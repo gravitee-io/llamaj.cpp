@@ -1,0 +1,47 @@
+/*
+ * Copyright © 2015 The Gravitee team (http://gravitee.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.gravitee.llama.cpp;
+
+import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.ValueLayout;
+
+import static io.gravitee.llama.cpp.llama_h_1.*;
+
+/**
+ * @author Rémi SULTAN (remi.sultan at graviteesource.com)
+ * @author GraviteeSource Team
+ */
+public final class LlamaVocab extends MemorySegmentAware {
+
+    public LlamaVocab(LlamaModel model) {
+        super(llama_model_get_vocab(model.segment));
+    }
+
+    public boolean isEog(int tokenId){
+        return llama_vocab_is_eog(this.segment, tokenId);
+    }
+
+    public String tokenToPiece(SegmentAllocator allocator, int tokenId){
+        var buffer = allocator.allocateArray(ValueLayout.OfChar.JAVA_BYTE, 256);
+        int pieceNumber = llama_token_to_piece(this.segment, tokenId, buffer, (int) buffer.byteSize(), 0, true);
+        var bufferArray = buffer.toArray(ValueLayout.JAVA_BYTE);
+        var answer = "";
+        for (int i = 0; i < pieceNumber; i++) {
+            answer += (char) bufferArray[i];
+        }
+        return answer;
+    }
+}
