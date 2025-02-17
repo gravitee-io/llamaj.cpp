@@ -15,17 +15,19 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.nio.file.Path;
-
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-abstract class LlamaCppTest {
+public enum PoolingType {
+    UNSPECIFIED,
+    NONE,
+    MEAN,
+    CLS,
+    LAST,
+    RANK;
 
-    public static final String NATIVE_LIB = "src/main/resources/libllama.dylib";
-
-    LlamaCppTest() {
-        System.load(Path.of(NATIVE_LIB).toAbsolutePath().toString());
+    public static PoolingType fromOrdinal(int ordinal) {
+        return values()[ordinal];
     }
 }
