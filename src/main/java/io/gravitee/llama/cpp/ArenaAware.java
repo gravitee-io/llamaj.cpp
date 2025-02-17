@@ -22,11 +22,11 @@ import java.lang.foreign.Arena;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public abstract class ArenaAware {
+abstract class ArenaAware {
 
     Arena arena;
 
-    public ArenaAware(Arena allocator) {
+    ArenaAware(Arena allocator) {
         this.arena = allocator;
     }
 

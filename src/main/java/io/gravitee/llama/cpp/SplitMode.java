@@ -19,6 +19,12 @@ package io.gravitee.llama.cpp;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public record LlamaOutput(String token) {
+public enum SplitMode {
+    NONE, // Single GPU
+    LAYER, // Split layers and KV across GPUs
+    ROW; // Split layers and KV acorss GPUs, use tensor parallelism if supported
 
+    public static SplitMode fromOrdinal(int ordinal) {
+        return values()[ordinal];
+    }
 }

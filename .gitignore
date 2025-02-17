@@ -37,3 +37,4 @@ build/
 ### Mac OS ###
 .DS_Store
 .idea/
+hs_err_pid*.log
