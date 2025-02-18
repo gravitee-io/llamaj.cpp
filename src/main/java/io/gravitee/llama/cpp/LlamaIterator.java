@@ -36,23 +36,21 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
     private final LlamaVocab vocab;
     private final LlamaSampler sampler;
     private final int nCtx;
-    private final int quota;
-
-    private LlamaBatch batch;
-    private Integer newTokenId;
-
-    private boolean hasNext;
 
     private final AtomicInteger inputTokens = new AtomicInteger(0);
     private final AtomicInteger outputTokens = new AtomicInteger(0);
 
+    private LlamaBatch batch;
+    private Integer newTokenId;
+    private int quota = -1;
+    private boolean hasNext;
 
     public LlamaIterator(
             LlamaContext context,
             LlamaVocab vocab,
             LlamaSampler sampler,
             String prompt) {
-        this(context, vocab, sampler, prompt, llama_n_ctx(context.segment), -1);
+        this(context, vocab, sampler, prompt, llama_n_ctx(context.segment));
     }
 
     public LlamaIterator(
@@ -61,23 +59,12 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
             LlamaSampler sampler,
             String prompt,
             int nCtx) {
-        this(context, vocab, sampler, prompt, nCtx, -1);
-    }
-
-    public LlamaIterator(
-            LlamaContext context,
-            LlamaVocab vocab,
-            LlamaSampler sampler,
-            String prompt,
-            int nCtx,
-            int quota) {
         super(Arena.ofAuto());
 
         this.context = context;
         this.vocab = vocab;
         this.sampler = sampler;
         this.nCtx = nCtx;
-        this.quota = quota;
         tokenized = new LlamaTokenizer(this.vocab, this.context).tokenize(arena, prompt);
 
         inputTokens.set(tokenized.size());
@@ -113,10 +100,21 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
         return new LlamaOutput(s, 1);
     }
 
+    public LlamaIterator setQuota(int quota) {
+        this.quota = quota;
+        return this;
+    }
+
     @Override
     public void close() {
         super.close();
-        inputTokens.set(0);
-        outputTokens.set(0);
+    }
+
+    public int getInputTokens() {
+        return inputTokens.get();
+    }
+
+    public int getOutputTokens() {
+        return outputTokens.get();
     }
 }

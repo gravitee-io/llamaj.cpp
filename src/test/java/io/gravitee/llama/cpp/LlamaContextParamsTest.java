@@ -19,9 +19,6 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
 
-import static io.gravitee.llama.cpp.SplitMode.LAYER;
-import static io.gravitee.llama.cpp.SplitMode.NONE;
-import static io.gravitee.llama.cpp.llama_h_1.llama_max_devices;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
