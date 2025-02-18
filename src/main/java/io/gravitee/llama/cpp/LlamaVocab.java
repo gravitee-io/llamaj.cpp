@@ -35,7 +35,7 @@ public final class LlamaVocab extends MemorySegmentAware {
     }
 
     public String tokenToPiece(SegmentAllocator allocator, int tokenId){
-        var buffer = allocator.allocateArray(ValueLayout.OfChar.JAVA_BYTE, 256);
+        var buffer = allocator.allocateArray(ValueLayout.OfChar.JAVA_BYTE, 10);
         int pieceNumber = llama_token_to_piece(this.segment, tokenId, buffer, (int) buffer.byteSize(), 0, true);
         var bufferArray = buffer.toArray(ValueLayout.JAVA_BYTE);
         var answer = "";

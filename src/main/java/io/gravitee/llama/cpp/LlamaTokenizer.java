@@ -54,7 +54,9 @@ public final class LlamaTokenizer extends MemorySegmentAware {
             throw new IllegalStateException("Failed to tokenize");
         }
 
-        return new TokenizerResponse(tokenBuffer, nbPromptTokens);
+        var tokenizerResponse = new TokenizerResponse(tokenBuffer, nbPromptTokens);
+        llama_kv_cache_clear(context.segment);
+        return tokenizerResponse;
     }
 
     public record TokenizerResponse(MemorySegment data, int size){}
