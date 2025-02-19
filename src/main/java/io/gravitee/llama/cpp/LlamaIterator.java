@@ -19,14 +19,16 @@ import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
 
 import java.lang.foreign.Arena;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.gravitee.llama.cpp.llama_h_1.llama_get_kv_cache_used_cells;
+import static io.gravitee.llama.cpp.llama_h_1.*;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaIterator extends ArenaAware implements Iterator<String> {
+public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOutput> {
 
     private final TokenizerResponse tokenized;
 
@@ -35,10 +37,21 @@ public final class LlamaIterator extends ArenaAware implements Iterator<String> 
     private final LlamaSampler sampler;
     private final int nCtx;
 
+    private final AtomicInteger inputTokens = new AtomicInteger(0);
+    private final AtomicInteger outputTokens = new AtomicInteger(0);
+
     private LlamaBatch batch;
     private Integer newTokenId;
-
+    private int quota = -1;
     private boolean hasNext;
+
+    public LlamaIterator(
+            LlamaContext context,
+            LlamaVocab vocab,
+            LlamaSampler sampler,
+            String prompt) {
+        this(context, vocab, sampler, prompt, llama_n_ctx(context.segment));
+    }
 
     public LlamaIterator(
             LlamaContext context,
@@ -52,8 +65,9 @@ public final class LlamaIterator extends ArenaAware implements Iterator<String> 
         this.vocab = vocab;
         this.sampler = sampler;
         this.nCtx = nCtx;
-
         tokenized = new LlamaTokenizer(this.vocab, this.context).tokenize(arena, prompt);
+
+        inputTokens.set(tokenized.size());
 
         hasNext = batch();
     }
@@ -65,13 +79,13 @@ public final class LlamaIterator extends ArenaAware implements Iterator<String> 
 
     private boolean batch() {
         batch = newTokenId == null ? new LlamaBatch(arena, tokenized) : new LlamaBatch(arena, newTokenId);
-
         if (checkContextSize() && batch.decode(context) != 0) {
             return false;
         }
 
         newTokenId = sampler.sample(context);
-        return !vocab.isEog(newTokenId);
+        llama_batch_free(batch.segment);
+        return (quota == -1 || quota > outputTokens.incrementAndGet()) && !vocab.isEog(newTokenId);
     }
 
     private boolean checkContextSize() {
@@ -80,9 +94,27 @@ public final class LlamaIterator extends ArenaAware implements Iterator<String> 
     }
 
     @Override
-    public String next() {
+    public LlamaOutput next() {
         String s = vocab.tokenToPiece(arena, newTokenId);
         hasNext = batch();
-        return s;
+        return new LlamaOutput(s, 1);
+    }
+
+    public LlamaIterator setQuota(int quota) {
+        this.quota = quota;
+        return this;
+    }
+
+    @Override
+    public void close() {
+        super.close();
+    }
+
+    public int getInputTokens() {
+        return inputTokens.get();
+    }
+
+    public int getOutputTokens() {
+        return outputTokens.get();
     }
 }

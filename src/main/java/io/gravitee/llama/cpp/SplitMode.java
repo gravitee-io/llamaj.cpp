@@ -15,17 +15,16 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.lang.foreign.MemorySegment;
-
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-abstract class MemorySegmentAware {
+public enum SplitMode {
+    NONE, // Single GPU
+    LAYER, // Split layers and KV across GPUs
+    ROW; // Split layers and KV acorss GPUs, use tensor parallelism if supported
 
-    final MemorySegment segment;
-
-    MemorySegmentAware(MemorySegment segment) {
-        this.segment = segment;
+    public static SplitMode fromOrdinal(int ordinal) {
+        return values()[ordinal];
     }
 }

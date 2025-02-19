@@ -25,19 +25,20 @@ public class Main {
         modelParameters.nGpuLayers(99).nGpuLayers();
 
         LlamaModel model = new LlamaModel(ARENA, Path.of(modelGguf).toAbsolutePath(), modelParameters);
+        LlamaVocab vocab = new LlamaVocab(model);
+
+        LlamaSampler sampler = new LlamaSampler(ARENA)
+                .temperature(0.4f)
+                .minP(0.1f, 40)
+                .topK(10)
+                .topP(0.2f, 10)
+                .seed(new Random().nextInt());
 
         var contextParams = new LlamaContextParams(ARENA)
                 .nCtx(512)
                 .nBatch(512);
 
         LlamaContext context = new LlamaContext(model, contextParams);
-
-        LlamaSampler sampler = new LlamaSampler(ARENA)
-                .minP(0.05f)
-                .temperature(0.8f)
-                .seed(new Random().nextInt());
-
-        LlamaVocab vocab = new LlamaVocab(model);
 
         String input = "";
         while (!input.trim().equals("bye")) {
@@ -62,21 +63,15 @@ public class Main {
                 ));
                 prompt = llamaTemplate.applyTemplate(arena, messages, contextParams.nCtx());
             }
+            var it = new LlamaIterator(context, vocab, sampler, prompt);
 
-            var llamaIterator = new LlamaIterator(
-                    context,
-                    vocab,
-                    sampler,
-                    prompt,
-                    contextParams.nCtx()
-            );
-
-            for (LlamaIterator it = llamaIterator; it.hasNext(); ) {
-                System.out.print(it.next());
+            for (; it.hasNext(); ) {
+                System.out.print(it.next().content());
             }
 
-            llamaIterator.close();
+            it.close();
             System.out.println();
+
         }
 
         llama_sampler_free(sampler.segment);

@@ -17,7 +17,6 @@ package io.gravitee.llama.cpp;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
 
-import javax.swing.plaf.PanelUI;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 
@@ -28,7 +27,7 @@ import static io.gravitee.llama.cpp.llama_h_1.*;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaBatch extends MemorySegmentAware{
+public final class LlamaBatch extends MemorySegmentAware {
 
     public LlamaBatch(SegmentAllocator allocator, TokenizerResponse tokenizerResponse) {
         this(allocator, tokenizerResponse.data(), tokenizerResponse.size());
@@ -38,14 +37,14 @@ public final class LlamaBatch extends MemorySegmentAware{
         this(allocator, getTokenArray(allocator, tokenId), 1);
     }
 
+    public LlamaBatch(SegmentAllocator allocator, MemorySegment segment, int size) {
+        super(llama_batch_get_one(allocator, segment, size));
+    }
+
     private static MemorySegment getTokenArray(SegmentAllocator allocator, int tokenId) {
         var tokenArray = allocator.allocateArray(llama_token, 1);
         tokenArray.set(llama_token, 0, tokenId);
         return tokenArray;
-    }
-
-    public LlamaBatch(SegmentAllocator allocator, MemorySegment segment, int size) {
-        super(llama_batch_get_one(allocator, segment, size));
     }
 
     public int nTokens() {

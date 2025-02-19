@@ -15,17 +15,19 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.lang.foreign.MemorySegment;
-
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-abstract class MemorySegmentAware {
+public enum PoolingType {
+    UNSPECIFIED,
+    NONE,
+    MEAN,
+    CLS,
+    LAST,
+    RANK;
 
-    final MemorySegment segment;
-
-    MemorySegmentAware(MemorySegment segment) {
-        this.segment = segment;
+    public static PoolingType fromOrdinal(int ordinal) {
+        return values()[ordinal];
     }
 }

@@ -15,17 +15,20 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.lang.foreign.MemorySegment;
+import java.nio.file.Path;
+
+import static io.gravitee.llama.cpp.llama_h_1.ggml_backend_load_all;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-abstract class MemorySegmentAware {
+abstract class LlamaCppTest {
 
-    final MemorySegment segment;
+    public static final String NATIVE_LIB = "src/main/resources/libllama.dylib";
 
-    MemorySegmentAware(MemorySegment segment) {
-        this.segment = segment;
+    LlamaCppTest() {
+        System.load(Path.of(NATIVE_LIB).toAbsolutePath().toString());
+        ggml_backend_load_all();
     }
 }

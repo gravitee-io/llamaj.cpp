@@ -18,7 +18,6 @@ package io.gravitee.llama.cpp;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
 import java.util.List;
 
 /**

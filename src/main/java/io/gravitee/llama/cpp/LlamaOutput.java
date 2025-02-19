@@ -19,6 +19,5 @@ package io.gravitee.llama.cpp;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public record LlamaOutput(String token) {
-
+public record LlamaOutput(String content, int numberOfTokens) {
 }
