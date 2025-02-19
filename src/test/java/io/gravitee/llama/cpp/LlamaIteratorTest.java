@@ -15,7 +15,9 @@
  */
 package io.gravitee.llama.cpp;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
@@ -24,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -36,37 +39,108 @@ import static io.gravitee.llama.cpp.llama_h_1.*;
  */
 class LlamaIteratorTest extends LlamaCppTest {
 
-    private static final String MODEL_TO_DOWNLOAD = "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf";
-    public static final String MODEL_PATH = "models/Llama-3.2-1B-Instruct-IQ3_M.gguf";
+    static final String MODEL_TO_DOWNLOAD = "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf";
+    static final String MODEL_PATH = "models/Llama-3.2-1B-Instruct-IQ3_M.gguf";
+    static final String SYSTEM = """
+            You are the best at guessing capitals. Respond to the best of your ability. Just answer with the capital.
+            """;
+    static final int SEED = new Random().nextInt();
 
-    @Test
-    void llama_simple_generation() {
+    static final String ENGLISH_GRAMMAR = """
+            root        ::= en-char+ ([ \\t\\n] en-char+)*
+            en-char     ::= letter | digit | punctuation
+            letter      ::= [a-zA-Z]
+            digit       ::= [0-9]
+            punctuation ::= [!"#$%&'()*+,-./:;<=>?@[\\\\\\]^_`{|}~]
+            """;
 
-        ggml_backend_load_all();
+    static Stream<Arguments> params_that_allow_llama_generation() {
+        return Stream.of(
+                Arguments.of(SYSTEM, "What is the capital of France?", "Paris"),
+                Arguments.of(SYSTEM, "What is the capital of the UK?", "London"),
+                Arguments.of(SYSTEM, "What is the capital of Poland?", "Warsaw")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("params_that_allow_llama_generation")
+    void llama_simple_generation(String system, String input, String expected) {
+
 
         try (Arena arena = Arena.ofConfined()) {
-
             var modelParameters = new LlamaModelParams(arena);
             Path absolutePath = getModelPath();
             var model = new LlamaModel(arena, absolutePath, modelParameters);
-            var contextParams = new LlamaContextParams(arena).nSeqMax(10);
+            var contextParams = new LlamaContextParams(arena);
             var context = new LlamaContext(model, contextParams);
 
             var vocab = new LlamaVocab(model);
             var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
 
-            var prompt = getPrompt(model, arena, contextParams);
+            var prompt = getPrompt(model, arena, builMessages(arena, system, input), contextParams);
 
             var it = new LlamaIterator(context, vocab, sampler, prompt);
             String output = "";
             for (; it.hasNext(); ) {
-                output += it.next().token();
+                output += it.next().content();
             }
             it.close();
 
             assertThat(it.getInputTokens()).isGreaterThan(0);
             assertThat(it.getInputTokens()).isGreaterThan(0);
-            assertThat(output).containsIgnoringCase("paris");
+            assertThat(output).containsIgnoringCase(expected);
+
+            llama_sampler_free(sampler.segment);
+            llama_free(context.segment);
+            llama_model_free(model.segment);
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("params_that_allow_llama_generation")
+    void llama_tuned_generation(String system, String input, String expected) {
+
+
+        try (Arena arena = Arena.ofConfined()) {
+            var modelParameters = new LlamaModelParams(arena);
+            Path absolutePath = getModelPath();
+            var model = new LlamaModel(arena, absolutePath, modelParameters);
+            var contextParams = new LlamaContextParams(arena)
+                    .nCtx(512)
+                    .nBatch(512)
+                    .nThreads(16)
+                    .nThreadsBatch(16)
+                    .attentionType(AttentionType.CAUSAL)
+                    .embeddings(false)
+                    .offloadKQV(true)
+                    .flashAttn(true)
+                    .noPerf(true);
+
+            var context = new LlamaContext(model, contextParams);
+
+            var vocab = new LlamaVocab(model);
+            var sampler = new LlamaSampler(arena).seed(new Random().nextInt())
+                    .seed(SEED)
+                    .temperature(0.75f)
+                    .topK(40)
+                    .topP(0.2f, 40)
+                    .minP(0.05f, 40)
+                    .mirostat(SEED, 3, 0.1f)
+                    .grammar(vocab, ENGLISH_GRAMMAR, "root")
+                    .penalties(10, 1.0f, 0.3f, 0.0f);
+
+            var prompt = getPrompt(model, arena, builMessages(arena, system, input), contextParams);
+
+            var it = new LlamaIterator(context, vocab, sampler, prompt);
+            String output = "";
+            for (; it.hasNext(); ) {
+                output += it.next().content();
+            }
+            it.close();
+
+            assertThat(it.getInputTokens()).isGreaterThan(0);
+            assertThat(it.getInputTokens()).isGreaterThan(0);
+            assertThat(output).containsIgnoringCase(expected);
 
             llama_sampler_free(sampler.segment);
             llama_free(context.segment);
@@ -87,22 +161,19 @@ class LlamaIteratorTest extends LlamaCppTest {
         }
     }
 
-    private static String getPrompt(LlamaModel model, Arena arena, LlamaContextParams contextParams) {
+    private static String getPrompt(
+            LlamaModel model,
+            Arena arena,
+            LlamaChatMessages messages,
+            LlamaContextParams contextParams) {
         var template = new LlamaTemplate(model);
-        var messages = builMessages(arena);
-
         return template.applyTemplate(arena, messages, contextParams.nCtx());
     }
 
-    private static LlamaChatMessages builMessages(Arena arena) {
-        return new LlamaChatMessages(arena, List.of(
-                new LlamaChatMessage(arena, Role.SYSTEM, """
-                        You are the best at guessing capitals. Respond to the best of your ability. Just answer with the capital
-                        """
-                ),
-                new LlamaChatMessage(arena, Role.USER, "What is the capital of France?")
-        ));
-    }
-
-
+    private static LlamaChatMessages builMessages(Arena arena, String system, String input) {
+            return new LlamaChatMessages(arena, List.of(
+                    new LlamaChatMessage(arena, Role.SYSTEM, system),
+                    new LlamaChatMessage(arena, Role.USER, input)
+            ));
+        }
 }

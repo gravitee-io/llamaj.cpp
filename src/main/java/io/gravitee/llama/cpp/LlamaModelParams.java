@@ -7,7 +7,6 @@ import java.util.Arrays;
 
 import static io.gravitee.llama.cpp.llama_h_1.llama_max_devices;
 import static io.gravitee.llama.cpp.llama_h_1.llama_model_default_params;
-import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
 
 
@@ -16,7 +15,6 @@ import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
  * @author GraviteeSource Team
  */
 public final class LlamaModelParams extends MemorySegmentAware {
-
 
     public LlamaModelParams(Arena arena) {
         super(llama_model_params.ofAddress(llama_model_default_params(arena), arena));

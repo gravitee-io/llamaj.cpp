@@ -66,7 +66,7 @@ public class Main {
             var it = new LlamaIterator(context, vocab, sampler, prompt);
 
             for (; it.hasNext(); ) {
-                System.out.print(it.next().token());
+                System.out.print(it.next().content());
             }
 
             it.close();

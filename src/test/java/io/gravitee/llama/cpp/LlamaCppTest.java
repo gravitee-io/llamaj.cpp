@@ -17,6 +17,8 @@ package io.gravitee.llama.cpp;
 
 import java.nio.file.Path;
 
+import static io.gravitee.llama.cpp.llama_h_1.ggml_backend_load_all;
+
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
@@ -27,5 +29,6 @@ abstract class LlamaCppTest {
 
     LlamaCppTest() {
         System.load(Path.of(NATIVE_LIB).toAbsolutePath().toString());
+        ggml_backend_load_all();
     }
 }

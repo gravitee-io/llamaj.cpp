@@ -56,7 +56,7 @@ public final class LlamaSampler extends MemorySegmentAware {
         return this;
     }
 
-    public LlamaSampler mirostat(int seed, int tau, int eta) {
+    public LlamaSampler mirostat(int seed, float tau, float eta) {
         llama_sampler_chain_add(this.segment, llama_sampler_init_mirostat_v2(seed, tau, eta));
         return this;
     }
