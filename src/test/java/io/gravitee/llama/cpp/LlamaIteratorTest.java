@@ -65,9 +65,11 @@ class LlamaIteratorTest extends LlamaCppTest {
     @ParameterizedTest
     @MethodSource("params_that_allow_llama_generation")
     void llama_simple_generation(String system, String input, String expected) {
-
-
         try (Arena arena = Arena.ofConfined()) {
+
+            var logger = new LlamaLogger(arena);
+            logger.setLogging(LlamaLogLevel.ERROR);
+
             var modelParameters = new LlamaModelParams(arena);
             Path absolutePath = getModelPath();
             var model = new LlamaModel(arena, absolutePath, modelParameters);
@@ -99,9 +101,10 @@ class LlamaIteratorTest extends LlamaCppTest {
     @ParameterizedTest
     @MethodSource("params_that_allow_llama_generation")
     void llama_tuned_generation(String system, String input, String expected) {
-
-
         try (Arena arena = Arena.ofConfined()) {
+            var logger = new LlamaLogger(arena);
+            logger.setLogging(LlamaLogLevel.ERROR);
+
             var modelParameters = new LlamaModelParams(arena);
             Path absolutePath = getModelPath();
             var model = new LlamaModel(arena, absolutePath, modelParameters);
