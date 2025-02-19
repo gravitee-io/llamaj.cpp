@@ -39,5 +39,4 @@ build/
 .idea/
 hs_err_pid*.log
 
-models/
 models/*
