@@ -21,8 +21,10 @@ import java.lang.foreign.Arena;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 import static io.gravitee.llama.cpp.llama_h_1.*;
+import static java.util.function.Predicate.not;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -127,7 +129,7 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
     }
 
     public LlamaIterator setStopStrings(List<String> stopStrings) {
-        this.stopStrings = stopStrings.stream().filter(String::isBlank).toList();
+        this.stopStrings = stopStrings.stream().filter(not(String::isBlank)).toList();
         maxStopStringSize = this.stopStrings.stream().mapToInt(String::length).max().orElse(0);
         return this;
     }
