@@ -61,7 +61,6 @@ public class Main {
 
             it.close();
             System.out.println();
-
         }
 
         llama_sampler_free(sampler.segment);

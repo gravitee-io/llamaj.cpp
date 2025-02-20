@@ -19,10 +19,12 @@ import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
 
 import java.lang.foreign.Arena;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 import static io.gravitee.llama.cpp.llama_h_1.*;
+import static java.util.function.Predicate.not;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -44,6 +46,10 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
     private Integer newTokenId;
     private int quota = -1;
     private boolean hasNext;
+
+    private List<String> stopStrings = List.of();
+    private String promptMemory = "";
+    private int maxStopStringSize = 0;
 
     public LlamaIterator(
             LlamaContext context,
@@ -79,13 +85,21 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
 
     private boolean batch() {
         batch = newTokenId == null ? new LlamaBatch(arena, tokenized) : new LlamaBatch(arena, newTokenId);
+
         if (checkContextSize() && batch.decode(context) != 0) {
             return false;
         }
 
         newTokenId = sampler.sample(context);
+
         llama_batch_free(batch.segment);
-        return (quota == -1 || quota > outputTokens.incrementAndGet()) && !vocab.isEog(newTokenId);
+        batch = null;
+        outputTokens.incrementAndGet();
+        return hasNotReachedQuota() && !vocab.isEog(newTokenId);
+    }
+
+    private boolean hasNotReachedQuota() {
+        return quota == -1 || quota > outputTokens.get();
     }
 
     private boolean checkContextSize() {
@@ -95,14 +109,33 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
 
     @Override
     public LlamaOutput next() {
-        String s = vocab.tokenToPiece(arena, newTokenId);
-        hasNext = batch();
-        return new LlamaOutput(s, 1);
+        var piece = vocab.tokenToPiece(arena, newTokenId);
+
+        if (!stopStrings.isEmpty()) {
+            promptMemory += piece;
+
+            if (promptMemory.length() > maxStopStringSize) {
+                promptMemory = promptMemory.substring(promptMemory.length() - maxStopStringSize);
+            }
+        }
+
+        hasNext = stopStringNotEndsWith() && batch();
+        return new LlamaOutput(piece, 1);
     }
 
     public LlamaIterator setQuota(int quota) {
         this.quota = quota;
         return this;
+    }
+
+    public LlamaIterator setStopStrings(List<String> stopStrings) {
+        this.stopStrings = stopStrings.stream().filter(not(String::isBlank)).toList();
+        maxStopStringSize = this.stopStrings.stream().mapToInt(String::length).max().orElse(0);
+        return this;
+    }
+
+    private boolean stopStringNotEndsWith() {
+        return stopStrings.isEmpty() || stopStrings.stream().noneMatch(promptMemory::endsWith);
     }
 
     @Override
