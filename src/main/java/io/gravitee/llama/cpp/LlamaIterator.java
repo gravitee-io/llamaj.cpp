@@ -92,12 +92,12 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
 
         llama_batch_free(batch.segment);
         batch = null;
-
-        return hasReachedQuota() && !vocab.isEog(newTokenId);
+        outputTokens.incrementAndGet();
+        return hasNotReachedQuota() && !vocab.isEog(newTokenId);
     }
 
-    private boolean hasReachedQuota() {
-        return quota == -1 || quota > outputTokens.incrementAndGet();
+    private boolean hasNotReachedQuota() {
+        return quota == -1 || quota > outputTokens.get();
     }
 
     private boolean checkContextSize() {

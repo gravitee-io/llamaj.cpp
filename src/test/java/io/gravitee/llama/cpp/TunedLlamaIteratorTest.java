@@ -115,7 +115,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
         it.close();
 
         assertThat(it.getInputTokens()).isGreaterThan(0);
-        assertThat(it.getInputTokens()).isGreaterThan(0);
+        assertThat(it.getOutputTokens()).isGreaterThan(0);
         assertThat(output).containsIgnoringCase(expected);
         System.out.println(output);
     }
@@ -127,6 +127,4 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
         llama_model_free(model.segment);
         arena = null;
     }
-
-
 }

@@ -85,7 +85,7 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
         }
 
         assertThat(it.getInputTokens()).isGreaterThan(0);
-        assertThat(it.getInputTokens()).isGreaterThan(0);
+        assertThat(it.getOutputTokens()).isGreaterThan(0);
         assertThat(output).containsIgnoringCase(expected);
         System.out.println(output);
     }
