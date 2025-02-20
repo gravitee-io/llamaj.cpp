@@ -37,7 +37,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  */
 class TunedLlamaIteratorTest extends LlamaCppTest {
 
-
     static final int SEED = new Random().nextInt();
 
     static final String ENGLISH_GRAMMAR = """
@@ -106,7 +105,9 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
     void llama_tuned_generation(String system, String input, String expected) {
         var prompt = getPrompt(model, arena, builMessages(arena, system, input), contextParams);
 
-        var it = new LlamaIterator(context, vocab, sampler, prompt);
+        var it = new LlamaIterator(context, vocab, sampler, prompt)
+                .setStopStrings(List.of("."))
+                .setQuota(10);
         String output = "";
         for (; it.hasNext(); ) {
             output += it.next().content();
