@@ -21,7 +21,6 @@ import java.lang.foreign.Arena;
 
 import static io.gravitee.llama.cpp.SplitMode.LAYER;
 import static io.gravitee.llama.cpp.SplitMode.NONE;
-import static io.gravitee.llama.cpp.llama_h_1.llama_max_devices;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
@@ -37,7 +36,7 @@ class LlamaModelParamsTest extends LlamaCppTest {
             assertThat(modelParams.nGpuLayers()).isEqualTo(999);
             assertThat(modelParams.splitMode()).isEqualTo(LAYER);
             assertThat(modelParams.mainGpu()).isEqualTo(0);
-            assertThat(modelParams.tensorSplit()).containsExactly(getEvenSplit(llama_max_devices()));
+            assertThat(modelParams.tensorSplit()).containsExactly(getEvenSplit(LlamaRuntime.llama_max_devices()));
             assertThat(modelParams.vocabOnly()).isFalse();
             assertThat(modelParams.useMmap()).isTrue();
             assertThat(modelParams.useMlock()).isFalse();
@@ -57,7 +56,7 @@ class LlamaModelParamsTest extends LlamaCppTest {
     @Test
     void should_create_LlamaModelParams_with_custom() {
         try (Arena arena = Arena.ofConfined()) {
-            long maxDevices = llama_max_devices();
+            long maxDevices = LlamaRuntime.llama_max_devices();
             int mainGpu = (int) (maxDevices / 2);
             float[] biasSplit = getBiasSplit(maxDevices, mainGpu);
 

@@ -15,6 +15,7 @@
  */
 package io.gravitee.llama.cpp;
 
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import org.junit.jupiter.api.BeforeAll;
 
 import java.io.IOException;
@@ -24,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static io.gravitee.llama.cpp.llama_h_1.ggml_backend_load_all;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /**
@@ -37,7 +37,7 @@ abstract class LlamaCppTest {
 
     @BeforeAll
     public static void beforeAll() throws IOException {
-        System.load(Path.of(NATIVE_LIB).toAbsolutePath().toString());
+        LlamaLibLoader.load();
     }
 
 

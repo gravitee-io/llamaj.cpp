@@ -18,26 +18,27 @@ package io.gravitee.llama.cpp;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 
-import static io.gravitee.llama.cpp.llama_h_1.*;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_tokenize;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaTokenizer extends MemorySegmentAware {
+public final class LlamaTokenizer {
 
-    private final LlamaContext context;
     private final LlamaVocab vocab;
+    private final LlamaContext context;
 
-    public LlamaTokenizer(LlamaVocab vocab, LlamaContext llamaContext) {
-        super(null);
+    public LlamaTokenizer(LlamaVocab vocab, LlamaContext context) {
         this.vocab = vocab;
-        this.context = llamaContext;
+        this.context = context;
     }
 
     public TokenizerResponse tokenize(SegmentAllocator allocator, String prompt) {
-        boolean isFirst = llama_get_kv_cache_used_cells(context.segment) == 0;
         var promptSegment = allocator.allocateUtf8String(prompt);
+        boolean isFirst = context.nCtxUsedCells() == 0;
         int nbPromptTokens = -llama_tokenize(
                 vocab.segment,
                 promptSegment,
@@ -48,15 +49,13 @@ public final class LlamaTokenizer extends MemorySegmentAware {
                 true
         );
 
-        var tokenBuffer = allocator.allocateArray(llama_token, nbPromptTokens);
+        var tokenBuffer = allocator.allocateArray(JAVA_INT, nbPromptTokens);
 
         if (llama_tokenize(vocab.segment, promptSegment, prompt.length(), tokenBuffer, nbPromptTokens, isFirst, true) < 0) {
             throw new IllegalStateException("Failed to tokenize");
         }
 
-        var tokenizerResponse = new TokenizerResponse(tokenBuffer, nbPromptTokens);
-        llama_kv_cache_clear(context.segment);
-        return tokenizerResponse;
+        return new TokenizerResponse(tokenBuffer, nbPromptTokens);
     }
 
     public record TokenizerResponse(MemorySegment data, int size){}

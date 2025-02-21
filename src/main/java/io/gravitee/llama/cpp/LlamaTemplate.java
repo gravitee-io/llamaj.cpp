@@ -19,8 +19,9 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.lang.foreign.ValueLayout;
 
-import static io.gravitee.llama.cpp.llama_h_1.llama_chat_apply_template;
-import static io.gravitee.llama.cpp.llama_h_1.llama_model_chat_template;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_chat_apply_template;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_chat_template;
+
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -33,8 +34,8 @@ public final class LlamaTemplate extends MemorySegmentAware {
     }
 
     public String applyTemplate(SegmentAllocator allocator, LlamaChatMessages messages, int nCtx) {
-        var templateBuffer = allocator.allocateArray(ValueLayout.OfChar.JAVA_CHAR, nCtx);
-
+        var templateBuffer = allocator.allocateArray(ValueLayout.JAVA_CHAR, nCtx);
+        
         int newLength = llama_chat_apply_template(
                 segment,
                 messages.segment,
@@ -45,7 +46,7 @@ public final class LlamaTemplate extends MemorySegmentAware {
         );
 
         if (newLength > nCtx) {
-            templateBuffer = allocator.allocateArray(ValueLayout.OfChar.JAVA_CHAR, newLength);
+            templateBuffer = allocator.allocateArray(ValueLayout.JAVA_CHAR, newLength);
             newLength = llama_chat_apply_template(
                     segment,
                     messages.segment,

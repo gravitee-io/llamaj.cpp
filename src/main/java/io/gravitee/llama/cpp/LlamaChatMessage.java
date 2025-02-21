@@ -18,6 +18,8 @@ package io.gravitee.llama.cpp;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
+
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
@@ -29,18 +31,18 @@ public final class LlamaChatMessage extends MemorySegmentAware {
     }
 
     private static MemorySegment initMessage(SegmentAllocator allocator, Role role, String content) {
-        var llamaChatMessage = llama_chat_message.allocate(allocator);
-        llama_chat_message.content$set(llamaChatMessage, allocator.allocateUtf8String(content));
-        llama_chat_message.role$set(llamaChatMessage, allocator.allocateUtf8String(role.getLabel()));
+        var llamaChatMessage = llama_chat_message_allocate(allocator);
+        llama_chat_message_content(llamaChatMessage, allocator.allocateUtf8String(content));
+        llama_chat_message_role(llamaChatMessage, allocator.allocateUtf8String(role.getLabel()));
         return llamaChatMessage;
     }
 
     public Role getRole() {
-        return Role.fromLabel(llama_chat_message.role$get(this.segment).getUtf8String(0));
+        return Role.fromLabel(llama_chat_message_role(this.segment).getUtf8String(0));
     }
 
     public String getContent() {
-        return llama_chat_message.content$get(this.segment).getUtf8String(0);
+        return llama_chat_message_content(this.segment).getUtf8String(0);
     }
 
 }

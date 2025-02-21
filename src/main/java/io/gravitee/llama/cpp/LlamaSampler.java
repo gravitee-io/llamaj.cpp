@@ -17,13 +17,14 @@ package io.gravitee.llama.cpp;
 
 import java.lang.foreign.SegmentAllocator;
 
-import static io.gravitee.llama.cpp.llama_h_1.*;
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
+
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaSampler extends MemorySegmentAware {
+public final class LlamaSampler extends MemorySegmentAware implements Freeable {
 
     private final SegmentAllocator allocator;
 
@@ -76,5 +77,10 @@ public final class LlamaSampler extends MemorySegmentAware {
     public LlamaSampler seed(int seed) {
         llama_sampler_chain_add(this.segment, llama_sampler_init_dist(seed));
         return this;
+    }
+
+    @Override
+    public void free() {
+        llama_sampler_free(this);
     }
 }

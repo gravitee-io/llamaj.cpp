@@ -1,0 +1,145 @@
+version: 2.1
+
+executors:
+  ubuntu_linux_x86_64:
+    docker:
+      - image: ubuntu:noble
+    working_directory: /home/circleci
+    resource_class: medium
+
+  llama_cpp_light_x86-64_cpu:
+    docker:
+      - image: ghcr.io/ggml-org/llama.cpp:light
+    working_directory: /home/circleci
+    resource_class: small
+
+  llama_cpp_light_x86-64_cuda:
+    docker:
+      - image: ghcr.io/ggml-org/llama.cpp:light-cuda
+    working_directory: /home/circleci
+    resource_class: small
+
+commands:
+  install_dependencies:
+    steps:
+      - run:
+          name: Install dependencies
+          command: |
+            export DEBIAN_FRONTEND=noninteractive
+            apt -y update && apt-get upgrade -y
+            apt -y install git wget openjdk-21-jdk libssl-dev build-essential cmake libcurl4-openssl-dev
+
+  download_jextract:
+    steps:
+      - run:
+          name: Download jextract Binary
+          command: |
+            if [ ! -d "/home/circleci/jextract" ]; then
+              echo "==================== Downloading jextract ===================="
+              wget https://download.java.net/java/early_access/jextract/21/1/openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+              tar -xzf openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+              mv jextract-21 "/home/circleci/jextract"
+              rm openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+            fi
+            echo 'export PATH="/home/circleci/jextract/bin:$PATH"' >> ~/.bashrc
+            source ~/.bashrc
+
+  get_llama_native_libs:
+    parameters:
+      os:
+        type: string
+      platform:
+        type: string
+      device:
+        type: string
+    steps:
+      - when:
+          condition: << parameters.os == "linux" >>
+          steps:
+            - run:
+                name: "Build for << parameters.os >>-<< parameters.platform >>-<< parameters.device >>"
+                command: |
+                  mkdir -p /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>/<< parameters.device >>/
+                  cp /app/*.so /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>/<< parameters.device >>/
+                  ls -la /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>/<< parameters.device >>/
+
+      #- run:
+      #    name: "Compile llama.cpp"
+      #    command: |
+      #      cd "/home/circleci/llama.cpp"
+      #      cmake --build build --config Release -j $(nproc)
+      #      ls -la ./build/bin/
+
+  generate_jextract_bindings:
+    parameters:
+      os:
+        type: string
+      platform:
+        type: string
+    steps:
+      - run:
+          name: Clone llama.cpp
+          command: |
+            if [ ! -d "/home/circleci/llama.cpp" ]; then
+              echo "==================== Cloning llama.cpp ===================="
+              git clone -b master --single-branch https://github.com/ggml-org/llama.cpp "/home/circleci/llama.cpp"
+              cd "/home/circleci/llama.cpp"
+
+              git --no-pager describe --tag | xargs git checkout
+            fi
+      - run:
+          name: Generate JExtract Bindings
+          command: |
+            if [ -d "/home/circleci/llama.cpp" ]; then
+
+              echo "============= Generate jextract Bindings ==============="
+              cd "/home/circleci/llama.cpp"
+              mkdir -p java
+            
+              export PATH="/home/circleci/jextract/bin:$PATH"
+              jextract -t io.gravitee.llama.cpp.<< parameters.os >>.<< parameters.platform >> \
+                       --source \
+                       --include-dir /usr/include \
+                       --include-dir ggml/include \
+                       --output java/ \
+                       include/llama.h
+            
+              cd java/
+              echo "============= List Files Before Creating JAR ==========="
+              find . -type f
+            fi
+
+jobs:
+  linux_x86_64_cpu_native_libs:
+    executor: llama_cpp_light_x86-64_cpu
+    steps:
+      - get_llama_native_libs:
+          os: "linux"
+          platform: "x86_64"
+          device: "cpu"
+
+  linux_x86_64_cuda_native_libs:
+    executor:  llama_cpp_light_x86-64_cuda
+    steps:
+      - get_llama_native_libs:
+          os: "linux"
+          platform: "x86_64"
+          device: "cuda"
+
+  linux_x86_64_java_bindings:
+    executor: ubuntu_linux_x86_64
+    steps:
+      - install_dependencies
+      - download_jextract
+      - generate_jextract_bindings:
+          os: "linux"
+          platform: "x86_64"
+
+
+#workflows:
+  #version: 2
+  #generate_llama_bindings:
+    #jobs:
+      #- linux_x86_64_cpu_native_libs
+      #- linux_x86_64_cuda_native_libs
+      #- linux_x86_64_java_bindings

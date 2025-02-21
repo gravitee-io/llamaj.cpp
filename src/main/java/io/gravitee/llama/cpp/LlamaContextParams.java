@@ -17,7 +17,19 @@ package io.gravitee.llama.cpp;
 
 import java.lang.foreign.Arena;
 
-import static io.gravitee.llama.cpp.llama_h_1.llama_context_default_params;
+import static io.gravitee.llama.cpp.LlamaRuntime.attention_type;
+import static io.gravitee.llama.cpp.LlamaRuntime.flash_attn;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_context_default_params;
+import static io.gravitee.llama.cpp.LlamaRuntime.n_batch;
+import static io.gravitee.llama.cpp.LlamaRuntime.n_ctx;
+import static io.gravitee.llama.cpp.LlamaRuntime.n_seq_max;
+import static io.gravitee.llama.cpp.LlamaRuntime.n_threads;
+import static io.gravitee.llama.cpp.LlamaRuntime.n_threads_batch;
+import static io.gravitee.llama.cpp.LlamaRuntime.n_ubatch;
+import static io.gravitee.llama.cpp.LlamaRuntime.no_perf;
+import static io.gravitee.llama.cpp.LlamaRuntime.offload_kqv;
+import static io.gravitee.llama.cpp.LlamaRuntime.pooling_type;
+
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -30,111 +42,110 @@ public final class LlamaContextParams extends MemorySegmentAware {
     }
 
     public int nCtx(){
-        return llama_context_params.n_ctx$get(this.segment);
+        return n_ctx(this.segment);
     }
 
     public LlamaContextParams nCtx(int nCtx){
-        llama_context_params.n_ctx$set(this.segment, nCtx);
+        n_ctx(this.segment, nCtx);
         return this;
     }
 
     public int nBatch(){
-        return llama_context_params.n_batch$get(this.segment);
+        return n_batch(this.segment);
     }
 
     public LlamaContextParams nBatch(int nBatch){
-        llama_context_params.n_batch$set(this.segment, nBatch);
+        n_batch(this.segment, nBatch);
         return this;
     }
 
     public int nUBatch(){
-        return llama_context_params.n_ubatch$get(this.segment);
+        return n_ubatch(this.segment);
     }
 
     public LlamaContextParams nUBatch(int nUBatch){
-        llama_context_params.n_ubatch$set(this.segment, nUBatch);
+        n_ubatch(this.segment, nUBatch);
         return this;
     }
 
     public int nSeqMax(){
-        return llama_context_params.n_seq_max$get(this.segment);
+        return n_seq_max(this.segment);
     }
 
     public LlamaContextParams nSeqMax(int nSeqMax){
-        llama_context_params.n_seq_max$set(this.segment, nSeqMax);
+        n_seq_max(this.segment, nSeqMax);
         return this;
     }
 
     public int nThreads(){
-        return llama_context_params.n_threads$get(this.segment);
+        return n_threads(this.segment);
     }
 
     public LlamaContextParams nThreads(int nThreads){
-        llama_context_params.n_threads$set(this.segment, nThreads);
+        n_threads(this.segment, nThreads);
         return this;
     }
 
     public int nThreadsBatch(){
-        return llama_context_params.n_threads_batch$get(this.segment);
+        return n_threads_batch(this.segment);
     }
 
     public LlamaContextParams nThreadsBatch(int nThreadsBatch){
-        llama_context_params.n_threads_batch$set(this.segment, nThreadsBatch);
+        n_threads_batch(this.segment, nThreadsBatch);
         return this;
     }
 
     public PoolingType poolingType(){
-        return PoolingType.fromOrdinal(llama_context_params.pooling_type$get(this.segment) + 1);
+        return PoolingType.fromOrdinal(pooling_type(this.segment) + 1);
     }
 
     public LlamaContextParams poolingType(PoolingType poolingType){
-        llama_context_params.pooling_type$set(this.segment, poolingType.ordinal() - 1);
+        pooling_type(this.segment, poolingType.ordinal() - 1);
         return this;
     }
 
     public AttentionType attentionType(){
-        return AttentionType.fromOrdinal(llama_context_params.attention_type$get(this.segment) + 1);
+        return AttentionType.fromOrdinal(attention_type(this.segment) + 1);
     }
 
     public LlamaContextParams attentionType(AttentionType attentionType){
-        llama_context_params.attention_type$set(this.segment, attentionType.ordinal() - 1);
+        attention_type(this.segment, attentionType.ordinal() - 1);
         return this;
     }
 
-
     public boolean embeddings(){
-        return llama_context_params.embeddings$get(this.segment);
+        return LlamaRuntime.embeddings(this.segment);
     }
 
     public LlamaContextParams embeddings(boolean embeddings) {
-        llama_context_params.embeddings$set(this.segment, embeddings);
+        LlamaRuntime.embeddings(this.segment, embeddings);
         return this;
     }
 
     public boolean offloadKQV(){
-        return llama_context_params.offload_kqv$get(this.segment);
+        return offload_kqv(this.segment);
     }
 
     public LlamaContextParams offloadKQV(boolean offloadKQV) {
-        llama_context_params.offload_kqv$set(this.segment, offloadKQV);
+        offload_kqv(this.segment, offloadKQV);
         return this;
     }
 
     public boolean flashAttn(){
-        return llama_context_params.flash_attn$get(this.segment);
+        return flash_attn(this.segment);
     }
 
     public LlamaContextParams flashAttn(boolean flashAttn) {
-        llama_context_params.flash_attn$set(this.segment, flashAttn);
+        flash_attn(this.segment, flashAttn);
         return this;
     }
 
     public boolean noPerf(){
-        return llama_context_params.no_perf$get(this.segment);
+        return no_perf(this.segment);
     }
 
     public LlamaContextParams noPerf(boolean embeddings) {
-        llama_context_params.no_perf$set(this.segment, embeddings);
+        no_perf(this.segment, embeddings);
         return this;
     }
 }

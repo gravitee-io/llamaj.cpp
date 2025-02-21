@@ -5,8 +5,9 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.util.Arrays;
 
-import static io.gravitee.llama.cpp.llama_h_1.llama_max_devices;
-import static io.gravitee.llama.cpp.llama_h_1.llama_model_default_params;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_max_devices;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_default_params;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_params_ofAddress;
 import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
 
 
@@ -16,13 +17,15 @@ import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
  */
 public final class LlamaModelParams extends MemorySegmentAware {
 
+    private final int maxDevices;
+
     public LlamaModelParams(Arena arena) {
-        super(llama_model_params.ofAddress(llama_model_default_params(arena), arena));
-        this.tensorSplit(arena, default_tensor_split());
+        super(llama_model_params_ofAddress(llama_model_default_params(arena), arena));
+        this.maxDevices = (int) llama_max_devices();
+        this.tensorSplit(arena, default_tensor_split(maxDevices));
     }
 
-    private static float[] default_tensor_split() {
-        int maxDevices = (int) llama_max_devices();
+    private static float[] default_tensor_split(int maxDevices) {
         if(maxDevices > 0){
             float[] tensorSplit = new float[maxDevices];
             Arrays.fill(tensorSplit, 1f / maxDevices);
@@ -32,43 +35,43 @@ public final class LlamaModelParams extends MemorySegmentAware {
     }
 
     public int nGpuLayers() {
-        return llama_model_params.n_gpu_layers$get(segment);
+        return LlamaRuntime.n_gpu_layers(segment);
     }
 
     public LlamaModelParams nGpuLayers(int layers) {
-        llama_model_params.n_gpu_layers$set(segment, layers);
+        LlamaRuntime.n_gpu_layers(segment, layers);
         return this;
     }
 
     public SplitMode splitMode() {
-        return SplitMode.fromOrdinal(llama_model_params.split_mode$get(segment));
+        return SplitMode.fromOrdinal(LlamaRuntime.split_mode(segment));
     }
 
     public LlamaModelParams splitMode(SplitMode mode) {
-        llama_model_params.split_mode$set(segment, mode.ordinal());
+        LlamaRuntime.split_mode(segment, mode.ordinal());
         return this;
     }
 
     public int mainGpu() {
-        return llama_model_params.main_gpu$get(segment);
+        return LlamaRuntime.main_gpu(segment);
     }
 
     public LlamaModelParams mainGpu(int mainGpu) {
-        llama_model_params.main_gpu$set(segment, mainGpu);
+        LlamaRuntime.main_gpu(segment, mainGpu);
         return this;
     }
 
     public float[] tensorSplit() {
-        var memorySegment = llama_model_params.tensor_split$get(segment);
-        float[] tensorSplit = new float[(int) llama_max_devices()];
-        for (int i = 0; i < llama_max_devices(); i++) {
+        var memorySegment = LlamaRuntime.tensor_split(segment);
+        float[] tensorSplit = new float[maxDevices];
+        for (int i = 0; i < maxDevices; i++) {
             tensorSplit[i] = memorySegment.getAtIndex(JAVA_FLOAT, i);
         }
         return tensorSplit;
     }
 
     public LlamaModelParams tensorSplit(SegmentAllocator allocator, float[] tensorSplit) {
-        var tensorSplitSegment = allocator.allocateArray(JAVA_FLOAT, llama_max_devices());
+        var tensorSplitSegment = allocator.allocateArray(JAVA_FLOAT, maxDevices);
         MemorySegment.copy(
                 MemorySegment.ofArray(tensorSplit),
                 0,
@@ -77,43 +80,43 @@ public final class LlamaModelParams extends MemorySegmentAware {
                 tensorSplit.length * JAVA_FLOAT.byteSize()
         );
 
-        llama_model_params.tensor_split$set(segment, tensorSplitSegment);
+        LlamaRuntime.tensor_split(segment, tensorSplitSegment);
         return this;
     }
 
     public boolean vocabOnly() {
-        return llama_model_params.vocab_only$get(segment);
+        return LlamaRuntime.vocab_only(segment);
     }
 
     public LlamaModelParams vocabOnly(boolean vocabOnly) {
-        llama_model_params.vocab_only$set(segment, vocabOnly);
+        LlamaRuntime.vocab_only(segment, vocabOnly);
         return this;
     }
 
     public boolean useMmap() {
-        return llama_model_params.use_mmap$get(segment);
+        return LlamaRuntime.use_mmap(segment);
     }
 
     public LlamaModelParams useMmap(boolean useMmap) {
-        llama_model_params.use_mmap$set(segment, useMmap);
+        LlamaRuntime.use_mmap(segment, useMmap);
         return this;
     }
 
     public boolean useMlock() {
-        return llama_model_params.use_mlock$get(segment);
+        return LlamaRuntime.use_mlock(segment);
     }
 
     public LlamaModelParams useMlock(boolean useMlock) {
-        llama_model_params.use_mlock$set(segment, useMlock);
+        LlamaRuntime.use_mlock(segment, useMlock);
         return this;
     }
 
     public boolean checkTensors() {
-        return llama_model_params.check_tensors$get(segment);
+        return LlamaRuntime.check_tensors(segment);
     }
 
     public LlamaModelParams checkTensors(boolean checkTensors) {
-        llama_model_params.check_tensors$set(segment, checkTensors);
+        LlamaRuntime.check_tensors(segment, checkTensors);
         return this;
     }
 }
