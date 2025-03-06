@@ -15,8 +15,6 @@
  */
 package io.gravitee.llama.cpp.nativelib;
 
-import io.gravitee.llama.cpp.platform.Architecture;
-import io.gravitee.llama.cpp.platform.OperatingSystem;
 import io.gravitee.llama.cpp.platform.Platform;
 import io.gravitee.llama.cpp.platform.PlatformResolver;
 import org.reflections.Reflections;
@@ -27,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.stream.Stream;
 
 import static java.util.function.Predicate.not;
@@ -52,9 +51,24 @@ public final class LlamaLibLoader {
     public static void load() {
         String envLibPath = System.getenv(LLAMA_CPP_LIB_PATH);
         if (envLibPath != null && !envLibPath.isBlank()) {
-            load(envLibPath);
+            loadFromExternalPath(envLibPath);
         } else {
-            loadClasspathLibs(PlatformResolver.platform());
+            loadFromClasspath(PlatformResolver.platform());
+        }
+    }
+
+    private static void loadFromExternalPath(String envLibPath) {
+        try {
+            boolean useTmpPath = Boolean.parseBoolean(System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS));
+            if (useTmpPath) {
+                var destination = Files.createTempDirectory(LLAMA_CPP_FOLDER);
+                Files.copy(Path.of(envLibPath), destination, StandardCopyOption.REPLACE_EXISTING);
+                load(destination.toString());
+            } else {
+                load(envLibPath);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -74,7 +88,7 @@ public final class LlamaLibLoader {
                 .forEach(System::load);
     }
 
-    private static void loadClasspathLibs(Platform platform) {
+    private static void loadFromClasspath(Platform platform) {
         try {
             boolean useTmpPath = Boolean.parseBoolean(System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS));
             var libDirectory = useTmpPath ? Files.createTempDirectory(LLAMA_CPP_FOLDER) : getHomeLlamaCpp();
