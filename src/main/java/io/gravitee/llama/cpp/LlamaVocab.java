@@ -18,7 +18,10 @@ package io.gravitee.llama.cpp;
 import java.lang.foreign.SegmentAllocator;
 import java.lang.foreign.ValueLayout;
 
-import static io.gravitee.llama.cpp.llama_h_1.*;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_get_vocab;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_token_to_piece;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_is_eog;
+
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -38,10 +41,10 @@ public final class LlamaVocab extends MemorySegmentAware {
         var buffer = allocator.allocateArray(ValueLayout.OfChar.JAVA_BYTE, 10);
         int pieceNumber = llama_token_to_piece(this.segment, tokenId, buffer, (int) buffer.byteSize(), 0, true);
         var bufferArray = buffer.toArray(ValueLayout.JAVA_BYTE);
-        var answer = "";
+        StringBuilder answer = new StringBuilder();
         for (int i = 0; i < pieceNumber; i++) {
-            answer += (char) bufferArray[i];
+            answer.append((char) bufferArray[i]);
         }
-        return answer;
+        return answer.toString();
     }
 }

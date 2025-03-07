@@ -21,9 +21,7 @@ import java.lang.foreign.Arena;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 
-import static io.gravitee.llama.cpp.llama_h_1.*;
 import static java.util.function.Predicate.not;
 
 /**
@@ -37,7 +35,6 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
     private final LlamaContext context;
     private final LlamaVocab vocab;
     private final LlamaSampler sampler;
-    private final int nCtx;
 
     private final AtomicInteger inputTokens = new AtomicInteger(0);
     private final AtomicInteger outputTokens = new AtomicInteger(0);
@@ -51,26 +48,17 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
     private String promptMemory = "";
     private int maxStopStringSize = 0;
 
+
     public LlamaIterator(
             LlamaContext context,
             LlamaVocab vocab,
             LlamaSampler sampler,
             String prompt) {
-        this(context, vocab, sampler, prompt, llama_n_ctx(context.segment));
-    }
-
-    public LlamaIterator(
-            LlamaContext context,
-            LlamaVocab vocab,
-            LlamaSampler sampler,
-            String prompt,
-            int nCtx) {
         super(Arena.ofAuto());
 
         this.context = context;
         this.vocab = vocab;
         this.sampler = sampler;
-        this.nCtx = nCtx;
         tokenized = new LlamaTokenizer(this.vocab, this.context).tokenize(arena, prompt);
 
         inputTokens.set(tokenized.size());
@@ -92,8 +80,9 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
 
         newTokenId = sampler.sample(context);
 
-        llama_batch_free(batch.segment);
+        batch.free();
         batch = null;
+
         outputTokens.incrementAndGet();
         return hasNotReachedQuota() && !vocab.isEog(newTokenId);
     }
@@ -103,8 +92,7 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
     }
 
     private boolean checkContextSize() {
-        int nCtxUsed = llama_get_kv_cache_used_cells(context.segment);
-        return nCtxUsed + batch.nTokens() <= nCtx;
+        return context.nCtxUsedCells() + batch.nTokens() <= context.nCtx();
     }
 
     @Override
@@ -136,11 +124,6 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
 
     private boolean stopStringNotEndsWith() {
         return stopStrings.isEmpty() || stopStrings.stream().noneMatch(promptMemory::endsWith);
-    }
-
-    @Override
-    public void close() {
-        super.close();
     }
 
     public int getInputTokens() {

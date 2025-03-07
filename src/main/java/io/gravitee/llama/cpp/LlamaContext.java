@@ -15,15 +15,36 @@
  */
 package io.gravitee.llama.cpp;
 
-import static io.gravitee.llama.cpp.llama_h_1.llama_init_from_model;
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaContext extends MemorySegmentAware {
+public final class LlamaContext extends MemorySegmentAware implements Freeable{
+
+    private final int nCtx;
 
     public LlamaContext(LlamaModel model, LlamaContextParams params) {
         super(llama_init_from_model(model.segment, params.segment));
+        this.nCtx = params.nCtx();
+    }
+
+    public int nCtx() {
+        return nCtx;
+    }
+
+    public int nCtxUsedCells() {
+        return llama_get_kv_cache_used_cells(this.segment);
+    }
+
+    public void setCache(LlamaCacheView cache) {
+        llama_kv_cache_clear(this.segment);
+        llama_kv_cache_view_update(this.segment, cache.segment);
+    }
+
+    @Override
+    public void free() {
+        llama_free(this);
     }
 }

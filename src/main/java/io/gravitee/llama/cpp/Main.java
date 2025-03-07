@@ -1,30 +1,31 @@
 package io.gravitee.llama.cpp;
 
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
+
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
-import static io.gravitee.llama.cpp.llama_h_1.*;
-
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
 public class Main {
 
     public static final Arena ARENA = Arena.ofAuto();
 
     public static void main(String[] args) {
-        String nativeLibPath = args[0];
-        String modelGguf = args[1];
+        String modelGguf = args[0];
+        String systemMessage = args[1];
 
-        System.load(Path.of(nativeLibPath).toAbsolutePath().toString());
+        LlamaLibLoader.load();
         ggml_backend_load_all();
 
         var logger = new LlamaLogger(ARENA);
         logger.setLogging(LlamaLogLevel.ERROR);
 
         var modelParameters = new LlamaModelParams(ARENA);
-        modelParameters.nGpuLayers(99).nGpuLayers();
+        modelParameters.nGpuLayers(999).nGpuLayers();
 
         LlamaModel model = new LlamaModel(ARENA, Path.of(modelGguf).toAbsolutePath(), modelParameters);
         LlamaVocab vocab = new LlamaVocab(model);
@@ -40,10 +41,12 @@ public class Main {
                 .nCtx(512)
                 .nBatch(512);
 
+        LlamaCacheService cacheService = new LlamaCacheService(ARENA);
         LlamaContext context = new LlamaContext(model, contextParams);
 
         String input = "";
         while (!input.trim().equals("bye")) {
+            var key = cacheService.newCache(context);
             Scanner scanIn = new Scanner(System.in);
             System.out.print("Please enter your prompt: ");
             input = scanIn.nextLine();
@@ -52,36 +55,34 @@ public class Main {
                 break;
             }
 
-            String prompt = buildPrompt(model, input, contextParams);
-            var it = new LlamaIterator(context, vocab, sampler, prompt);
+            String prompt = buildPrompt(model, systemMessage, input, contextParams);
+            context.setCache(cacheService.get(key));
 
-            for (; it.hasNext(); ) {
+            var it = new LlamaIterator(context, vocab, sampler, prompt);
+            it.setQuota(context.nCtx());
+            while (it.hasNext()) {
                 System.out.print(it.next().content());
             }
 
             it.close();
+
+            cacheService.remove(key);
             System.out.println();
         }
 
-        llama_sampler_free(sampler.segment);
-        llama_free(context.segment);
-        llama_model_free(model.segment);
+        sampler.free();
+        context.free();
+        model.free();
     }
 
-    private static String buildPrompt(LlamaModel model, String input, LlamaContextParams contextParams) {
-        String prompt;
+    private static String buildPrompt(LlamaModel model, String systemMessage, String input, LlamaContextParams contextParams) {
         try (Arena arena = Arena.ofConfined()) {
             LlamaTemplate llamaTemplate = new LlamaTemplate(model);
             var messages = new LlamaChatMessages(arena, List.of(
-                    new LlamaChatMessage(arena, Role.SYSTEM, """
-                            You are Yoda, a powerful Jedi Master with the knowledge of the universe.
-                            Answer the question to the best of your ability.
-                            """
-                    ),
+                    new LlamaChatMessage(arena, Role.SYSTEM, systemMessage),
                     new LlamaChatMessage(arena, Role.USER, input)
             ));
-            prompt = llamaTemplate.applyTemplate(arena, messages, contextParams.nCtx());
+            return llamaTemplate.applyTemplate(arena, messages, contextParams.nCtx());
         }
-        return prompt;
     }
 }

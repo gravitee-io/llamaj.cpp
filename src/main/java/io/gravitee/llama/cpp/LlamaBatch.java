@@ -1,3 +1,4 @@
+
 /*
  * Copyright © 2015 The Gravitee team (http://gravitee.io)
  *
@@ -16,18 +17,22 @@
 package io.gravitee.llama.cpp;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
+import io.gravitee.llama.cpp.macosx.aarch64.llama_batch;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 
-import static io.gravitee.llama.cpp.llama_h_1.*;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_batch_free;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_batch_get_one;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_decode;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaBatch extends MemorySegmentAware {
+public final class LlamaBatch extends MemorySegmentAware implements Freeable{
 
     public LlamaBatch(SegmentAllocator allocator, TokenizerResponse tokenizerResponse) {
         this(allocator, tokenizerResponse.data(), tokenizerResponse.size());
@@ -42,17 +47,21 @@ public final class LlamaBatch extends MemorySegmentAware {
     }
 
     private static MemorySegment getTokenArray(SegmentAllocator allocator, int tokenId) {
-        var tokenArray = allocator.allocateArray(llama_token, 1);
-        tokenArray.set(llama_token, 0, tokenId);
+        var tokenArray = allocator.allocateArray(JAVA_INT, 1);
+        tokenArray.set(JAVA_INT, 0, tokenId);
         return tokenArray;
-    }
-
-    public int nTokens() {
-        return llama_batch.n_tokens$get(segment);
     }
 
     public int decode(LlamaContext context){
         return llama_decode(context.segment, this.segment);
     }
 
+    public int nTokens() {
+        return llama_batch.n_tokens$get(segment);
+    }
+
+    @Override
+    public void free() {
+        llama_batch_free(this);
+    }
 }

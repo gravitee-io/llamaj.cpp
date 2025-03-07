@@ -29,8 +29,6 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import static io.gravitee.llama.cpp.llama_h_1.*;
-
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
@@ -55,7 +53,7 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     @BeforeAll
     public static void beforeAll() throws IOException {
         LlamaCppTest.beforeAll();
-        ggml_backend_load_all();
+        LlamaRuntime.ggml_backend_load_all();
 
         arena = Arena.ofAuto();
 
@@ -92,9 +90,9 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
 
     @AfterAll
     public static void afterAll() {
-        llama_sampler_free(sampler.segment);
-        llama_free(context.segment);
-        llama_model_free(model.segment);
+        LlamaRuntime.llama_sampler_free(sampler);
+        LlamaRuntime.llama_free(context);
+        LlamaRuntime.llama_model_free(model);
         arena = null;
     }
 }
