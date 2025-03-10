@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.stream.Stream;
 
+import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_load_all;
 import static java.util.function.Predicate.not;
 
 /**
@@ -93,12 +94,16 @@ public final class LlamaLibLoader {
             boolean useTmpPath = Boolean.parseBoolean(System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS));
             var libDirectory = useTmpPath ? Files.createTempDirectory(LLAMA_CPP_FOLDER) : getHomeLlamaCpp();
 
-            var reflections = new Reflections(platform.getPackage(), Scanners.Resources);
-            reflections
-                    .getResources(".+")
-                    .forEach(name -> copyFromClasspath(name, libDirectory));
+            if (!useTmpPath && Files.isDirectory(libDirectory) && !Files.list(libDirectory).toList().isEmpty()) {
+                load(libDirectory.toString());
+            } else {
+                var reflections = new Reflections(platform.getPackage(), Scanners.Resources);
+                reflections
+                        .getResources(".+")
+                        .forEach(name -> copyFromClasspath(name, libDirectory));
 
-            load(libDirectory.toString());
+                load(libDirectory.toString());
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

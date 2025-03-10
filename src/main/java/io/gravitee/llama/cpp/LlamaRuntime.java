@@ -25,7 +25,7 @@ import java.lang.foreign.SegmentAllocator;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-final class LlamaRuntime {
+public final class LlamaRuntime {
 
     private static final String runtime = PlatformResolver.platform().runtime();
     public static final String MACOSX_AARCH_64 = "macosx_aarch64";
@@ -35,7 +35,7 @@ final class LlamaRuntime {
     }
 
     /* load backends */
-    static void ggml_backend_load_all() {
+    public static void ggml_backend_load_all() {
         switch (runtime) {
             case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.ggml_backend_load_all();
             case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.ggml_backend_load_all();
@@ -565,18 +565,18 @@ final class LlamaRuntime {
         };
     }
 
-    public static void llama_kv_cache_view_update(MemorySegment context, MemorySegment view) {
+    public static void llama_kv_cache_seq_rm(MemorySegment ctx, int seq_id, int p0, int p1) {
         switch (runtime) {
-            case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_kv_cache_view_update(context, view);
-            case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_kv_cache_view_update(context, view);
+            case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_kv_cache_seq_rm(ctx, seq_id, p0, p1);
+            case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_kv_cache_seq_rm(ctx, seq_id, p0, p1);
             default -> throw new IllegalStateException("Unexpected value: " + runtime);
         }
     }
 
-    public static void llama_kv_cache_view_free(MemorySegment view) {
+    public static void llama_kv_cache_seq_add(MemorySegment ctx, int seq_id, int p0, int p1, int delta) {
         switch (runtime) {
-            case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_kv_cache_view_free(view);
-            case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_kv_cache_view_free(view);
+            case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_kv_cache_seq_add(ctx, seq_id, p0, p1, delta);
+            case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_kv_cache_seq_add(ctx, seq_id, p0, p1, delta);
             default -> throw new IllegalStateException("Unexpected value: " + runtime);
         }
     }

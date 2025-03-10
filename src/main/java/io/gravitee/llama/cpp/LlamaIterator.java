@@ -30,7 +30,7 @@ import static java.util.function.Predicate.not;
  */
 public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOutput> {
 
-    private final TokenizerResponse tokenized;
+    private TokenizerResponse tokenized;
 
     private final LlamaContext context;
     private final LlamaVocab vocab;
@@ -48,22 +48,27 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
     private String promptMemory = "";
     private int maxStopStringSize = 0;
 
+    private final LlamaTokenizer tokenizer;
 
     public LlamaIterator(
-            LlamaContext context,
+            Arena arena,
+            LlamaModel model,
+            LlamaContextParams params,
             LlamaVocab vocab,
-            LlamaSampler sampler,
-            String prompt) {
-        super(Arena.ofAuto());
+            LlamaSampler sampler) {
+        super(arena);
 
-        this.context = context;
+        this.context = new LlamaContext(model, params);
         this.vocab = vocab;
         this.sampler = sampler;
-        tokenized = new LlamaTokenizer(this.vocab, this.context).tokenize(arena, prompt);
+        tokenizer = new LlamaTokenizer(this.vocab, this.context);
+    }
 
+    public LlamaIterator initialize(String prompt) {
+        tokenized = tokenizer.tokenize(arena, prompt);
         inputTokens.set(tokenized.size());
-
         hasNext = batch();
+        return this;
     }
 
     @Override
@@ -86,6 +91,7 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
         outputTokens.incrementAndGet();
         return hasNotReachedQuota() && !vocab.isEog(newTokenId);
     }
+
 
     private boolean hasNotReachedQuota() {
         return quota == -1 || quota > outputTokens.get();
@@ -112,7 +118,7 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
     }
 
     public LlamaIterator setQuota(int quota) {
-        this.quota = quota;
+        this.quota = Math.min(quota, context.nCtx());
         return this;
     }
 
@@ -132,5 +138,13 @@ public final class LlamaIterator extends ArenaAware implements Iterator<LlamaOut
 
     public int getOutputTokens() {
         return outputTokens.get();
+    }
+
+    public LlamaTokenizer getTokenizer() {
+        return tokenizer;
+    }
+
+    public void close() {
+        context.free();
     }
 }

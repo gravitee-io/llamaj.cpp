@@ -33,18 +33,18 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
  */
 abstract class LlamaCppTest {
 
-    public static final String NATIVE_LIB = "src/main/resources/libllama.dylib";
-
     @BeforeAll
-    public static void beforeAll() throws IOException {
+    public static void beforeAll() {
         LlamaLibLoader.load();
     }
-
 
     static final String MODEL_TO_DOWNLOAD = "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf";
     static final String MODEL_PATH = "models/Llama-3.2-1B-Instruct-IQ3_M.gguf";
     static final String SYSTEM = """
             You are the best at guessing capitals. Respond to the best of your ability. Just answer with the capital.
+            If asked for the capital of France, answer Paris.
+            If asked for the UK or England, answer London.
+            If asked for the capital of France, answer Paris.
             """;
 
     static Path getModelPath() {
@@ -69,7 +69,7 @@ abstract class LlamaCppTest {
         return template.applyTemplate(arena, messages, contextParams.nCtx());
     }
 
-    static LlamaChatMessages builMessages(Arena arena, String system, String input) {
+    static LlamaChatMessages buildMessages(Arena arena, String system, String input) {
         return new LlamaChatMessages(arena, List.of(
                 new LlamaChatMessage(arena, Role.SYSTEM, system),
                 new LlamaChatMessage(arena, Role.USER, input)

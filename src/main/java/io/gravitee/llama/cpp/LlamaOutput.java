@@ -20,4 +20,8 @@ package io.gravitee.llama.cpp;
  * @author GraviteeSource Team
  */
 public record LlamaOutput(String content, int numberOfTokens) {
+
+    public LlamaOutput merge(LlamaOutput other){
+        return new LlamaOutput(content + other.content, numberOfTokens + other.numberOfTokens);
+    }
 }
