@@ -30,7 +30,4 @@ abstract class ArenaAware {
         this.arena = allocator;
     }
 
-    public void close() {
-        this.arena = null;
-    }
 }

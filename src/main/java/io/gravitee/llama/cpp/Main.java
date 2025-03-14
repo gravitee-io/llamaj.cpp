@@ -25,7 +25,7 @@ public class Main {
         logger.setLogging(LlamaLogLevel.ERROR);
 
         var modelParameters = new LlamaModelParams(ARENA);
-        modelParameters.nGpuLayers(999).nGpuLayers();
+        modelParameters.nGpuLayers(999).useMlock(true).useMmap(true);
 
         LlamaModel model = new LlamaModel(ARENA, Path.of(modelGguf).toAbsolutePath(), modelParameters);
         LlamaVocab vocab = new LlamaVocab(model);
@@ -39,14 +39,11 @@ public class Main {
 
         var contextParams = new LlamaContextParams(ARENA)
                 .nCtx(512)
-                .nBatch(512);
-
-        LlamaCacheService cacheService = new LlamaCacheService(ARENA);
-        LlamaContext context = new LlamaContext(model, contextParams);
+                .nBatch(512)
+                .nSeqMax(256);
 
         String input = "";
         while (!input.trim().equals("bye")) {
-            var key = cacheService.newCache(context);
             Scanner scanIn = new Scanner(System.in);
             System.out.print("Please enter your prompt: ");
             input = scanIn.nextLine();
@@ -56,22 +53,21 @@ public class Main {
             }
 
             String prompt = buildPrompt(model, systemMessage, input, contextParams);
-            context.setCache(cacheService.get(key));
 
-            var it = new LlamaIterator(context, vocab, sampler, prompt);
-            it.setQuota(context.nCtx());
+            var it = new LlamaIterator(ARENA, model, contextParams, vocab, sampler)
+                    .setQuota(256)
+                    .initialize(prompt);
+
             while (it.hasNext()) {
                 System.out.print(it.next().content());
             }
 
             it.close();
 
-            cacheService.remove(key);
             System.out.println();
         }
 
         sampler.free();
-        context.free();
         model.free();
     }
 

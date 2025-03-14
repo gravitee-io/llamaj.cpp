@@ -1,6 +1,10 @@
 version: 2.1
 
 executors:
+  macos-executor:
+    macos:
+      xcode: 16.1.0
+    resource_class: macos.m1.medium.gen1
   ubuntu_linux_x86_64:
     docker:
       - image: ubuntu:noble
@@ -20,6 +24,57 @@ executors:
     resource_class: small
 
 commands:
+  install-java-macos:
+    steps:
+      - run:
+          name: Install Java 21
+          command: |
+            JDK_URL="https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-aarch64_bin.tar.gz"
+            INSTALL_DIR="/Library/Java/JavaVirtualMachines"
+            JDK_DIR="jdk-21.0.2.jdk"
+  
+            # Create installation directory if it doesn't exist
+            sudo mkdir -p $INSTALL_DIR
+            cd $INSTALL_DIR
+  
+            # Download and extract JDK
+            sudo curl -L -o jdk.tar.gz $JDK_URL
+            sudo tar -xzf jdk.tar.gz
+            sudo rm jdk.tar.gz
+            
+            cd ~/
+            # Set JAVA_HOME and update PATH
+            echo 'export JAVA_HOME="'$INSTALL_DIR'/'$JDK_DIR'/Contents/Home"' >> ~/.zprofile
+            echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> ~/.zprofile
+            source ~/.zprofile
+            
+            java -version
+  install-maven-macos:
+    steps:
+      - run:
+          name: Install Maven
+          command: |
+            MAVEN_URL="https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz"
+            INSTALL_DIR="/opt/maven"
+            MAVEN_DIR="apache-maven-3.9.9"
+  
+            # Create installation directory
+            sudo mkdir -p $INSTALL_DIR
+            cd $INSTALL_DIR
+  
+            # Download and extract Maven
+            sudo curl -L -o maven.tar.gz $MAVEN_URL
+            sudo tar -xzf maven.tar.gz --strip-components=1
+            sudo rm maven.tar.gz
+            cd ~/
+            # Set MAVEN_HOME and update PATH
+            echo 'export MAVEN_HOME="'$INSTALL_DIR'"' >> ~/.zprofile
+            echo 'export PATH="$MAVEN_HOME/bin:$PATH"' >> ~/.zprofile
+            source ~/.zprofile
+  
+            # Verify installation
+            sudo mvn -version
+
   install_dependencies:
     steps:
       - run:
@@ -91,7 +146,6 @@ commands:
           name: Generate JExtract Bindings
           command: |
             if [ -d "/home/circleci/llama.cpp" ]; then
-
               echo "============= Generate jextract Bindings ==============="
               cd "/home/circleci/llama.cpp"
               mkdir -p java
@@ -110,6 +164,24 @@ commands:
             fi
 
 jobs:
+  build_and_test_macos:
+    executor: macos-executor
+    steps:
+      - install-java-macos
+      - install-maven-macos
+      - checkout
+      - run:
+          name: Download model
+          command: |
+            mkdir -p models
+            curl -L -o models/Llama-3.2-1B-Instruct-IQ3_M.gguf https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf
+
+      - run:
+          name: Run Tests
+          command: |
+            source ~/.zprofile
+            mvn clean install
+
   linux_x86_64_cpu_native_libs:
     executor: llama_cpp_light_x86-64_cpu
     steps:
@@ -136,10 +208,11 @@ jobs:
           platform: "x86_64"
 
 
-#workflows:
-  #version: 2
-  #generate_llama_bindings:
-    #jobs:
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build_and_test_macos
       #- linux_x86_64_cpu_native_libs
       #- linux_x86_64_cuda_native_libs
       #- linux_x86_64_java_bindings
