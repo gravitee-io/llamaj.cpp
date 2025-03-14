@@ -63,6 +63,7 @@ If you wish to build llama.cpp with particular configuration (CUDA, OpenBLAS, AV
 Please refer to the [llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md) documentation
 
 3. Link sources
+
 You can use the environment variable `LLAMA_CPP_LIB_PATH=/path/to/llama.cpp/build/bin/`
 This will directly load the dynamically shared object library files (`.so` for linux, `.dylib` for macos) 
 You can also decide to copy these files into a temporary folder using the environment variable `LLAMA_CPP_USE_TMP_LIB_PATH=true`
