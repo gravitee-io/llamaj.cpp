@@ -24,7 +24,7 @@ $ java --enable-preview \
      -Dsun.stderr.encoding=UTF-8 \
      -classpath target/classes:gravitee-llama-cpp.jar \
      io.gravitee.llama.cpp.Main \
-     "Your system prompt here" /path/to/your/model/model.gguf
+     /path/to/your/model/model.gguf "Your system prompt here"
 ```
 
 There are plenty of models on HuggingFace, we suggest the one [here](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF)
