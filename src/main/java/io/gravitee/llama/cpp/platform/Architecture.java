@@ -20,7 +20,7 @@ package io.gravitee.llama.cpp.platform;
  * @author GraviteeSource Team
  */
 public enum Architecture {
-    X86_64("x84_64"), AARCH64("aarch64");
+    X86_64("x86_64"), AARCH64("aarch64");
 
     private static final String AMD_64 = "amd64";
     private static final String OS_ARCH = "os.arch";
