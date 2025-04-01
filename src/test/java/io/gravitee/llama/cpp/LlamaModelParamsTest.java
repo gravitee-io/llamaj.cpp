@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
 
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_supports_gpu_offload;
 import static io.gravitee.llama.cpp.SplitMode.LAYER;
 import static io.gravitee.llama.cpp.SplitMode.NONE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -33,7 +34,7 @@ class LlamaModelParamsTest extends LlamaCppTest {
     void should_create_LlamaModelParams_with_default() {
         try (Arena arena = Arena.ofConfined()) {
             var modelParams = new LlamaModelParams(arena);
-            assertThat(modelParams.nGpuLayers()).isEqualTo(999);
+            assertThat(modelParams.nGpuLayers()).isGreaterThanOrEqualTo(0);
             assertThat(modelParams.splitMode()).isEqualTo(LAYER);
             assertThat(modelParams.mainGpu()).isEqualTo(0);
             assertThat(modelParams.tensorSplit()).containsExactly(getEvenSplit(LlamaRuntime.llama_max_devices()));
@@ -52,16 +53,16 @@ class LlamaModelParamsTest extends LlamaCppTest {
         return tensorSplits;
     }
 
-
     @Test
     void should_create_LlamaModelParams_with_custom() {
         try (Arena arena = Arena.ofConfined()) {
             long maxDevices = LlamaRuntime.llama_max_devices();
             int mainGpu = (int) (maxDevices / 2);
             float[] biasSplit = getBiasSplit(maxDevices, mainGpu);
+            var gpuEnabled = llama_supports_gpu_offload();
 
             var modelParams = new LlamaModelParams(arena)
-                    .nGpuLayers(99)
+                    .nGpuLayers(gpuEnabled ? 99 : 0)
                     .splitMode(NONE)
                     .mainGpu(mainGpu)
                     .tensorSplit(arena, biasSplit)

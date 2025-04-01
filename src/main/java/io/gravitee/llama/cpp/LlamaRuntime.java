@@ -712,4 +712,14 @@ public final class LlamaRuntime {
             default -> throw new IllegalStateException("Unexpected value: " + runtime);
         }
     }
+
+    /* Utils */
+
+    public static boolean llama_supports_gpu_offload() {
+        return switch (runtime) {
+            case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_supports_gpu_offload();
+            case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_supports_gpu_offload();
+            default -> throw new IllegalStateException("Unexpected value: " + runtime);
+        };
+    }
 }
