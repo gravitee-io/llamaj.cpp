@@ -20,8 +20,7 @@ import io.gravitee.llama.cpp.platform.PlatformResolver;
 import java.lang.foreign.*;
 import java.util.function.Consumer;
 
-import static io.gravitee.llama.cpp.LlamaRuntime.MACOSX_AARCH_64;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_log_set;
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -51,6 +50,10 @@ public final class LlamaLogger extends ArenaAware {
             case MACOSX_AARCH_64 -> {
                 io.gravitee.llama.cpp.macosx.aarch64.ggml_log_callback logCallback = this::logCallback;
                 yield io.gravitee.llama.cpp.macosx.aarch64.ggml_log_callback.allocate(logCallback, arena);
+            }
+            case LINUX_X86_64 -> {
+                io.gravitee.llama.cpp.linux.x86_64.ggml_log_callback logCallback = this::logCallback;
+                yield io.gravitee.llama.cpp.linux.x86_64.ggml_log_callback.allocate(logCallback, arena);
             }
             default -> throw new IllegalStateException("Unexpected value: " + runtime);
         };

@@ -17,16 +17,15 @@ $ mvn clean install
 ## Run
 
 ```bash
-$ java --enable-preview \
-     --enable-native-access=ALL-UNNAMED \
-     -Dfile.encoding=UTF-8 \
-     -Dsun.stdout.encoding=UTF-8 \
-     -Dsun.stderr.encoding=UTF-8 \
-     -classpath target/classes:gravitee-llama-cpp.jar \
-     io.gravitee.llama.cpp.Main \
-     /path/to/your/model/model.gguf "Your system prompt here"
+$ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
+    -Dexec.args="/path/to/model/model.gguf 'You are a helpful assistant. Answer question to the best of your ability'"
 ```
 
+On linux don't forget to link your libraries with the environment variable below:
+```bash
+$ export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
+```
+`
 There are plenty of models on HuggingFace, we suggest the one [here](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF)
 
 ## Use your own llama.cpp build
