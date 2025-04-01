@@ -18,7 +18,7 @@ $ mvn clean install
 
 ```bash
 $ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
-    -Dexec.args="/path/to/model/ 'You are a helpful assistant. Answer question to the best of your ability'"
+    -Dexec.args="/path/to/model/model.gguf 'You are a helpful assistant. Answer question to the best of your ability'"
 ```
 
 On linux don't forget to link your libraries with the environment variable below:
