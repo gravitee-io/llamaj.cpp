@@ -1,5 +1,9 @@
 version: 2.1
 
+orbs:
+  gh: circleci/github-cli@2.7.0
+  keeper: gravitee-io/keeper@0.7.0
+
 executors:
   macos-executor:
     macos:
@@ -16,9 +20,32 @@ executors:
     docker:
       - image: ghcr.io/ggml-org/llama.cpp:light
     working_directory: /home/circleci
-    resource_class: large
+    resource_class: small
 
 commands:
+  git_config:
+    description: This command runs the git config in your pipeline, for the bot user configured in your secret manager. It requires [bash]
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://IZd-yvsMopfQEa_0j1SDvg/field/login
+          var-name: GIT_USER_NAME
+      - keeper/env-export:
+          secret-url: keeper://IZd-yvsMopfQEa_0j1SDvg/custom_field/email
+          var-name: GIT_USER_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - gh/setup
+      - run:
+          name: Git Config
+          command: |
+            cd /home/circleci/gravitee-llama-cpp/
+            git config --global user.name "${GIT_USER_NAME}"
+            git config --global user.email "${GIT_USER_EMAIL}"
+            
+            ORG_REPO=$(git --no-pager config remote.origin.url | sed -E 's/git@github.com:(.*).git/\1/')
+            git remote set-url origin "https://$GITHUB_TOKEN@github.com/$ORG_REPO.git"
+  
   install-java-macos:
     steps:
       - run:
@@ -78,13 +105,31 @@ commands:
             export DEBIAN_FRONTEND=noninteractive
             apt -y update && apt-get upgrade -y
       - run:
+          name: Locale dependencies
+          command: |
+            apt -y install locales git jq wget
+            locale-gen C.UTF-8
+      - gh/install
+
+  install_java_dependencies:
+    steps:
+      - run:
           name: Java dependencies
           command: |
-            apt -y install openjdk-21-jdk git maven wget
-      #- run:
-      #    name: C/C++ deps
-      #    command: |
-      #      apt -y install libssl-dev build-essential cmake libcurl4-openssl-dev
+            apt -y install openjdk-21-jdk maven 
+
+  install_compile_dependencies:
+    steps:
+      - run:
+          name: Upgrade
+          command: |
+            export DEBIAN_FRONTEND=noninteractive
+            apt -y update && apt-get upgrade -y
+      - run:
+          name: C/C++ deps
+          command: |
+            apt -y install libssl-dev build-essential cmake libcurl4-openssl-dev
+      
 
   download_jextract:
     steps:
@@ -138,18 +183,16 @@ commands:
         type: string
       platform:
         type: string
-      device:
-        type: string
     steps:
       - when:
           condition: << parameters.os == "linux" >>
           steps:
             - run:
-                name: "Build for << parameters.os >>-<< parameters.platform >>-<< parameters.device >>"
+                name: "Build for << parameters.os >>-<< parameters.platform >>"
                 command: |
-                  mkdir -p /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>/<< parameters.device >>/
-                  cp /app/*.so /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>/<< parameters.device >>/
-                  ls -la /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>/<< parameters.device >>/
+                  mkdir -p /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>
+                  cp /app/*.so /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>
+                  ls -la /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>
 
       #- run:
       #    name: "Compile llama.cpp"
@@ -172,8 +215,9 @@ commands:
               echo "==================== Cloning llama.cpp ===================="
               git clone -b master --single-branch https://github.com/ggml-org/llama.cpp "/home/circleci/llama.cpp"
               cd "/home/circleci/llama.cpp"
-
-              git --no-pager describe --tag | xargs git checkout
+              LLAMA_CPP_VERSION=$(git --no-pager describe --tag)
+              echo "export LLAMA_CPP_VERSION=$LLAMA_CPP_VERSION" >> $BASH_ENV
+              echo $LLAMA_CPP_VERSION | xargs git checkout
             fi
       - run:
           name: Generate JExtract Bindings
@@ -195,6 +239,8 @@ commands:
               echo "============= List Files Before Creating JAR ==========="
               find . -type f
             fi
+            
+            cd /home/circleci
 
 jobs:
   build_and_test_macos:
@@ -214,6 +260,7 @@ jobs:
     executor: llama_cpp_light_x86-64_cpu
     steps:
       - install_dependencies
+      - install_java_dependencies
       - checkout
       - download-model:
           model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
@@ -222,39 +269,80 @@ jobs:
           os: "linux"
           platform: "x86_64"
 
-
   linux_x86_64_cpu_native_libs:
     executor: llama_cpp_light_x86-64_cpu
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
     steps:
       - get_llama_native_libs:
           os: "linux"
           platform: "x86_64"
-          device: "cpu"
-
-  linux_x86_64_cuda_native_libs:
-    executor:  llama_cpp_light_x86-64_cuda
-    steps:
-      - get_llama_native_libs:
-          os: "linux"
-          platform: "x86_64"
-          device: "cuda"
-
-  linux_x86_64_java_bindings:
-    executor: ubuntu_linux_x86_64
-    steps:
       - install_dependencies
+      - install_java_dependencies
+      - install_compile_dependencies
       - download_jextract
       - generate_jextract_bindings:
           os: "linux"
           platform: "x86_64"
+      - checkout:
+          path: "/home/circleci/gravitee-llama-cpp"
+      - git_config
+      - run:
+          name: "Push to github"
+          command: |
+            REPO_DIR=/home/circleci/gravitee-llama-cpp/
+            TARGET_SOURCE_DIR=$REPO_DIR/src/main/
+            
+            OS=linux
+            PLATFORM=x86_64
+            cd $REPO_DIR
+            
+            # Copy java bindings into repository
+            rm -r $TARGET_SOURCE_DIR/java/io/gravitee/llama/cpp/$OS/$PLATFORM/
+            cp -r /home/circleci/llama.cpp/java/* $TARGET_SOURCE_DIR/java/
 
+            # Copy native libs
+            NATIVE_LIB_SOURCE=$TARGET_SOURCE_DIR/resources/$OS/$PLATFORM/
+            rm $NATIVE_LIB_SOURCE/*
+            cp /home/circleci/llama-cpp/lib/$OS/$PLATFORM/* $NATIVE_LIB_SOURCE/
+            
+            # Push to git
+            BRANCH_NAME="chore/llama-cpp-$LLAMA_CPP_VERSION-$OS-$PLATFORM"
+            git checkout -b $BRANCH_NAME
+            mvn versions:set -DgenerateBackupPoms=false -DnewVersion="$LLAMA_CPP_VERSION"
+            
+            git add --all  
+            git commit -m "chore: version set for llama.cpp v$LLAMA_CPP_VERSION on $OS $PLATFORM"
+            git push origin $BRANCH_NAME
+            
+            gh pr create --title "llama.cpp v$LLAMA_CPP_VERSION on $OS $PLATFORM" \
+              --body "This PR updates llama.cpp v$LLAMA_CPP_VERSION for $OS-$PLATFORM"
+
+parameters:
+  gio_action:
+    type: enum
+    enum: [ push_commit, update_native_libs ]
+    default: push_commit
+    description: ""
 
 workflows:
   version: 2
   build_and_test:
+    when:
+      and:
+        - equal: [ push_commit , << pipeline.parameters.gio_action >> ]
     jobs:
-      - build_and_test_macos
+      #- build_and_test_macos
       - build_and_test_linux
       #- linux_x86_64_cpu_native_libs
       #- linux_x86_64_cuda_native_libs
-      #- linux_x86_64_java_bindings
+
+  update_libraries:
+    when:
+      and:
+        - equal: [ update_native_libs , << pipeline.parameters.gio_action >> ]
+    jobs:
+      - linux_x86_64_cpu_native_libs:
+          context:
+            - cicd-orchestrator

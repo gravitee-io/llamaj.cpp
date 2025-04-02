@@ -71,7 +71,7 @@ class LlamaModelParamsTest extends LlamaCppTest {
                     .useMlock(true)
                     .checkTensors(true);
 
-            assertThat(modelParams.nGpuLayers()).isEqualTo(99);
+            assertThat(modelParams.nGpuLayers()).isEqualTo(gpuEnabled ? 99 : 0);
             assertThat(modelParams.splitMode()).isEqualTo(NONE);
             assertThat(modelParams.mainGpu()).isEqualTo(mainGpu);
             assertThat(modelParams.tensorSplit()).containsExactly(biasSplit);
