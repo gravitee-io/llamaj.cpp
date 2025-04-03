@@ -3,35 +3,28 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$133 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$133() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_arm_fma",
-        constants$18.const$4
+        constants$132.const$4
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_fp16_va",
-        constants$18.const$4
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_dotprod",
-        constants$18.const$4
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_matmul_int8",
-        constants$18.const$4
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_sve",
-        constants$18.const$4
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_get_sve_cnt",
-        constants$18.const$4
-    );
+    static final StructLayout const$1 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("from_float"),
+        RuntimeHelper.POINTER.withName("vec_dot"),
+        JAVA_INT.withName("vec_dot_type"),
+        MemoryLayout.paddingLayout(4),
+        JAVA_LONG.withName("nrows")
+    ).withName("ggml_type_traits_cpu");
+    static final VarHandle const$2 = constants$133.const$1.varHandle(MemoryLayout.PathElement.groupElement("from_float"));
+    static final VarHandle const$3 = constants$133.const$1.varHandle(MemoryLayout.PathElement.groupElement("vec_dot"));
+    static final VarHandle const$4 = constants$133.const$1.varHandle(MemoryLayout.PathElement.groupElement("vec_dot_type"));
+    static final VarHandle const$5 = constants$133.const$1.varHandle(MemoryLayout.PathElement.groupElement("nrows"));
 }
 
 

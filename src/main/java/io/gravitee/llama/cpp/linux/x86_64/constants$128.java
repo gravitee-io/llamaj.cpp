@@ -3,39 +3,38 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$128 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$128() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_FLOAT,
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_INT,
+        RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         JAVA_INT
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_get_f32_1d",
+        "ggml_graph_compute_with_ctx",
         constants$128.const$0
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_FLOAT
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_sse3",
+        constants$15.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_set_f32_1d",
-        constants$128.const$2
+        "ggml_cpu_has_ssse3",
+        constants$15.const$4
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_FLOAT,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_avx",
+        constants$15.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_get_f32_nd",
-        constants$128.const$4
+        "ggml_cpu_has_avx_vnni",
+        constants$15.const$4
     );
 }
 

@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct llama_chat_message {
@@ -16,10 +18,10 @@ import java.lang.foreign.*;
 public class llama_chat_message {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$151.const$4;
+        return constants$150.const$0;
     }
     public static VarHandle role$VH() {
-        return constants$151.const$5;
+        return constants$150.const$1;
     }
     /**
      * Getter for field:
@@ -28,7 +30,7 @@ public class llama_chat_message {
      * }
      */
     public static MemorySegment role$get(MemorySegment seg) {
-        return (MemorySegment)constants$151.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$150.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -37,16 +39,16 @@ public class llama_chat_message {
      * }
      */
     public static void role$set(MemorySegment seg, MemorySegment x) {
-        constants$151.const$5.set(seg, x);
+        constants$150.const$1.set(seg, x);
     }
     public static MemorySegment role$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$151.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$150.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void role$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$151.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$150.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle content$VH() {
-        return constants$152.const$0;
+        return constants$150.const$2;
     }
     /**
      * Getter for field:
@@ -55,7 +57,7 @@ public class llama_chat_message {
      * }
      */
     public static MemorySegment content$get(MemorySegment seg) {
-        return (MemorySegment)constants$152.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$150.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -64,13 +66,13 @@ public class llama_chat_message {
      * }
      */
     public static void content$set(MemorySegment seg, MemorySegment x) {
-        constants$152.const$0.set(seg, x);
+        constants$150.const$2.set(seg, x);
     }
     public static MemorySegment content$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$152.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$150.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void content$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$152.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$150.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

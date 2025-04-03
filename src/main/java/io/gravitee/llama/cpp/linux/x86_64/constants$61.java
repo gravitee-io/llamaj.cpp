@@ -3,41 +3,46 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$61 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$61() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_out_prod",
-        constants$12.const$0
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_scale",
-        constants$58.const$4
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_scale_inplace",
-        constants$58.const$4
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_set",
-        constants$49.const$2
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_set_inplace",
-        constants$49.const$2
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
+        JAVA_LONG,
         JAVA_LONG
     );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_set_1d",
-        constants$61.const$5
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_cont_2d",
+        constants$61.const$0
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_cont_3d",
+        constants$61.const$2
+    );
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_cont_4d",
+        constants$61.const$4
     );
 }
 

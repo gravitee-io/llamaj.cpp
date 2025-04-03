@@ -3,39 +3,37 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$64 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$64() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_transpose",
+        constants$9.const$0
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_cont_4d",
-        constants$64.const$0
+        "ggml_get_rows",
+        constants$9.const$5
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_reshape",
-        constants$12.const$0
+        "ggml_get_rows_back",
+        constants$58.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_reshape_1d",
-        constants$63.const$1
+        "ggml_diag",
+        constants$9.const$0
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_reshape_2d",
-        constants$63.const$3
+        "ggml_diag_mask_inf",
+        constants$60.const$2
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_reshape_3d",
-        constants$63.const$5
+        "ggml_diag_mask_inf_inplace",
+        constants$60.const$2
     );
 }
 

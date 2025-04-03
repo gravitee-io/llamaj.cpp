@@ -3,7 +3,10 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$174 {
 
     // Suppresses default constructor, ensuring non-instantiability.
@@ -14,23 +17,23 @@ final class constants$174 {
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
         "llama_set_n_threads",
-        constants$127.const$0
+        constants$124.const$2
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
         "llama_n_threads",
-        constants$7.const$4
+        constants$7.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
         "llama_n_threads_batch",
-        constants$7.const$4
+        constants$7.const$1
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
         "llama_set_embeddings",
-        constants$42.const$3
+        constants$39.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
         "llama_set_causal_attn",
-        constants$42.const$3
+        constants$39.const$3
     );
 }
 

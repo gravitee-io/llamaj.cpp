@@ -2,19 +2,39 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
-
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$32 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$32() {}
-    static final VarHandle const$0 = constants$31.const$3.varHandle(PathElement.groupElement("op"));
-    static final VarHandle const$1 = constants$31.const$3.varHandle(PathElement.groupElement("flags"));
-    static final VarHandle const$2 = constants$31.const$3.varHandle(PathElement.groupElement("view_src"));
-    static final VarHandle const$3 = constants$31.const$3.varHandle(PathElement.groupElement("view_offs"));
-    static final VarHandle const$4 = constants$31.const$3.varHandle(PathElement.groupElement("data"));
-    static final VarHandle const$5 = constants$31.const$3.varHandle(PathElement.groupElement("extra"));
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_print_object",
+        constants$11.const$4
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_print_objects",
+        constants$11.const$4
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_nelements",
+        constants$20.const$3
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_nrows",
+        constants$20.const$3
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_nbytes",
+        constants$20.const$3
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_nbytes_pad",
+        constants$20.const$3
+    );
 }
 
 

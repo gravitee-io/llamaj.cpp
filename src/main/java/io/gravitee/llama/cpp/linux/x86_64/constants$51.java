@@ -3,34 +3,37 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$51 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$51() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_sqr_inplace",
-        constants$11.const$1
+        "ggml_abs_inplace",
+        constants$9.const$0
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_sqrt",
-        constants$11.const$1
+        "ggml_sgn",
+        constants$9.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_sqrt_inplace",
-        constants$11.const$1
+        "ggml_sgn_inplace",
+        constants$9.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_log",
-        constants$11.const$1
+        "ggml_neg",
+        constants$9.const$0
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_log_inplace",
-        constants$11.const$1
+        "ggml_neg_inplace",
+        constants$9.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_sin",
-        constants$11.const$1
+        "ggml_step",
+        constants$9.const$0
     );
 }
 

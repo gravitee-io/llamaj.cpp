@@ -4,6 +4,7 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$121 {
@@ -11,22 +12,31 @@ final class constants$121 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$121() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_reset",
-        constants$14.const$2
+        "ggml_backend_tensor_alloc",
+        constants$12.const$3
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_set_eval_callback",
-        constants$81.const$1
+        "ggml_backend_view_init",
+        constants$7.const$1
     );
-    static final StructLayout const$2 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("buffer"),
-        RuntimeHelper.POINTER.withName("ctx_allocated"),
-        RuntimeHelper.POINTER.withName("ctx_unallocated"),
-        RuntimeHelper.POINTER.withName("graph")
-    ).withName("ggml_backend_graph_copy");
-    static final VarHandle const$3 = constants$121.const$2.varHandle(PathElement.groupElement("buffer"));
-    static final VarHandle const$4 = constants$121.const$2.varHandle(PathElement.groupElement("ctx_allocated"));
-    static final VarHandle const$5 = constants$121.const$2.varHandle(PathElement.groupElement("ctx_unallocated"));
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_backend_cpu_buffer_from_ptr",
+        constants$42.const$0
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_cpu_buffer_type",
+        constants$8.const$1
+    );
+    static final StructLayout const$4 = MemoryLayout.structLayout(
+        JAVA_LONG.withName("work_size"),
+        RuntimeHelper.POINTER.withName("work_data"),
+        JAVA_INT.withName("n_threads"),
+        MemoryLayout.paddingLayout(4),
+        RuntimeHelper.POINTER.withName("threadpool"),
+        RuntimeHelper.POINTER.withName("abort_callback"),
+        RuntimeHelper.POINTER.withName("abort_callback_data")
+    ).withName("ggml_cplan");
+    static final VarHandle const$5 = constants$121.const$4.varHandle(MemoryLayout.PathElement.groupElement("work_size"));
 }
 
 

@@ -4,22 +4,40 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$125 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$125() {}
-    static final VarHandle const$0 = constants$124.const$2.varHandle(PathElement.groupElement("threadpool"));
-    static final VarHandle const$1 = constants$124.const$2.varHandle(PathElement.groupElement("abort_callback"));
-    static final VarHandle const$2 = constants$124.const$2.varHandle(PathElement.groupElement("abort_callback_data"));
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_numa_init",
-        constants$92.const$2
+    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_BOOLEAN);
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_set_i32_nd",
+        constants$125.const$0
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_FLOAT,
+        RuntimeHelper.POINTER,
+        JAVA_INT
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_get_f32_1d",
+        constants$125.const$2
+    );
+    static final FunctionDescriptor const$4 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_FLOAT
+    );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_is_numa",
+        "ggml_set_f32_1d",
         constants$125.const$4
     );
 }

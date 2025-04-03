@@ -4,29 +4,38 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$95 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$95() {}
-    static final VarHandle const$0 = constants$93.const$5.varHandle(PathElement.groupElement("from_float_ref"));
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_get_type_traits",
-        constants$28.const$0
+    static final VarHandle const$0 = constants$94.const$2.varHandle(MemoryLayout.PathElement.groupElement("offset"));
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("buffer"),
+        RuntimeHelper.POINTER.withName("base"),
+        JAVA_LONG.withName("alignment"),
+        JAVA_LONG.withName("offset")
+    ).withName("ggml_tallocr"),
+        RuntimeHelper.POINTER
     );
-    static final StructLayout const$2 = MemoryLayout.structLayout(
-        MemoryLayout.sequenceLayout(512, JAVA_BOOLEAN).withName("cpumask"),
-        JAVA_INT.withName("n_threads"),
-        JAVA_INT.withName("prio"),
-        JAVA_INT.withName("poll"),
-        JAVA_BOOLEAN.withName("strict_cpu"),
-        JAVA_BOOLEAN.withName("paused"),
-        MemoryLayout.paddingLayout(2)
-    ).withName("ggml_threadpool_params");
-    static final VarHandle const$3 = constants$95.const$2.varHandle(PathElement.groupElement("n_threads"));
-    static final VarHandle const$4 = constants$95.const$2.varHandle(PathElement.groupElement("prio"));
-    static final VarHandle const$5 = constants$95.const$2.varHandle(PathElement.groupElement("poll"));
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_tallocr_new",
+        constants$95.const$1
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_tallocr_alloc",
+        constants$7.const$3
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_gallocr_new",
+        constants$8.const$3
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_gallocr_new_n",
+        constants$86.const$4
+    );
 }
 
 

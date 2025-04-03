@@ -3,42 +3,42 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$60 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$60() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_FLOAT
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_set_2d_inplace",
+        constants$59.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_rms_norm_back",
-        constants$60.const$0
+        "ggml_cpy",
+        constants$9.const$5
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_mul_mat",
-        constants$12.const$0
-    );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.ofVoid(
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         JAVA_INT
     );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_cast",
+        constants$60.const$2
+    );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_mul_mat_set_prec",
-        constants$60.const$3
+        "ggml_cont",
+        constants$9.const$0
     );
     static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+        JAVA_LONG
     );
     static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_mul_mat_id",
+        "ggml_cont_1d",
         constants$60.const$5
     );
 }

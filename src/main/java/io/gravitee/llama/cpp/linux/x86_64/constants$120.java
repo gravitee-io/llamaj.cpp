@@ -3,34 +3,46 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$120 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$120() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_set_tensor_backend",
-        constants$81.const$1
+    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
+        MemoryLayout.structLayout(
+            RuntimeHelper.POINTER.withName("buffer"),
+            RuntimeHelper.POINTER.withName("ctx_allocated"),
+            RuntimeHelper.POINTER.withName("ctx_unallocated"),
+            RuntimeHelper.POINTER.withName("graph")
+        ).withName("ggml_backend_graph_copy")
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_tensor_backend",
-        constants$11.const$1
+        "ggml_backend_graph_copy_free",
+        constants$120.const$0
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_alloc_graph",
-        constants$33.const$3
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_graph_compute",
-        constants$9.const$5
-    );
+    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(ggml_backend_eval_callback.class, "apply", constants$120.const$2);
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_graph_compute_async",
-        constants$9.const$5
+        constants$120.const$2
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_synchronize",
-        constants$14.const$2
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER
+    );
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "ggml_backend_compare_graph_backend",
+        constants$120.const$5
     );
 }
 

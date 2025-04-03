@@ -2,35 +2,36 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$31 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$31() {}
-    static final VarHandle const$0 = constants$30.const$5.varHandle(PathElement.groupElement("mem_size"));
-    static final VarHandle const$1 = constants$30.const$5.varHandle(PathElement.groupElement("mem_buffer"));
-    static final VarHandle const$2 = constants$30.const$5.varHandle(PathElement.groupElement("no_alloc"));
-    static final StructLayout const$3 = MemoryLayout.structLayout(
-        JAVA_INT.withName("type"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("buffer"),
-        MemoryLayout.sequenceLayout(4, JAVA_LONG).withName("ne"),
-        MemoryLayout.sequenceLayout(4, JAVA_LONG).withName("nb"),
-        JAVA_INT.withName("op"),
-        MemoryLayout.sequenceLayout(16, JAVA_INT).withName("op_params"),
-        JAVA_INT.withName("flags"),
-        MemoryLayout.sequenceLayout(10, RuntimeHelper.POINTER).withName("src"),
-        RuntimeHelper.POINTER.withName("view_src"),
-        JAVA_LONG.withName("view_offs"),
-        RuntimeHelper.POINTER.withName("data"),
-        MemoryLayout.sequenceLayout(64, JAVA_BYTE).withName("name"),
-        RuntimeHelper.POINTER.withName("extra"),
-        MemoryLayout.sequenceLayout(8, JAVA_BYTE).withName("padding")
-    ).withName("ggml_tensor");
-    static final VarHandle const$4 = constants$31.const$3.varHandle(PathElement.groupElement("type"));
-    static final VarHandle const$5 = constants$31.const$3.varHandle(PathElement.groupElement("buffer"));
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_LONG);
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_time_ms",
+        constants$31.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_time_us",
+        constants$31.const$0
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_cycles",
+        constants$31.const$0
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_cycles_per_ms",
+        constants$31.const$0
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_fopen",
+        constants$9.const$0
+    );
 }
 
 

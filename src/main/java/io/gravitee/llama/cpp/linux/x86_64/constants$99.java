@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$99 {
@@ -10,28 +12,28 @@ final class constants$99 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$99() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_gallocr_alloc_graph",
-        constants$33.const$3
+        "ggml_backend_buffer_get_base",
+        constants$8.const$3
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_LONG,
-        RuntimeHelper.POINTER,
-        JAVA_INT
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_buffer_get_size",
+        constants$20.const$3
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_gallocr_get_buffer_size",
-        constants$99.const$1
+        "ggml_backend_buffer_init_tensor",
+        constants$7.const$3
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_alloc_ctx_tensors_from_buft",
-        constants$11.const$1
+        "ggml_backend_buffer_get_alignment",
+        constants$20.const$3
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_alloc_ctx_tensors",
-        constants$11.const$1
+        "ggml_backend_buffer_get_max_size",
+        constants$20.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_name",
-        constants$10.const$5
+        "ggml_backend_buffer_get_alloc_size",
+        constants$98.const$0
     );
 }
 

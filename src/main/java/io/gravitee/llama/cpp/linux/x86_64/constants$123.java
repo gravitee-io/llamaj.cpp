@@ -3,34 +3,34 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$123 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$123() {}
-    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(ggml_backend_eval_callback.class, "apply", constants$122.const$5);
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_BOOLEAN);
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        constants$122.const$5
+        "ggml_is_numa",
+        constants$123.const$0
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_new_i32",
+        constants$86.const$4
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_compare_graph_backend",
-        constants$123.const$2
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_FLOAT
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_alloc",
-        constants$15.const$1
+        "ggml_new_f32",
+        constants$123.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_view_init",
-        constants$7.const$4
+        "ggml_set_i32",
+        constants$86.const$4
     );
 }
 

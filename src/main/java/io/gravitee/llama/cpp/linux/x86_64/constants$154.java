@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$154 {
@@ -10,59 +12,28 @@ final class constants$154 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$154() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_detach_threadpool",
-        constants$14.const$2
+        "llama_new_context_with_model",
+        constants$153.const$4
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        MemoryLayout.structLayout(
-            RuntimeHelper.POINTER.withName("devices"),
-            JAVA_INT.withName("n_gpu_layers"),
-            JAVA_INT.withName("split_mode"),
-            JAVA_INT.withName("main_gpu"),
-            MemoryLayout.paddingLayout(4),
-            RuntimeHelper.POINTER.withName("tensor_split"),
-            RuntimeHelper.POINTER.withName("progress_callback"),
-            RuntimeHelper.POINTER.withName("progress_callback_user_data"),
-            RuntimeHelper.POINTER.withName("kv_overrides"),
-            JAVA_BOOLEAN.withName("vocab_only"),
-            JAVA_BOOLEAN.withName("use_mmap"),
-            JAVA_BOOLEAN.withName("use_mlock"),
-            JAVA_BOOLEAN.withName("check_tensors"),
-            MemoryLayout.paddingLayout(4)
-        ).withName("llama_model_params")
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_free",
+        constants$11.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_load_model_from_file",
-        constants$154.const$1
+        "llama_time_us",
+        constants$31.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_model_load_from_file",
-        constants$154.const$1
+        "llama_max_devices",
+        constants$31.const$0
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        MemoryLayout.structLayout(
-            RuntimeHelper.POINTER.withName("devices"),
-            JAVA_INT.withName("n_gpu_layers"),
-            JAVA_INT.withName("split_mode"),
-            JAVA_INT.withName("main_gpu"),
-            MemoryLayout.paddingLayout(4),
-            RuntimeHelper.POINTER.withName("tensor_split"),
-            RuntimeHelper.POINTER.withName("progress_callback"),
-            RuntimeHelper.POINTER.withName("progress_callback_user_data"),
-            RuntimeHelper.POINTER.withName("kv_overrides"),
-            JAVA_BOOLEAN.withName("vocab_only"),
-            JAVA_BOOLEAN.withName("use_mmap"),
-            JAVA_BOOLEAN.withName("use_mlock"),
-            JAVA_BOOLEAN.withName("check_tensors"),
-            MemoryLayout.paddingLayout(4)
-        ).withName("llama_model_params")
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_supports_mmap",
+        constants$123.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_model_load_from_splits",
-        constants$154.const$4
+        "llama_supports_mlock",
+        constants$123.const$0
     );
 }
 

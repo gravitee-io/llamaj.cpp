@@ -3,34 +3,41 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$103 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$103() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_set_usage",
-        constants$60.const$3
+    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        JAVA_LONG
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_get_usage",
-        constants$7.const$4
+        "ggml_backend_tensor_set",
+        constants$103.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_get_type",
-        constants$10.const$5
+        "ggml_backend_tensor_get",
+        constants$103.const$0
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_reset",
-        constants$14.const$2
+    static final FunctionDescriptor const$3 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_BYTE,
+        JAVA_LONG,
+        JAVA_LONG
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_copy",
-        constants$13.const$3
+        "ggml_backend_tensor_memset",
+        constants$103.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_guid",
-        constants$10.const$5
+        "ggml_backend_synchronize",
+        constants$11.const$4
     );
 }
 

@@ -3,25 +3,38 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 final class constants$114 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$114() {}
-    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(ggml_backend_set_n_threads_t.class, "apply", constants$60.const$3);
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_get",
+        constants$113.const$2
+    );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        constants$60.const$3
+        "ggml_backend_dev_by_name",
+        constants$8.const$3
     );
-    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_backend_dev_get_extra_bufts_t.class, "apply", constants$10.const$5);
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_by_type",
+        constants$25.const$0
+    );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        constants$10.const$5
+        "ggml_backend_init_by_name",
+        constants$9.const$0
     );
-    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_backend_set_abort_callback_t.class, "apply", constants$81.const$1);
-    static final StructLayout const$5 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("name"),
-        RuntimeHelper.POINTER.withName("value")
-    ).withName("ggml_backend_feature");
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_init_by_type",
+        constants$10.const$0
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_backend_init_best",
+        constants$8.const$1
+    );
 }
 
 

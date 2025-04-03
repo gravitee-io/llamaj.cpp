@@ -4,26 +4,40 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$9 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$9() {}
-    static final VarHandle const$0 = RuntimeHelper.POINTER.varHandle();
-    static final MemorySegment const$1 = RuntimeHelper.lookupGlobalVariable("stdin", RuntimeHelper.POINTER);
-    static final MemorySegment const$2 = RuntimeHelper.lookupGlobalVariable("stdout", RuntimeHelper.POINTER);
-    static final MemorySegment const$3 = RuntimeHelper.lookupGlobalVariable("stderr", RuntimeHelper.POINTER);
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "remove",
-        constants$7.const$4
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_INT,
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "tempnam",
+        constants$9.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "fflush",
+        constants$7.const$1
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "fflush_unlocked",
+        constants$7.const$1
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "fopen",
+        constants$9.const$0
+    );
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER
     );
     static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "rename",
+        "freopen",
         constants$9.const$5
     );
 }

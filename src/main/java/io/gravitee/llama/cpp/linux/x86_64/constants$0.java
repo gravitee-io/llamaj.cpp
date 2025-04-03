@@ -2,7 +2,9 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$0 {
@@ -14,7 +16,7 @@ final class constants$0 {
         MemoryLayout.paddingLayout(8),
         MemoryLayout.paddingLayout(16).withName("__clang_max_align_nonce2")
     ).withName("");
-    static final VarHandle const$1 = constants$0.const$0.varHandle(PathElement.groupElement("__clang_max_align_nonce1"));
+    static final VarHandle const$1 = constants$0.const$0.varHandle(MemoryLayout.PathElement.groupElement("__clang_max_align_nonce1"));
     static final StructLayout const$2 = MemoryLayout.structLayout(
         MemoryLayout.sequenceLayout(2, JAVA_INT).withName("__val")
     ).withName("");
@@ -25,7 +27,7 @@ final class constants$0 {
             MemoryLayout.sequenceLayout(4, JAVA_BYTE).withName("__wchb")
         ).withName("__value")
     ).withName("");
-    static final VarHandle const$4 = constants$0.const$3.varHandle(PathElement.groupElement("__count"));
+    static final VarHandle const$4 = constants$0.const$3.varHandle(MemoryLayout.PathElement.groupElement("__count"));
     static final UnionLayout const$5 = MemoryLayout.unionLayout(
         JAVA_INT.withName("__wch"),
         MemoryLayout.sequenceLayout(4, JAVA_BYTE).withName("__wchb")

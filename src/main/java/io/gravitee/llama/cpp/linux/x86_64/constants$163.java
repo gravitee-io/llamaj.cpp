@@ -3,37 +3,31 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$163 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$163() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_model_is_recurrent",
-        constants$33.const$0
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_model_quantize",
-        constants$15.const$1
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_adapter_lora_init",
-        constants$11.const$1
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_adapter_lora_free",
-        constants$14.const$2
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_FLOAT
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_set_adapter_lora",
-        constants$163.const$4
-    );
+    static final StructLayout const$0 = MemoryLayout.structLayout(
+        JAVA_INT.withName("pos")
+    ).withName("llama_kv_cache_view_cell");
+    static final VarHandle const$1 = constants$163.const$0.varHandle(MemoryLayout.PathElement.groupElement("pos"));
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        JAVA_INT.withName("n_cells"),
+        JAVA_INT.withName("n_seq_max"),
+        JAVA_INT.withName("token_count"),
+        JAVA_INT.withName("used_cells"),
+        JAVA_INT.withName("max_contiguous"),
+        JAVA_INT.withName("max_contiguous_idx"),
+        RuntimeHelper.POINTER.withName("cells"),
+        RuntimeHelper.POINTER.withName("cells_sequences")
+    ).withName("llama_kv_cache_view");
+    static final VarHandle const$3 = constants$163.const$2.varHandle(MemoryLayout.PathElement.groupElement("n_cells"));
+    static final VarHandle const$4 = constants$163.const$2.varHandle(MemoryLayout.PathElement.groupElement("n_seq_max"));
+    static final VarHandle const$5 = constants$163.const$2.varHandle(MemoryLayout.PathElement.groupElement("token_count"));
 }
 
 

@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct ggml_init_params {
@@ -17,10 +19,10 @@ import java.lang.foreign.*;
 public class ggml_init_params {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$30.const$5;
+        return constants$27.const$5;
     }
     public static VarHandle mem_size$VH() {
-        return constants$31.const$0;
+        return constants$28.const$0;
     }
     /**
      * Getter for field:
@@ -29,7 +31,7 @@ public class ggml_init_params {
      * }
      */
     public static long mem_size$get(MemorySegment seg) {
-        return (long)constants$31.const$0.get(seg);
+        return (long)constants$28.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -38,16 +40,16 @@ public class ggml_init_params {
      * }
      */
     public static void mem_size$set(MemorySegment seg, long x) {
-        constants$31.const$0.set(seg, x);
+        constants$28.const$0.set(seg, x);
     }
     public static long mem_size$get(MemorySegment seg, long index) {
-        return (long)constants$31.const$0.get(seg.asSlice(index*sizeof()));
+        return (long)constants$28.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void mem_size$set(MemorySegment seg, long index, long x) {
-        constants$31.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$28.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle mem_buffer$VH() {
-        return constants$31.const$1;
+        return constants$28.const$1;
     }
     /**
      * Getter for field:
@@ -56,7 +58,7 @@ public class ggml_init_params {
      * }
      */
     public static MemorySegment mem_buffer$get(MemorySegment seg) {
-        return (MemorySegment)constants$31.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$28.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -65,16 +67,16 @@ public class ggml_init_params {
      * }
      */
     public static void mem_buffer$set(MemorySegment seg, MemorySegment x) {
-        constants$31.const$1.set(seg, x);
+        constants$28.const$1.set(seg, x);
     }
     public static MemorySegment mem_buffer$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$31.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$28.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void mem_buffer$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$31.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$28.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle no_alloc$VH() {
-        return constants$31.const$2;
+        return constants$28.const$2;
     }
     /**
      * Getter for field:
@@ -83,7 +85,7 @@ public class ggml_init_params {
      * }
      */
     public static boolean no_alloc$get(MemorySegment seg) {
-        return (boolean)constants$31.const$2.get(seg);
+        return (boolean)constants$28.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -92,13 +94,13 @@ public class ggml_init_params {
      * }
      */
     public static void no_alloc$set(MemorySegment seg, boolean x) {
-        constants$31.const$2.set(seg, x);
+        constants$28.const$2.set(seg, x);
     }
     public static boolean no_alloc$get(MemorySegment seg, long index) {
-        return (boolean)constants$31.const$2.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$28.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void no_alloc$set(MemorySegment seg, long index, boolean x) {
-        constants$31.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$28.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

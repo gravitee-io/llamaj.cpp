@@ -3,34 +3,34 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$26 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$26() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "fileno_unlocked",
-        constants$7.const$4
+        "ggml_fp16_to_fp32_row",
+        constants$11.const$2
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "pclose",
-        constants$7.const$4
+        "ggml_fp32_to_fp16_row",
+        constants$11.const$2
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "popen",
-        constants$11.const$1
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ctermid",
-        constants$10.const$5
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "flockfile",
-        constants$14.const$2
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        JAVA_SHORT.withName("bits")
+    ).withName("");
+    static final VarHandle const$3 = constants$26.const$2.varHandle(MemoryLayout.PathElement.groupElement("bits"));
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        JAVA_SHORT.withName("bits")
+    ).withName(""),
+        JAVA_FLOAT
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ftrylockfile",
-        constants$7.const$4
+        "ggml_fp32_to_bf16",
+        constants$26.const$4
     );
 }
 

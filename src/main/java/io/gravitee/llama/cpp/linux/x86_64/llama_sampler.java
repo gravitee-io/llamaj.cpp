@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct llama_sampler {
@@ -28,7 +30,7 @@ public class llama_sampler {
      * }
      */
     public static MemorySegment iface$get(MemorySegment seg) {
-        return (MemorySegment)constants$186.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$186.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -40,7 +42,7 @@ public class llama_sampler {
         constants$186.const$5.set(seg, x);
     }
     public static MemorySegment iface$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$186.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$186.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void iface$set(MemorySegment seg, long index, MemorySegment x) {
         constants$186.const$5.set(seg.asSlice(index*sizeof()), x);
@@ -55,7 +57,7 @@ public class llama_sampler {
      * }
      */
     public static MemorySegment ctx$get(MemorySegment seg) {
-        return (MemorySegment)constants$187.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$187.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -67,7 +69,7 @@ public class llama_sampler {
         constants$187.const$0.set(seg, x);
     }
     public static MemorySegment ctx$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$187.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$187.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void ctx$set(MemorySegment seg, long index, MemorySegment x) {
         constants$187.const$0.set(seg.asSlice(index*sizeof()), x);

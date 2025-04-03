@@ -2,9 +2,6 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
-import io.gravitee.llama.cpp.linux.x86_64.RuntimeHelper;
-import io.gravitee.llama.cpp.linux.x86_64.constants$29;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 import java.nio.ByteOrder;
@@ -20,10 +17,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class ggml_bf16_t {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$29.const$2;
+        return constants$26.const$2;
     }
     public static VarHandle bits$VH() {
-        return constants$29.const$3;
+        return constants$26.const$3;
     }
     /**
      * Getter for field:
@@ -32,7 +29,7 @@ public class ggml_bf16_t {
      * }
      */
     public static short bits$get(MemorySegment seg) {
-        return (short)constants$29.const$3.get(seg);
+        return (short)constants$26.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -41,13 +38,13 @@ public class ggml_bf16_t {
      * }
      */
     public static void bits$set(MemorySegment seg, short x) {
-        constants$29.const$3.set(seg, x);
+        constants$26.const$3.set(seg, x);
     }
     public static short bits$get(MemorySegment seg, long index) {
-        return (short)constants$29.const$3.get(seg.asSlice(index*sizeof()));
+        return (short)constants$26.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void bits$set(MemorySegment seg, long index, short x) {
-        constants$29.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$26.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

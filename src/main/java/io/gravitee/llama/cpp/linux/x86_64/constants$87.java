@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$87 {
@@ -10,38 +12,28 @@ final class constants$87 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$87() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_cross_entropy_loss",
-        constants$12.const$0
+        "ggml_graph_nodes",
+        constants$8.const$3
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_cross_entropy_loss_back",
-        constants$60.const$5
+        "ggml_graph_n_nodes",
+        constants$7.const$1
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_graph_add_node",
+        constants$10.const$5
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_opt_step_adamw",
-        constants$87.const$2
+        "ggml_graph_overhead",
+        constants$31.const$0
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_build_forward_expand",
-        constants$13.const$3
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_LONG,
+        JAVA_LONG,
         JAVA_BOOLEAN
     );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_build_backward_expand",
-        constants$87.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_graph_overhead_custom",
+        constants$87.const$4
     );
 }
 

@@ -2,19 +2,21 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
-
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$145 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$145() {}
-    static final VarHandle const$0 = constants$144.const$0.varHandle(PathElement.groupElement("n_threads_batch"));
-    static final VarHandle const$1 = constants$144.const$0.varHandle(PathElement.groupElement("rope_scaling_type"));
-    static final VarHandle const$2 = constants$144.const$0.varHandle(PathElement.groupElement("pooling_type"));
-    static final VarHandle const$3 = constants$144.const$0.varHandle(PathElement.groupElement("attention_type"));
-    static final VarHandle const$4 = constants$144.const$0.varHandle(PathElement.groupElement("rope_freq_base"));
-    static final VarHandle const$5 = constants$144.const$0.varHandle(PathElement.groupElement("rope_freq_scale"));
+    static final VarHandle const$0 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("yarn_orig_ctx"));
+    static final VarHandle const$1 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("defrag_thold"));
+    static final VarHandle const$2 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("cb_eval"));
+    static final VarHandle const$3 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("cb_eval_user_data"));
+    static final VarHandle const$4 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("type_k"));
+    static final VarHandle const$5 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("type_v"));
 }
 
 

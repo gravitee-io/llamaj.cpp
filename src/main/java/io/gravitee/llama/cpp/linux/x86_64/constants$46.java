@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$46 {
@@ -10,32 +12,33 @@ final class constants$46 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$46() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_get_tensor",
-        constants$11.const$1
+        "ggml_add1",
+        constants$9.const$5
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.ofVoid(
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_add1_inplace",
+        constants$9.const$5
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         JAVA_LONG,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_unravel_index",
-        constants$46.const$1
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_get_unary_op",
-        constants$7.const$4
+        "ggml_acc",
+        constants$46.const$2
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_get_data",
-        constants$10.const$5
+        "ggml_acc_inplace",
+        constants$46.const$2
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_get_data_f32",
-        constants$10.const$5
+        "ggml_sub",
+        constants$9.const$5
     );
 }
 

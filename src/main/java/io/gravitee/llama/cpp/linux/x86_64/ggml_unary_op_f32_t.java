@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * void (*ggml_unary_op_f32_t)(int,float*,float*);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_unary_op_f32_t {
 
-    void apply(int _x0, MemorySegment _x1, MemorySegment _x2);
+    void apply(int _x0, java.lang.foreign.MemorySegment _x1, java.lang.foreign.MemorySegment _x2);
     static MemorySegment allocate(ggml_unary_op_f32_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$80.const$0, fi, constants$79.const$5, scope);
+        return RuntimeHelper.upcallStub(constants$77.const$1, fi, constants$77.const$0, scope);
     }
     static ggml_unary_op_f32_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (int __x0, MemorySegment __x1, MemorySegment __x2) -> {
+        return (int __x0, java.lang.foreign.MemorySegment __x1, java.lang.foreign.MemorySegment __x2) -> {
             try {
-                constants$80.const$1.invokeExact(symbol, __x0, __x1, __x2);
+                constants$77.const$2.invokeExact(symbol, __x0, __x1, __x2);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

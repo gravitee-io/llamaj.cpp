@@ -4,7 +4,7 @@
 
   <groupId>io.gravitee.llama.cpp</groupId>
   <artifactId>gravitee-llama-cpp</artifactId>
-  <version>b4827</version>
+  <version>b5038-1-g5f696e88</version>
   <packaging>jar</packaging>
 
   <name>gravitee-llama-cpp</name>

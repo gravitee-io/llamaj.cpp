@@ -4,33 +4,36 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$97 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$97() {}
-    static final StructLayout const$0 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("buffer"),
-        RuntimeHelper.POINTER.withName("base"),
-        JAVA_LONG.withName("alignment"),
-        JAVA_LONG.withName("offset")
-    ).withName("ggml_tallocr");
-    static final VarHandle const$1 = constants$97.const$0.varHandle(PathElement.groupElement("buffer"));
-    static final VarHandle const$2 = constants$97.const$0.varHandle(PathElement.groupElement("base"));
-    static final VarHandle const$3 = constants$97.const$0.varHandle(PathElement.groupElement("alignment"));
-    static final VarHandle const$4 = constants$97.const$0.varHandle(PathElement.groupElement("offset"));
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("buffer"),
-        RuntimeHelper.POINTER.withName("base"),
-        JAVA_LONG.withName("alignment"),
-        JAVA_LONG.withName("offset")
-    ).withName("ggml_tallocr"),
-        RuntimeHelper.POINTER
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_alloc_ctx_tensors_from_buft",
+        constants$9.const$0
     );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_tallocr_new",
-        constants$97.const$5
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_alloc_ctx_tensors",
+        constants$9.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_backend_buft_name",
+        constants$8.const$3
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_buft_alloc_buffer",
+        constants$42.const$0
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_buft_get_alignment",
+        constants$20.const$3
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_backend_buft_get_max_size",
+        constants$20.const$3
     );
 }
 

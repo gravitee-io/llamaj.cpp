@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$130 {
@@ -10,37 +12,28 @@ final class constants$130 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$130() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_threadpool_resume",
-        constants$14.const$2
+        "ggml_cpu_has_avx512_vnni",
+        constants$15.const$4
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_LONG.withName("work_size"),
-        RuntimeHelper.POINTER.withName("work_data"),
-        JAVA_INT.withName("n_threads"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("threadpool"),
-        RuntimeHelper.POINTER.withName("abort_callback"),
-        RuntimeHelper.POINTER.withName("abort_callback_data")
-    ).withName("ggml_cplan"),
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_avx512_bf16",
+        constants$15.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_graph_plan",
-        constants$130.const$1
+        "ggml_cpu_has_amx_int8",
+        constants$15.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_graph_compute",
-        constants$9.const$5
+        "ggml_cpu_has_neon",
+        constants$15.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_graph_compute_with_ctx",
-        constants$7.const$1
+        "ggml_cpu_has_arm_fma",
+        constants$15.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_sse3",
-        constants$18.const$4
+        "ggml_cpu_has_fp16_va",
+        constants$15.const$4
     );
 }
 
