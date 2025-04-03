@@ -1,10 +1,15 @@
 version: 2.1
 
+orbs:
+  gh: circleci/github-cli@2.7.0
+  keeper: gravitee-io/keeper@0.7.0
+
 executors:
   macos-executor:
     macos:
       xcode: 16.1.0
     resource_class: macos.m1.medium.gen1
+
   ubuntu_linux_x86_64:
     docker:
       - image: ubuntu:noble
@@ -17,13 +22,32 @@ executors:
     working_directory: /home/circleci
     resource_class: small
 
-  llama_cpp_light_x86-64_cuda:
-    docker:
-      - image: ghcr.io/ggml-org/llama.cpp:light-cuda
-    working_directory: /home/circleci
-    resource_class: small
-
 commands:
+  git_config:
+    description: This command runs the git config in your pipeline, for the bot user configured in your secret manager. It requires [bash]
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://IZd-yvsMopfQEa_0j1SDvg/field/login
+          var-name: GIT_USER_NAME
+      - keeper/env-export:
+          secret-url: keeper://IZd-yvsMopfQEa_0j1SDvg/custom_field/email
+          var-name: GIT_USER_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - gh/setup
+      - run:
+          name: Git Config
+          command: |
+            cd /home/circleci/gravitee-llama-cpp/
+            git config --global user.name "${GIT_USER_NAME}"
+            git config --global user.email "${GIT_USER_EMAIL}"
+            
+            ORG_REPO=$(git --no-pager config remote.origin.url | sed -E 's/git@github.com:(.*).git/\1/')
+            git remote set-url origin "https://$GITHUB_TOKEN@github.com/$ORG_REPO.git"
+            
+            cd /home/circleci/
+
   install-java-macos:
     steps:
       - run:
@@ -44,6 +68,7 @@ commands:
             
             cd ~/
             # Set JAVA_HOME and update PATH
+            echo 'source ~/.zprofile' >> ~/.zshrc
             echo 'export JAVA_HOME="'$INSTALL_DIR'/'$JDK_DIR'/Contents/Home"' >> ~/.zprofile
             echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> ~/.zprofile
             source ~/.zprofile
@@ -78,26 +103,81 @@ commands:
   install_dependencies:
     steps:
       - run:
-          name: Install dependencies
+          name: Upgrade
           command: |
             export DEBIAN_FRONTEND=noninteractive
             apt -y update && apt-get upgrade -y
-            apt -y install git wget openjdk-21-jdk libssl-dev build-essential cmake libcurl4-openssl-dev
+      - run:
+          name: Locale dependencies
+          command: |
+            apt -y install locales git jq wget
+            locale-gen C.UTF-8
+      - gh/install
+
+  install_java_dependencies:
+    steps:
+      - run:
+          name: Java dependencies
+          command: |
+            apt -y install openjdk-21-jdk maven 
+
+  install_compile_dependencies:
+    steps:
+      - run:
+          name: Upgrade
+          command: |
+            export DEBIAN_FRONTEND=noninteractive
+            apt -y update && apt-get upgrade -y
+      - run:
+          name: C/C++ deps
+          command: |
+            apt -y install libssl-dev build-essential cmake libcurl4-openssl-dev
 
   download_jextract:
     steps:
       - run:
           name: Download jextract Binary
           command: |
-            if [ ! -d "/home/circleci/jextract" ]; then
-              echo "==================== Downloading jextract ===================="
-              wget https://download.java.net/java/early_access/jextract/21/1/openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-              tar -xzf openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-              mv jextract-21 "/home/circleci/jextract"
-              rm openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-            fi
-            echo 'export PATH="/home/circleci/jextract/bin:$PATH"' >> ~/.bashrc
+            cd $HOME_DIR
+            
+            echo "==================== Downloading jextract ===================="
+            wget https://download.java.net/java/early_access/jextract/21/1/openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+            tar -xzf openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+            mv jextract-21 "$HOME_DIR/jextract"
+            rm openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+            echo 'export PATH="$HOME_DIR/jextract/bin:$PATH"' >> ~/.bashrc
             source ~/.bashrc
+
+  download-model:
+    parameters:
+      model_url:
+        type: string
+      model_path:
+        type: string
+    steps:
+      - run:
+          name: Download Model
+          command: |
+            mkdir -p models
+            curl -L -o << parameters.model_path >> << parameters.model_url >>
+
+  run-tests:
+    parameters:
+      os:
+        type: string
+      platform:
+        type: string
+    steps:
+      - run:
+          name: Run Tests
+          command: |
+            if [ << parameters.os >> == "macosx" ]; then
+              source ~/.zprofile
+            elif [ << parameters.os >> == "linux" ]; then
+              export LLAMA_CPP_LIB_PATH="$HOME_DIR/src/main/resources/<< parameters.os >>/<< parameters.platform >>"
+              export LD_LIBRARY_PATH="$LLAMA_CPP_LIB_PATH:$LD_LIBRARY_PATH"
+            fi
+            mvn clean install
 
   get_llama_native_libs:
     parameters:
@@ -105,25 +185,45 @@ commands:
         type: string
       platform:
         type: string
-      device:
-        type: string
     steps:
       - when:
-          condition: << parameters.os == "linux" >>
+          condition:
+            and:
+              - equal: [ 'linux', << parameters.os >> ]
           steps:
             - run:
-                name: "Build for << parameters.os >>-<< parameters.platform >>-<< parameters.device >>"
+                name: "Build for << parameters.os >>-<< parameters.platform >>"
                 command: |
-                  mkdir -p /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>/<< parameters.device >>/
-                  cp /app/*.so /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>/<< parameters.device >>/
-                  ls -la /home/circleci/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>/<< parameters.device >>/
-
-      #- run:
-      #    name: "Compile llama.cpp"
-      #    command: |
-      #      cd "/home/circleci/llama.cpp"
-      #      cmake --build build --config Release -j $(nproc)
-      #      ls -la ./build/bin/
+                  mkdir -p $HOME_DIR/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>
+                  cp /app/*.so $HOME_DIR/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>
+                  ls -la $HOME_DIR/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>
+      - when:
+          condition:
+            and:
+              - equal: ['macosx', << parameters.os >>]
+          steps:
+            - run:
+                name: "Compile llama.cpp"
+                command: |
+                  # Build native libs
+                  cd "$HOME_DIR/llama.cpp"
+                  cmake -B build -DCMAKE_OSX_DEPLOYMENT_TARGET=14.6
+                  cmake --build build --config Release -j $(sysctl -n hw.ncpu)
+                  
+                  # Copy libs
+                  ls -la ./build/bin/
+                  cp ./build/bin/*.dylib $HOME_DIR/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>
+                  
+                  # Load libs
+                  cd $HOME_DIR/llama-cpp/lib/<< parameters.os >>/<< parameters.platform >>
+                  for lib in *.dylib; do
+                    install_name_tool -id "@rpath/$lib" "$lib"
+                    for dep in *.dylib; do
+                      install_name_tool -change "@rpath/$dep" "@loader_path/$dep" "$lib"
+                    done
+                  done
+                  
+                  cd $HOME_DIR/
 
   generate_jextract_bindings:
     parameters:
@@ -135,84 +235,180 @@ commands:
       - run:
           name: Clone llama.cpp
           command: |
-            if [ ! -d "/home/circleci/llama.cpp" ]; then
-              echo "==================== Cloning llama.cpp ===================="
-              git clone -b master --single-branch https://github.com/ggml-org/llama.cpp "/home/circleci/llama.cpp"
-              cd "/home/circleci/llama.cpp"
-
-              git --no-pager describe --tag | xargs git checkout
+            echo "==================== Cloning llama.cpp ===================="
+            git clone -b master --single-branch https://github.com/ggml-org/llama.cpp "$HOME_DIR/llama.cpp"
+            cd "$HOME_DIR/llama.cpp"
+            LLAMA_CPP_VERSION=$(gh release ls --limit 1 --json tagName  | jq ".[0].tagName" | tr -d \")
+            
+            if [[ << parameters.os >> == 'linux' ]]; then
+              echo "export LLAMA_CPP_VERSION=$LLAMA_CPP_VERSION" >> $BASH_ENV
+            elif [[ << parameters.os >> == 'macosx' ]]; then
+              echo "export LLAMA_CPP_VERSION=$LLAMA_CPP_VERSION"
             fi
+            
+            echo $LLAMA_CPP_VERSION | xargs git checkout
+      - when:
+          condition:
+            and:
+              - equal: [ 'linux', << parameters.os >> ]
+          steps:
+            - download_jextract
       - run:
           name: Generate JExtract Bindings
           command: |
-            if [ -d "/home/circleci/llama.cpp" ]; then
-              echo "============= Generate jextract Bindings ==============="
-              cd "/home/circleci/llama.cpp"
-              mkdir -p java
-            
-              export PATH="/home/circleci/jextract/bin:$PATH"
-              jextract -t io.gravitee.llama.cpp.<< parameters.os >>.<< parameters.platform >> \
-                       --source \
-                       --include-dir /usr/include \
-                       --include-dir ggml/include \
-                       --output java/ \
-                       include/llama.h
-            
-              cd java/
-              echo "============= List Files Before Creating JAR ==========="
-              find . -type f
-            fi
+            echo "============= Generate jextract Bindings ==============="
+            cd "$HOME_DIR/llama.cpp"
+            mkdir -p java
+          
+            export PATH="$HOME_DIR/jextract/bin:$PATH"
+            jextract -t io.gravitee.llama.cpp.<< parameters.os >>.<< parameters.platform >> \
+                     --source \
+                     --include-dir /usr/include \
+                     --include-dir ggml/include \
+                     --output java/ \
+                     include/llama.h
+          
+            cd java/
+            echo "============= List Files Before Creating JAR ==========="
+            find . -type f
+
+            cd $HOME_DIR
+
+  push_updated_libs:
+    parameters:
+      os:
+        type: string
+      platform:
+        type: string
+    steps:
+      - run:
+          name: "Push to github"
+          command: |
+            REPO_DIR=$HOME_DIR/gravitee-llama-cpp/
+            cd $REPO_DIR
+
+            TARGET_SOURCE_DIR=$REPO_DIR/src/main/
+
+            OS=<< parameters.os >>
+            PLATFORM=<< parameters.platform >>
+            cd $REPO_DIR
+
+            # Copy java bindings into repository
+            rm -r $TARGET_SOURCE_DIR/java/io/gravitee/llama/cpp/$OS/$PLATFORM/
+            cp -r $HOME_DIR/llama.cpp/java/* $TARGET_SOURCE_DIR/java/
+
+            # Copy native libs
+            NATIVE_LIB_SOURCE=$TARGET_SOURCE_DIR/resources/$OS/$PLATFORM/
+            rm $NATIVE_LIB_SOURCE/*
+            cp $HOME_DIR/llama-cpp/lib/$OS/$PLATFORM/* $NATIVE_LIB_SOURCE/
+
+            # Push to git
+            BRANCH_NAME="chore/llama-cpp-$LLAMA_CPP_VERSION-$OS-$PLATFORM"
+            git checkout -b $BRANCH_NAME
+            mvn versions:set -DgenerateBackupPoms=false -DnewVersion="$LLAMA_CPP_VERSION"
+
+            git add --all  
+            git commit -m "chore: version set for llama.cpp v$LLAMA_CPP_VERSION on $OS $PLATFORM"
+            git push origin $BRANCH_NAME
+
+            gh pr create --title "chore: llama.cpp v$LLAMA_CPP_VERSION on $OS $PLATFORM" \
+              --body "This PR updates llama.cpp v$LLAMA_CPP_VERSION for $OS-$PLATFORM"
+    
 
 jobs:
   build_and_test_macos:
     executor: macos-executor
+    environment:
+      HOME_DIR: "/Users/distiller"
     steps:
       - install-java-macos
       - install-maven-macos
       - checkout
-      - run:
-          name: Download model
-          command: |
-            mkdir -p models
-            curl -L -o models/Llama-3.2-1B-Instruct-IQ3_M.gguf https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf
+      - download-model:
+          model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
+          model_path: "models/Llama-3.2-1B-Instruct-IQ3_M.gguf"
+      - run-tests:
+          os: "macosx"
+          platform: "aarch64"
 
-      - run:
-          name: Run Tests
-          command: |
-            source ~/.zprofile
-            mvn clean install
+  build_and_test_linux:
+    executor: llama_cpp_light_x86-64_cpu
+    environment:
+      HOME_DIR: "/home/circleci"
+    steps:
+      - install_dependencies
+      - install_java_dependencies
+      - checkout
+      - download-model:
+          model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
+          model_path: "models/Llama-3.2-1B-Instruct-IQ3_M.gguf"
+      - run-tests:
+          os: "linux"
+          platform: "x86_64"
 
   linux_x86_64_cpu_native_libs:
     executor: llama_cpp_light_x86-64_cpu
-    steps:
-      - get_llama_native_libs:
-          os: "linux"
-          platform: "x86_64"
-          device: "cpu"
-
-  linux_x86_64_cuda_native_libs:
-    executor:  llama_cpp_light_x86-64_cuda
-    steps:
-      - get_llama_native_libs:
-          os: "linux"
-          platform: "x86_64"
-          device: "cuda"
-
-  linux_x86_64_java_bindings:
-    executor: ubuntu_linux_x86_64
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      HOME_DIR: "/home/circleci"
     steps:
       - install_dependencies
-      - download_jextract
+      - install_java_dependencies
+      - install_compile_dependencies
+      - checkout:
+          path: "/home/circleci/gravitee-llama-cpp"
+      - git_config
       - generate_jextract_bindings:
           os: "linux"
           platform: "x86_64"
+      - get_llama_native_libs:
+          os: "linux"
+          platform: "x86_64"
+      - push_updated_libs:
+          os: "linux"
+          platform: "x86_64"
 
+parameters:
+  gio_action:
+    type: enum
+    enum: [ push_commit, update_native_libs ]
+    default: push_commit
+    description: ""
 
 workflows:
   version: 2
-  build_and_test:
+
+  build-and-test:
+    when:
+      and:
+        - equal: [ push_commit , << pipeline.parameters.gio_action >> ]
     jobs:
       - build_and_test_macos
-      #- linux_x86_64_cpu_native_libs
-      #- linux_x86_64_cuda_native_libs
-      #- linux_x86_64_java_bindings
+      - build_and_test_linux
+
+  update_libraries:
+    when:
+      and:
+        - equal: [ update_native_libs , << pipeline.parameters.gio_action >> ]
+    jobs:
+    - linux_x86_64_cpu_native_libs:
+        context:
+          - cicd-orchestrator
+        filters:
+          branches:
+            only:
+              - main
+
+  weekly-library-update:
+    triggers:
+      - schedule:
+          cron: "0 12 * * 5"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - linux_x86_64_cpu_native_libs:
+          context:
+            - cicd-orchestrator
