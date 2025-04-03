@@ -4,35 +4,29 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$135 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$135() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_INT
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_cpu_set_abort_callback",
+        constants$78.const$2
     );
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_vec_dot_t.class, "apply", constants$135.const$0);
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        constants$135.const$0
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_cpu_reg",
+        constants$8.const$1
     );
-    static final StructLayout const$3 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("from_float"),
-        RuntimeHelper.POINTER.withName("vec_dot"),
-        JAVA_INT.withName("vec_dot_type"),
-        MemoryLayout.paddingLayout(4),
-        JAVA_LONG.withName("nrows")
-    ).withName("ggml_type_traits_cpu");
-    static final VarHandle const$4 = constants$135.const$3.varHandle(PathElement.groupElement("from_float"));
-    static final VarHandle const$5 = constants$135.const$3.varHandle(PathElement.groupElement("vec_dot"));
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        JAVA_INT.withName("id"),
+        JAVA_FLOAT.withName("logit"),
+        JAVA_FLOAT.withName("p")
+    ).withName("llama_token_data");
+    static final VarHandle const$3 = constants$135.const$2.varHandle(MemoryLayout.PathElement.groupElement("id"));
+    static final VarHandle const$4 = constants$135.const$2.varHandle(MemoryLayout.PathElement.groupElement("logit"));
+    static final VarHandle const$5 = constants$135.const$2.varHandle(MemoryLayout.PathElement.groupElement("p"));
 }
 
 

@@ -3,39 +3,55 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$66 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$66() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_soft_max_ext_back",
+        constants$65.const$4
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_soft_max_ext_back_inplace",
+        constants$65.const$4
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
+        RuntimeHelper.POINTER,
         JAVA_INT,
         JAVA_INT
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_permute",
-        constants$66.const$0
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_transpose",
-        constants$11.const$1
-    );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_get_rows",
-        constants$12.const$0
+        "ggml_rope",
+        constants$66.const$2
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_get_rows_back",
-        constants$60.const$5
+        "ggml_rope_inplace",
+        constants$66.const$2
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_diag",
-        constants$11.const$1
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
+    );
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "ggml_rope_ext",
+        constants$66.const$5
     );
 }
 

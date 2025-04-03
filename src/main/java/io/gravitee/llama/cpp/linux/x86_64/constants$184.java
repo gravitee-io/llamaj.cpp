@@ -4,6 +4,7 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$184 {
@@ -26,9 +27,9 @@ final class constants$184 {
         RuntimeHelper.POINTER.withName("clone"),
         RuntimeHelper.POINTER.withName("free")
     ).withName("llama_sampler_i");
-    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(llama_sampler_i.name.class, "apply", constants$10.const$5);
-    static final VarHandle const$4 = constants$184.const$2.varHandle(PathElement.groupElement("name"));
-    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(llama_sampler_i.accept.class, "apply", constants$60.const$3);
+    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(llama_sampler_i.name.class, "apply", constants$8.const$3);
+    static final VarHandle const$4 = constants$184.const$2.varHandle(MemoryLayout.PathElement.groupElement("name"));
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(llama_sampler_i.accept.class, "apply", constants$57.const$5);
 }
 
 

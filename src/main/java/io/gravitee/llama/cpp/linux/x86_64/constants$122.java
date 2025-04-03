@@ -4,43 +4,21 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$122 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$122() {}
-    static final VarHandle const$0 = constants$121.const$2.varHandle(PathElement.groupElement("graph"));
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("buffer"),
-        RuntimeHelper.POINTER.withName("ctx_allocated"),
-        RuntimeHelper.POINTER.withName("ctx_unallocated"),
-        RuntimeHelper.POINTER.withName("graph")
-    ).withName("ggml_backend_graph_copy"),
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_copy",
-        constants$122.const$1
-    );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.ofVoid(
-        MemoryLayout.structLayout(
-            RuntimeHelper.POINTER.withName("buffer"),
-            RuntimeHelper.POINTER.withName("ctx_allocated"),
-            RuntimeHelper.POINTER.withName("ctx_unallocated"),
-            RuntimeHelper.POINTER.withName("graph")
-        ).withName("ggml_backend_graph_copy")
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_copy_free",
-        constants$122.const$3
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+    static final VarHandle const$0 = constants$121.const$4.varHandle(MemoryLayout.PathElement.groupElement("work_data"));
+    static final VarHandle const$1 = constants$121.const$4.varHandle(MemoryLayout.PathElement.groupElement("n_threads"));
+    static final VarHandle const$2 = constants$121.const$4.varHandle(MemoryLayout.PathElement.groupElement("threadpool"));
+    static final VarHandle const$3 = constants$121.const$4.varHandle(MemoryLayout.PathElement.groupElement("abort_callback"));
+    static final VarHandle const$4 = constants$121.const$4.varHandle(MemoryLayout.PathElement.groupElement("abort_callback_data"));
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_numa_init",
+        constants$89.const$4
     );
 }
 

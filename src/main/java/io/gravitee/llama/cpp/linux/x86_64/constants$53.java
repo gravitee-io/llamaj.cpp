@@ -3,34 +3,39 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$53 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$53() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_argmax",
-        constants$11.const$1
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_FLOAT,
+        JAVA_BOOLEAN
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_count_equal",
-        constants$12.const$0
+        "ggml_leaky_relu",
+        constants$53.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_repeat",
-        constants$12.const$0
+        "ggml_relu_inplace",
+        constants$9.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_repeat_back",
-        constants$12.const$0
+        "ggml_sigmoid",
+        constants$9.const$0
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_concat",
-        constants$48.const$5
+        "ggml_sigmoid_inplace",
+        constants$9.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_abs",
-        constants$11.const$1
+        "ggml_gelu",
+        constants$9.const$0
     );
 }
 

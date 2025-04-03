@@ -3,34 +3,37 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$37 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$37() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_type_name",
-        constants$28.const$0
+        "ggml_is_contiguous_0",
+        constants$30.const$0
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_op_name",
-        constants$28.const$0
+        "ggml_is_contiguous_1",
+        constants$30.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_op_symbol",
-        constants$28.const$0
+        "ggml_is_contiguous_2",
+        constants$30.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_unary_op_name",
-        constants$28.const$0
+        "ggml_are_same_shape",
+        constants$30.const$3
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_op_desc",
-        constants$10.const$5
+        "ggml_are_same_stride",
+        constants$30.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_element_size",
-        constants$23.const$3
+        "ggml_can_repeat",
+        constants$30.const$3
     );
 }
 

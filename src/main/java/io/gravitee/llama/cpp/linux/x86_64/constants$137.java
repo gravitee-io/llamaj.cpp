@@ -4,34 +4,30 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$137 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$137() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_set_n_threads",
-        constants$60.const$3
-    );
+    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(llama_progress_callback.class, "apply", constants$136.const$5);
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_set_threadpool",
-        constants$13.const$3
+        constants$136.const$5
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_set_abort_callback",
-        constants$81.const$1
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_reg",
-        constants$10.const$3
-    );
-    static final StructLayout const$4 = MemoryLayout.structLayout(
-        JAVA_INT.withName("id"),
-        JAVA_FLOAT.withName("logit"),
-        JAVA_FLOAT.withName("p")
-    ).withName("llama_token_data");
-    static final VarHandle const$5 = constants$137.const$4.varHandle(PathElement.groupElement("id"));
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        JAVA_INT.withName("n_tokens"),
+        MemoryLayout.paddingLayout(4),
+        RuntimeHelper.POINTER.withName("token"),
+        RuntimeHelper.POINTER.withName("embd"),
+        RuntimeHelper.POINTER.withName("pos"),
+        RuntimeHelper.POINTER.withName("n_seq_id"),
+        RuntimeHelper.POINTER.withName("seq_id"),
+        RuntimeHelper.POINTER.withName("logits")
+    ).withName("llama_batch");
+    static final VarHandle const$3 = constants$137.const$2.varHandle(MemoryLayout.PathElement.groupElement("n_tokens"));
+    static final VarHandle const$4 = constants$137.const$2.varHandle(MemoryLayout.PathElement.groupElement("token"));
+    static final VarHandle const$5 = constants$137.const$2.varHandle(MemoryLayout.PathElement.groupElement("embd"));
 }
 
 

@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct ggml_backend_dev_props {
@@ -20,10 +22,10 @@ import java.lang.foreign.*;
 public class ggml_backend_dev_props {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$109.const$5;
+        return constants$107.const$2;
     }
     public static VarHandle name$VH() {
-        return constants$110.const$0;
+        return constants$107.const$3;
     }
     /**
      * Getter for field:
@@ -32,7 +34,7 @@ public class ggml_backend_dev_props {
      * }
      */
     public static MemorySegment name$get(MemorySegment seg) {
-        return (MemorySegment)constants$110.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$107.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -41,16 +43,16 @@ public class ggml_backend_dev_props {
      * }
      */
     public static void name$set(MemorySegment seg, MemorySegment x) {
-        constants$110.const$0.set(seg, x);
+        constants$107.const$3.set(seg, x);
     }
     public static MemorySegment name$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$110.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$107.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void name$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$110.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$107.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle description$VH() {
-        return constants$110.const$1;
+        return constants$107.const$4;
     }
     /**
      * Getter for field:
@@ -59,7 +61,7 @@ public class ggml_backend_dev_props {
      * }
      */
     public static MemorySegment description$get(MemorySegment seg) {
-        return (MemorySegment)constants$110.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$107.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -68,16 +70,16 @@ public class ggml_backend_dev_props {
      * }
      */
     public static void description$set(MemorySegment seg, MemorySegment x) {
-        constants$110.const$1.set(seg, x);
+        constants$107.const$4.set(seg, x);
     }
     public static MemorySegment description$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$110.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$107.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void description$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$110.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$107.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle memory_free$VH() {
-        return constants$110.const$2;
+        return constants$107.const$5;
     }
     /**
      * Getter for field:
@@ -86,7 +88,7 @@ public class ggml_backend_dev_props {
      * }
      */
     public static long memory_free$get(MemorySegment seg) {
-        return (long)constants$110.const$2.get(seg);
+        return (long)constants$107.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -95,16 +97,16 @@ public class ggml_backend_dev_props {
      * }
      */
     public static void memory_free$set(MemorySegment seg, long x) {
-        constants$110.const$2.set(seg, x);
+        constants$107.const$5.set(seg, x);
     }
     public static long memory_free$get(MemorySegment seg, long index) {
-        return (long)constants$110.const$2.get(seg.asSlice(index*sizeof()));
+        return (long)constants$107.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void memory_free$set(MemorySegment seg, long index, long x) {
-        constants$110.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$107.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle memory_total$VH() {
-        return constants$110.const$3;
+        return constants$108.const$0;
     }
     /**
      * Getter for field:
@@ -113,7 +115,7 @@ public class ggml_backend_dev_props {
      * }
      */
     public static long memory_total$get(MemorySegment seg) {
-        return (long)constants$110.const$3.get(seg);
+        return (long)constants$108.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -122,16 +124,16 @@ public class ggml_backend_dev_props {
      * }
      */
     public static void memory_total$set(MemorySegment seg, long x) {
-        constants$110.const$3.set(seg, x);
+        constants$108.const$0.set(seg, x);
     }
     public static long memory_total$get(MemorySegment seg, long index) {
-        return (long)constants$110.const$3.get(seg.asSlice(index*sizeof()));
+        return (long)constants$108.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void memory_total$set(MemorySegment seg, long index, long x) {
-        constants$110.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$108.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle type$VH() {
-        return constants$110.const$4;
+        return constants$108.const$1;
     }
     /**
      * Getter for field:
@@ -140,7 +142,7 @@ public class ggml_backend_dev_props {
      * }
      */
     public static int type$get(MemorySegment seg) {
-        return (int)constants$110.const$4.get(seg);
+        return (int)constants$108.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -149,13 +151,13 @@ public class ggml_backend_dev_props {
      * }
      */
     public static void type$set(MemorySegment seg, int x) {
-        constants$110.const$4.set(seg, x);
+        constants$108.const$1.set(seg, x);
     }
     public static int type$get(MemorySegment seg, long index) {
-        return (int)constants$110.const$4.get(seg.asSlice(index*sizeof()));
+        return (int)constants$108.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void type$set(MemorySegment seg, long index, int x) {
-        constants$110.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$108.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static MemorySegment caps$slice(MemorySegment seg) {
         return seg.asSlice(36, 4);

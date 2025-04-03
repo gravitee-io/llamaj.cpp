@@ -4,6 +4,7 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$8 {
@@ -11,18 +12,25 @@ final class constants$8 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$8() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        constants$7.const$4
+        "fclose",
+        constants$7.const$1
     );
-    static final StructLayout const$1 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("read"),
-        RuntimeHelper.POINTER.withName("write"),
-        RuntimeHelper.POINTER.withName("seek"),
-        RuntimeHelper.POINTER.withName("close")
-    ).withName("_IO_cookie_io_functions_t");
-    static final VarHandle const$2 = constants$8.const$1.varHandle(PathElement.groupElement("read"));
-    static final VarHandle const$3 = constants$8.const$1.varHandle(PathElement.groupElement("write"));
-    static final VarHandle const$4 = constants$8.const$1.varHandle(PathElement.groupElement("seek"));
-    static final VarHandle const$5 = constants$8.const$1.varHandle(PathElement.groupElement("close"));
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER);
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "tmpfile",
+        constants$8.const$1
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "tmpnam",
+        constants$8.const$3
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "tmpnam_r",
+        constants$8.const$3
+    );
 }
 
 

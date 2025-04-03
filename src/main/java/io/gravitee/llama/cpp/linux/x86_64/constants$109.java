@@ -2,36 +2,39 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$109 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$109() {}
-    static final StructLayout const$0 = MemoryLayout.structLayout(
-        JAVA_BOOLEAN.withName("async"),
-        JAVA_BOOLEAN.withName("host_buffer"),
-        JAVA_BOOLEAN.withName("buffer_from_host_ptr"),
-        JAVA_BOOLEAN.withName("events")
-    ).withName("ggml_backend_dev_caps");
-    static final VarHandle const$1 = constants$109.const$0.varHandle(PathElement.groupElement("async"));
-    static final VarHandle const$2 = constants$109.const$0.varHandle(PathElement.groupElement("host_buffer"));
-    static final VarHandle const$3 = constants$109.const$0.varHandle(PathElement.groupElement("buffer_from_host_ptr"));
-    static final VarHandle const$4 = constants$109.const$0.varHandle(PathElement.groupElement("events"));
-    static final StructLayout const$5 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("name"),
-        RuntimeHelper.POINTER.withName("description"),
-        JAVA_LONG.withName("memory_free"),
-        JAVA_LONG.withName("memory_total"),
-        JAVA_INT.withName("type"),
-        MemoryLayout.structLayout(
-            JAVA_BOOLEAN.withName("async"),
-            JAVA_BOOLEAN.withName("host_buffer"),
-            JAVA_BOOLEAN.withName("buffer_from_host_ptr"),
-            JAVA_BOOLEAN.withName("events")
-        ).withName("caps")
-    ).withName("ggml_backend_dev_props");
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_get_props",
+        constants$10.const$5
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_backend_reg",
+        constants$8.const$3
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_init",
+        constants$9.const$0
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_buffer_type",
+        constants$8.const$3
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_host_buffer_type",
+        constants$8.const$3
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_buffer_from_host_ptr",
+        constants$61.const$0
+    );
 }
 
 

@@ -3,35 +3,37 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$100 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$100() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_alloc_buffer",
-        constants$45.const$0
+    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_BYTE
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_get_alignment",
-        constants$23.const$3
+        "ggml_backend_buffer_clear",
+        constants$100.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_get_max_size",
-        constants$23.const$3
+        "ggml_backend_buffer_is_host",
+        constants$30.const$0
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_LONG,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_buffer_set_usage",
+        constants$57.const$5
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_get_alloc_size",
-        constants$100.const$3
+        "ggml_backend_buffer_get_usage",
+        constants$7.const$1
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_is_host",
-        constants$33.const$0
+        "ggml_backend_buffer_get_type",
+        constants$8.const$3
     );
 }
 

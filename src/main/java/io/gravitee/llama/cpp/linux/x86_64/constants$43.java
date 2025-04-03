@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$43 {
@@ -10,31 +12,32 @@ final class constants$43 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$43() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_get_mem_size",
-        constants$23.const$3
+        "ggml_get_tensor",
+        constants$9.const$0
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_get_max_tensor_size",
-        constants$23.const$3
-    );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final FunctionDescriptor const$1 = FunctionDescriptor.ofVoid(
         RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
+        JAVA_LONG,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_new_tensor",
-        constants$43.const$2
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_unravel_index",
+        constants$43.const$1
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_LONG
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_get_unary_op",
+        constants$7.const$1
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_get_data",
+        constants$8.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_new_tensor_1d",
-        constants$43.const$4
+        "ggml_get_data_f32",
+        constants$8.const$3
     );
 }
 

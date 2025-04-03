@@ -3,26 +3,40 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$7 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$7() {}
-    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(cookie_write_function_t.class, "apply", constants$6.const$3);
+    static final MemorySegment const$0 = RuntimeHelper.lookupGlobalVariable("stderr", RuntimeHelper.POINTER);
     static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT
-    );
-    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(cookie_seek_function_t.class, "apply", constants$7.const$1);
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        constants$7.const$1
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_INT,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(cookie_close_function_t.class, "apply", constants$7.const$4);
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "remove",
+        constants$7.const$1
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_INT,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "rename",
+        constants$7.const$3
+    );
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_INT,
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        RuntimeHelper.POINTER
+    );
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "renameat",
+        constants$7.const$5
+    );
 }
 
 

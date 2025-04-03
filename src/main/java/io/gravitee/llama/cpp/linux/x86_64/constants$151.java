@@ -2,24 +2,48 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$151 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$151() {}
-    static final VarHandle const$0 = constants$150.const$5.varHandle(PathElement.groupElement("token"));
-    static final VarHandle const$1 = constants$150.const$5.varHandle(PathElement.groupElement("bias"));
-    static final StructLayout const$2 = MemoryLayout.structLayout(
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(MemoryLayout.structLayout(
         JAVA_BOOLEAN.withName("no_perf")
-    ).withName("llama_sampler_chain_params");
-    static final VarHandle const$3 = constants$151.const$2.varHandle(PathElement.groupElement("no_perf"));
-    static final StructLayout const$4 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("role"),
-        RuntimeHelper.POINTER.withName("content")
-    ).withName("llama_chat_message");
-    static final VarHandle const$5 = constants$151.const$4.varHandle(PathElement.groupElement("role"));
+    ).withName("llama_sampler_chain_params"));
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_sampler_chain_default_params",
+        constants$151.const$0
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        JAVA_INT.withName("nthread"),
+        JAVA_INT.withName("ftype"),
+        JAVA_INT.withName("output_tensor_type"),
+        JAVA_INT.withName("token_embedding_type"),
+        JAVA_BOOLEAN.withName("allow_requantize"),
+        JAVA_BOOLEAN.withName("quantize_output_tensor"),
+        JAVA_BOOLEAN.withName("only_copy"),
+        JAVA_BOOLEAN.withName("pure"),
+        JAVA_BOOLEAN.withName("keep_split"),
+        MemoryLayout.paddingLayout(3),
+        RuntimeHelper.POINTER.withName("imatrix"),
+        RuntimeHelper.POINTER.withName("kv_overrides")
+    ).withName("llama_model_quantize_params"));
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_model_quantize_default_params",
+        constants$151.const$2
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_backend_init",
+        constants$30.const$5
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_backend_free",
+        constants$30.const$5
+    );
 }
 
 

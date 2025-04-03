@@ -2,10 +2,6 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
-import io.gravitee.llama.cpp.linux.x86_64.RuntimeHelper;
-import io.gravitee.llama.cpp.linux.x86_64.constants$0;
-import io.gravitee.llama.cpp.linux.x86_64.constants$1;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 import java.nio.ByteOrder;

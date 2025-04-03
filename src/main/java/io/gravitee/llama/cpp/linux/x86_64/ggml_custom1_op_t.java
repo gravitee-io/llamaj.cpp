@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * void (*ggml_custom1_op_t)(struct ggml_tensor* dst,struct ggml_tensor* a,int ith,int nth,void* userdata);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_custom1_op_t {
 
-    void apply(MemorySegment dst, MemorySegment a, int ith, int nth, MemorySegment userdata);
+    void apply(java.lang.foreign.MemorySegment dst, java.lang.foreign.MemorySegment a, int ith, int nth, java.lang.foreign.MemorySegment userdata);
     static MemorySegment allocate(ggml_custom1_op_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$84.const$1, fi, constants$84.const$0, scope);
+        return RuntimeHelper.upcallStub(constants$81.const$2, fi, constants$81.const$1, scope);
     }
     static ggml_custom1_op_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _dst, MemorySegment _a, int _ith, int _nth, MemorySegment _userdata) -> {
+        return (java.lang.foreign.MemorySegment _dst, java.lang.foreign.MemorySegment _a, int _ith, int _nth, java.lang.foreign.MemorySegment _userdata) -> {
             try {
-                constants$84.const$2.invokeExact(symbol, _dst, _a, _ith, _nth, _userdata);
+                constants$81.const$3.invokeExact(symbol, _dst, _a, _ith, _nth, _userdata);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

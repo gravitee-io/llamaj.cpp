@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct ggml_type_traits_cpu {
@@ -18,10 +20,10 @@ import java.lang.foreign.*;
 public class ggml_type_traits_cpu {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$135.const$3;
+        return constants$133.const$1;
     }
     public static VarHandle from_float$VH() {
-        return constants$135.const$4;
+        return constants$133.const$2;
     }
     /**
      * Getter for field:
@@ -30,7 +32,7 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static MemorySegment from_float$get(MemorySegment seg) {
-        return (MemorySegment)constants$135.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$133.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -39,19 +41,19 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static void from_float$set(MemorySegment seg, MemorySegment x) {
-        constants$135.const$4.set(seg, x);
+        constants$133.const$2.set(seg, x);
     }
     public static MemorySegment from_float$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$135.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$133.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void from_float$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$135.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$133.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static ggml_from_float_t from_float(MemorySegment segment, Arena scope) {
         return ggml_from_float_t.ofAddress(from_float$get(segment), scope);
     }
     public static VarHandle vec_dot$VH() {
-        return constants$135.const$5;
+        return constants$133.const$3;
     }
     /**
      * Getter for field:
@@ -60,7 +62,7 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static MemorySegment vec_dot$get(MemorySegment seg) {
-        return (MemorySegment)constants$135.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$133.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -69,19 +71,19 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static void vec_dot$set(MemorySegment seg, MemorySegment x) {
-        constants$135.const$5.set(seg, x);
+        constants$133.const$3.set(seg, x);
     }
     public static MemorySegment vec_dot$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$135.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$133.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void vec_dot$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$135.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$133.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static ggml_vec_dot_t vec_dot(MemorySegment segment, Arena scope) {
         return ggml_vec_dot_t.ofAddress(vec_dot$get(segment), scope);
     }
     public static VarHandle vec_dot_type$VH() {
-        return constants$136.const$0;
+        return constants$133.const$4;
     }
     /**
      * Getter for field:
@@ -90,7 +92,7 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static int vec_dot_type$get(MemorySegment seg) {
-        return (int)constants$136.const$0.get(seg);
+        return (int)constants$133.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -99,16 +101,16 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static void vec_dot_type$set(MemorySegment seg, int x) {
-        constants$136.const$0.set(seg, x);
+        constants$133.const$4.set(seg, x);
     }
     public static int vec_dot_type$get(MemorySegment seg, long index) {
-        return (int)constants$136.const$0.get(seg.asSlice(index*sizeof()));
+        return (int)constants$133.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void vec_dot_type$set(MemorySegment seg, long index, int x) {
-        constants$136.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$133.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle nrows$VH() {
-        return constants$136.const$1;
+        return constants$133.const$5;
     }
     /**
      * Getter for field:
@@ -117,7 +119,7 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static long nrows$get(MemorySegment seg) {
-        return (long)constants$136.const$1.get(seg);
+        return (long)constants$133.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -126,13 +128,13 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static void nrows$set(MemorySegment seg, long x) {
-        constants$136.const$1.set(seg, x);
+        constants$133.const$5.set(seg, x);
     }
     public static long nrows$get(MemorySegment seg, long index) {
-        return (long)constants$136.const$1.get(seg.asSlice(index*sizeof()));
+        return (long)constants$133.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void nrows$set(MemorySegment seg, long index, long x) {
-        constants$136.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$133.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

@@ -3,34 +3,42 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$38 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$38() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        JAVA_INT
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_tensor_overhead",
+        constants$31.const$0
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_is_quantized",
-        constants$38.const$0
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        JAVA_LONG
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_ftype_to_ggml_type",
-        constants$19.const$5
+        "ggml_validate_row_data",
+        constants$38.const$1
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_is_transposed",
-        constants$33.const$0
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        MemoryLayout.structLayout(
+            JAVA_LONG.withName("mem_size"),
+            RuntimeHelper.POINTER.withName("mem_buffer"),
+            JAVA_BOOLEAN.withName("no_alloc"),
+            MemoryLayout.paddingLayout(7)
+        ).withName("ggml_init_params")
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_is_permuted",
-        constants$33.const$0
+        "ggml_init",
+        constants$38.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_is_empty",
-        constants$33.const$0
+        "ggml_reset",
+        constants$11.const$4
     );
 }
 

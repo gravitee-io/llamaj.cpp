@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct ggml_backend_dev_caps {
@@ -18,10 +20,10 @@ import java.lang.foreign.*;
 public class ggml_backend_dev_caps {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$109.const$0;
+        return constants$106.const$3;
     }
     public static VarHandle async$VH() {
-        return constants$109.const$1;
+        return constants$106.const$4;
     }
     /**
      * Getter for field:
@@ -30,7 +32,7 @@ public class ggml_backend_dev_caps {
      * }
      */
     public static boolean async$get(MemorySegment seg) {
-        return (boolean)constants$109.const$1.get(seg);
+        return (boolean)constants$106.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -39,16 +41,16 @@ public class ggml_backend_dev_caps {
      * }
      */
     public static void async$set(MemorySegment seg, boolean x) {
-        constants$109.const$1.set(seg, x);
+        constants$106.const$4.set(seg, x);
     }
     public static boolean async$get(MemorySegment seg, long index) {
-        return (boolean)constants$109.const$1.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$106.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void async$set(MemorySegment seg, long index, boolean x) {
-        constants$109.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$106.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle host_buffer$VH() {
-        return constants$109.const$2;
+        return constants$106.const$5;
     }
     /**
      * Getter for field:
@@ -57,7 +59,7 @@ public class ggml_backend_dev_caps {
      * }
      */
     public static boolean host_buffer$get(MemorySegment seg) {
-        return (boolean)constants$109.const$2.get(seg);
+        return (boolean)constants$106.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -66,16 +68,16 @@ public class ggml_backend_dev_caps {
      * }
      */
     public static void host_buffer$set(MemorySegment seg, boolean x) {
-        constants$109.const$2.set(seg, x);
+        constants$106.const$5.set(seg, x);
     }
     public static boolean host_buffer$get(MemorySegment seg, long index) {
-        return (boolean)constants$109.const$2.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$106.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void host_buffer$set(MemorySegment seg, long index, boolean x) {
-        constants$109.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$106.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle buffer_from_host_ptr$VH() {
-        return constants$109.const$3;
+        return constants$107.const$0;
     }
     /**
      * Getter for field:
@@ -84,7 +86,7 @@ public class ggml_backend_dev_caps {
      * }
      */
     public static boolean buffer_from_host_ptr$get(MemorySegment seg) {
-        return (boolean)constants$109.const$3.get(seg);
+        return (boolean)constants$107.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -93,16 +95,16 @@ public class ggml_backend_dev_caps {
      * }
      */
     public static void buffer_from_host_ptr$set(MemorySegment seg, boolean x) {
-        constants$109.const$3.set(seg, x);
+        constants$107.const$0.set(seg, x);
     }
     public static boolean buffer_from_host_ptr$get(MemorySegment seg, long index) {
-        return (boolean)constants$109.const$3.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$107.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void buffer_from_host_ptr$set(MemorySegment seg, long index, boolean x) {
-        constants$109.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$107.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle events$VH() {
-        return constants$109.const$4;
+        return constants$107.const$1;
     }
     /**
      * Getter for field:
@@ -111,7 +113,7 @@ public class ggml_backend_dev_caps {
      * }
      */
     public static boolean events$get(MemorySegment seg) {
-        return (boolean)constants$109.const$4.get(seg);
+        return (boolean)constants$107.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -120,13 +122,13 @@ public class ggml_backend_dev_caps {
      * }
      */
     public static void events$set(MemorySegment seg, boolean x) {
-        constants$109.const$4.set(seg, x);
+        constants$107.const$1.set(seg, x);
     }
     public static boolean events$get(MemorySegment seg, long index) {
-        return (boolean)constants$109.const$4.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$107.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void events$set(MemorySegment seg, long index, boolean x) {
-        constants$109.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$107.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }
