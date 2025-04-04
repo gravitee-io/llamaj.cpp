@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * void (*ggml_backend_set_n_threads_t)(struct ggml_backend* backend,int n_threads);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_backend_set_n_threads_t {
 
-    void apply(MemorySegment backend, int n_threads);
+    void apply(java.lang.foreign.MemorySegment backend, int n_threads);
     static MemorySegment allocate(ggml_backend_set_n_threads_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$114.const$0, fi, constants$60.const$3, scope);
+        return RuntimeHelper.upcallStub(constants$111.const$3, fi, constants$57.const$5, scope);
     }
     static ggml_backend_set_n_threads_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _backend, int _n_threads) -> {
+        return (java.lang.foreign.MemorySegment _backend, int _n_threads) -> {
             try {
-                constants$114.const$1.invokeExact(symbol, _backend, _n_threads);
+                constants$111.const$4.invokeExact(symbol, _backend, _n_threads);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

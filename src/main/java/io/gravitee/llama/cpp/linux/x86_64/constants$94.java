@@ -2,19 +2,32 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
-
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$94 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$94() {}
-    static final VarHandle const$0 = constants$93.const$5.varHandle(PathElement.groupElement("type_name"));
-    static final VarHandle const$1 = constants$93.const$5.varHandle(PathElement.groupElement("blck_size"));
-    static final VarHandle const$2 = constants$93.const$5.varHandle(PathElement.groupElement("blck_size_interleave"));
-    static final VarHandle const$3 = constants$93.const$5.varHandle(PathElement.groupElement("type_size"));
-    static final VarHandle const$4 = constants$93.const$5.varHandle(PathElement.groupElement("is_quantized"));
-    static final VarHandle const$5 = constants$93.const$5.varHandle(PathElement.groupElement("to_float"));
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_threadpool_params_init",
+        constants$57.const$5
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_threadpool_params_match",
+        constants$30.const$3
+    );
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("buffer"),
+        RuntimeHelper.POINTER.withName("base"),
+        JAVA_LONG.withName("alignment"),
+        JAVA_LONG.withName("offset")
+    ).withName("ggml_tallocr");
+    static final VarHandle const$3 = constants$94.const$2.varHandle(MemoryLayout.PathElement.groupElement("buffer"));
+    static final VarHandle const$4 = constants$94.const$2.varHandle(MemoryLayout.PathElement.groupElement("base"));
+    static final VarHandle const$5 = constants$94.const$2.varHandle(MemoryLayout.PathElement.groupElement("alignment"));
 }
 
 

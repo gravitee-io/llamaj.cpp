@@ -2,32 +2,21 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$148 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$148() {}
-    static final VarHandle const$0 = constants$144.const$0.varHandle(PathElement.groupElement("offload_kqv"));
-    static final VarHandle const$1 = constants$144.const$0.varHandle(PathElement.groupElement("flash_attn"));
-    static final VarHandle const$2 = constants$144.const$0.varHandle(PathElement.groupElement("no_perf"));
-    static final VarHandle const$3 = constants$144.const$0.varHandle(PathElement.groupElement("abort_callback"));
-    static final VarHandle const$4 = constants$144.const$0.varHandle(PathElement.groupElement("abort_callback_data"));
-    static final StructLayout const$5 = MemoryLayout.structLayout(
-        JAVA_INT.withName("nthread"),
-        JAVA_INT.withName("ftype"),
-        JAVA_INT.withName("output_tensor_type"),
-        JAVA_INT.withName("token_embedding_type"),
-        JAVA_BOOLEAN.withName("allow_requantize"),
-        JAVA_BOOLEAN.withName("quantize_output_tensor"),
-        JAVA_BOOLEAN.withName("only_copy"),
-        JAVA_BOOLEAN.withName("pure"),
-        JAVA_BOOLEAN.withName("keep_split"),
-        MemoryLayout.paddingLayout(3),
-        RuntimeHelper.POINTER.withName("imatrix"),
-        RuntimeHelper.POINTER.withName("kv_overrides")
-    ).withName("llama_model_quantize_params");
+    static final VarHandle const$0 = constants$147.const$1.varHandle(MemoryLayout.PathElement.groupElement("allow_requantize"));
+    static final VarHandle const$1 = constants$147.const$1.varHandle(MemoryLayout.PathElement.groupElement("quantize_output_tensor"));
+    static final VarHandle const$2 = constants$147.const$1.varHandle(MemoryLayout.PathElement.groupElement("only_copy"));
+    static final VarHandle const$3 = constants$147.const$1.varHandle(MemoryLayout.PathElement.groupElement("pure"));
+    static final VarHandle const$4 = constants$147.const$1.varHandle(MemoryLayout.PathElement.groupElement("keep_split"));
+    static final VarHandle const$5 = constants$147.const$1.varHandle(MemoryLayout.PathElement.groupElement("imatrix"));
 }
 
 

@@ -2,14 +2,16 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$1 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$1() {}
-    static final VarHandle const$0 = constants$0.const$5.varHandle(PathElement.groupElement("__wch"));
+    static final VarHandle const$0 = constants$0.const$5.varHandle(MemoryLayout.PathElement.groupElement("__wch"));
     static final StructLayout const$1 = MemoryLayout.structLayout(
         JAVA_LONG.withName("__pos"),
         MemoryLayout.structLayout(
@@ -20,7 +22,7 @@ final class constants$1 {
             ).withName("__value")
         ).withName("__state")
     ).withName("_G_fpos_t");
-    static final VarHandle const$2 = constants$1.const$1.varHandle(PathElement.groupElement("__pos"));
+    static final VarHandle const$2 = constants$1.const$1.varHandle(MemoryLayout.PathElement.groupElement("__pos"));
     static final StructLayout const$3 = MemoryLayout.structLayout(
         JAVA_LONG.withName("__pos"),
         MemoryLayout.structLayout(
@@ -31,7 +33,7 @@ final class constants$1 {
             ).withName("__value")
         ).withName("__state")
     ).withName("_G_fpos64_t");
-    static final VarHandle const$4 = constants$1.const$3.varHandle(PathElement.groupElement("__pos"));
+    static final VarHandle const$4 = constants$1.const$3.varHandle(MemoryLayout.PathElement.groupElement("__pos"));
     static final StructLayout const$5 = MemoryLayout.structLayout(
         JAVA_INT.withName("_flags"),
         MemoryLayout.paddingLayout(4),

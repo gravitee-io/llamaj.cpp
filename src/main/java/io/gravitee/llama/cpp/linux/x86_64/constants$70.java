@@ -3,49 +3,44 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$70 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$70() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_FLOAT
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_conv_1d_ph",
+        constants$66.const$2
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_rope_custom",
-        constants$70.const$0
+        "ggml_conv_1d_dw",
+        constants$69.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_rope_custom_inplace",
-        constants$70.const$0
+        "ggml_conv_1d_dw_ph",
+        constants$66.const$2
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.ofVoid(
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_conv_transpose_1d",
+        constants$69.const$4
+    );
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         JAVA_INT,
         JAVA_INT,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_rope_yarn_corr_dims",
-        constants$70.const$3
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_rope_ext_back",
-        constants$69.const$1
+        "ggml_conv_2d",
+        constants$70.const$4
     );
 }
 

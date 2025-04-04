@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct llama_kv_cache_view {
@@ -22,10 +24,10 @@ import java.lang.foreign.*;
 public class llama_kv_cache_view {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$165.const$0;
+        return constants$163.const$2;
     }
     public static VarHandle n_cells$VH() {
-        return constants$165.const$1;
+        return constants$163.const$3;
     }
     /**
      * Getter for field:
@@ -34,7 +36,7 @@ public class llama_kv_cache_view {
      * }
      */
     public static int n_cells$get(MemorySegment seg) {
-        return (int)constants$165.const$1.get(seg);
+        return (int)constants$163.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -43,16 +45,16 @@ public class llama_kv_cache_view {
      * }
      */
     public static void n_cells$set(MemorySegment seg, int x) {
-        constants$165.const$1.set(seg, x);
+        constants$163.const$3.set(seg, x);
     }
     public static int n_cells$get(MemorySegment seg, long index) {
-        return (int)constants$165.const$1.get(seg.asSlice(index*sizeof()));
+        return (int)constants$163.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void n_cells$set(MemorySegment seg, long index, int x) {
-        constants$165.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$163.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle n_seq_max$VH() {
-        return constants$165.const$2;
+        return constants$163.const$4;
     }
     /**
      * Getter for field:
@@ -61,7 +63,7 @@ public class llama_kv_cache_view {
      * }
      */
     public static int n_seq_max$get(MemorySegment seg) {
-        return (int)constants$165.const$2.get(seg);
+        return (int)constants$163.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -70,16 +72,16 @@ public class llama_kv_cache_view {
      * }
      */
     public static void n_seq_max$set(MemorySegment seg, int x) {
-        constants$165.const$2.set(seg, x);
+        constants$163.const$4.set(seg, x);
     }
     public static int n_seq_max$get(MemorySegment seg, long index) {
-        return (int)constants$165.const$2.get(seg.asSlice(index*sizeof()));
+        return (int)constants$163.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void n_seq_max$set(MemorySegment seg, long index, int x) {
-        constants$165.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$163.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle token_count$VH() {
-        return constants$165.const$3;
+        return constants$163.const$5;
     }
     /**
      * Getter for field:
@@ -88,7 +90,7 @@ public class llama_kv_cache_view {
      * }
      */
     public static int token_count$get(MemorySegment seg) {
-        return (int)constants$165.const$3.get(seg);
+        return (int)constants$163.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -97,16 +99,16 @@ public class llama_kv_cache_view {
      * }
      */
     public static void token_count$set(MemorySegment seg, int x) {
-        constants$165.const$3.set(seg, x);
+        constants$163.const$5.set(seg, x);
     }
     public static int token_count$get(MemorySegment seg, long index) {
-        return (int)constants$165.const$3.get(seg.asSlice(index*sizeof()));
+        return (int)constants$163.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void token_count$set(MemorySegment seg, long index, int x) {
-        constants$165.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$163.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle used_cells$VH() {
-        return constants$165.const$4;
+        return constants$164.const$0;
     }
     /**
      * Getter for field:
@@ -115,7 +117,7 @@ public class llama_kv_cache_view {
      * }
      */
     public static int used_cells$get(MemorySegment seg) {
-        return (int)constants$165.const$4.get(seg);
+        return (int)constants$164.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -124,16 +126,16 @@ public class llama_kv_cache_view {
      * }
      */
     public static void used_cells$set(MemorySegment seg, int x) {
-        constants$165.const$4.set(seg, x);
+        constants$164.const$0.set(seg, x);
     }
     public static int used_cells$get(MemorySegment seg, long index) {
-        return (int)constants$165.const$4.get(seg.asSlice(index*sizeof()));
+        return (int)constants$164.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void used_cells$set(MemorySegment seg, long index, int x) {
-        constants$165.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$164.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle max_contiguous$VH() {
-        return constants$165.const$5;
+        return constants$164.const$1;
     }
     /**
      * Getter for field:
@@ -142,7 +144,7 @@ public class llama_kv_cache_view {
      * }
      */
     public static int max_contiguous$get(MemorySegment seg) {
-        return (int)constants$165.const$5.get(seg);
+        return (int)constants$164.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -151,16 +153,16 @@ public class llama_kv_cache_view {
      * }
      */
     public static void max_contiguous$set(MemorySegment seg, int x) {
-        constants$165.const$5.set(seg, x);
+        constants$164.const$1.set(seg, x);
     }
     public static int max_contiguous$get(MemorySegment seg, long index) {
-        return (int)constants$165.const$5.get(seg.asSlice(index*sizeof()));
+        return (int)constants$164.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void max_contiguous$set(MemorySegment seg, long index, int x) {
-        constants$165.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$164.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle max_contiguous_idx$VH() {
-        return constants$166.const$0;
+        return constants$164.const$2;
     }
     /**
      * Getter for field:
@@ -169,7 +171,7 @@ public class llama_kv_cache_view {
      * }
      */
     public static int max_contiguous_idx$get(MemorySegment seg) {
-        return (int)constants$166.const$0.get(seg);
+        return (int)constants$164.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -178,16 +180,16 @@ public class llama_kv_cache_view {
      * }
      */
     public static void max_contiguous_idx$set(MemorySegment seg, int x) {
-        constants$166.const$0.set(seg, x);
+        constants$164.const$2.set(seg, x);
     }
     public static int max_contiguous_idx$get(MemorySegment seg, long index) {
-        return (int)constants$166.const$0.get(seg.asSlice(index*sizeof()));
+        return (int)constants$164.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void max_contiguous_idx$set(MemorySegment seg, long index, int x) {
-        constants$166.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$164.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle cells$VH() {
-        return constants$166.const$1;
+        return constants$164.const$3;
     }
     /**
      * Getter for field:
@@ -196,7 +198,7 @@ public class llama_kv_cache_view {
      * }
      */
     public static MemorySegment cells$get(MemorySegment seg) {
-        return (MemorySegment)constants$166.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$164.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -205,16 +207,16 @@ public class llama_kv_cache_view {
      * }
      */
     public static void cells$set(MemorySegment seg, MemorySegment x) {
-        constants$166.const$1.set(seg, x);
+        constants$164.const$3.set(seg, x);
     }
     public static MemorySegment cells$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$166.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$164.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void cells$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$166.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$164.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle cells_sequences$VH() {
-        return constants$166.const$2;
+        return constants$164.const$4;
     }
     /**
      * Getter for field:
@@ -223,7 +225,7 @@ public class llama_kv_cache_view {
      * }
      */
     public static MemorySegment cells_sequences$get(MemorySegment seg) {
-        return (MemorySegment)constants$166.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$164.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -232,13 +234,13 @@ public class llama_kv_cache_view {
      * }
      */
     public static void cells_sequences$set(MemorySegment seg, MemorySegment x) {
-        constants$166.const$2.set(seg, x);
+        constants$164.const$4.set(seg, x);
     }
     public static MemorySegment cells_sequences$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$166.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$164.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void cells_sequences$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$166.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$164.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

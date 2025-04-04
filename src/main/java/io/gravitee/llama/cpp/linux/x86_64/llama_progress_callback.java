@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * _Bool (*llama_progress_callback)(float progress,void* user_data);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface llama_progress_callback {
 
-    boolean apply(float progress, MemorySegment user_data);
+    boolean apply(float progress, java.lang.foreign.MemorySegment user_data);
     static MemorySegment allocate(llama_progress_callback fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$139.const$2, fi, constants$139.const$1, scope);
+        return RuntimeHelper.upcallStub(constants$137.const$0, fi, constants$136.const$5, scope);
     }
     static llama_progress_callback ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (float _progress, MemorySegment _user_data) -> {
+        return (float _progress, java.lang.foreign.MemorySegment _user_data) -> {
             try {
-                return (boolean)constants$139.const$3.invokeExact(symbol, _progress, _user_data);
+                return (boolean)constants$137.const$1.invokeExact(symbol, _progress, _user_data);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

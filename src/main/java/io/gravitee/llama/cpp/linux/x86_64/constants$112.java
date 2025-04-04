@@ -3,35 +3,25 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$112 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$112() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_buffer_type",
-        constants$10.const$5
+        constants$8.const$3
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_host_buffer_type",
-        constants$10.const$5
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_buffer_from_host_ptr",
-        constants$63.const$3
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_supports_op",
-        constants$33.const$3
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_supports_buft",
-        constants$33.const$3
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_offload_op",
-        constants$33.const$3
-    );
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_backend_set_abort_callback_t.class, "apply", constants$78.const$2);
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("name"),
+        RuntimeHelper.POINTER.withName("value")
+    ).withName("ggml_backend_feature");
+    static final VarHandle const$3 = constants$112.const$2.varHandle(MemoryLayout.PathElement.groupElement("name"));
+    static final VarHandle const$4 = constants$112.const$2.varHandle(MemoryLayout.PathElement.groupElement("value"));
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_backend_get_features_t.class, "apply", constants$8.const$3);
 }
 
 

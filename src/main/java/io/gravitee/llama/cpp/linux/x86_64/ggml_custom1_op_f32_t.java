@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * void (*ggml_custom1_op_f32_t)(struct ggml_tensor*,struct ggml_tensor*);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_custom1_op_f32_t {
 
-    void apply(MemorySegment _x0, MemorySegment _x1);
+    void apply(java.lang.foreign.MemorySegment _x0, java.lang.foreign.MemorySegment _x1);
     static MemorySegment allocate(ggml_custom1_op_f32_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$80.const$5, fi, constants$13.const$3, scope);
+        return RuntimeHelper.upcallStub(constants$78.const$0, fi, constants$10.const$5, scope);
     }
     static ggml_custom1_op_f32_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment __x0, MemorySegment __x1) -> {
+        return (java.lang.foreign.MemorySegment __x0, java.lang.foreign.MemorySegment __x1) -> {
             try {
-                constants$81.const$0.invokeExact(symbol, __x0, __x1);
+                constants$78.const$1.invokeExact(symbol, __x0, __x1);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * void (*ggml_from_float_t)(float* x,void* y,long k);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_from_float_t {
 
-    void apply(MemorySegment x, MemorySegment y, long k);
+    void apply(java.lang.foreign.MemorySegment x, java.lang.foreign.MemorySegment y, long k);
     static MemorySegment allocate(ggml_from_float_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$93.const$4, fi, constants$14.const$0, scope);
+        return RuntimeHelper.upcallStub(constants$91.const$0, fi, constants$11.const$2, scope);
     }
     static ggml_from_float_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _x, MemorySegment _y, long _k) -> {
+        return (java.lang.foreign.MemorySegment _x, java.lang.foreign.MemorySegment _y, long _k) -> {
             try {
-                constants$93.const$3.invokeExact(symbol, _x, _y, _k);
+                constants$90.const$5.invokeExact(symbol, _x, _y, _k);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

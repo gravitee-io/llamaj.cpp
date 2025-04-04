@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * void (*ggml_custom2_op_f32_t)(struct ggml_tensor*,struct ggml_tensor*,struct ggml_tensor*);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_custom2_op_f32_t {
 
-    void apply(MemorySegment backend, MemorySegment abort_callback, MemorySegment abort_callback_data);
+    void apply(java.lang.foreign.MemorySegment backend, java.lang.foreign.MemorySegment abort_callback, java.lang.foreign.MemorySegment abort_callback_data);
     static MemorySegment allocate(ggml_custom2_op_f32_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$81.const$2, fi, constants$81.const$1, scope);
+        return RuntimeHelper.upcallStub(constants$78.const$3, fi, constants$78.const$2, scope);
     }
     static ggml_custom2_op_f32_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _backend, MemorySegment _abort_callback, MemorySegment _abort_callback_data) -> {
+        return (java.lang.foreign.MemorySegment _backend, java.lang.foreign.MemorySegment _abort_callback, java.lang.foreign.MemorySegment _abort_callback_data) -> {
             try {
-                constants$81.const$3.invokeExact(symbol, _backend, _abort_callback, _abort_callback_data);
+                constants$78.const$4.invokeExact(symbol, _backend, _abort_callback, _abort_callback_data);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

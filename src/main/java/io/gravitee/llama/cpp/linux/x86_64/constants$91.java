@@ -3,32 +3,29 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$91 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$91() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_graph_get_grad_acc",
-        constants$11.const$1
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_graph_export",
-        constants$13.const$3
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_graph_import",
-        constants$12.const$0
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_graph_print",
-        constants$14.const$2
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_graph_dump_dot",
-        constants$81.const$1
-    );
-    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_log_callback.class, "apply", constants$79.const$5);
+    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(ggml_from_float_t.class, "apply", constants$11.const$2);
+    static final StructLayout const$1 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("type_name"),
+        JAVA_LONG.withName("blck_size"),
+        JAVA_LONG.withName("blck_size_interleave"),
+        JAVA_LONG.withName("type_size"),
+        JAVA_BOOLEAN.withName("is_quantized"),
+        MemoryLayout.paddingLayout(7),
+        RuntimeHelper.POINTER.withName("to_float"),
+        RuntimeHelper.POINTER.withName("from_float_ref")
+    ).withName("ggml_type_traits");
+    static final VarHandle const$2 = constants$91.const$1.varHandle(MemoryLayout.PathElement.groupElement("type_name"));
+    static final VarHandle const$3 = constants$91.const$1.varHandle(MemoryLayout.PathElement.groupElement("blck_size"));
+    static final VarHandle const$4 = constants$91.const$1.varHandle(MemoryLayout.PathElement.groupElement("blck_size_interleave"));
+    static final VarHandle const$5 = constants$91.const$1.varHandle(MemoryLayout.PathElement.groupElement("type_size"));
 }
 
 

@@ -3,19 +3,21 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 final class constants$198 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$198() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
         "llama_perf_sampler_print",
-        constants$14.const$2
+        constants$11.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
         "llama_perf_sampler_reset",
-        constants$14.const$2
+        constants$11.const$4
     );
     static final MemorySegment const$2 = MemorySegment.ofAddress(0L);
     static final MemorySegment const$3 = RuntimeHelper.CONSTANT_ALLOCATOR.allocateUtf8String("/tmp");

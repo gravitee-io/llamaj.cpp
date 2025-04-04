@@ -3,30 +3,36 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$113 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$113() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_name",
-        constants$10.const$5
+        "ggml_backend_device_register",
+        constants$11.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_dev_count",
-        constants$23.const$3
+        "ggml_backend_reg_count",
+        constants$31.const$0
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_dev_get",
-        constants$45.const$0
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        JAVA_LONG
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_get_proc_address",
-        constants$11.const$1
+        "ggml_backend_reg_get",
+        constants$113.const$2
     );
-    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_backend_split_buffer_type_t.class, "apply", constants$12.const$2);
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_reg_by_name",
+        constants$8.const$3
+    );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        constants$12.const$2
+        "ggml_backend_dev_count",
+        constants$31.const$0
     );
 }
 

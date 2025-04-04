@@ -2,28 +2,39 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$165 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$165() {}
-    static final StructLayout const$0 = MemoryLayout.structLayout(
-        JAVA_INT.withName("n_cells"),
-        JAVA_INT.withName("n_seq_max"),
-        JAVA_INT.withName("token_count"),
-        JAVA_INT.withName("used_cells"),
-        JAVA_INT.withName("max_contiguous"),
-        JAVA_INT.withName("max_contiguous_idx"),
-        RuntimeHelper.POINTER.withName("cells"),
-        RuntimeHelper.POINTER.withName("cells_sequences")
-    ).withName("llama_kv_cache_view");
-    static final VarHandle const$1 = constants$165.const$0.varHandle(PathElement.groupElement("n_cells"));
-    static final VarHandle const$2 = constants$165.const$0.varHandle(PathElement.groupElement("n_seq_max"));
-    static final VarHandle const$3 = constants$165.const$0.varHandle(PathElement.groupElement("token_count"));
-    static final VarHandle const$4 = constants$165.const$0.varHandle(PathElement.groupElement("used_cells"));
-    static final VarHandle const$5 = constants$165.const$0.varHandle(PathElement.groupElement("max_contiguous"));
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_kv_cache_view_free",
+        constants$11.const$4
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_kv_cache_view_update",
+        constants$10.const$5
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_n_tokens",
+        constants$7.const$1
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_get_kv_cache_token_count",
+        constants$7.const$1
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_used_cells",
+        constants$7.const$1
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_get_kv_cache_used_cells",
+        constants$7.const$1
+    );
 }
 
 

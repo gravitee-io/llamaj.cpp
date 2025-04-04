@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct ggml_backend_feature* (*ggml_backend_get_features_t)(struct ggml_backend_reg* reg);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_backend_get_features_t {
 
-    MemorySegment apply(MemorySegment reg);
+    java.lang.foreign.MemorySegment apply(java.lang.foreign.MemorySegment reg);
     static MemorySegment allocate(ggml_backend_get_features_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$115.const$2, fi, constants$10.const$5, scope);
+        return RuntimeHelper.upcallStub(constants$112.const$5, fi, constants$8.const$3, scope);
     }
     static ggml_backend_get_features_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _reg) -> {
+        return (java.lang.foreign.MemorySegment _reg) -> {
             try {
-                return (MemorySegment)constants$114.const$3.invokeExact(symbol, _reg);
+                return (java.lang.foreign.MemorySegment)constants$112.const$0.invokeExact(symbol, _reg);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

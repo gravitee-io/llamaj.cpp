@@ -3,18 +3,12 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 public class llama_h_1 {
 
-    /**
-     * {@snippet :
-     * enum llama_vocab_pre_type.LLAMA_VOCAB_PRE_TYPE_STABLELM2 = 10;
-     * }
-     */
-    public static int LLAMA_VOCAB_PRE_TYPE_STABLELM2() {
-        return (int)10L;
-    }
     /**
      * {@snippet :
      * enum llama_vocab_pre_type.LLAMA_VOCAB_PRE_TYPE_QWEN2 = 11;
@@ -166,6 +160,30 @@ public class llama_h_1 {
      */
     public static int LLAMA_VOCAB_PRE_TYPE_GPT4O() {
         return (int)29L;
+    }
+    /**
+     * {@snippet :
+     * enum llama_vocab_pre_type.LLAMA_VOCAB_PRE_TYPE_SUPERBPE = 30;
+     * }
+     */
+    public static int LLAMA_VOCAB_PRE_TYPE_SUPERBPE() {
+        return (int)30L;
+    }
+    /**
+     * {@snippet :
+     * enum llama_vocab_pre_type.LLAMA_VOCAB_PRE_TYPE_TRILLION = 31;
+     * }
+     */
+    public static int LLAMA_VOCAB_PRE_TYPE_TRILLION() {
+        return (int)31L;
+    }
+    /**
+     * {@snippet :
+     * enum llama_vocab_pre_type.LLAMA_VOCAB_PRE_TYPE_BAILINGMOE = 32;
+     * }
+     */
+    public static int LLAMA_VOCAB_PRE_TYPE_BAILINGMOE() {
+        return (int)32L;
     }
     /**
      * {@snippet :
@@ -792,7 +810,7 @@ public class llama_h_1 {
         return (int)3L;
     }
     public static MethodHandle llama_model_default_params$MH() {
-        return RuntimeHelper.requireNonNull(constants$152.const$2,"llama_model_default_params");
+        return RuntimeHelper.requireNonNull(constants$150.const$4,"llama_model_default_params");
     }
     /**
      * {@snippet :
@@ -802,13 +820,13 @@ public class llama_h_1 {
     public static MemorySegment llama_model_default_params(SegmentAllocator allocator) {
         var mh$ = llama_model_default_params$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(allocator);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(allocator);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_context_default_params$MH() {
-        return RuntimeHelper.requireNonNull(constants$152.const$4,"llama_context_default_params");
+        return RuntimeHelper.requireNonNull(constants$150.const$6,"llama_context_default_params");
     }
     /**
      * {@snippet :
@@ -818,13 +836,13 @@ public class llama_h_1 {
     public static MemorySegment llama_context_default_params(SegmentAllocator allocator) {
         var mh$ = llama_context_default_params$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(allocator);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(allocator);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_sampler_chain_default_params$MH() {
-        return RuntimeHelper.requireNonNull(constants$152.const$6,"llama_sampler_chain_default_params");
+        return RuntimeHelper.requireNonNull(constants$151.const$1,"llama_sampler_chain_default_params");
     }
     /**
      * {@snippet :
@@ -834,13 +852,13 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_chain_default_params(SegmentAllocator allocator) {
         var mh$ = llama_sampler_chain_default_params$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(allocator);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(allocator);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_model_quantize_default_params$MH() {
-        return RuntimeHelper.requireNonNull(constants$153.const$1,"llama_model_quantize_default_params");
+        return RuntimeHelper.requireNonNull(constants$151.const$3,"llama_model_quantize_default_params");
     }
     /**
      * {@snippet :
@@ -850,13 +868,13 @@ public class llama_h_1 {
     public static MemorySegment llama_model_quantize_default_params(SegmentAllocator allocator) {
         var mh$ = llama_model_quantize_default_params$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(allocator);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(allocator);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_backend_init$MH() {
-        return RuntimeHelper.requireNonNull(constants$153.const$2,"llama_backend_init");
+        return RuntimeHelper.requireNonNull(constants$151.const$4,"llama_backend_init");
     }
     /**
      * {@snippet :
@@ -872,7 +890,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_backend_free$MH() {
-        return RuntimeHelper.requireNonNull(constants$153.const$3,"llama_backend_free");
+        return RuntimeHelper.requireNonNull(constants$151.const$5,"llama_backend_free");
     }
     /**
      * {@snippet :
@@ -888,7 +906,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_numa_init$MH() {
-        return RuntimeHelper.requireNonNull(constants$153.const$4,"llama_numa_init");
+        return RuntimeHelper.requireNonNull(constants$152.const$0,"llama_numa_init");
     }
     /**
      * {@snippet :
@@ -904,7 +922,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_attach_threadpool$MH() {
-        return RuntimeHelper.requireNonNull(constants$153.const$5,"llama_attach_threadpool");
+        return RuntimeHelper.requireNonNull(constants$152.const$1,"llama_attach_threadpool");
     }
     /**
      * {@snippet :
@@ -920,7 +938,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_detach_threadpool$MH() {
-        return RuntimeHelper.requireNonNull(constants$154.const$0,"llama_detach_threadpool");
+        return RuntimeHelper.requireNonNull(constants$152.const$2,"llama_detach_threadpool");
     }
     /**
      * {@snippet :
@@ -936,7 +954,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_load_model_from_file$MH() {
-        return RuntimeHelper.requireNonNull(constants$154.const$2,"llama_load_model_from_file");
+        return RuntimeHelper.requireNonNull(constants$152.const$4,"llama_load_model_from_file");
     }
     /**
      * {@snippet :
@@ -946,13 +964,13 @@ public class llama_h_1 {
     public static MemorySegment llama_load_model_from_file(MemorySegment path_model, MemorySegment params) {
         var mh$ = llama_load_model_from_file$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(path_model, params);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(path_model, params);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_model_load_from_file$MH() {
-        return RuntimeHelper.requireNonNull(constants$154.const$3,"llama_model_load_from_file");
+        return RuntimeHelper.requireNonNull(constants$152.const$5,"llama_model_load_from_file");
     }
     /**
      * {@snippet :
@@ -962,13 +980,13 @@ public class llama_h_1 {
     public static MemorySegment llama_model_load_from_file(MemorySegment path_model, MemorySegment params) {
         var mh$ = llama_model_load_from_file$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(path_model, params);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(path_model, params);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_model_load_from_splits$MH() {
-        return RuntimeHelper.requireNonNull(constants$154.const$5,"llama_model_load_from_splits");
+        return RuntimeHelper.requireNonNull(constants$153.const$1,"llama_model_load_from_splits");
     }
     /**
      * {@snippet :
@@ -978,13 +996,13 @@ public class llama_h_1 {
     public static MemorySegment llama_model_load_from_splits(MemorySegment paths, long n_paths, MemorySegment params) {
         var mh$ = llama_model_load_from_splits$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(paths, n_paths, params);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(paths, n_paths, params);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_free_model$MH() {
-        return RuntimeHelper.requireNonNull(constants$155.const$0,"llama_free_model");
+        return RuntimeHelper.requireNonNull(constants$153.const$2,"llama_free_model");
     }
     /**
      * {@snippet :
@@ -1000,7 +1018,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_free$MH() {
-        return RuntimeHelper.requireNonNull(constants$155.const$1,"llama_model_free");
+        return RuntimeHelper.requireNonNull(constants$153.const$3,"llama_model_free");
     }
     /**
      * {@snippet :
@@ -1016,7 +1034,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_init_from_model$MH() {
-        return RuntimeHelper.requireNonNull(constants$155.const$3,"llama_init_from_model");
+        return RuntimeHelper.requireNonNull(constants$153.const$5,"llama_init_from_model");
     }
     /**
      * {@snippet :
@@ -1026,13 +1044,13 @@ public class llama_h_1 {
     public static MemorySegment llama_init_from_model(MemorySegment model, MemorySegment params) {
         var mh$ = llama_init_from_model$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(model, params);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(model, params);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_new_context_with_model$MH() {
-        return RuntimeHelper.requireNonNull(constants$155.const$4,"llama_new_context_with_model");
+        return RuntimeHelper.requireNonNull(constants$154.const$0,"llama_new_context_with_model");
     }
     /**
      * {@snippet :
@@ -1042,13 +1060,13 @@ public class llama_h_1 {
     public static MemorySegment llama_new_context_with_model(MemorySegment model, MemorySegment params) {
         var mh$ = llama_new_context_with_model$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(model, params);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(model, params);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_free$MH() {
-        return RuntimeHelper.requireNonNull(constants$155.const$5,"llama_free");
+        return RuntimeHelper.requireNonNull(constants$154.const$1,"llama_free");
     }
     /**
      * {@snippet :
@@ -1064,7 +1082,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_time_us$MH() {
-        return RuntimeHelper.requireNonNull(constants$156.const$0,"llama_time_us");
+        return RuntimeHelper.requireNonNull(constants$154.const$2,"llama_time_us");
     }
     /**
      * {@snippet :
@@ -1080,7 +1098,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_max_devices$MH() {
-        return RuntimeHelper.requireNonNull(constants$156.const$1,"llama_max_devices");
+        return RuntimeHelper.requireNonNull(constants$154.const$3,"llama_max_devices");
     }
     /**
      * {@snippet :
@@ -1096,7 +1114,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_supports_mmap$MH() {
-        return RuntimeHelper.requireNonNull(constants$156.const$2,"llama_supports_mmap");
+        return RuntimeHelper.requireNonNull(constants$154.const$4,"llama_supports_mmap");
     }
     /**
      * {@snippet :
@@ -1112,7 +1130,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_supports_mlock$MH() {
-        return RuntimeHelper.requireNonNull(constants$156.const$3,"llama_supports_mlock");
+        return RuntimeHelper.requireNonNull(constants$154.const$5,"llama_supports_mlock");
     }
     /**
      * {@snippet :
@@ -1128,7 +1146,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_supports_gpu_offload$MH() {
-        return RuntimeHelper.requireNonNull(constants$156.const$4,"llama_supports_gpu_offload");
+        return RuntimeHelper.requireNonNull(constants$155.const$0,"llama_supports_gpu_offload");
     }
     /**
      * {@snippet :
@@ -1144,7 +1162,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_supports_rpc$MH() {
-        return RuntimeHelper.requireNonNull(constants$156.const$5,"llama_supports_rpc");
+        return RuntimeHelper.requireNonNull(constants$155.const$1,"llama_supports_rpc");
     }
     /**
      * {@snippet :
@@ -1160,7 +1178,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_n_ctx$MH() {
-        return RuntimeHelper.requireNonNull(constants$157.const$0,"llama_n_ctx");
+        return RuntimeHelper.requireNonNull(constants$155.const$2,"llama_n_ctx");
     }
     /**
      * {@snippet :
@@ -1176,7 +1194,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_n_batch$MH() {
-        return RuntimeHelper.requireNonNull(constants$157.const$1,"llama_n_batch");
+        return RuntimeHelper.requireNonNull(constants$155.const$3,"llama_n_batch");
     }
     /**
      * {@snippet :
@@ -1192,7 +1210,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_n_ubatch$MH() {
-        return RuntimeHelper.requireNonNull(constants$157.const$2,"llama_n_ubatch");
+        return RuntimeHelper.requireNonNull(constants$155.const$4,"llama_n_ubatch");
     }
     /**
      * {@snippet :
@@ -1208,7 +1226,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_n_seq_max$MH() {
-        return RuntimeHelper.requireNonNull(constants$157.const$3,"llama_n_seq_max");
+        return RuntimeHelper.requireNonNull(constants$155.const$5,"llama_n_seq_max");
     }
     /**
      * {@snippet :
@@ -1224,7 +1242,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_n_ctx_train$MH() {
-        return RuntimeHelper.requireNonNull(constants$157.const$4,"llama_n_ctx_train");
+        return RuntimeHelper.requireNonNull(constants$156.const$0,"llama_n_ctx_train");
     }
     /**
      * {@snippet :
@@ -1240,7 +1258,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_n_embd$MH() {
-        return RuntimeHelper.requireNonNull(constants$157.const$5,"llama_n_embd");
+        return RuntimeHelper.requireNonNull(constants$156.const$1,"llama_n_embd");
     }
     /**
      * {@snippet :
@@ -1256,7 +1274,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_n_layer$MH() {
-        return RuntimeHelper.requireNonNull(constants$158.const$0,"llama_n_layer");
+        return RuntimeHelper.requireNonNull(constants$156.const$2,"llama_n_layer");
     }
     /**
      * {@snippet :
@@ -1272,7 +1290,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_n_head$MH() {
-        return RuntimeHelper.requireNonNull(constants$158.const$1,"llama_n_head");
+        return RuntimeHelper.requireNonNull(constants$156.const$3,"llama_n_head");
     }
     /**
      * {@snippet :
@@ -1288,7 +1306,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_n_vocab$MH() {
-        return RuntimeHelper.requireNonNull(constants$158.const$2,"llama_n_vocab");
+        return RuntimeHelper.requireNonNull(constants$156.const$4,"llama_n_vocab");
     }
     /**
      * {@snippet :
@@ -1304,7 +1322,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_get_model$MH() {
-        return RuntimeHelper.requireNonNull(constants$158.const$3,"llama_get_model");
+        return RuntimeHelper.requireNonNull(constants$156.const$5,"llama_get_model");
     }
     /**
      * {@snippet :
@@ -1314,13 +1332,29 @@ public class llama_h_1 {
     public static MemorySegment llama_get_model(MemorySegment ctx) {
         var mh$ = llama_get_model$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(ctx);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(ctx);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_get_kv_self$MH() {
+        return RuntimeHelper.requireNonNull(constants$157.const$0,"llama_get_kv_self");
+    }
+    /**
+     * {@snippet :
+     * struct llama_kv_cache* llama_get_kv_self(struct llama_context* ctx);
+     * }
+     */
+    public static MemorySegment llama_get_kv_self(MemorySegment ctx) {
+        var mh$ = llama_get_kv_self$MH();
+        try {
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(ctx);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_pooling_type$MH() {
-        return RuntimeHelper.requireNonNull(constants$158.const$4,"llama_pooling_type");
+        return RuntimeHelper.requireNonNull(constants$157.const$1,"llama_pooling_type");
     }
     /**
      * {@snippet :
@@ -1336,7 +1370,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_get_vocab$MH() {
-        return RuntimeHelper.requireNonNull(constants$158.const$5,"llama_model_get_vocab");
+        return RuntimeHelper.requireNonNull(constants$157.const$2,"llama_model_get_vocab");
     }
     /**
      * {@snippet :
@@ -1346,13 +1380,13 @@ public class llama_h_1 {
     public static MemorySegment llama_model_get_vocab(MemorySegment model) {
         var mh$ = llama_model_get_vocab$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(model);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(model);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_model_rope_type$MH() {
-        return RuntimeHelper.requireNonNull(constants$159.const$0,"llama_model_rope_type");
+        return RuntimeHelper.requireNonNull(constants$157.const$3,"llama_model_rope_type");
     }
     /**
      * {@snippet :
@@ -1368,7 +1402,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_n_ctx_train$MH() {
-        return RuntimeHelper.requireNonNull(constants$159.const$1,"llama_model_n_ctx_train");
+        return RuntimeHelper.requireNonNull(constants$157.const$4,"llama_model_n_ctx_train");
     }
     /**
      * {@snippet :
@@ -1384,7 +1418,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_n_embd$MH() {
-        return RuntimeHelper.requireNonNull(constants$159.const$2,"llama_model_n_embd");
+        return RuntimeHelper.requireNonNull(constants$157.const$5,"llama_model_n_embd");
     }
     /**
      * {@snippet :
@@ -1400,7 +1434,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_n_layer$MH() {
-        return RuntimeHelper.requireNonNull(constants$159.const$3,"llama_model_n_layer");
+        return RuntimeHelper.requireNonNull(constants$158.const$0,"llama_model_n_layer");
     }
     /**
      * {@snippet :
@@ -1416,7 +1450,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_n_head$MH() {
-        return RuntimeHelper.requireNonNull(constants$159.const$4,"llama_model_n_head");
+        return RuntimeHelper.requireNonNull(constants$158.const$1,"llama_model_n_head");
     }
     /**
      * {@snippet :
@@ -1432,7 +1466,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_n_head_kv$MH() {
-        return RuntimeHelper.requireNonNull(constants$159.const$5,"llama_model_n_head_kv");
+        return RuntimeHelper.requireNonNull(constants$158.const$2,"llama_model_n_head_kv");
     }
     /**
      * {@snippet :
@@ -1448,7 +1482,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_rope_freq_scale_train$MH() {
-        return RuntimeHelper.requireNonNull(constants$160.const$1,"llama_model_rope_freq_scale_train");
+        return RuntimeHelper.requireNonNull(constants$158.const$4,"llama_model_rope_freq_scale_train");
     }
     /**
      * {@snippet :
@@ -1464,7 +1498,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_vocab_type$MH() {
-        return RuntimeHelper.requireNonNull(constants$160.const$2,"llama_vocab_type");
+        return RuntimeHelper.requireNonNull(constants$158.const$5,"llama_vocab_type");
     }
     /**
      * {@snippet :
@@ -1480,7 +1514,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_vocab_n_tokens$MH() {
-        return RuntimeHelper.requireNonNull(constants$160.const$3,"llama_vocab_n_tokens");
+        return RuntimeHelper.requireNonNull(constants$159.const$0,"llama_vocab_n_tokens");
     }
     /**
      * {@snippet :
@@ -1496,7 +1530,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_meta_val_str$MH() {
-        return RuntimeHelper.requireNonNull(constants$160.const$5,"llama_model_meta_val_str");
+        return RuntimeHelper.requireNonNull(constants$159.const$2,"llama_model_meta_val_str");
     }
     /**
      * {@snippet :
@@ -1512,7 +1546,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_meta_count$MH() {
-        return RuntimeHelper.requireNonNull(constants$161.const$0,"llama_model_meta_count");
+        return RuntimeHelper.requireNonNull(constants$159.const$3,"llama_model_meta_count");
     }
     /**
      * {@snippet :
@@ -1528,7 +1562,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_meta_key_by_index$MH() {
-        return RuntimeHelper.requireNonNull(constants$161.const$2,"llama_model_meta_key_by_index");
+        return RuntimeHelper.requireNonNull(constants$159.const$5,"llama_model_meta_key_by_index");
     }
     /**
      * {@snippet :
@@ -1544,7 +1578,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_meta_val_str_by_index$MH() {
-        return RuntimeHelper.requireNonNull(constants$161.const$3,"llama_model_meta_val_str_by_index");
+        return RuntimeHelper.requireNonNull(constants$160.const$0,"llama_model_meta_val_str_by_index");
     }
     /**
      * {@snippet :
@@ -1560,7 +1594,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_desc$MH() {
-        return RuntimeHelper.requireNonNull(constants$161.const$5,"llama_model_desc");
+        return RuntimeHelper.requireNonNull(constants$160.const$2,"llama_model_desc");
     }
     /**
      * {@snippet :
@@ -1576,7 +1610,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_size$MH() {
-        return RuntimeHelper.requireNonNull(constants$162.const$0,"llama_model_size");
+        return RuntimeHelper.requireNonNull(constants$160.const$3,"llama_model_size");
     }
     /**
      * {@snippet :
@@ -1592,7 +1626,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_chat_template$MH() {
-        return RuntimeHelper.requireNonNull(constants$162.const$1,"llama_model_chat_template");
+        return RuntimeHelper.requireNonNull(constants$160.const$4,"llama_model_chat_template");
     }
     /**
      * {@snippet :
@@ -1602,13 +1636,13 @@ public class llama_h_1 {
     public static MemorySegment llama_model_chat_template(MemorySegment model, MemorySegment name) {
         var mh$ = llama_model_chat_template$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(model, name);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(model, name);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_model_n_params$MH() {
-        return RuntimeHelper.requireNonNull(constants$162.const$2,"llama_model_n_params");
+        return RuntimeHelper.requireNonNull(constants$160.const$5,"llama_model_n_params");
     }
     /**
      * {@snippet :
@@ -1624,7 +1658,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_has_encoder$MH() {
-        return RuntimeHelper.requireNonNull(constants$162.const$3,"llama_model_has_encoder");
+        return RuntimeHelper.requireNonNull(constants$161.const$0,"llama_model_has_encoder");
     }
     /**
      * {@snippet :
@@ -1640,7 +1674,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_has_decoder$MH() {
-        return RuntimeHelper.requireNonNull(constants$162.const$4,"llama_model_has_decoder");
+        return RuntimeHelper.requireNonNull(constants$161.const$1,"llama_model_has_decoder");
     }
     /**
      * {@snippet :
@@ -1656,7 +1690,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_decoder_start_token$MH() {
-        return RuntimeHelper.requireNonNull(constants$162.const$5,"llama_model_decoder_start_token");
+        return RuntimeHelper.requireNonNull(constants$161.const$2,"llama_model_decoder_start_token");
     }
     /**
      * {@snippet :
@@ -1672,7 +1706,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_is_recurrent$MH() {
-        return RuntimeHelper.requireNonNull(constants$163.const$0,"llama_model_is_recurrent");
+        return RuntimeHelper.requireNonNull(constants$161.const$3,"llama_model_is_recurrent");
     }
     /**
      * {@snippet :
@@ -1688,7 +1722,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_model_quantize$MH() {
-        return RuntimeHelper.requireNonNull(constants$163.const$1,"llama_model_quantize");
+        return RuntimeHelper.requireNonNull(constants$161.const$4,"llama_model_quantize");
     }
     /**
      * {@snippet :
@@ -1704,7 +1738,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_adapter_lora_init$MH() {
-        return RuntimeHelper.requireNonNull(constants$163.const$2,"llama_adapter_lora_init");
+        return RuntimeHelper.requireNonNull(constants$161.const$5,"llama_adapter_lora_init");
     }
     /**
      * {@snippet :
@@ -1714,13 +1748,13 @@ public class llama_h_1 {
     public static MemorySegment llama_adapter_lora_init(MemorySegment model, MemorySegment path_lora) {
         var mh$ = llama_adapter_lora_init$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(model, path_lora);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(model, path_lora);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_adapter_lora_free$MH() {
-        return RuntimeHelper.requireNonNull(constants$163.const$3,"llama_adapter_lora_free");
+        return RuntimeHelper.requireNonNull(constants$162.const$0,"llama_adapter_lora_free");
     }
     /**
      * {@snippet :
@@ -1736,7 +1770,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_set_adapter_lora$MH() {
-        return RuntimeHelper.requireNonNull(constants$163.const$5,"llama_set_adapter_lora");
+        return RuntimeHelper.requireNonNull(constants$162.const$2,"llama_set_adapter_lora");
     }
     /**
      * {@snippet :
@@ -1752,7 +1786,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_rm_adapter_lora$MH() {
-        return RuntimeHelper.requireNonNull(constants$164.const$0,"llama_rm_adapter_lora");
+        return RuntimeHelper.requireNonNull(constants$162.const$3,"llama_rm_adapter_lora");
     }
     /**
      * {@snippet :
@@ -1768,7 +1802,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_clear_adapter_lora$MH() {
-        return RuntimeHelper.requireNonNull(constants$164.const$1,"llama_clear_adapter_lora");
+        return RuntimeHelper.requireNonNull(constants$162.const$4,"llama_clear_adapter_lora");
     }
     /**
      * {@snippet :
@@ -1784,7 +1818,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_apply_adapter_cvec$MH() {
-        return RuntimeHelper.requireNonNull(constants$164.const$3,"llama_apply_adapter_cvec");
+        return RuntimeHelper.requireNonNull(constants$162.const$6,"llama_apply_adapter_cvec");
     }
     /**
      * {@snippet :
@@ -1800,7 +1834,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_kv_cache_view_init$MH() {
-        return RuntimeHelper.requireNonNull(constants$166.const$4,"llama_kv_cache_view_init");
+        return RuntimeHelper.requireNonNull(constants$164.const$6,"llama_kv_cache_view_init");
     }
     /**
      * {@snippet :
@@ -1810,13 +1844,13 @@ public class llama_h_1 {
     public static MemorySegment llama_kv_cache_view_init(SegmentAllocator allocator, MemorySegment ctx, int n_seq_max) {
         var mh$ = llama_kv_cache_view_init$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(allocator, ctx, n_seq_max);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(allocator, ctx, n_seq_max);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_kv_cache_view_free$MH() {
-        return RuntimeHelper.requireNonNull(constants$166.const$5,"llama_kv_cache_view_free");
+        return RuntimeHelper.requireNonNull(constants$165.const$0,"llama_kv_cache_view_free");
     }
     /**
      * {@snippet :
@@ -1832,7 +1866,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_kv_cache_view_update$MH() {
-        return RuntimeHelper.requireNonNull(constants$167.const$0,"llama_kv_cache_view_update");
+        return RuntimeHelper.requireNonNull(constants$165.const$1,"llama_kv_cache_view_update");
     }
     /**
      * {@snippet :
@@ -1847,8 +1881,24 @@ public class llama_h_1 {
             throw new AssertionError("should not reach here", ex$);
         }
     }
+    public static MethodHandle llama_kv_self_n_tokens$MH() {
+        return RuntimeHelper.requireNonNull(constants$165.const$2,"llama_kv_self_n_tokens");
+    }
+    /**
+     * {@snippet :
+     * int32_t llama_kv_self_n_tokens(struct llama_context* ctx);
+     * }
+     */
+    public static int llama_kv_self_n_tokens(MemorySegment ctx) {
+        var mh$ = llama_kv_self_n_tokens$MH();
+        try {
+            return (int)mh$.invokeExact(ctx);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
     public static MethodHandle llama_get_kv_cache_token_count$MH() {
-        return RuntimeHelper.requireNonNull(constants$167.const$1,"llama_get_kv_cache_token_count");
+        return RuntimeHelper.requireNonNull(constants$165.const$3,"llama_get_kv_cache_token_count");
     }
     /**
      * {@snippet :
@@ -1863,8 +1913,24 @@ public class llama_h_1 {
             throw new AssertionError("should not reach here", ex$);
         }
     }
+    public static MethodHandle llama_kv_self_used_cells$MH() {
+        return RuntimeHelper.requireNonNull(constants$165.const$4,"llama_kv_self_used_cells");
+    }
+    /**
+     * {@snippet :
+     * int32_t llama_kv_self_used_cells(struct llama_context* ctx);
+     * }
+     */
+    public static int llama_kv_self_used_cells(MemorySegment ctx) {
+        var mh$ = llama_kv_self_used_cells$MH();
+        try {
+            return (int)mh$.invokeExact(ctx);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
     public static MethodHandle llama_get_kv_cache_used_cells$MH() {
-        return RuntimeHelper.requireNonNull(constants$167.const$2,"llama_get_kv_cache_used_cells");
+        return RuntimeHelper.requireNonNull(constants$165.const$5,"llama_get_kv_cache_used_cells");
     }
     /**
      * {@snippet :
@@ -1879,8 +1945,168 @@ public class llama_h_1 {
             throw new AssertionError("should not reach here", ex$);
         }
     }
+    public static MethodHandle llama_kv_self_clear$MH() {
+        return RuntimeHelper.requireNonNull(constants$166.const$0,"llama_kv_self_clear");
+    }
+    /**
+     * {@snippet :
+     * void llama_kv_self_clear(struct llama_context* ctx);
+     * }
+     */
+    public static void llama_kv_self_clear(MemorySegment ctx) {
+        var mh$ = llama_kv_self_clear$MH();
+        try {
+            mh$.invokeExact(ctx);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_kv_self_seq_rm$MH() {
+        return RuntimeHelper.requireNonNull(constants$166.const$2,"llama_kv_self_seq_rm");
+    }
+    /**
+     * {@snippet :
+     * _Bool llama_kv_self_seq_rm(struct llama_context* ctx, llama_seq_id seq_id, llama_pos p0, llama_pos p1);
+     * }
+     */
+    public static boolean llama_kv_self_seq_rm(MemorySegment ctx, int seq_id, int p0, int p1) {
+        var mh$ = llama_kv_self_seq_rm$MH();
+        try {
+            return (boolean)mh$.invokeExact(ctx, seq_id, p0, p1);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_kv_self_seq_cp$MH() {
+        return RuntimeHelper.requireNonNull(constants$166.const$4,"llama_kv_self_seq_cp");
+    }
+    /**
+     * {@snippet :
+     * void llama_kv_self_seq_cp(struct llama_context* ctx, llama_seq_id seq_id_src, llama_seq_id seq_id_dst, llama_pos p0, llama_pos p1);
+     * }
+     */
+    public static void llama_kv_self_seq_cp(MemorySegment ctx, int seq_id_src, int seq_id_dst, int p0, int p1) {
+        var mh$ = llama_kv_self_seq_cp$MH();
+        try {
+            mh$.invokeExact(ctx, seq_id_src, seq_id_dst, p0, p1);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_kv_self_seq_keep$MH() {
+        return RuntimeHelper.requireNonNull(constants$166.const$5,"llama_kv_self_seq_keep");
+    }
+    /**
+     * {@snippet :
+     * void llama_kv_self_seq_keep(struct llama_context* ctx, llama_seq_id seq_id);
+     * }
+     */
+    public static void llama_kv_self_seq_keep(MemorySegment ctx, int seq_id) {
+        var mh$ = llama_kv_self_seq_keep$MH();
+        try {
+            mh$.invokeExact(ctx, seq_id);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_kv_self_seq_add$MH() {
+        return RuntimeHelper.requireNonNull(constants$167.const$0,"llama_kv_self_seq_add");
+    }
+    /**
+     * {@snippet :
+     * void llama_kv_self_seq_add(struct llama_context* ctx, llama_seq_id seq_id, llama_pos p0, llama_pos p1, llama_pos delta);
+     * }
+     */
+    public static void llama_kv_self_seq_add(MemorySegment ctx, int seq_id, int p0, int p1, int delta) {
+        var mh$ = llama_kv_self_seq_add$MH();
+        try {
+            mh$.invokeExact(ctx, seq_id, p0, p1, delta);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_kv_self_seq_div$MH() {
+        return RuntimeHelper.requireNonNull(constants$167.const$1,"llama_kv_self_seq_div");
+    }
+    /**
+     * {@snippet :
+     * void llama_kv_self_seq_div(struct llama_context* ctx, llama_seq_id seq_id, llama_pos p0, llama_pos p1, int d);
+     * }
+     */
+    public static void llama_kv_self_seq_div(MemorySegment ctx, int seq_id, int p0, int p1, int d) {
+        var mh$ = llama_kv_self_seq_div$MH();
+        try {
+            mh$.invokeExact(ctx, seq_id, p0, p1, d);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_kv_self_seq_pos_max$MH() {
+        return RuntimeHelper.requireNonNull(constants$167.const$2,"llama_kv_self_seq_pos_max");
+    }
+    /**
+     * {@snippet :
+     * llama_pos llama_kv_self_seq_pos_max(struct llama_context* ctx, llama_seq_id seq_id);
+     * }
+     */
+    public static int llama_kv_self_seq_pos_max(MemorySegment ctx, int seq_id) {
+        var mh$ = llama_kv_self_seq_pos_max$MH();
+        try {
+            return (int)mh$.invokeExact(ctx, seq_id);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_kv_self_defrag$MH() {
+        return RuntimeHelper.requireNonNull(constants$167.const$3,"llama_kv_self_defrag");
+    }
+    /**
+     * {@snippet :
+     * void llama_kv_self_defrag(struct llama_context* ctx);
+     * }
+     */
+    public static void llama_kv_self_defrag(MemorySegment ctx) {
+        var mh$ = llama_kv_self_defrag$MH();
+        try {
+            mh$.invokeExact(ctx);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_kv_self_can_shift$MH() {
+        return RuntimeHelper.requireNonNull(constants$167.const$4,"llama_kv_self_can_shift");
+    }
+    /**
+     * {@snippet :
+     * _Bool llama_kv_self_can_shift(struct llama_context* ctx);
+     * }
+     */
+    public static boolean llama_kv_self_can_shift(MemorySegment ctx) {
+        var mh$ = llama_kv_self_can_shift$MH();
+        try {
+            return (boolean)mh$.invokeExact(ctx);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
+    public static MethodHandle llama_kv_self_update$MH() {
+        return RuntimeHelper.requireNonNull(constants$167.const$5,"llama_kv_self_update");
+    }
+    /**
+     * {@snippet :
+     * void llama_kv_self_update(struct llama_context* ctx);
+     * }
+     */
+    public static void llama_kv_self_update(MemorySegment ctx) {
+        var mh$ = llama_kv_self_update$MH();
+        try {
+            mh$.invokeExact(ctx);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
     public static MethodHandle llama_kv_cache_clear$MH() {
-        return RuntimeHelper.requireNonNull(constants$167.const$3,"llama_kv_cache_clear");
+        return RuntimeHelper.requireNonNull(constants$168.const$0,"llama_kv_cache_clear");
     }
     /**
      * {@snippet :
@@ -1896,7 +2122,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_kv_cache_seq_rm$MH() {
-        return RuntimeHelper.requireNonNull(constants$167.const$5,"llama_kv_cache_seq_rm");
+        return RuntimeHelper.requireNonNull(constants$168.const$1,"llama_kv_cache_seq_rm");
     }
     /**
      * {@snippet :
@@ -1912,7 +2138,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_kv_cache_seq_cp$MH() {
-        return RuntimeHelper.requireNonNull(constants$168.const$1,"llama_kv_cache_seq_cp");
+        return RuntimeHelper.requireNonNull(constants$168.const$2,"llama_kv_cache_seq_cp");
     }
     /**
      * {@snippet :
@@ -1928,7 +2154,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_kv_cache_seq_keep$MH() {
-        return RuntimeHelper.requireNonNull(constants$168.const$2,"llama_kv_cache_seq_keep");
+        return RuntimeHelper.requireNonNull(constants$168.const$3,"llama_kv_cache_seq_keep");
     }
     /**
      * {@snippet :
@@ -1944,7 +2170,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_kv_cache_seq_add$MH() {
-        return RuntimeHelper.requireNonNull(constants$168.const$3,"llama_kv_cache_seq_add");
+        return RuntimeHelper.requireNonNull(constants$168.const$4,"llama_kv_cache_seq_add");
     }
     /**
      * {@snippet :
@@ -1960,7 +2186,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_kv_cache_seq_div$MH() {
-        return RuntimeHelper.requireNonNull(constants$168.const$4,"llama_kv_cache_seq_div");
+        return RuntimeHelper.requireNonNull(constants$168.const$5,"llama_kv_cache_seq_div");
     }
     /**
      * {@snippet :
@@ -1976,7 +2202,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_kv_cache_seq_pos_max$MH() {
-        return RuntimeHelper.requireNonNull(constants$168.const$5,"llama_kv_cache_seq_pos_max");
+        return RuntimeHelper.requireNonNull(constants$169.const$0,"llama_kv_cache_seq_pos_max");
     }
     /**
      * {@snippet :
@@ -1992,7 +2218,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_kv_cache_defrag$MH() {
-        return RuntimeHelper.requireNonNull(constants$169.const$0,"llama_kv_cache_defrag");
+        return RuntimeHelper.requireNonNull(constants$169.const$1,"llama_kv_cache_defrag");
     }
     /**
      * {@snippet :
@@ -2001,22 +2227,6 @@ public class llama_h_1 {
      */
     public static void llama_kv_cache_defrag(MemorySegment ctx) {
         var mh$ = llama_kv_cache_defrag$MH();
-        try {
-            mh$.invokeExact(ctx);
-        } catch (Throwable ex$) {
-            throw new AssertionError("should not reach here", ex$);
-        }
-    }
-    public static MethodHandle llama_kv_cache_update$MH() {
-        return RuntimeHelper.requireNonNull(constants$169.const$1,"llama_kv_cache_update");
-    }
-    /**
-     * {@snippet :
-     * void llama_kv_cache_update(struct llama_context* ctx);
-     * }
-     */
-    public static void llama_kv_cache_update(MemorySegment ctx) {
-        var mh$ = llama_kv_cache_update$MH();
         try {
             mh$.invokeExact(ctx);
         } catch (Throwable ex$) {
@@ -2039,8 +2249,24 @@ public class llama_h_1 {
             throw new AssertionError("should not reach here", ex$);
         }
     }
+    public static MethodHandle llama_kv_cache_update$MH() {
+        return RuntimeHelper.requireNonNull(constants$169.const$3,"llama_kv_cache_update");
+    }
+    /**
+     * {@snippet :
+     * void llama_kv_cache_update(struct llama_context* ctx);
+     * }
+     */
+    public static void llama_kv_cache_update(MemorySegment ctx) {
+        var mh$ = llama_kv_cache_update$MH();
+        try {
+            mh$.invokeExact(ctx);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
     public static MethodHandle llama_state_get_size$MH() {
-        return RuntimeHelper.requireNonNull(constants$169.const$3,"llama_state_get_size");
+        return RuntimeHelper.requireNonNull(constants$169.const$4,"llama_state_get_size");
     }
     /**
      * {@snippet :
@@ -2056,7 +2282,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_get_state_size$MH() {
-        return RuntimeHelper.requireNonNull(constants$169.const$4,"llama_get_state_size");
+        return RuntimeHelper.requireNonNull(constants$169.const$5,"llama_get_state_size");
     }
     /**
      * {@snippet :
@@ -2072,7 +2298,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_state_get_data$MH() {
-        return RuntimeHelper.requireNonNull(constants$169.const$5,"llama_state_get_data");
+        return RuntimeHelper.requireNonNull(constants$170.const$1,"llama_state_get_data");
     }
     /**
      * {@snippet :
@@ -2088,7 +2314,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_copy_state_data$MH() {
-        return RuntimeHelper.requireNonNull(constants$170.const$0,"llama_copy_state_data");
+        return RuntimeHelper.requireNonNull(constants$170.const$2,"llama_copy_state_data");
     }
     /**
      * {@snippet :
@@ -2104,7 +2330,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_state_set_data$MH() {
-        return RuntimeHelper.requireNonNull(constants$170.const$1,"llama_state_set_data");
+        return RuntimeHelper.requireNonNull(constants$170.const$3,"llama_state_set_data");
     }
     /**
      * {@snippet :
@@ -2120,7 +2346,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_set_state_data$MH() {
-        return RuntimeHelper.requireNonNull(constants$170.const$2,"llama_set_state_data");
+        return RuntimeHelper.requireNonNull(constants$170.const$4,"llama_set_state_data");
     }
     /**
      * {@snippet :
@@ -2136,7 +2362,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_state_load_file$MH() {
-        return RuntimeHelper.requireNonNull(constants$170.const$4,"llama_state_load_file");
+        return RuntimeHelper.requireNonNull(constants$170.const$6,"llama_state_load_file");
     }
     /**
      * {@snippet :
@@ -2152,7 +2378,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_load_session_file$MH() {
-        return RuntimeHelper.requireNonNull(constants$170.const$5,"llama_load_session_file");
+        return RuntimeHelper.requireNonNull(constants$171.const$0,"llama_load_session_file");
     }
     /**
      * {@snippet :
@@ -2168,7 +2394,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_state_save_file$MH() {
-        return RuntimeHelper.requireNonNull(constants$171.const$1,"llama_state_save_file");
+        return RuntimeHelper.requireNonNull(constants$171.const$2,"llama_state_save_file");
     }
     /**
      * {@snippet :
@@ -2184,7 +2410,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_save_session_file$MH() {
-        return RuntimeHelper.requireNonNull(constants$171.const$2,"llama_save_session_file");
+        return RuntimeHelper.requireNonNull(constants$171.const$3,"llama_save_session_file");
     }
     /**
      * {@snippet :
@@ -2200,7 +2426,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_state_seq_get_size$MH() {
-        return RuntimeHelper.requireNonNull(constants$171.const$3,"llama_state_seq_get_size");
+        return RuntimeHelper.requireNonNull(constants$171.const$4,"llama_state_seq_get_size");
     }
     /**
      * {@snippet :
@@ -2216,7 +2442,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_state_seq_get_data$MH() {
-        return RuntimeHelper.requireNonNull(constants$171.const$5,"llama_state_seq_get_data");
+        return RuntimeHelper.requireNonNull(constants$171.const$6,"llama_state_seq_get_data");
     }
     /**
      * {@snippet :
@@ -2290,7 +2516,7 @@ public class llama_h_1 {
     public static MemorySegment llama_batch_get_one(SegmentAllocator allocator, MemorySegment tokens, int n_tokens) {
         var mh$ = llama_batch_get_one$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(allocator, tokens, n_tokens);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(allocator, tokens, n_tokens);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -2306,7 +2532,7 @@ public class llama_h_1 {
     public static MemorySegment llama_batch_init(SegmentAllocator allocator, int n_tokens, int embd, int n_seq_max) {
         var mh$ = llama_batch_init$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(allocator, n_tokens, embd, n_seq_max);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(allocator, n_tokens, embd, n_seq_max);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -2439,8 +2665,24 @@ public class llama_h_1 {
             throw new AssertionError("should not reach here", ex$);
         }
     }
+    public static MethodHandle llama_set_warmup$MH() {
+        return RuntimeHelper.requireNonNull(constants$175.const$0,"llama_set_warmup");
+    }
+    /**
+     * {@snippet :
+     * void llama_set_warmup(struct llama_context* ctx, _Bool warmup);
+     * }
+     */
+    public static void llama_set_warmup(MemorySegment ctx, boolean warmup) {
+        var mh$ = llama_set_warmup$MH();
+        try {
+            mh$.invokeExact(ctx, warmup);
+        } catch (Throwable ex$) {
+            throw new AssertionError("should not reach here", ex$);
+        }
+    }
     public static MethodHandle llama_set_abort_callback$MH() {
-        return RuntimeHelper.requireNonNull(constants$175.const$0,"llama_set_abort_callback");
+        return RuntimeHelper.requireNonNull(constants$175.const$1,"llama_set_abort_callback");
     }
     /**
      * {@snippet :
@@ -2456,7 +2698,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_synchronize$MH() {
-        return RuntimeHelper.requireNonNull(constants$175.const$1,"llama_synchronize");
+        return RuntimeHelper.requireNonNull(constants$175.const$2,"llama_synchronize");
     }
     /**
      * {@snippet :
@@ -2472,7 +2714,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_get_logits$MH() {
-        return RuntimeHelper.requireNonNull(constants$175.const$2,"llama_get_logits");
+        return RuntimeHelper.requireNonNull(constants$175.const$3,"llama_get_logits");
     }
     /**
      * {@snippet :
@@ -2482,13 +2724,13 @@ public class llama_h_1 {
     public static MemorySegment llama_get_logits(MemorySegment ctx) {
         var mh$ = llama_get_logits$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(ctx);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(ctx);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_get_logits_ith$MH() {
-        return RuntimeHelper.requireNonNull(constants$175.const$3,"llama_get_logits_ith");
+        return RuntimeHelper.requireNonNull(constants$175.const$4,"llama_get_logits_ith");
     }
     /**
      * {@snippet :
@@ -2498,13 +2740,13 @@ public class llama_h_1 {
     public static MemorySegment llama_get_logits_ith(MemorySegment ctx, int i) {
         var mh$ = llama_get_logits_ith$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(ctx, i);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(ctx, i);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_get_embeddings$MH() {
-        return RuntimeHelper.requireNonNull(constants$175.const$4,"llama_get_embeddings");
+        return RuntimeHelper.requireNonNull(constants$175.const$5,"llama_get_embeddings");
     }
     /**
      * {@snippet :
@@ -2514,13 +2756,13 @@ public class llama_h_1 {
     public static MemorySegment llama_get_embeddings(MemorySegment ctx) {
         var mh$ = llama_get_embeddings$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(ctx);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(ctx);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_get_embeddings_ith$MH() {
-        return RuntimeHelper.requireNonNull(constants$175.const$5,"llama_get_embeddings_ith");
+        return RuntimeHelper.requireNonNull(constants$176.const$0,"llama_get_embeddings_ith");
     }
     /**
      * {@snippet :
@@ -2530,13 +2772,13 @@ public class llama_h_1 {
     public static MemorySegment llama_get_embeddings_ith(MemorySegment ctx, int i) {
         var mh$ = llama_get_embeddings_ith$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(ctx, i);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(ctx, i);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_get_embeddings_seq$MH() {
-        return RuntimeHelper.requireNonNull(constants$176.const$0,"llama_get_embeddings_seq");
+        return RuntimeHelper.requireNonNull(constants$176.const$1,"llama_get_embeddings_seq");
     }
     /**
      * {@snippet :
@@ -2546,13 +2788,13 @@ public class llama_h_1 {
     public static MemorySegment llama_get_embeddings_seq(MemorySegment ctx, int seq_id) {
         var mh$ = llama_get_embeddings_seq$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(ctx, seq_id);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(ctx, seq_id);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_vocab_get_text$MH() {
-        return RuntimeHelper.requireNonNull(constants$176.const$1,"llama_vocab_get_text");
+        return RuntimeHelper.requireNonNull(constants$176.const$2,"llama_vocab_get_text");
     }
     /**
      * {@snippet :
@@ -2562,13 +2804,13 @@ public class llama_h_1 {
     public static MemorySegment llama_vocab_get_text(MemorySegment vocab, int token) {
         var mh$ = llama_vocab_get_text$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(vocab, token);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(vocab, token);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
     }
     public static MethodHandle llama_vocab_get_score$MH() {
-        return RuntimeHelper.requireNonNull(constants$176.const$2,"llama_vocab_get_score");
+        return RuntimeHelper.requireNonNull(constants$176.const$3,"llama_vocab_get_score");
     }
     /**
      * {@snippet :
@@ -2584,7 +2826,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_vocab_get_attr$MH() {
-        return RuntimeHelper.requireNonNull(constants$176.const$3,"llama_vocab_get_attr");
+        return RuntimeHelper.requireNonNull(constants$176.const$4,"llama_vocab_get_attr");
     }
     /**
      * {@snippet :
@@ -2600,7 +2842,7 @@ public class llama_h_1 {
         }
     }
     public static MethodHandle llama_vocab_is_eog$MH() {
-        return RuntimeHelper.requireNonNull(constants$176.const$5,"llama_vocab_is_eog");
+        return RuntimeHelper.requireNonNull(constants$176.const$6,"llama_vocab_is_eog");
     }
     /**
      * {@snippet :
@@ -2866,7 +3108,7 @@ public class llama_h_1 {
     public static MemorySegment llama_token_get_text(MemorySegment vocab, int token) {
         var mh$ = llama_token_get_text$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(vocab, token);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(vocab, token);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3288,7 +3530,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init(MemorySegment iface, MemorySegment ctx) {
         var mh$ = llama_sampler_init$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(iface, ctx);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(iface, ctx);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3304,7 +3546,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_name(MemorySegment smpl) {
         var mh$ = llama_sampler_name$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(smpl);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(smpl);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3368,7 +3610,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_clone(MemorySegment smpl) {
         var mh$ = llama_sampler_clone$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(smpl);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(smpl);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3400,7 +3642,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_chain_init(MemorySegment params) {
         var mh$ = llama_sampler_chain_init$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(params);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(params);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3432,7 +3674,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_chain_get(MemorySegment chain, int i) {
         var mh$ = llama_sampler_chain_get$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(chain, i);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(chain, i);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3464,7 +3706,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_chain_remove(MemorySegment chain, int i) {
         var mh$ = llama_sampler_chain_remove$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(chain, i);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(chain, i);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3480,7 +3722,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_greedy() {
         var mh$ = llama_sampler_init_greedy$MH();
         try {
-            return (MemorySegment)mh$.invokeExact();
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact();
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3496,7 +3738,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_dist(int seed) {
         var mh$ = llama_sampler_init_dist$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(seed);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(seed);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3512,7 +3754,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_softmax() {
         var mh$ = llama_sampler_init_softmax$MH();
         try {
-            return (MemorySegment)mh$.invokeExact();
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact();
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3528,7 +3770,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_top_k(int k) {
         var mh$ = llama_sampler_init_top_k$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(k);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(k);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3544,7 +3786,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_top_p(float p, long min_keep) {
         var mh$ = llama_sampler_init_top_p$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(p, min_keep);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(p, min_keep);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3560,7 +3802,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_min_p(float p, long min_keep) {
         var mh$ = llama_sampler_init_min_p$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(p, min_keep);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(p, min_keep);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3576,7 +3818,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_typical(float p, long min_keep) {
         var mh$ = llama_sampler_init_typical$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(p, min_keep);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(p, min_keep);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3592,7 +3834,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_temp(float t) {
         var mh$ = llama_sampler_init_temp$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(t);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(t);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3608,7 +3850,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_temp_ext(float t, float delta, float exponent) {
         var mh$ = llama_sampler_init_temp_ext$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(t, delta, exponent);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(t, delta, exponent);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3624,7 +3866,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_xtc(float p, float t, long min_keep, int seed) {
         var mh$ = llama_sampler_init_xtc$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(p, t, min_keep, seed);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(p, t, min_keep, seed);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3640,7 +3882,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_top_n_sigma(float n) {
         var mh$ = llama_sampler_init_top_n_sigma$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(n);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(n);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3656,7 +3898,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_mirostat(int n_vocab, int seed, float tau, float eta, int m) {
         var mh$ = llama_sampler_init_mirostat$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(n_vocab, seed, tau, eta, m);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(n_vocab, seed, tau, eta, m);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3672,7 +3914,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_mirostat_v2(int seed, float tau, float eta) {
         var mh$ = llama_sampler_init_mirostat_v2$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(seed, tau, eta);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(seed, tau, eta);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3688,7 +3930,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_grammar(MemorySegment vocab, MemorySegment grammar_str, MemorySegment grammar_root) {
         var mh$ = llama_sampler_init_grammar$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(vocab, grammar_str, grammar_root);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(vocab, grammar_str, grammar_root);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3704,7 +3946,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_grammar_lazy(MemorySegment vocab, MemorySegment grammar_str, MemorySegment grammar_root, MemorySegment trigger_words, long num_trigger_words, MemorySegment trigger_tokens, long num_trigger_tokens) {
         var mh$ = llama_sampler_init_grammar_lazy$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(vocab, grammar_str, grammar_root, trigger_words, num_trigger_words, trigger_tokens, num_trigger_tokens);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(vocab, grammar_str, grammar_root, trigger_words, num_trigger_words, trigger_tokens, num_trigger_tokens);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3720,7 +3962,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_grammar_lazy_patterns(MemorySegment vocab, MemorySegment grammar_str, MemorySegment grammar_root, MemorySegment trigger_patterns, long num_trigger_patterns, MemorySegment trigger_tokens, long num_trigger_tokens) {
         var mh$ = llama_sampler_init_grammar_lazy_patterns$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(vocab, grammar_str, grammar_root, trigger_patterns, num_trigger_patterns, trigger_tokens, num_trigger_tokens);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(vocab, grammar_str, grammar_root, trigger_patterns, num_trigger_patterns, trigger_tokens, num_trigger_tokens);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3736,7 +3978,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_penalties(int penalty_last_n, float penalty_repeat, float penalty_freq, float penalty_present) {
         var mh$ = llama_sampler_init_penalties$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(penalty_last_n, penalty_repeat, penalty_freq, penalty_present);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(penalty_last_n, penalty_repeat, penalty_freq, penalty_present);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3752,7 +3994,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_dry(MemorySegment vocab, int n_ctx_train, float dry_multiplier, float dry_base, int dry_allowed_length, int dry_penalty_last_n, MemorySegment seq_breakers, long num_breakers) {
         var mh$ = llama_sampler_init_dry$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(vocab, n_ctx_train, dry_multiplier, dry_base, dry_allowed_length, dry_penalty_last_n, seq_breakers, num_breakers);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(vocab, n_ctx_train, dry_multiplier, dry_base, dry_allowed_length, dry_penalty_last_n, seq_breakers, num_breakers);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3768,7 +4010,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_logit_bias(int n_vocab, int n_logit_bias, MemorySegment logit_bias) {
         var mh$ = llama_sampler_init_logit_bias$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(n_vocab, n_logit_bias, logit_bias);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(n_vocab, n_logit_bias, logit_bias);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3784,7 +4026,7 @@ public class llama_h_1 {
     public static MemorySegment llama_sampler_init_infill(MemorySegment vocab) {
         var mh$ = llama_sampler_init_infill$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(vocab);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(vocab);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3864,7 +4106,7 @@ public class llama_h_1 {
     public static MemorySegment llama_print_system_info() {
         var mh$ = llama_print_system_info$MH();
         try {
-            return (MemorySegment)mh$.invokeExact();
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact();
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3896,7 +4138,7 @@ public class llama_h_1 {
     public static MemorySegment llama_perf_context(SegmentAllocator allocator, MemorySegment ctx) {
         var mh$ = llama_perf_context$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(allocator, ctx);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(allocator, ctx);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }
@@ -3944,7 +4186,7 @@ public class llama_h_1 {
     public static MemorySegment llama_perf_sampler(SegmentAllocator allocator, MemorySegment chain) {
         var mh$ = llama_perf_sampler$MH();
         try {
-            return (MemorySegment)mh$.invokeExact(allocator, chain);
+            return (java.lang.foreign.MemorySegment)mh$.invokeExact(allocator, chain);
         } catch (Throwable ex$) {
             throw new AssertionError("should not reach here", ex$);
         }

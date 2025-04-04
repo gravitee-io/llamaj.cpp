@@ -3,34 +3,37 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$156 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$156() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_time_us",
-        constants$34.const$0
+        "llama_n_ctx_train",
+        constants$7.const$1
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_max_devices",
-        constants$34.const$0
+        "llama_n_embd",
+        constants$7.const$1
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_supports_mmap",
-        constants$125.const$4
+        "llama_n_layer",
+        constants$7.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_supports_mlock",
-        constants$125.const$4
+        "llama_n_head",
+        constants$7.const$1
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_supports_gpu_offload",
-        constants$125.const$4
+        "llama_n_vocab",
+        constants$7.const$1
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_supports_rpc",
-        constants$125.const$4
+        "llama_get_model",
+        constants$8.const$3
     );
 }
 

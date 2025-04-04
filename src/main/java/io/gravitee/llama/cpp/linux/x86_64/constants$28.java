@@ -3,33 +3,36 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$28 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$28() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_INT
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_status_to_string",
-        constants$28.const$0
-    );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_FLOAT,
-        JAVA_SHORT
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_fp16_to_fp32",
-        constants$28.const$2
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_SHORT,
-        JAVA_FLOAT
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_fp32_to_fp16",
-        constants$28.const$4
-    );
+    static final VarHandle const$0 = constants$27.const$5.varHandle(MemoryLayout.PathElement.groupElement("mem_size"));
+    static final VarHandle const$1 = constants$27.const$5.varHandle(MemoryLayout.PathElement.groupElement("mem_buffer"));
+    static final VarHandle const$2 = constants$27.const$5.varHandle(MemoryLayout.PathElement.groupElement("no_alloc"));
+    static final StructLayout const$3 = MemoryLayout.structLayout(
+        JAVA_INT.withName("type"),
+        MemoryLayout.paddingLayout(4),
+        RuntimeHelper.POINTER.withName("buffer"),
+        MemoryLayout.sequenceLayout(4, JAVA_LONG).withName("ne"),
+        MemoryLayout.sequenceLayout(4, JAVA_LONG).withName("nb"),
+        JAVA_INT.withName("op"),
+        MemoryLayout.sequenceLayout(16, JAVA_INT).withName("op_params"),
+        JAVA_INT.withName("flags"),
+        MemoryLayout.sequenceLayout(10, RuntimeHelper.POINTER).withName("src"),
+        RuntimeHelper.POINTER.withName("view_src"),
+        JAVA_LONG.withName("view_offs"),
+        RuntimeHelper.POINTER.withName("data"),
+        MemoryLayout.sequenceLayout(64, JAVA_BYTE).withName("name"),
+        RuntimeHelper.POINTER.withName("extra"),
+        MemoryLayout.sequenceLayout(8, JAVA_BYTE).withName("padding")
+    ).withName("ggml_tensor");
+    static final VarHandle const$4 = constants$28.const$3.varHandle(MemoryLayout.PathElement.groupElement("type"));
+    static final VarHandle const$5 = constants$28.const$3.varHandle(MemoryLayout.PathElement.groupElement("buffer"));
 }
 
 

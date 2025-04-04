@@ -4,75 +4,52 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$152 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$152() {}
-    static final VarHandle const$0 = constants$151.const$4.varHandle(PathElement.groupElement("content"));
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("devices"),
-        JAVA_INT.withName("n_gpu_layers"),
-        JAVA_INT.withName("split_mode"),
-        JAVA_INT.withName("main_gpu"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("tensor_split"),
-        RuntimeHelper.POINTER.withName("progress_callback"),
-        RuntimeHelper.POINTER.withName("progress_callback_user_data"),
-        RuntimeHelper.POINTER.withName("kv_overrides"),
-        JAVA_BOOLEAN.withName("vocab_only"),
-        JAVA_BOOLEAN.withName("use_mmap"),
-        JAVA_BOOLEAN.withName("use_mlock"),
-        JAVA_BOOLEAN.withName("check_tensors"),
-        MemoryLayout.paddingLayout(4)
-    ).withName("llama_model_params"));
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_model_default_params",
-        constants$152.const$1
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_numa_init",
+        constants$89.const$4
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_INT.withName("n_ctx"),
-        JAVA_INT.withName("n_batch"),
-        JAVA_INT.withName("n_ubatch"),
-        JAVA_INT.withName("n_seq_max"),
-        JAVA_INT.withName("n_threads"),
-        JAVA_INT.withName("n_threads_batch"),
-        JAVA_INT.withName("rope_scaling_type"),
-        JAVA_INT.withName("pooling_type"),
-        JAVA_INT.withName("attention_type"),
-        JAVA_FLOAT.withName("rope_freq_base"),
-        JAVA_FLOAT.withName("rope_freq_scale"),
-        JAVA_FLOAT.withName("yarn_ext_factor"),
-        JAVA_FLOAT.withName("yarn_attn_factor"),
-        JAVA_FLOAT.withName("yarn_beta_fast"),
-        JAVA_FLOAT.withName("yarn_beta_slow"),
-        JAVA_INT.withName("yarn_orig_ctx"),
-        JAVA_FLOAT.withName("defrag_thold"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("cb_eval"),
-        RuntimeHelper.POINTER.withName("cb_eval_user_data"),
-        JAVA_INT.withName("type_k"),
-        JAVA_INT.withName("type_v"),
-        JAVA_BOOLEAN.withName("logits_all"),
-        JAVA_BOOLEAN.withName("embeddings"),
-        JAVA_BOOLEAN.withName("offload_kqv"),
-        JAVA_BOOLEAN.withName("flash_attn"),
-        JAVA_BOOLEAN.withName("no_perf"),
-        MemoryLayout.paddingLayout(3),
-        RuntimeHelper.POINTER.withName("abort_callback"),
-        RuntimeHelper.POINTER.withName("abort_callback_data")
-    ).withName("llama_context_params"));
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_attach_threadpool",
+        constants$78.const$2
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_detach_threadpool",
+        constants$11.const$4
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        MemoryLayout.structLayout(
+            RuntimeHelper.POINTER.withName("devices"),
+            RuntimeHelper.POINTER.withName("tensor_buft_overrides"),
+            JAVA_INT.withName("n_gpu_layers"),
+            JAVA_INT.withName("split_mode"),
+            JAVA_INT.withName("main_gpu"),
+            MemoryLayout.paddingLayout(4),
+            RuntimeHelper.POINTER.withName("tensor_split"),
+            RuntimeHelper.POINTER.withName("progress_callback"),
+            RuntimeHelper.POINTER.withName("progress_callback_user_data"),
+            RuntimeHelper.POINTER.withName("kv_overrides"),
+            JAVA_BOOLEAN.withName("vocab_only"),
+            JAVA_BOOLEAN.withName("use_mmap"),
+            JAVA_BOOLEAN.withName("use_mlock"),
+            JAVA_BOOLEAN.withName("check_tensors"),
+            MemoryLayout.paddingLayout(4)
+        ).withName("llama_model_params")
+    );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_context_default_params",
+        "llama_load_model_from_file",
         constants$152.const$3
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_BOOLEAN.withName("no_perf")
-    ).withName("llama_sampler_chain_params"));
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_sampler_chain_default_params",
-        constants$152.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_model_load_from_file",
+        constants$152.const$3
     );
 }
 

@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct llama_kv_cache_view_cell {
@@ -15,10 +17,10 @@ import java.lang.foreign.*;
 public class llama_kv_cache_view_cell {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$164.const$4;
+        return constants$163.const$0;
     }
     public static VarHandle pos$VH() {
-        return constants$164.const$5;
+        return constants$163.const$1;
     }
     /**
      * Getter for field:
@@ -27,7 +29,7 @@ public class llama_kv_cache_view_cell {
      * }
      */
     public static int pos$get(MemorySegment seg) {
-        return (int)constants$164.const$5.get(seg);
+        return (int)constants$163.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -36,13 +38,13 @@ public class llama_kv_cache_view_cell {
      * }
      */
     public static void pos$set(MemorySegment seg, int x) {
-        constants$164.const$5.set(seg, x);
+        constants$163.const$1.set(seg, x);
     }
     public static int pos$get(MemorySegment seg, long index) {
-        return (int)constants$164.const$5.get(seg.asSlice(index*sizeof()));
+        return (int)constants$163.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void pos$set(MemorySegment seg, long index, int x) {
-        constants$164.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$163.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

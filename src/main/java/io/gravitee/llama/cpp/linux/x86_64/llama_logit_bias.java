@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct llama_logit_bias {
@@ -16,10 +18,10 @@ import java.lang.foreign.*;
 public class llama_logit_bias {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$150.const$5;
+        return constants$149.const$1;
     }
     public static VarHandle token$VH() {
-        return constants$151.const$0;
+        return constants$149.const$2;
     }
     /**
      * Getter for field:
@@ -28,7 +30,7 @@ public class llama_logit_bias {
      * }
      */
     public static int token$get(MemorySegment seg) {
-        return (int)constants$151.const$0.get(seg);
+        return (int)constants$149.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -37,16 +39,16 @@ public class llama_logit_bias {
      * }
      */
     public static void token$set(MemorySegment seg, int x) {
-        constants$151.const$0.set(seg, x);
+        constants$149.const$2.set(seg, x);
     }
     public static int token$get(MemorySegment seg, long index) {
-        return (int)constants$151.const$0.get(seg.asSlice(index*sizeof()));
+        return (int)constants$149.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void token$set(MemorySegment seg, long index, int x) {
-        constants$151.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$149.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle bias$VH() {
-        return constants$151.const$1;
+        return constants$149.const$3;
     }
     /**
      * Getter for field:
@@ -55,7 +57,7 @@ public class llama_logit_bias {
      * }
      */
     public static float bias$get(MemorySegment seg) {
-        return (float)constants$151.const$1.get(seg);
+        return (float)constants$149.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -64,13 +66,13 @@ public class llama_logit_bias {
      * }
      */
     public static void bias$set(MemorySegment seg, float x) {
-        constants$151.const$1.set(seg, x);
+        constants$149.const$3.set(seg, x);
     }
     public static float bias$get(MemorySegment seg, long index) {
-        return (float)constants$151.const$1.get(seg.asSlice(index*sizeof()));
+        return (float)constants$149.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void bias$set(MemorySegment seg, long index, float x) {
-        constants$151.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$149.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

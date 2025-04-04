@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct llama_token_data {
@@ -17,10 +19,10 @@ import java.lang.foreign.*;
 public class llama_token_data {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$137.const$4;
+        return constants$135.const$2;
     }
     public static VarHandle id$VH() {
-        return constants$137.const$5;
+        return constants$135.const$3;
     }
     /**
      * Getter for field:
@@ -29,7 +31,7 @@ public class llama_token_data {
      * }
      */
     public static int id$get(MemorySegment seg) {
-        return (int)constants$137.const$5.get(seg);
+        return (int)constants$135.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -38,16 +40,16 @@ public class llama_token_data {
      * }
      */
     public static void id$set(MemorySegment seg, int x) {
-        constants$137.const$5.set(seg, x);
+        constants$135.const$3.set(seg, x);
     }
     public static int id$get(MemorySegment seg, long index) {
-        return (int)constants$137.const$5.get(seg.asSlice(index*sizeof()));
+        return (int)constants$135.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void id$set(MemorySegment seg, long index, int x) {
-        constants$137.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$135.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle logit$VH() {
-        return constants$138.const$0;
+        return constants$135.const$4;
     }
     /**
      * Getter for field:
@@ -56,7 +58,7 @@ public class llama_token_data {
      * }
      */
     public static float logit$get(MemorySegment seg) {
-        return (float)constants$138.const$0.get(seg);
+        return (float)constants$135.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -65,16 +67,16 @@ public class llama_token_data {
      * }
      */
     public static void logit$set(MemorySegment seg, float x) {
-        constants$138.const$0.set(seg, x);
+        constants$135.const$4.set(seg, x);
     }
     public static float logit$get(MemorySegment seg, long index) {
-        return (float)constants$138.const$0.get(seg.asSlice(index*sizeof()));
+        return (float)constants$135.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void logit$set(MemorySegment seg, long index, float x) {
-        constants$138.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$135.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle p$VH() {
-        return constants$138.const$1;
+        return constants$135.const$5;
     }
     /**
      * Getter for field:
@@ -83,7 +85,7 @@ public class llama_token_data {
      * }
      */
     public static float p$get(MemorySegment seg) {
-        return (float)constants$138.const$1.get(seg);
+        return (float)constants$135.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -92,13 +94,13 @@ public class llama_token_data {
      * }
      */
     public static void p$set(MemorySegment seg, float x) {
-        constants$138.const$1.set(seg, x);
+        constants$135.const$5.set(seg, x);
     }
     public static float p$get(MemorySegment seg, long index) {
-        return (float)constants$138.const$1.get(seg.asSlice(index*sizeof()));
+        return (float)constants$135.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void p$set(MemorySegment seg, long index, float x) {
-        constants$138.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$135.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

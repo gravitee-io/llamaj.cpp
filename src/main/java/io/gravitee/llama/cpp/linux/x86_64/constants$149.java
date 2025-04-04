@@ -2,19 +2,26 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
-
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$149 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$149() {}
-    static final VarHandle const$0 = constants$148.const$5.varHandle(PathElement.groupElement("nthread"));
-    static final VarHandle const$1 = constants$148.const$5.varHandle(PathElement.groupElement("ftype"));
-    static final VarHandle const$2 = constants$148.const$5.varHandle(PathElement.groupElement("output_tensor_type"));
-    static final VarHandle const$3 = constants$148.const$5.varHandle(PathElement.groupElement("token_embedding_type"));
-    static final VarHandle const$4 = constants$148.const$5.varHandle(PathElement.groupElement("allow_requantize"));
-    static final VarHandle const$5 = constants$148.const$5.varHandle(PathElement.groupElement("quantize_output_tensor"));
+    static final VarHandle const$0 = constants$147.const$1.varHandle(MemoryLayout.PathElement.groupElement("kv_overrides"));
+    static final StructLayout const$1 = MemoryLayout.structLayout(
+        JAVA_INT.withName("token"),
+        JAVA_FLOAT.withName("bias")
+    ).withName("llama_logit_bias");
+    static final VarHandle const$2 = constants$149.const$1.varHandle(MemoryLayout.PathElement.groupElement("token"));
+    static final VarHandle const$3 = constants$149.const$1.varHandle(MemoryLayout.PathElement.groupElement("bias"));
+    static final StructLayout const$4 = MemoryLayout.structLayout(
+        JAVA_BOOLEAN.withName("no_perf")
+    ).withName("llama_sampler_chain_params");
+    static final VarHandle const$5 = constants$149.const$4.varHandle(MemoryLayout.PathElement.groupElement("no_perf"));
 }
 
 

@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$172 {
@@ -11,7 +13,7 @@ final class constants$172 {
     private constants$172() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
         "llama_state_seq_set_data",
-        constants$171.const$4
+        constants$171.const$5
     );
     static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_LONG,
         RuntimeHelper.POINTER,

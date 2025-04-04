@@ -4,36 +4,35 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$164 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$164() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_rm_adapter_lora",
-        constants$9.const$5
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_clear_adapter_lora",
-        constants$14.const$2
-    );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_INT,
+    static final VarHandle const$0 = constants$163.const$2.varHandle(MemoryLayout.PathElement.groupElement("used_cells"));
+    static final VarHandle const$1 = constants$163.const$2.varHandle(MemoryLayout.PathElement.groupElement("max_contiguous"));
+    static final VarHandle const$2 = constants$163.const$2.varHandle(MemoryLayout.PathElement.groupElement("max_contiguous_idx"));
+    static final VarHandle const$3 = constants$163.const$2.varHandle(MemoryLayout.PathElement.groupElement("cells"));
+    static final VarHandle const$4 = constants$163.const$2.varHandle(MemoryLayout.PathElement.groupElement("cells_sequences"));
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        JAVA_INT.withName("n_cells"),
+        JAVA_INT.withName("n_seq_max"),
+        JAVA_INT.withName("token_count"),
+        JAVA_INT.withName("used_cells"),
+        JAVA_INT.withName("max_contiguous"),
+        JAVA_INT.withName("max_contiguous_idx"),
+        RuntimeHelper.POINTER.withName("cells"),
+        RuntimeHelper.POINTER.withName("cells_sequences")
+    ).withName("llama_kv_cache_view"),
         RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_INT,
-        JAVA_INT,
         JAVA_INT
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_apply_adapter_cvec",
-        constants$164.const$2
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "llama_kv_cache_view_init",
+        constants$164.const$5
     );
-    static final StructLayout const$4 = MemoryLayout.structLayout(
-        JAVA_INT.withName("pos")
-    ).withName("llama_kv_cache_view_cell");
-    static final VarHandle const$5 = constants$164.const$4.varHandle(PathElement.groupElement("pos"));
 }
 
 

@@ -3,35 +3,32 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$107 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$107() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_compute",
-        constants$9.const$5
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_compute_async",
-        constants$9.const$5
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_supports_op",
-        constants$33.const$3
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_supports_buft",
-        constants$33.const$3
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_offload_op",
-        constants$33.const$3
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_copy_async",
-        constants$81.const$4
-    );
+    static final VarHandle const$0 = constants$106.const$3.varHandle(MemoryLayout.PathElement.groupElement("buffer_from_host_ptr"));
+    static final VarHandle const$1 = constants$106.const$3.varHandle(MemoryLayout.PathElement.groupElement("events"));
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("name"),
+        RuntimeHelper.POINTER.withName("description"),
+        JAVA_LONG.withName("memory_free"),
+        JAVA_LONG.withName("memory_total"),
+        JAVA_INT.withName("type"),
+        MemoryLayout.structLayout(
+            JAVA_BOOLEAN.withName("async"),
+            JAVA_BOOLEAN.withName("host_buffer"),
+            JAVA_BOOLEAN.withName("buffer_from_host_ptr"),
+            JAVA_BOOLEAN.withName("events")
+        ).withName("caps")
+    ).withName("ggml_backend_dev_props");
+    static final VarHandle const$3 = constants$107.const$2.varHandle(MemoryLayout.PathElement.groupElement("name"));
+    static final VarHandle const$4 = constants$107.const$2.varHandle(MemoryLayout.PathElement.groupElement("description"));
+    static final VarHandle const$5 = constants$107.const$2.varHandle(MemoryLayout.PathElement.groupElement("memory_free"));
 }
 
 

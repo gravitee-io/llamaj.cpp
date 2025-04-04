@@ -3,43 +3,46 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$127 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$127() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_threadpool_get_n_threads",
+        constants$7.const$1
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_set_i32_1d",
-        constants$127.const$0
+        "ggml_threadpool_pause",
+        constants$11.const$4
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_INT,
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_threadpool_resume",
+        constants$11.const$4
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        JAVA_LONG.withName("work_size"),
+        RuntimeHelper.POINTER.withName("work_data"),
+        JAVA_INT.withName("n_threads"),
+        MemoryLayout.paddingLayout(4),
+        RuntimeHelper.POINTER.withName("threadpool"),
+        RuntimeHelper.POINTER.withName("abort_callback"),
+        RuntimeHelper.POINTER.withName("abort_callback_data")
+    ).withName("ggml_cplan"),
         RuntimeHelper.POINTER,
         JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT
+        RuntimeHelper.POINTER
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_get_i32_nd",
-        constants$127.const$2
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_graph_plan",
+        constants$127.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_set_i32_nd",
-        constants$127.const$4
+        "ggml_graph_compute",
+        constants$7.const$3
     );
 }
 

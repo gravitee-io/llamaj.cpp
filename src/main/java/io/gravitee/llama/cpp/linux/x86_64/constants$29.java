@@ -4,33 +4,19 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$29 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$29() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_fp16_to_fp32_row",
-        constants$14.const$0
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_fp32_to_fp16_row",
-        constants$14.const$0
-    );
-    static final StructLayout const$2 = MemoryLayout.structLayout(
-        JAVA_SHORT.withName("bits")
-    ).withName("");
-    static final VarHandle const$3 = constants$29.const$2.varHandle(PathElement.groupElement("bits"));
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_SHORT.withName("bits")
-    ).withName(""),
-        JAVA_FLOAT
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_fp32_to_bf16",
-        constants$29.const$4
-    );
+    static final VarHandle const$0 = constants$28.const$3.varHandle(MemoryLayout.PathElement.groupElement("op"));
+    static final VarHandle const$1 = constants$28.const$3.varHandle(MemoryLayout.PathElement.groupElement("flags"));
+    static final VarHandle const$2 = constants$28.const$3.varHandle(MemoryLayout.PathElement.groupElement("view_src"));
+    static final VarHandle const$3 = constants$28.const$3.varHandle(MemoryLayout.PathElement.groupElement("view_offs"));
+    static final VarHandle const$4 = constants$28.const$3.varHandle(MemoryLayout.PathElement.groupElement("data"));
+    static final VarHandle const$5 = constants$28.const$3.varHandle(MemoryLayout.PathElement.groupElement("extra"));
 }
 
 

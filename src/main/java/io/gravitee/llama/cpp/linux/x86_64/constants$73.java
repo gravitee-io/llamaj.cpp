@@ -3,42 +3,49 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$73 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$73() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_timestep_embedding",
+        constants$72.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_conv_2d",
-        constants$73.const$0
+        "ggml_argsort",
+        constants$60.const$2
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_conv_2d_sk_p0",
-        constants$12.const$0
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_conv_2d_s1_ph",
-        constants$12.const$0
+        "ggml_arange",
+        constants$73.const$2
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_conv_2d_dw",
-        constants$73.const$0
+        "ggml_top_k",
+        constants$60.const$2
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_conv_transpose_2d_p0",
-        constants$48.const$5
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
+    );
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "ggml_flash_attn_ext",
+        constants$73.const$5
     );
 }
 

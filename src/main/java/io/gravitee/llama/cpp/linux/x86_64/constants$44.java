@@ -3,44 +3,37 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$44 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$44() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_LONG,
-        JAVA_LONG
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_get_name",
+        constants$8.const$3
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_new_tensor_2d",
-        constants$44.const$0
+        "ggml_set_name",
+        constants$9.const$0
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandleVariadic(
+        "ggml_format_name",
+        constants$9.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_new_tensor_3d",
-        constants$44.const$2
+        "ggml_set_input",
+        constants$11.const$4
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_set_output",
+        constants$11.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_new_tensor_4d",
-        constants$44.const$4
+        "ggml_set_param",
+        constants$10.const$5
     );
 }
 

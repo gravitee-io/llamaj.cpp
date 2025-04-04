@@ -4,35 +4,41 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$166 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$166() {}
-    static final VarHandle const$0 = constants$165.const$0.varHandle(PathElement.groupElement("max_contiguous_idx"));
-    static final VarHandle const$1 = constants$165.const$0.varHandle(PathElement.groupElement("cells"));
-    static final VarHandle const$2 = constants$165.const$0.varHandle(PathElement.groupElement("cells_sequences"));
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_INT.withName("n_cells"),
-        JAVA_INT.withName("n_seq_max"),
-        JAVA_INT.withName("token_count"),
-        JAVA_INT.withName("used_cells"),
-        JAVA_INT.withName("max_contiguous"),
-        JAVA_INT.withName("max_contiguous_idx"),
-        RuntimeHelper.POINTER.withName("cells"),
-        RuntimeHelper.POINTER.withName("cells_sequences")
-    ).withName("llama_kv_cache_view"),
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_clear",
+        constants$11.const$4
+    );
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_BOOLEAN,
         RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_seq_rm",
+        constants$166.const$1
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
         JAVA_INT
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_view_init",
+        "llama_kv_self_seq_cp",
         constants$166.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_view_free",
-        constants$14.const$2
+        "llama_kv_self_seq_keep",
+        constants$57.const$5
     );
 }
 

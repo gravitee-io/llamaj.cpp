@@ -3,40 +3,46 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$41 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$41() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_tensor_overhead",
-        constants$34.const$0
-    );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        JAVA_INT,
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_LONG,
         JAVA_LONG
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_validate_row_data",
-        constants$41.const$1
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_new_tensor_2d",
+        constants$41.const$0
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        MemoryLayout.structLayout(
-            JAVA_LONG.withName("mem_size"),
-            RuntimeHelper.POINTER.withName("mem_buffer"),
-            JAVA_BOOLEAN.withName("no_alloc"),
-            MemoryLayout.paddingLayout(7)
-        ).withName("ggml_init_params")
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_init",
-        constants$41.const$3
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_new_tensor_3d",
+        constants$41.const$2
+    );
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_reset",
-        constants$14.const$2
+        "ggml_new_tensor_4d",
+        constants$41.const$4
     );
 }
 

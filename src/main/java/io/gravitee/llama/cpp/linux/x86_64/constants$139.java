@@ -4,32 +4,22 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$139 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$139() {}
-    static final VarHandle const$0 = constants$138.const$2.varHandle(PathElement.groupElement("sorted"));
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        JAVA_FLOAT,
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(llama_progress_callback.class, "apply", constants$139.const$1);
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        constants$139.const$1
-    );
-    static final StructLayout const$4 = MemoryLayout.structLayout(
-        JAVA_INT.withName("n_tokens"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("token"),
-        RuntimeHelper.POINTER.withName("embd"),
-        RuntimeHelper.POINTER.withName("pos"),
-        RuntimeHelper.POINTER.withName("n_seq_id"),
-        RuntimeHelper.POINTER.withName("seq_id"),
-        RuntimeHelper.POINTER.withName("logits")
-    ).withName("llama_batch");
-    static final VarHandle const$5 = constants$139.const$4.varHandle(PathElement.groupElement("n_tokens"));
+    static final VarHandle const$0 = constants$138.const$4.varHandle(MemoryLayout.PathElement.groupElement("$anon$0"), MemoryLayout.PathElement.groupElement("val_i64"));
+    static final VarHandle const$1 = constants$138.const$4.varHandle(MemoryLayout.PathElement.groupElement("$anon$0"), MemoryLayout.PathElement.groupElement("val_f64"));
+    static final VarHandle const$2 = constants$138.const$4.varHandle(MemoryLayout.PathElement.groupElement("$anon$0"), MemoryLayout.PathElement.groupElement("val_bool"));
+    static final StructLayout const$3 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("pattern"),
+        RuntimeHelper.POINTER.withName("buft")
+    ).withName("llama_model_tensor_buft_override");
+    static final VarHandle const$4 = constants$139.const$3.varHandle(MemoryLayout.PathElement.groupElement("pattern"));
+    static final VarHandle const$5 = constants$139.const$3.varHandle(MemoryLayout.PathElement.groupElement("buft"));
 }
 
 

@@ -3,34 +3,36 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$119 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$119() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_reserve",
-        constants$33.const$3
+    static final StructLayout const$0 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("buffer"),
+        RuntimeHelper.POINTER.withName("ctx_allocated"),
+        RuntimeHelper.POINTER.withName("ctx_unallocated"),
+        RuntimeHelper.POINTER.withName("graph")
+    ).withName("ggml_backend_graph_copy");
+    static final VarHandle const$1 = constants$119.const$0.varHandle(MemoryLayout.PathElement.groupElement("buffer"));
+    static final VarHandle const$2 = constants$119.const$0.varHandle(MemoryLayout.PathElement.groupElement("ctx_allocated"));
+    static final VarHandle const$3 = constants$119.const$0.varHandle(MemoryLayout.PathElement.groupElement("ctx_unallocated"));
+    static final VarHandle const$4 = constants$119.const$0.varHandle(MemoryLayout.PathElement.groupElement("graph"));
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("buffer"),
+        RuntimeHelper.POINTER.withName("ctx_allocated"),
+        RuntimeHelper.POINTER.withName("ctx_unallocated"),
+        RuntimeHelper.POINTER.withName("graph")
+    ).withName("ggml_backend_graph_copy"),
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_n_backends",
-        constants$7.const$4
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_backend",
-        constants$89.const$2
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_n_splits",
-        constants$7.const$4
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_n_copies",
-        constants$7.const$4
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_buffer_size",
-        constants$100.const$3
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "ggml_backend_graph_copy",
+        constants$119.const$5
     );
 }
 

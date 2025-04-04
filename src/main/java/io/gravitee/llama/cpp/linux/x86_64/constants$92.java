@@ -3,35 +3,31 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$92 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$92() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_log_set",
-        constants$13.const$3
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_set_zero",
-        constants$10.const$5
-    );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.ofVoid(
-        JAVA_INT
-    );
+    static final VarHandle const$0 = constants$91.const$1.varHandle(MemoryLayout.PathElement.groupElement("is_quantized"));
+    static final VarHandle const$1 = constants$91.const$1.varHandle(MemoryLayout.PathElement.groupElement("to_float"));
+    static final VarHandle const$2 = constants$91.const$1.varHandle(MemoryLayout.PathElement.groupElement("from_float_ref"));
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_quantize_init",
-        constants$92.const$2
+        "ggml_get_type_traits",
+        constants$25.const$0
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_quantize_free",
-        constants$33.const$5
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_quantize_requires_imatrix",
-        constants$38.const$0
-    );
+    static final StructLayout const$4 = MemoryLayout.structLayout(
+        MemoryLayout.sequenceLayout(512, JAVA_BOOLEAN).withName("cpumask"),
+        JAVA_INT.withName("n_threads"),
+        JAVA_INT.withName("prio"),
+        JAVA_INT.withName("poll"),
+        JAVA_BOOLEAN.withName("strict_cpu"),
+        JAVA_BOOLEAN.withName("paused"),
+        MemoryLayout.paddingLayout(2)
+    ).withName("ggml_threadpool_params");
+    static final VarHandle const$5 = constants$92.const$4.varHandle(MemoryLayout.PathElement.groupElement("n_threads"));
 }
 
 

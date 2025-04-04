@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct _IO_FILE {
@@ -82,7 +84,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_read_ptr$get(MemorySegment seg) {
-        return (MemorySegment)constants$2.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$2.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -94,7 +96,7 @@ public class _IO_FILE {
         constants$2.const$1.set(seg, x);
     }
     public static MemorySegment _IO_read_ptr$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$2.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$2.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_read_ptr$set(MemorySegment seg, long index, MemorySegment x) {
         constants$2.const$1.set(seg.asSlice(index*sizeof()), x);
@@ -109,7 +111,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_read_end$get(MemorySegment seg) {
-        return (MemorySegment)constants$2.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$2.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -121,7 +123,7 @@ public class _IO_FILE {
         constants$2.const$2.set(seg, x);
     }
     public static MemorySegment _IO_read_end$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$2.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$2.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_read_end$set(MemorySegment seg, long index, MemorySegment x) {
         constants$2.const$2.set(seg.asSlice(index*sizeof()), x);
@@ -136,7 +138,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_read_base$get(MemorySegment seg) {
-        return (MemorySegment)constants$2.const$3.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$2.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -148,7 +150,7 @@ public class _IO_FILE {
         constants$2.const$3.set(seg, x);
     }
     public static MemorySegment _IO_read_base$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$2.const$3.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$2.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_read_base$set(MemorySegment seg, long index, MemorySegment x) {
         constants$2.const$3.set(seg.asSlice(index*sizeof()), x);
@@ -163,7 +165,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_write_base$get(MemorySegment seg) {
-        return (MemorySegment)constants$2.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$2.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -175,7 +177,7 @@ public class _IO_FILE {
         constants$2.const$4.set(seg, x);
     }
     public static MemorySegment _IO_write_base$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$2.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$2.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_write_base$set(MemorySegment seg, long index, MemorySegment x) {
         constants$2.const$4.set(seg.asSlice(index*sizeof()), x);
@@ -190,7 +192,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_write_ptr$get(MemorySegment seg) {
-        return (MemorySegment)constants$2.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$2.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -202,7 +204,7 @@ public class _IO_FILE {
         constants$2.const$5.set(seg, x);
     }
     public static MemorySegment _IO_write_ptr$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$2.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$2.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_write_ptr$set(MemorySegment seg, long index, MemorySegment x) {
         constants$2.const$5.set(seg.asSlice(index*sizeof()), x);
@@ -217,7 +219,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_write_end$get(MemorySegment seg) {
-        return (MemorySegment)constants$3.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$3.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -229,7 +231,7 @@ public class _IO_FILE {
         constants$3.const$0.set(seg, x);
     }
     public static MemorySegment _IO_write_end$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$3.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$3.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_write_end$set(MemorySegment seg, long index, MemorySegment x) {
         constants$3.const$0.set(seg.asSlice(index*sizeof()), x);
@@ -244,7 +246,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_buf_base$get(MemorySegment seg) {
-        return (MemorySegment)constants$3.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$3.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -256,7 +258,7 @@ public class _IO_FILE {
         constants$3.const$1.set(seg, x);
     }
     public static MemorySegment _IO_buf_base$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$3.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$3.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_buf_base$set(MemorySegment seg, long index, MemorySegment x) {
         constants$3.const$1.set(seg.asSlice(index*sizeof()), x);
@@ -271,7 +273,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_buf_end$get(MemorySegment seg) {
-        return (MemorySegment)constants$3.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$3.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -283,7 +285,7 @@ public class _IO_FILE {
         constants$3.const$2.set(seg, x);
     }
     public static MemorySegment _IO_buf_end$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$3.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$3.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_buf_end$set(MemorySegment seg, long index, MemorySegment x) {
         constants$3.const$2.set(seg.asSlice(index*sizeof()), x);
@@ -298,7 +300,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_save_base$get(MemorySegment seg) {
-        return (MemorySegment)constants$3.const$3.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$3.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -310,7 +312,7 @@ public class _IO_FILE {
         constants$3.const$3.set(seg, x);
     }
     public static MemorySegment _IO_save_base$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$3.const$3.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$3.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_save_base$set(MemorySegment seg, long index, MemorySegment x) {
         constants$3.const$3.set(seg.asSlice(index*sizeof()), x);
@@ -325,7 +327,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_backup_base$get(MemorySegment seg) {
-        return (MemorySegment)constants$3.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$3.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -337,7 +339,7 @@ public class _IO_FILE {
         constants$3.const$4.set(seg, x);
     }
     public static MemorySegment _IO_backup_base$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$3.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$3.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_backup_base$set(MemorySegment seg, long index, MemorySegment x) {
         constants$3.const$4.set(seg.asSlice(index*sizeof()), x);
@@ -352,7 +354,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _IO_save_end$get(MemorySegment seg) {
-        return (MemorySegment)constants$3.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$3.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -364,7 +366,7 @@ public class _IO_FILE {
         constants$3.const$5.set(seg, x);
     }
     public static MemorySegment _IO_save_end$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$3.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$3.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void _IO_save_end$set(MemorySegment seg, long index, MemorySegment x) {
         constants$3.const$5.set(seg.asSlice(index*sizeof()), x);
@@ -379,7 +381,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _markers$get(MemorySegment seg) {
-        return (MemorySegment)constants$4.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$4.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -391,7 +393,7 @@ public class _IO_FILE {
         constants$4.const$0.set(seg, x);
     }
     public static MemorySegment _markers$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$4.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$4.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void _markers$set(MemorySegment seg, long index, MemorySegment x) {
         constants$4.const$0.set(seg.asSlice(index*sizeof()), x);
@@ -406,7 +408,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _chain$get(MemorySegment seg) {
-        return (MemorySegment)constants$4.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$4.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -418,7 +420,7 @@ public class _IO_FILE {
         constants$4.const$1.set(seg, x);
     }
     public static MemorySegment _chain$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$4.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$4.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void _chain$set(MemorySegment seg, long index, MemorySegment x) {
         constants$4.const$1.set(seg.asSlice(index*sizeof()), x);
@@ -571,7 +573,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _lock$get(MemorySegment seg) {
-        return (MemorySegment)constants$5.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$5.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -583,7 +585,7 @@ public class _IO_FILE {
         constants$5.const$1.set(seg, x);
     }
     public static MemorySegment _lock$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$5.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$5.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void _lock$set(MemorySegment seg, long index, MemorySegment x) {
         constants$5.const$1.set(seg.asSlice(index*sizeof()), x);
@@ -625,7 +627,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _codecvt$get(MemorySegment seg) {
-        return (MemorySegment)constants$5.const$3.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$5.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -637,7 +639,7 @@ public class _IO_FILE {
         constants$5.const$3.set(seg, x);
     }
     public static MemorySegment _codecvt$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$5.const$3.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$5.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void _codecvt$set(MemorySegment seg, long index, MemorySegment x) {
         constants$5.const$3.set(seg.asSlice(index*sizeof()), x);
@@ -652,7 +654,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _wide_data$get(MemorySegment seg) {
-        return (MemorySegment)constants$5.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$5.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -664,7 +666,7 @@ public class _IO_FILE {
         constants$5.const$4.set(seg, x);
     }
     public static MemorySegment _wide_data$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$5.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$5.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void _wide_data$set(MemorySegment seg, long index, MemorySegment x) {
         constants$5.const$4.set(seg.asSlice(index*sizeof()), x);
@@ -679,7 +681,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _freeres_list$get(MemorySegment seg) {
-        return (MemorySegment)constants$5.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$5.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -691,7 +693,7 @@ public class _IO_FILE {
         constants$5.const$5.set(seg, x);
     }
     public static MemorySegment _freeres_list$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$5.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$5.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void _freeres_list$set(MemorySegment seg, long index, MemorySegment x) {
         constants$5.const$5.set(seg.asSlice(index*sizeof()), x);
@@ -706,7 +708,7 @@ public class _IO_FILE {
      * }
      */
     public static MemorySegment _freeres_buf$get(MemorySegment seg) {
-        return (MemorySegment)constants$6.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$6.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -718,7 +720,7 @@ public class _IO_FILE {
         constants$6.const$0.set(seg, x);
     }
     public static MemorySegment _freeres_buf$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$6.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$6.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void _freeres_buf$set(MemorySegment seg, long index, MemorySegment x) {
         constants$6.const$0.set(seg.asSlice(index*sizeof()), x);

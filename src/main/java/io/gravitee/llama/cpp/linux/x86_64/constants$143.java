@@ -2,19 +2,21 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
-
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$143 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$143() {}
-    static final VarHandle const$0 = constants$141.const$5.varHandle(PathElement.groupElement("progress_callback_user_data"));
-    static final VarHandle const$1 = constants$141.const$5.varHandle(PathElement.groupElement("kv_overrides"));
-    static final VarHandle const$2 = constants$141.const$5.varHandle(PathElement.groupElement("vocab_only"));
-    static final VarHandle const$3 = constants$141.const$5.varHandle(PathElement.groupElement("use_mmap"));
-    static final VarHandle const$4 = constants$141.const$5.varHandle(PathElement.groupElement("use_mlock"));
-    static final VarHandle const$5 = constants$141.const$5.varHandle(PathElement.groupElement("check_tensors"));
+    static final VarHandle const$0 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("n_seq_max"));
+    static final VarHandle const$1 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("n_threads"));
+    static final VarHandle const$2 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("n_threads_batch"));
+    static final VarHandle const$3 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("rope_scaling_type"));
+    static final VarHandle const$4 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("pooling_type"));
+    static final VarHandle const$5 = constants$142.const$2.varHandle(MemoryLayout.PathElement.groupElement("attention_type"));
 }
 
 

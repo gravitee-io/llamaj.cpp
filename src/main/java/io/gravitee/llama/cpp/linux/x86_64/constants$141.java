@@ -2,44 +2,21 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$141 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$141() {}
-    static final StructLayout const$0 = MemoryLayout.structLayout(
-        JAVA_INT.withName("tag"),
-        MemoryLayout.sequenceLayout(128, JAVA_BYTE).withName("key"),
-        MemoryLayout.paddingLayout(4),
-        MemoryLayout.unionLayout(
-            JAVA_LONG.withName("val_i64"),
-            JAVA_DOUBLE.withName("val_f64"),
-            JAVA_BOOLEAN.withName("val_bool"),
-            MemoryLayout.sequenceLayout(128, JAVA_BYTE).withName("val_str")
-        ).withName("$anon$0")
-    ).withName("llama_model_kv_override");
-    static final VarHandle const$1 = constants$141.const$0.varHandle(PathElement.groupElement("tag"));
-    static final VarHandle const$2 = constants$141.const$0.varHandle(PathElement.groupElement("$anon$0"), PathElement.groupElement("val_i64"));
-    static final VarHandle const$3 = constants$141.const$0.varHandle(PathElement.groupElement("$anon$0"), PathElement.groupElement("val_f64"));
-    static final VarHandle const$4 = constants$141.const$0.varHandle(PathElement.groupElement("$anon$0"), PathElement.groupElement("val_bool"));
-    static final StructLayout const$5 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("devices"),
-        JAVA_INT.withName("n_gpu_layers"),
-        JAVA_INT.withName("split_mode"),
-        JAVA_INT.withName("main_gpu"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("tensor_split"),
-        RuntimeHelper.POINTER.withName("progress_callback"),
-        RuntimeHelper.POINTER.withName("progress_callback_user_data"),
-        RuntimeHelper.POINTER.withName("kv_overrides"),
-        JAVA_BOOLEAN.withName("vocab_only"),
-        JAVA_BOOLEAN.withName("use_mmap"),
-        JAVA_BOOLEAN.withName("use_mlock"),
-        JAVA_BOOLEAN.withName("check_tensors"),
-        MemoryLayout.paddingLayout(4)
-    ).withName("llama_model_params");
+    static final VarHandle const$0 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("tensor_split"));
+    static final VarHandle const$1 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("progress_callback"));
+    static final VarHandle const$2 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("progress_callback_user_data"));
+    static final VarHandle const$3 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("kv_overrides"));
+    static final VarHandle const$4 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("vocab_only"));
+    static final VarHandle const$5 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("use_mmap"));
 }
 
 

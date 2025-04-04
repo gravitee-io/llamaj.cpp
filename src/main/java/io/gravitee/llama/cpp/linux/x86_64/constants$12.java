@@ -3,42 +3,38 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$12 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$12() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandleVariadic(
+        "fprintf",
+        constants$7.const$3
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandleVariadic(
+        "printf",
+        constants$7.const$1
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandleVariadic(
+        "sprintf",
+        constants$7.const$3
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_INT,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "freopen",
-        constants$12.const$0
-    );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_INT,
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "fdopen",
-        constants$12.const$2
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        MemoryLayout.structLayout(
-            RuntimeHelper.POINTER.withName("read"),
-            RuntimeHelper.POINTER.withName("write"),
-            RuntimeHelper.POINTER.withName("seek"),
-            RuntimeHelper.POINTER.withName("close")
-        ).withName("_IO_cookie_io_functions_t")
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "vfprintf",
+        constants$12.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "fopencookie",
-        constants$12.const$4
+        "vprintf",
+        constants$7.const$3
     );
 }
 
