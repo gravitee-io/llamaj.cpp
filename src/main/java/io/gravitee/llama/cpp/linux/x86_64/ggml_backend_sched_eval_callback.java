@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * _Bool (*ggml_backend_sched_eval_callback)(struct ggml_tensor* t,_Bool ask,void* user_data);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_backend_sched_eval_callback {
 
-    boolean apply(MemorySegment t, boolean ask, MemorySegment user_data);
+    boolean apply(java.lang.foreign.MemorySegment t, boolean ask, java.lang.foreign.MemorySegment user_data);
     static MemorySegment allocate(ggml_backend_sched_eval_callback fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$118.const$1, fi, constants$118.const$0, scope);
+        return RuntimeHelper.upcallStub(constants$115.const$5, fi, constants$115.const$4, scope);
     }
     static ggml_backend_sched_eval_callback ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _t, boolean _ask, MemorySegment _user_data) -> {
+        return (java.lang.foreign.MemorySegment _t, boolean _ask, java.lang.foreign.MemorySegment _user_data) -> {
             try {
-                return (boolean)constants$118.const$2.invokeExact(symbol, _t, _ask, _user_data);
+                return (boolean)constants$116.const$0.invokeExact(symbol, _t, _ask, _user_data);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

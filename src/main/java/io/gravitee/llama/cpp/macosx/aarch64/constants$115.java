@@ -11,15 +11,26 @@ final class constants$115 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$115() {}
-    static final VarHandle const$0 = constants$114.const$5.varHandle(PathElement.groupElement("name"));
-    static final VarHandle const$1 = constants$114.const$5.varHandle(PathElement.groupElement("description"));
-    static final VarHandle const$2 = constants$114.const$5.varHandle(PathElement.groupElement("memory_free"));
-    static final VarHandle const$3 = constants$114.const$5.varHandle(PathElement.groupElement("memory_total"));
-    static final VarHandle const$4 = constants$114.const$5.varHandle(PathElement.groupElement("type"));
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_name",
-        constants$16.const$0
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_event_record",
+        constants$17.const$5
     );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_event_synchronize",
+        constants$0.const$3
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_backend_event_wait",
+        constants$17.const$5
+    );
+    static final StructLayout const$3 = MemoryLayout.structLayout(
+        JAVA_BOOLEAN.withName("async"),
+        JAVA_BOOLEAN.withName("host_buffer"),
+        JAVA_BOOLEAN.withName("buffer_from_host_ptr"),
+        JAVA_BOOLEAN.withName("events")
+    ).withName("ggml_backend_dev_caps");
+    static final VarHandle const$4 = constants$115.const$3.varHandle(MemoryLayout.PathElement.groupElement("async"));
+    static final VarHandle const$5 = constants$115.const$3.varHandle(MemoryLayout.PathElement.groupElement("host_buffer"));
 }
 
 

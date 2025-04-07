@@ -11,37 +11,30 @@ final class constants$199 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$199() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_sampler_apply",
+        constants$17.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_logit_bias",
-        constants$199.const$0
+        "llama_sampler_reset",
+        constants$0.const$3
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_infill",
+        "llama_sampler_clone",
         constants$16.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_sampler_get_seed",
-        constants$5.const$4
+        "llama_sampler_free",
+        constants$0.const$3
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_sampler_sample",
-        constants$5.const$0
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        MemoryLayout.structLayout(
+            JAVA_BOOLEAN.withName("no_perf")
+        ).withName("llama_sampler_chain_params")
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_split_path",
-        constants$199.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_sampler_chain_init",
+        constants$199.const$4
     );
 }
 

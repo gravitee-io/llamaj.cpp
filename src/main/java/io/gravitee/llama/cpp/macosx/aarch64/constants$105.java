@@ -12,28 +12,34 @@ final class constants$105 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$105() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_alloc_buffer",
-        constants$47.const$2
+        "ggml_gallocr_free",
+        constants$0.const$3
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_get_alignment",
-        constants$15.const$0
+        "ggml_gallocr_reserve",
+        constants$36.const$1
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_get_max_size",
-        constants$15.const$0
-    );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_LONG,
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_get_alloc_size",
-        constants$105.const$3
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_gallocr_reserve_n",
+        constants$105.const$2
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_is_host",
-        constants$35.const$4
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_gallocr_alloc_graph",
+        constants$36.const$1
+    );
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_LONG,
+        RuntimeHelper.POINTER,
+        JAVA_INT
+    );
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "ggml_gallocr_get_buffer_size",
+        constants$105.const$5
     );
 }
 

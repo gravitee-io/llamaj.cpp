@@ -11,49 +11,17 @@ final class constants$160 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$160() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_backend_init",
-        constants$36.const$3
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_backend_free",
-        constants$36.const$3
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_numa_init",
-        constants$96.const$5
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_attach_threadpool",
-        constants$83.const$1
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_detach_threadpool",
-        constants$0.const$3
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        MemoryLayout.structLayout(
-            RuntimeHelper.POINTER.withName("devices"),
-            JAVA_INT.withName("n_gpu_layers"),
-            JAVA_INT.withName("split_mode"),
-            JAVA_INT.withName("main_gpu"),
-            MemoryLayout.paddingLayout(4),
-            RuntimeHelper.POINTER.withName("tensor_split"),
-            RuntimeHelper.POINTER.withName("progress_callback"),
-            RuntimeHelper.POINTER.withName("progress_callback_user_data"),
-            RuntimeHelper.POINTER.withName("kv_overrides"),
-            JAVA_BOOLEAN.withName("vocab_only"),
-            JAVA_BOOLEAN.withName("use_mmap"),
-            JAVA_BOOLEAN.withName("use_mlock"),
-            JAVA_BOOLEAN.withName("check_tensors"),
-            MemoryLayout.paddingLayout(4)
-        ).withName("llama_model_params")
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_load_model_from_file",
-        constants$160.const$5
-    );
+    static final VarHandle const$0 = constants$159.const$4.varHandle(MemoryLayout.PathElement.groupElement("bias"));
+    static final StructLayout const$1 = MemoryLayout.structLayout(
+        JAVA_BOOLEAN.withName("no_perf")
+    ).withName("llama_sampler_chain_params");
+    static final VarHandle const$2 = constants$160.const$1.varHandle(MemoryLayout.PathElement.groupElement("no_perf"));
+    static final StructLayout const$3 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("role"),
+        RuntimeHelper.POINTER.withName("content")
+    ).withName("llama_chat_message");
+    static final VarHandle const$4 = constants$160.const$3.varHandle(MemoryLayout.PathElement.groupElement("role"));
+    static final VarHandle const$5 = constants$160.const$3.varHandle(MemoryLayout.PathElement.groupElement("content"));
 }
 
 

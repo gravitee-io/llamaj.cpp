@@ -133,6 +133,26 @@ commands:
           command: |
             apt -y install libssl-dev build-essential cmake libcurl4-openssl-dev
 
+  build_jextract:
+    steps:
+      - run:
+          name: Install llvm
+          command: |
+            brew install llvm
+      - run:
+          name: Clone jextract
+          command: |
+            git clone -b jdk21 --single-branch https://github.com/openjdk/jextract "$HOME_DIR/jextract"
+            cd $HOME_DIR/jextract
+            sed -i '' 's#gradle-7\.3\.3-bin\.zip#gradle-8.5-bin.zip#g' gradle/wrapper/gradle-wrapper.properties
+      - run:
+          name: build jextract
+          command: |
+            source ~/.zprofile
+            sh ./gradlew -Pjdk21_home=$JAVA_HOME -Pllvm_home=$(brew prefix llvm) clean verify
+            echo "PATH=$(pwd)/bin:$PATH" >> ~/.zprofile
+            source ~/.zprofile
+
   download_jextract:
     steps:
       - run:
@@ -253,6 +273,12 @@ commands:
               - equal: [ 'linux', << parameters.os >> ]
           steps:
             - download_jextract
+      - when:
+          condition:
+            and:
+              - equal: [ 'macosx', << parameters.os >> ]
+          steps:
+            - build_jextract
       - run:
           name: Generate JExtract Bindings
           command: |
@@ -369,6 +395,28 @@ jobs:
           os: "linux"
           platform: "x86_64"
 
+  macosx_aarch64_native_libs:
+    executor: macos-executor
+    environment:
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOME_DIR: "/Users/distiller"
+    steps:
+      - checkout:
+          path: "/Users/distiller/gravitee-llama-cpp"
+      - git_config
+      - install-java-macos
+      - generate_jextract_bindings:
+          os: "macosx"
+          platform: "aarch64"
+      - get_llama_native_libs:
+          os: "macosx"
+          platform: "aarch64"
+      - push_updated_libs:
+          os: "macosx"
+          platform: "aarch64"
+
 parameters:
   gio_action:
     type: enum
@@ -387,19 +435,6 @@ workflows:
       - build_and_test_macos
       - build_and_test_linux
 
-  update_libraries:
-    when:
-      and:
-        - equal: [ update_native_libs , << pipeline.parameters.gio_action >> ]
-    jobs:
-    - linux_x86_64_cpu_native_libs:
-        context:
-          - cicd-orchestrator
-        filters:
-          branches:
-            only:
-              - main
-
   weekly-library-update:
     triggers:
       - schedule:
@@ -412,3 +447,4 @@ workflows:
       - linux_x86_64_cpu_native_libs:
           context:
             - cicd-orchestrator
+    #Todo: Automated Macos Native Libs

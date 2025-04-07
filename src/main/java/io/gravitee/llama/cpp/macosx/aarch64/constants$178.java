@@ -12,48 +12,28 @@ final class constants$178 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$178() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_state_seq_set_data",
-        constants$177.const$4
+        "llama_kv_self_seq_div",
+        constants$177.const$2
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_LONG,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_LONG
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_seq_pos_max",
+        constants$133.const$5
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_state_seq_save_file",
-        constants$178.const$1
+        "llama_kv_self_defrag",
+        constants$0.const$3
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_LONG,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_can_shift",
+        constants$35.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_state_seq_load_file",
-        constants$178.const$3
+        "llama_kv_self_update",
+        constants$0.const$3
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_INT.withName("n_tokens"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("token"),
-        RuntimeHelper.POINTER.withName("embd"),
-        RuntimeHelper.POINTER.withName("pos"),
-        RuntimeHelper.POINTER.withName("n_seq_id"),
-        RuntimeHelper.POINTER.withName("seq_id"),
-        RuntimeHelper.POINTER.withName("logits")
-    ).withName("llama_batch"),
-        RuntimeHelper.POINTER,
-        JAVA_INT
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_batch_get_one",
-        constants$178.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_kv_cache_clear",
+        constants$0.const$3
     );
 }
 

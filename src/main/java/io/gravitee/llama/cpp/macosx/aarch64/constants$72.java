@@ -11,13 +11,16 @@ final class constants$72 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$72() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_rope_inplace",
+        constants$71.const$4
+    );
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         JAVA_INT,
-        RuntimeHelper.POINTER,
         JAVA_INT,
         JAVA_INT,
         JAVA_FLOAT,
@@ -27,19 +30,17 @@ final class constants$72 {
         JAVA_FLOAT,
         JAVA_FLOAT
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_rope_multi",
-        constants$72.const$0
-    );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_rope_ext_inplace",
-        constants$71.const$5
+        "ggml_rope_ext",
+        constants$72.const$1
     );
     static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         JAVA_INT,
+        RuntimeHelper.POINTER,
         JAVA_INT,
         JAVA_INT,
         JAVA_FLOAT,
@@ -50,12 +51,12 @@ final class constants$72 {
         JAVA_FLOAT
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_rope_custom",
+        "ggml_rope_multi",
         constants$72.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_rope_custom_inplace",
-        constants$72.const$3
+        "ggml_rope_ext_inplace",
+        constants$72.const$1
     );
 }
 

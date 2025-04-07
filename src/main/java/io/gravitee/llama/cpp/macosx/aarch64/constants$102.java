@@ -11,24 +11,24 @@ final class constants$102 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$102() {}
-    static final VarHandle const$0 = constants$101.const$4.varHandle(PathElement.groupElement("base"));
-    static final VarHandle const$1 = constants$101.const$4.varHandle(PathElement.groupElement("alignment"));
-    static final VarHandle const$2 = constants$101.const$4.varHandle(PathElement.groupElement("offset"));
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("buffer"),
-        RuntimeHelper.POINTER.withName("base"),
-        JAVA_LONG.withName("alignment"),
-        JAVA_LONG.withName("offset")
-    ).withName("ggml_tallocr"),
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_tallocr_new",
-        constants$102.const$3
+    static final VarHandle const$0 = constants$101.const$4.varHandle(MemoryLayout.PathElement.groupElement("prio"));
+    static final VarHandle const$1 = constants$101.const$4.varHandle(MemoryLayout.PathElement.groupElement("poll"));
+    static final VarHandle const$2 = constants$101.const$4.varHandle(MemoryLayout.PathElement.groupElement("strict_cpu"));
+    static final VarHandle const$3 = constants$101.const$4.varHandle(MemoryLayout.PathElement.groupElement("paused"));
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        MemoryLayout.sequenceLayout(512, JAVA_BOOLEAN).withName("cpumask"),
+        JAVA_INT.withName("n_threads"),
+        JAVA_INT.withName("prio"),
+        JAVA_INT.withName("poll"),
+        JAVA_BOOLEAN.withName("strict_cpu"),
+        JAVA_BOOLEAN.withName("paused"),
+        MemoryLayout.paddingLayout(2)
+    ).withName("ggml_threadpool_params"),
+        JAVA_INT
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_tallocr_alloc",
-        constants$17.const$5
+        "ggml_threadpool_params_default",
+        constants$102.const$4
     );
 }
 

@@ -12,33 +12,37 @@ final class constants$195 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$195() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_sampler_chain_remove",
-        constants$93.const$5
+        "llama_detokenize",
+        constants$194.const$2
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_greedy",
-        constants$18.const$4
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_INT,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        JAVA_BOOLEAN,
+        RuntimeHelper.POINTER,
+        JAVA_INT
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_dist",
-        constants$30.const$4
+        "llama_chat_apply_template",
+        constants$195.const$1
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_softmax",
-        constants$18.const$4
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_top_k",
-        constants$30.const$4
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_FLOAT,
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_INT,
+        RuntimeHelper.POINTER,
         JAVA_LONG
     );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_top_p",
-        constants$195.const$5
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_chat_builtin_templates",
+        constants$195.const$3
     );
+    static final StructLayout const$5 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("name"),
+        RuntimeHelper.POINTER.withName("accept"),
+        RuntimeHelper.POINTER.withName("apply"),
+        RuntimeHelper.POINTER.withName("reset"),
+        RuntimeHelper.POINTER.withName("clone"),
+        RuntimeHelper.POINTER.withName("free")
+    ).withName("llama_sampler_i");
 }
 
 

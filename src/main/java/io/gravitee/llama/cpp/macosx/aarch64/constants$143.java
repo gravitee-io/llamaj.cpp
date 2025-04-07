@@ -11,25 +11,15 @@ final class constants$143 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$143() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_set_threadpool",
-        constants$17.const$5
+    static final VarHandle const$0 = constants$142.const$4.varHandle(MemoryLayout.PathElement.groupElement("from_float"));
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_type_traits_cpu.vec_dot.class, "apply", constants$142.const$1);
+    static final VarHandle const$2 = constants$142.const$4.varHandle(MemoryLayout.PathElement.groupElement("vec_dot"));
+    static final VarHandle const$3 = constants$142.const$4.varHandle(MemoryLayout.PathElement.groupElement("vec_dot_type"));
+    static final VarHandle const$4 = constants$142.const$4.varHandle(MemoryLayout.PathElement.groupElement("nrows"));
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_get_type_traits_cpu",
+        constants$30.const$4
     );
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_backend_cpu_set_abort_callback$abort_callback.class, "apply", constants$35.const$4);
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_set_abort_callback",
-        constants$83.const$1
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_reg",
-        constants$18.const$4
-    );
-    static final StructLayout const$4 = MemoryLayout.structLayout(
-        JAVA_INT.withName("id"),
-        JAVA_FLOAT.withName("logit"),
-        JAVA_FLOAT.withName("p")
-    ).withName("llama_token_data");
-    static final VarHandle const$5 = constants$143.const$4.varHandle(PathElement.groupElement("id"));
 }
 
 

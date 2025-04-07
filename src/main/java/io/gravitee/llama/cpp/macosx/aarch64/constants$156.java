@@ -11,12 +11,12 @@ final class constants$156 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$156() {}
-    static final VarHandle const$0 = constants$155.const$2.varHandle(PathElement.groupElement("token_embedding_type"));
-    static final VarHandle const$1 = constants$155.const$2.varHandle(PathElement.groupElement("allow_requantize"));
-    static final VarHandle const$2 = constants$155.const$2.varHandle(PathElement.groupElement("quantize_output_tensor"));
-    static final VarHandle const$3 = constants$155.const$2.varHandle(PathElement.groupElement("only_copy"));
-    static final VarHandle const$4 = constants$155.const$2.varHandle(PathElement.groupElement("pure"));
-    static final VarHandle const$5 = constants$155.const$2.varHandle(PathElement.groupElement("keep_split"));
+    static final VarHandle const$0 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("type_k"));
+    static final VarHandle const$1 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("type_v"));
+    static final VarHandle const$2 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("logits_all"));
+    static final VarHandle const$3 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("embeddings"));
+    static final VarHandle const$4 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("offload_kqv"));
+    static final VarHandle const$5 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("flash_attn"));
 }
 
 

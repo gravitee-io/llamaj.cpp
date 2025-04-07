@@ -11,18 +11,30 @@ final class constants$141 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$141() {}
-    static final StructLayout const$0 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("from_float"),
-        RuntimeHelper.POINTER.withName("vec_dot"),
-        JAVA_INT.withName("vec_dot_type"),
-        MemoryLayout.paddingLayout(4),
-        JAVA_LONG.withName("nrows")
-    ).withName("ggml_type_traits_cpu");
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_type_traits_cpu.from_float.class, "apply", constants$31.const$4);
-    static final VarHandle const$2 = constants$141.const$0.varHandle(PathElement.groupElement("from_float"));
-    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(ggml_type_traits_cpu.vec_dot.class, "apply", constants$140.const$3);
-    static final VarHandle const$4 = constants$141.const$0.varHandle(PathElement.groupElement("vec_dot"));
-    static final VarHandle const$5 = constants$141.const$0.varHandle(PathElement.groupElement("vec_dot_type"));
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_get_sve_cnt",
+        constants$15.const$4
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_sme",
+        constants$15.const$4
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_riscv_v",
+        constants$15.const$4
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_vsx",
+        constants$15.const$4
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_vxe",
+        constants$15.const$4
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_wasm_simd",
+        constants$15.const$4
+    );
 }
 
 

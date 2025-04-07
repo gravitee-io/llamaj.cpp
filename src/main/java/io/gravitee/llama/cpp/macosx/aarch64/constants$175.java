@@ -11,34 +11,29 @@ final class constants$175 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$175() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_defrag",
-        constants$0.const$3
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_update",
-        constants$0.const$3
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_can_shift",
-        constants$35.const$4
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_state_get_size",
-        constants$15.const$0
+    static final VarHandle const$0 = constants$174.const$0.varHandle(MemoryLayout.PathElement.groupElement("max_contiguous_idx"));
+    static final VarHandle const$1 = constants$174.const$0.varHandle(MemoryLayout.PathElement.groupElement("cells"));
+    static final VarHandle const$2 = constants$174.const$0.varHandle(MemoryLayout.PathElement.groupElement("cells_sequences"));
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        JAVA_INT.withName("n_cells"),
+        JAVA_INT.withName("n_seq_max"),
+        JAVA_INT.withName("token_count"),
+        JAVA_INT.withName("used_cells"),
+        JAVA_INT.withName("max_contiguous"),
+        JAVA_INT.withName("max_contiguous_idx"),
+        RuntimeHelper.POINTER.withName("cells"),
+        RuntimeHelper.POINTER.withName("cells_sequences")
+    ).withName("llama_kv_cache_view"),
+        RuntimeHelper.POINTER,
+        JAVA_INT
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_get_state_size",
-        constants$15.const$0
+        "llama_kv_cache_view_init",
+        constants$175.const$3
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_LONG,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_state_get_data",
-        constants$175.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_kv_cache_view_free",
+        constants$0.const$3
     );
 }
 

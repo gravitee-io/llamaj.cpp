@@ -11,7 +11,47 @@ final class constants$204 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$204() {}
-    static final MemorySegment const$0 = RuntimeHelper.CONSTANT_ALLOCATOR.allocateUtf8String("/var/tmp/");
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        RuntimeHelper.POINTER,
+        JAVA_LONG
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_grammar_lazy",
+        constants$204.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_grammar_lazy_patterns",
+        constants$204.const$0
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_penalties",
+        constants$204.const$3
+    );
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_INT,
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        JAVA_LONG
+    );
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_dry",
+        constants$204.const$5
+    );
 }
 
 

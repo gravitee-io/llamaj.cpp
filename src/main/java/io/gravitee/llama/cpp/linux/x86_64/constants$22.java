@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$22 {
@@ -10,30 +12,28 @@ final class constants$22 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$22() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "puts",
-        constants$7.const$4
+        "ferror",
+        constants$7.const$1
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ungetc",
-        constants$17.const$0
+        "clearerr_unlocked",
+        constants$11.const$4
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_LONG,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_LONG,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "feof_unlocked",
+        constants$7.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "fread",
-        constants$22.const$2
+        "ferror_unlocked",
+        constants$7.const$1
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "fwrite",
-        constants$22.const$2
+        "perror",
+        constants$11.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "fread_unlocked",
-        constants$22.const$2
+        "fileno",
+        constants$7.const$1
     );
 }
 

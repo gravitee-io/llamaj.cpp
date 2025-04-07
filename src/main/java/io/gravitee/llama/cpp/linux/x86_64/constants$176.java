@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$176 {
@@ -10,28 +12,32 @@ final class constants$176 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$176() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_get_embeddings_seq",
-        constants$89.const$2
+        "llama_get_embeddings_ith",
+        constants$86.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_vocab_get_text",
-        constants$89.const$2
+        "llama_get_embeddings_seq",
+        constants$86.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_vocab_get_score",
-        constants$128.const$0
+        "llama_vocab_get_text",
+        constants$86.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_vocab_get_attr",
-        constants$27.const$2
+        "llama_vocab_get_score",
+        constants$125.const$2
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_BOOLEAN,
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_vocab_get_attr",
+        constants$24.const$2
+    );
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_BOOLEAN,
         RuntimeHelper.POINTER,
         JAVA_INT
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
         "llama_vocab_is_eog",
-        constants$176.const$4
+        constants$176.const$5
     );
 }
 

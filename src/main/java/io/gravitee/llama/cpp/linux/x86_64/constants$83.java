@@ -3,38 +3,46 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 final class constants$83 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$83() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom1_inplace_f32",
-        constants$12.const$0
+        "ggml_map_custom1_inplace",
+        constants$82.const$4
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom2_f32",
-        constants$60.const$5
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom2_inplace_f32",
-        constants$60.const$5
-    );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
+        JAVA_INT,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom3_f32",
-        constants$83.const$3
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_map_custom2",
+        constants$83.const$1
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_map_custom2_inplace",
+        constants$83.const$1
+    );
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        RuntimeHelper.POINTER
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom3_inplace_f32",
-        constants$83.const$3
+        "ggml_map_custom3",
+        constants$83.const$4
     );
 }
 

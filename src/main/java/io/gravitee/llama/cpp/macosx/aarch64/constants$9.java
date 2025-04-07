@@ -15,10 +15,10 @@ final class constants$9 {
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
         constants$8.const$5
     );
-    static final VarHandle const$2 = constants$6.const$3.varHandle(PathElement.groupElement("_seek"));
+    static final VarHandle const$2 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_seek"));
     static final MethodHandle const$3 = RuntimeHelper.upcallHandle(__sFILE._write.class, "apply", constants$5.const$0);
-    static final VarHandle const$4 = constants$6.const$3.varHandle(PathElement.groupElement("_write"));
-    static final VarHandle const$5 = constants$6.const$3.varHandle(PathElement.groupElement("_extra"));
+    static final VarHandle const$4 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_write"));
+    static final VarHandle const$5 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_extra"));
 }
 
 

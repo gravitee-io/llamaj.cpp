@@ -11,21 +11,30 @@ final class constants$171 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$171() {}
-    static final StructLayout const$0 = MemoryLayout.structLayout(
-        JAVA_INT.withName("n_cells"),
-        JAVA_INT.withName("n_seq_max"),
-        JAVA_INT.withName("token_count"),
-        JAVA_INT.withName("used_cells"),
-        JAVA_INT.withName("max_contiguous"),
-        JAVA_INT.withName("max_contiguous_idx"),
-        RuntimeHelper.POINTER.withName("cells"),
-        RuntimeHelper.POINTER.withName("cells_sequences")
-    ).withName("llama_kv_cache_view");
-    static final VarHandle const$1 = constants$171.const$0.varHandle(PathElement.groupElement("n_cells"));
-    static final VarHandle const$2 = constants$171.const$0.varHandle(PathElement.groupElement("n_seq_max"));
-    static final VarHandle const$3 = constants$171.const$0.varHandle(PathElement.groupElement("token_count"));
-    static final VarHandle const$4 = constants$171.const$0.varHandle(PathElement.groupElement("used_cells"));
-    static final VarHandle const$5 = constants$171.const$0.varHandle(PathElement.groupElement("max_contiguous"));
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_model_size",
+        constants$15.const$0
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_model_chat_template",
+        constants$12.const$5
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_model_n_params",
+        constants$15.const$0
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_model_has_encoder",
+        constants$35.const$4
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_model_has_decoder",
+        constants$35.const$4
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_model_decoder_start_token",
+        constants$5.const$4
+    );
 }
 
 

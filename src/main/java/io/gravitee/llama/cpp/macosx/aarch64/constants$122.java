@@ -12,28 +12,27 @@ final class constants$122 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$122() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_init_by_type",
-        constants$20.const$1
+        "ggml_backend_device_register",
+        constants$0.const$3
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_init_best",
-        constants$18.const$4
+        "ggml_backend_reg_count",
+        constants$36.const$5
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_load",
-        constants$16.const$0
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        JAVA_LONG
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_unload",
-        constants$0.const$3
+        "ggml_backend_reg_get",
+        constants$122.const$2
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_load_all",
-        constants$36.const$3
+        "ggml_backend_reg_by_name",
+        constants$16.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_load_all_from_path",
-        constants$0.const$3
+        "ggml_backend_dev_count",
+        constants$36.const$5
     );
 }
 

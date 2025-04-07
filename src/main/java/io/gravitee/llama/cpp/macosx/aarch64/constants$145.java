@@ -11,26 +11,22 @@ final class constants$145 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$145() {}
-    static final VarHandle const$0 = constants$144.const$2.varHandle(PathElement.groupElement("sorted"));
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        JAVA_FLOAT,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_cpu_set_abort_callback",
+        constants$84.const$2
     );
-    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(llama_progress_callback.class, "apply", constants$145.const$1);
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        constants$145.const$1
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_cpu_reg",
+        constants$18.const$4
     );
-    static final StructLayout const$4 = MemoryLayout.structLayout(
-        JAVA_INT.withName("n_tokens"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("token"),
-        RuntimeHelper.POINTER.withName("embd"),
-        RuntimeHelper.POINTER.withName("pos"),
-        RuntimeHelper.POINTER.withName("n_seq_id"),
-        RuntimeHelper.POINTER.withName("seq_id"),
-        RuntimeHelper.POINTER.withName("logits")
-    ).withName("llama_batch");
-    static final VarHandle const$5 = constants$145.const$4.varHandle(PathElement.groupElement("n_tokens"));
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        JAVA_INT.withName("id"),
+        JAVA_FLOAT.withName("logit"),
+        JAVA_FLOAT.withName("p")
+    ).withName("llama_token_data");
+    static final VarHandle const$3 = constants$145.const$2.varHandle(MemoryLayout.PathElement.groupElement("id"));
+    static final VarHandle const$4 = constants$145.const$2.varHandle(MemoryLayout.PathElement.groupElement("logit"));
+    static final VarHandle const$5 = constants$145.const$2.varHandle(MemoryLayout.PathElement.groupElement("p"));
 }
 
 

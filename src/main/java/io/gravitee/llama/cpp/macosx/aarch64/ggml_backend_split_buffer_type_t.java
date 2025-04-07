@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_backend_split_buffer_type_t {
 
-    MemorySegment apply(int main_device, MemorySegment tensor_split);
+    java.lang.foreign.MemorySegment apply(int main_device, java.lang.foreign.MemorySegment tensor_split);
     static MemorySegment allocate(ggml_backend_split_buffer_type_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$118.const$4, fi, constants$20.const$1, scope);
+        return RuntimeHelper.upcallStub(constants$120.const$1, fi, constants$20.const$1, scope);
     }
     static ggml_backend_split_buffer_type_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (int _main_device, MemorySegment _tensor_split) -> {
+        return (int _main_device, java.lang.foreign.MemorySegment _tensor_split) -> {
             try {
-                return (MemorySegment)constants$118.const$5.invokeExact(symbol, _main_device, _tensor_split);
+                return (java.lang.foreign.MemorySegment)constants$120.const$2.invokeExact(symbol, _main_device, _tensor_split);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

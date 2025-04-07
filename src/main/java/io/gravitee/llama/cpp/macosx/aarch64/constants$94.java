@@ -11,29 +11,30 @@ final class constants$94 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$94() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_graph_nodes",
-        constants$16.const$0
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_graph_n_nodes",
-        constants$5.const$4
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_graph_add_node",
-        constants$17.const$5
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_graph_overhead",
-        constants$36.const$5
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_LONG,
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         JAVA_LONG,
         JAVA_BOOLEAN
     );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_new_graph_custom",
+        constants$94.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_graph_dup",
+        constants$12.const$5
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_graph_cpy",
+        constants$17.const$5
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_graph_reset",
+        constants$0.const$3
+    );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_graph_overhead_custom",
-        constants$94.const$4
+        "ggml_graph_clear",
+        constants$0.const$3
     );
 }
 

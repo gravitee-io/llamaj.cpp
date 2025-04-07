@@ -3,30 +3,38 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$33 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$33() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        RuntimeHelper.POINTER
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_LONG,
+        JAVA_INT
     );
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_abort_callback.class, "apply", constants$33.const$0);
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_blck_size",
         constants$33.const$0
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_type_size",
+        constants$33.const$0
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_LONG,
+        JAVA_INT,
+        JAVA_LONG
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_guid_matches",
+        "ggml_row_size",
         constants$33.const$3
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.ofVoid();
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_DOUBLE,
+        JAVA_INT
+    );
     static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_time_init",
+        "ggml_type_sizef",
         constants$33.const$5
     );
 }

@@ -3,7 +3,10 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$82 {
 
     // Suppresses default constructor, ensuring non-instantiability.
@@ -11,25 +14,29 @@ final class constants$82 {
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
         constants$81.const$4
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_map_unary_f32",
-        constants$12.const$0
+    static final FunctionDescriptor const$1 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        RuntimeHelper.POINTER
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_map_unary_inplace_f32",
-        constants$12.const$0
-    );
+    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_custom3_op_t.class, "apply", constants$82.const$1);
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_map_binary_f32",
-        constants$60.const$5
+        constants$82.const$1
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_map_binary_inplace_f32",
-        constants$60.const$5
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        RuntimeHelper.POINTER
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom1_f32",
-        constants$12.const$0
+        "ggml_map_custom1",
+        constants$82.const$4
     );
 }
 

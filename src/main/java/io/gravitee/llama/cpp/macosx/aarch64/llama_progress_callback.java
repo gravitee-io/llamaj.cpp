@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface llama_progress_callback {
 
-    boolean apply(float progress, MemorySegment user_data);
+    boolean apply(float progress, java.lang.foreign.MemorySegment user_data);
     static MemorySegment allocate(llama_progress_callback fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$145.const$2, fi, constants$145.const$1, scope);
+        return RuntimeHelper.upcallStub(constants$147.const$0, fi, constants$146.const$5, scope);
     }
     static llama_progress_callback ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (float _progress, MemorySegment _user_data) -> {
+        return (float _progress, java.lang.foreign.MemorySegment _user_data) -> {
             try {
-                return (boolean)constants$145.const$3.invokeExact(symbol, _progress, _user_data);
+                return (boolean)constants$147.const$1.invokeExact(symbol, _progress, _user_data);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

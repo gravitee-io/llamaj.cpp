@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$197 {
@@ -25,11 +27,11 @@ final class constants$197 {
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
         "llama_perf_context_print",
-        constants$14.const$2
+        constants$11.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
         "llama_perf_context_reset",
-        constants$14.const$2
+        constants$11.const$4
     );
     static final FunctionDescriptor const$4 = FunctionDescriptor.of(MemoryLayout.structLayout(
         JAVA_DOUBLE.withName("t_sample_ms"),

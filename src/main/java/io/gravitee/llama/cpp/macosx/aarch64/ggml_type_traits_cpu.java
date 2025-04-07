@@ -20,7 +20,7 @@ import static java.lang.foreign.ValueLayout.*;
 public class ggml_type_traits_cpu {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$141.const$0;
+        return constants$142.const$4;
     }
     /**
      * {@snippet lang=c :
@@ -29,15 +29,15 @@ public class ggml_type_traits_cpu {
      */
     public interface from_float {
 
-        void apply(MemorySegment x, MemorySegment y, long k);
+        void apply(java.lang.foreign.MemorySegment x, java.lang.foreign.MemorySegment y, long k);
         static MemorySegment allocate(from_float fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$141.const$1, fi, constants$31.const$4, scope);
+            return RuntimeHelper.upcallStub(constants$142.const$5, fi, constants$31.const$4, scope);
         }
         static from_float ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment _x, MemorySegment _y, long _k) -> {
+            return (java.lang.foreign.MemorySegment _x, java.lang.foreign.MemorySegment _y, long _k) -> {
                 try {
-                    constants$97.const$5.invokeExact(symbol, _x, _y, _k);
+                    constants$99.const$3.invokeExact(symbol, _x, _y, _k);
                 } catch (Throwable ex$) {
                     throw new AssertionError("should not reach here", ex$);
                 }
@@ -46,7 +46,7 @@ public class ggml_type_traits_cpu {
     }
 
     public static VarHandle from_float$VH() {
-        return constants$141.const$2;
+        return constants$143.const$0;
     }
     /**
      * Getter for field:
@@ -55,7 +55,7 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static MemorySegment from_float$get(MemorySegment seg) {
-        return (MemorySegment)constants$141.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$143.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -64,13 +64,13 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static void from_float$set(MemorySegment seg, MemorySegment x) {
-        constants$141.const$2.set(seg, x);
+        constants$143.const$0.set(seg, x);
     }
     public static MemorySegment from_float$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$141.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$143.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void from_float$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$141.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$143.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static from_float from_float(MemorySegment segment, Arena scope) {
         return from_float.ofAddress(from_float$get(segment), scope);
@@ -82,15 +82,15 @@ public class ggml_type_traits_cpu {
      */
     public interface vec_dot {
 
-        void apply(int n, MemorySegment s, long bs, MemorySegment x, long bx, MemorySegment y, long by, int nrc);
+        void apply(int n, java.lang.foreign.MemorySegment s, long bs, java.lang.foreign.MemorySegment x, long bx, java.lang.foreign.MemorySegment y, long by, int nrc);
         static MemorySegment allocate(vec_dot fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$141.const$3, fi, constants$140.const$3, scope);
+            return RuntimeHelper.upcallStub(constants$143.const$1, fi, constants$142.const$1, scope);
         }
         static vec_dot ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (int _n, MemorySegment _s, long _bs, MemorySegment _x, long _bx, MemorySegment _y, long _by, int _nrc) -> {
+            return (int _n, java.lang.foreign.MemorySegment _s, long _bs, java.lang.foreign.MemorySegment _x, long _bx, java.lang.foreign.MemorySegment _y, long _by, int _nrc) -> {
                 try {
-                    constants$140.const$5.invokeExact(symbol, _n, _s, _bs, _x, _bx, _y, _by, _nrc);
+                    constants$142.const$3.invokeExact(symbol, _n, _s, _bs, _x, _bx, _y, _by, _nrc);
                 } catch (Throwable ex$) {
                     throw new AssertionError("should not reach here", ex$);
                 }
@@ -99,7 +99,7 @@ public class ggml_type_traits_cpu {
     }
 
     public static VarHandle vec_dot$VH() {
-        return constants$141.const$4;
+        return constants$143.const$2;
     }
     /**
      * Getter for field:
@@ -108,7 +108,7 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static MemorySegment vec_dot$get(MemorySegment seg) {
-        return (MemorySegment)constants$141.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$143.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -117,19 +117,19 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static void vec_dot$set(MemorySegment seg, MemorySegment x) {
-        constants$141.const$4.set(seg, x);
+        constants$143.const$2.set(seg, x);
     }
     public static MemorySegment vec_dot$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$141.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$143.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void vec_dot$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$141.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$143.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static vec_dot vec_dot(MemorySegment segment, Arena scope) {
         return vec_dot.ofAddress(vec_dot$get(segment), scope);
     }
     public static VarHandle vec_dot_type$VH() {
-        return constants$141.const$5;
+        return constants$143.const$3;
     }
     /**
      * Getter for field:
@@ -138,7 +138,7 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static int vec_dot_type$get(MemorySegment seg) {
-        return (int)constants$141.const$5.get(seg);
+        return (int)constants$143.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -147,16 +147,16 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static void vec_dot_type$set(MemorySegment seg, int x) {
-        constants$141.const$5.set(seg, x);
+        constants$143.const$3.set(seg, x);
     }
     public static int vec_dot_type$get(MemorySegment seg, long index) {
-        return (int)constants$141.const$5.get(seg.asSlice(index*sizeof()));
+        return (int)constants$143.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void vec_dot_type$set(MemorySegment seg, long index, int x) {
-        constants$141.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$143.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle nrows$VH() {
-        return constants$142.const$0;
+        return constants$143.const$4;
     }
     /**
      * Getter for field:
@@ -165,7 +165,7 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static long nrows$get(MemorySegment seg) {
-        return (long)constants$142.const$0.get(seg);
+        return (long)constants$143.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -174,13 +174,13 @@ public class ggml_type_traits_cpu {
      * }
      */
     public static void nrows$set(MemorySegment seg, long x) {
-        constants$142.const$0.set(seg, x);
+        constants$143.const$4.set(seg, x);
     }
     public static long nrows$get(MemorySegment seg, long index) {
-        return (long)constants$142.const$0.get(seg.asSlice(index*sizeof()));
+        return (long)constants$143.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void nrows$set(MemorySegment seg, long index, long x) {
-        constants$142.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$143.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

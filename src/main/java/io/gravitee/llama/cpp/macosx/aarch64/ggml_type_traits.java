@@ -23,10 +23,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class ggml_type_traits {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$98.const$1;
+        return constants$99.const$5;
     }
     public static VarHandle type_name$VH() {
-        return constants$98.const$2;
+        return constants$100.const$0;
     }
     /**
      * Getter for field:
@@ -35,7 +35,7 @@ public class ggml_type_traits {
      * }
      */
     public static MemorySegment type_name$get(MemorySegment seg) {
-        return (MemorySegment)constants$98.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$100.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -44,16 +44,16 @@ public class ggml_type_traits {
      * }
      */
     public static void type_name$set(MemorySegment seg, MemorySegment x) {
-        constants$98.const$2.set(seg, x);
+        constants$100.const$0.set(seg, x);
     }
     public static MemorySegment type_name$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$98.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$100.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void type_name$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$98.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$100.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle blck_size$VH() {
-        return constants$98.const$3;
+        return constants$100.const$1;
     }
     /**
      * Getter for field:
@@ -62,7 +62,7 @@ public class ggml_type_traits {
      * }
      */
     public static long blck_size$get(MemorySegment seg) {
-        return (long)constants$98.const$3.get(seg);
+        return (long)constants$100.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -71,16 +71,16 @@ public class ggml_type_traits {
      * }
      */
     public static void blck_size$set(MemorySegment seg, long x) {
-        constants$98.const$3.set(seg, x);
+        constants$100.const$1.set(seg, x);
     }
     public static long blck_size$get(MemorySegment seg, long index) {
-        return (long)constants$98.const$3.get(seg.asSlice(index*sizeof()));
+        return (long)constants$100.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void blck_size$set(MemorySegment seg, long index, long x) {
-        constants$98.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$100.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle blck_size_interleave$VH() {
-        return constants$98.const$4;
+        return constants$100.const$2;
     }
     /**
      * Getter for field:
@@ -89,7 +89,7 @@ public class ggml_type_traits {
      * }
      */
     public static long blck_size_interleave$get(MemorySegment seg) {
-        return (long)constants$98.const$4.get(seg);
+        return (long)constants$100.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -98,16 +98,16 @@ public class ggml_type_traits {
      * }
      */
     public static void blck_size_interleave$set(MemorySegment seg, long x) {
-        constants$98.const$4.set(seg, x);
+        constants$100.const$2.set(seg, x);
     }
     public static long blck_size_interleave$get(MemorySegment seg, long index) {
-        return (long)constants$98.const$4.get(seg.asSlice(index*sizeof()));
+        return (long)constants$100.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void blck_size_interleave$set(MemorySegment seg, long index, long x) {
-        constants$98.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$100.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle type_size$VH() {
-        return constants$98.const$5;
+        return constants$100.const$3;
     }
     /**
      * Getter for field:
@@ -116,7 +116,7 @@ public class ggml_type_traits {
      * }
      */
     public static long type_size$get(MemorySegment seg) {
-        return (long)constants$98.const$5.get(seg);
+        return (long)constants$100.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -125,16 +125,16 @@ public class ggml_type_traits {
      * }
      */
     public static void type_size$set(MemorySegment seg, long x) {
-        constants$98.const$5.set(seg, x);
+        constants$100.const$3.set(seg, x);
     }
     public static long type_size$get(MemorySegment seg, long index) {
-        return (long)constants$98.const$5.get(seg.asSlice(index*sizeof()));
+        return (long)constants$100.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void type_size$set(MemorySegment seg, long index, long x) {
-        constants$98.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$100.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle is_quantized$VH() {
-        return constants$99.const$0;
+        return constants$100.const$4;
     }
     /**
      * Getter for field:
@@ -143,7 +143,7 @@ public class ggml_type_traits {
      * }
      */
     public static boolean is_quantized$get(MemorySegment seg) {
-        return (boolean)constants$99.const$0.get(seg);
+        return (boolean)constants$100.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -152,13 +152,13 @@ public class ggml_type_traits {
      * }
      */
     public static void is_quantized$set(MemorySegment seg, boolean x) {
-        constants$99.const$0.set(seg, x);
+        constants$100.const$4.set(seg, x);
     }
     public static boolean is_quantized$get(MemorySegment seg, long index) {
-        return (boolean)constants$99.const$0.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$100.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void is_quantized$set(MemorySegment seg, long index, boolean x) {
-        constants$99.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$100.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     /**
      * {@snippet lang=c :
@@ -167,15 +167,15 @@ public class ggml_type_traits {
      */
     public interface to_float {
 
-        void apply(MemorySegment x, MemorySegment y, long k);
+        void apply(java.lang.foreign.MemorySegment x, java.lang.foreign.MemorySegment y, long k);
         static MemorySegment allocate(to_float fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$99.const$1, fi, constants$31.const$4, scope);
+            return RuntimeHelper.upcallStub(constants$100.const$5, fi, constants$31.const$4, scope);
         }
         static to_float ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment _x, MemorySegment _y, long _k) -> {
+            return (java.lang.foreign.MemorySegment _x, java.lang.foreign.MemorySegment _y, long _k) -> {
                 try {
-                    constants$97.const$5.invokeExact(symbol, _x, _y, _k);
+                    constants$99.const$3.invokeExact(symbol, _x, _y, _k);
                 } catch (Throwable ex$) {
                     throw new AssertionError("should not reach here", ex$);
                 }
@@ -184,7 +184,7 @@ public class ggml_type_traits {
     }
 
     public static VarHandle to_float$VH() {
-        return constants$99.const$2;
+        return constants$101.const$0;
     }
     /**
      * Getter for field:
@@ -193,7 +193,7 @@ public class ggml_type_traits {
      * }
      */
     public static MemorySegment to_float$get(MemorySegment seg) {
-        return (MemorySegment)constants$99.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$101.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -202,13 +202,13 @@ public class ggml_type_traits {
      * }
      */
     public static void to_float$set(MemorySegment seg, MemorySegment x) {
-        constants$99.const$2.set(seg, x);
+        constants$101.const$0.set(seg, x);
     }
     public static MemorySegment to_float$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$99.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$101.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void to_float$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$99.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$101.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static to_float to_float(MemorySegment segment, Arena scope) {
         return to_float.ofAddress(to_float$get(segment), scope);
@@ -220,15 +220,15 @@ public class ggml_type_traits {
      */
     public interface from_float_ref {
 
-        void apply(MemorySegment x, MemorySegment y, long k);
+        void apply(java.lang.foreign.MemorySegment x, java.lang.foreign.MemorySegment y, long k);
         static MemorySegment allocate(from_float_ref fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$99.const$3, fi, constants$31.const$4, scope);
+            return RuntimeHelper.upcallStub(constants$101.const$1, fi, constants$31.const$4, scope);
         }
         static from_float_ref ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment _x, MemorySegment _y, long _k) -> {
+            return (java.lang.foreign.MemorySegment _x, java.lang.foreign.MemorySegment _y, long _k) -> {
                 try {
-                    constants$97.const$5.invokeExact(symbol, _x, _y, _k);
+                    constants$99.const$3.invokeExact(symbol, _x, _y, _k);
                 } catch (Throwable ex$) {
                     throw new AssertionError("should not reach here", ex$);
                 }
@@ -237,7 +237,7 @@ public class ggml_type_traits {
     }
 
     public static VarHandle from_float_ref$VH() {
-        return constants$99.const$4;
+        return constants$101.const$2;
     }
     /**
      * Getter for field:
@@ -246,7 +246,7 @@ public class ggml_type_traits {
      * }
      */
     public static MemorySegment from_float_ref$get(MemorySegment seg) {
-        return (MemorySegment)constants$99.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$101.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -255,13 +255,13 @@ public class ggml_type_traits {
      * }
      */
     public static void from_float_ref$set(MemorySegment seg, MemorySegment x) {
-        constants$99.const$4.set(seg, x);
+        constants$101.const$2.set(seg, x);
     }
     public static MemorySegment from_float_ref$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$99.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$101.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void from_float_ref$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$99.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$101.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static from_float_ref from_float_ref(MemorySegment segment, Arena scope) {
         return from_float_ref.ofAddress(from_float_ref$get(segment), scope);

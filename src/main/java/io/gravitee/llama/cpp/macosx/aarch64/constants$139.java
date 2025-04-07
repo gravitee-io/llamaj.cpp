@@ -12,27 +12,27 @@ final class constants$139 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$139() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_matmul_int8",
+        "ggml_cpu_has_fma",
         constants$15.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_sve",
+        "ggml_cpu_has_avx512",
         constants$15.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_get_sve_cnt",
+        "ggml_cpu_has_avx512_vbmi",
         constants$15.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_sme",
+        "ggml_cpu_has_avx512_vnni",
         constants$15.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_riscv_v",
+        "ggml_cpu_has_avx512_bf16",
         constants$15.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_vsx",
+        "ggml_cpu_has_amx_int8",
         constants$15.const$4
     );
 }

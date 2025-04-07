@@ -12,28 +12,28 @@ final class constants$193 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$193() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init",
-        constants$12.const$5
+        "llama_add_eos_token",
+        constants$35.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_sampler_name",
-        constants$16.const$0
+        "llama_token_fim_pre",
+        constants$5.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_sampler_accept",
-        constants$62.const$4
+        "llama_token_fim_suf",
+        constants$5.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_sampler_apply",
-        constants$17.const$5
+        "llama_token_fim_mid",
+        constants$5.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_sampler_reset",
-        constants$0.const$3
+        "llama_token_fim_pad",
+        constants$5.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_sampler_clone",
-        constants$16.const$0
+        "llama_token_fim_rep",
+        constants$5.const$4
     );
 }
 

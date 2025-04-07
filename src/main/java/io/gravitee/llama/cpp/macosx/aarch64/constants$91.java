@@ -11,31 +11,25 @@ final class constants$91 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$91() {}
-    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(ggml_map_custom3_inplace$fun.class, "apply", constants$88.const$3);
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom3_inplace",
-        constants$90.const$5
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_cross_entropy_loss",
-        constants$14.const$0
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_cross_entropy_loss_back",
-        constants$63.const$0
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(ggml_map_custom2$fun.class, "apply", constants$89.const$1);
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
+        JAVA_INT,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_opt_step_adamw",
-        constants$91.const$4
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_map_custom2",
+        constants$91.const$1
     );
+    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(ggml_map_custom2_inplace$fun.class, "apply", constants$89.const$1);
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_map_custom2_inplace",
+        constants$91.const$1
+    );
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_map_custom3$fun.class, "apply", constants$89.const$4);
 }
 
 

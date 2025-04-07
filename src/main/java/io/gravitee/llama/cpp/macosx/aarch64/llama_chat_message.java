@@ -18,10 +18,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class llama_chat_message {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$158.const$1;
+        return constants$160.const$3;
     }
     public static VarHandle role$VH() {
-        return constants$158.const$2;
+        return constants$160.const$4;
     }
     /**
      * Getter for field:
@@ -30,7 +30,7 @@ public class llama_chat_message {
      * }
      */
     public static MemorySegment role$get(MemorySegment seg) {
-        return (MemorySegment)constants$158.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$160.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -39,16 +39,16 @@ public class llama_chat_message {
      * }
      */
     public static void role$set(MemorySegment seg, MemorySegment x) {
-        constants$158.const$2.set(seg, x);
+        constants$160.const$4.set(seg, x);
     }
     public static MemorySegment role$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$158.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$160.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void role$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$158.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$160.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle content$VH() {
-        return constants$158.const$3;
+        return constants$160.const$5;
     }
     /**
      * Getter for field:
@@ -57,7 +57,7 @@ public class llama_chat_message {
      * }
      */
     public static MemorySegment content$get(MemorySegment seg) {
-        return (MemorySegment)constants$158.const$3.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$160.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -66,13 +66,13 @@ public class llama_chat_message {
      * }
      */
     public static void content$set(MemorySegment seg, MemorySegment x) {
-        constants$158.const$3.set(seg, x);
+        constants$160.const$5.set(seg, x);
     }
     public static MemorySegment content$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$158.const$3.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$160.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void content$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$158.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$160.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

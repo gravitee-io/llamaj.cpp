@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$192 {
@@ -20,7 +22,7 @@ final class constants$192 {
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
         "llama_sampler_init_grammar",
-        constants$12.const$0
+        constants$9.const$5
     );
     static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,

@@ -30,7 +30,7 @@ public class __sbuf {
      * }
      */
     public static MemorySegment _base$get(MemorySegment seg) {
-        return (MemorySegment)constants$6.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$6.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -42,7 +42,7 @@ public class __sbuf {
         constants$6.const$1.set(seg, x);
     }
     public static MemorySegment _base$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$6.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$6.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void _base$set(MemorySegment seg, long index, MemorySegment x) {
         constants$6.const$1.set(seg.asSlice(index*sizeof()), x);

@@ -11,28 +11,28 @@ final class constants$188 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$188() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_token_fim_suf",
-        constants$5.const$4
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        RuntimeHelper.POINTER,
+        JAVA_INT
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_token_fim_mid",
-        constants$5.const$4
+        "llama_vocab_is_eog",
+        constants$188.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_token_fim_pad",
-        constants$5.const$4
+        "llama_vocab_is_control",
+        constants$188.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_token_fim_rep",
+        "llama_vocab_bos",
         constants$5.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_token_fim_sep",
+        "llama_vocab_eos",
         constants$5.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_vocab_cls",
+        "llama_vocab_eot",
         constants$5.const$4
     );
 }

@@ -11,29 +11,30 @@ final class constants$114 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$114() {}
-    static final StructLayout const$0 = MemoryLayout.structLayout(
-        JAVA_BOOLEAN.withName("async"),
-        JAVA_BOOLEAN.withName("host_buffer"),
-        JAVA_BOOLEAN.withName("buffer_from_host_ptr"),
-        JAVA_BOOLEAN.withName("events")
-    ).withName("ggml_backend_dev_caps");
-    static final VarHandle const$1 = constants$114.const$0.varHandle(PathElement.groupElement("async"));
-    static final VarHandle const$2 = constants$114.const$0.varHandle(PathElement.groupElement("host_buffer"));
-    static final VarHandle const$3 = constants$114.const$0.varHandle(PathElement.groupElement("buffer_from_host_ptr"));
-    static final VarHandle const$4 = constants$114.const$0.varHandle(PathElement.groupElement("events"));
-    static final StructLayout const$5 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("name"),
-        RuntimeHelper.POINTER.withName("description"),
-        JAVA_LONG.withName("memory_free"),
-        JAVA_LONG.withName("memory_total"),
-        JAVA_INT.withName("type"),
-        MemoryLayout.structLayout(
-            JAVA_BOOLEAN.withName("async"),
-            JAVA_BOOLEAN.withName("host_buffer"),
-            JAVA_BOOLEAN.withName("buffer_from_host_ptr"),
-            JAVA_BOOLEAN.withName("events")
-        ).withName("caps")
-    ).withName("ggml_backend_dev_props");
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_supports_buft",
+        constants$36.const$1
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_offload_op",
+        constants$36.const$1
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_backend_tensor_copy_async",
+        constants$84.const$5
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_get_device",
+        constants$16.const$0
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_event_new",
+        constants$16.const$0
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_backend_event_free",
+        constants$0.const$3
+    );
 }
 
 

@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_backend_set_n_threads_t {
 
-    void apply(MemorySegment backend, int n_threads);
+    void apply(java.lang.foreign.MemorySegment backend, int n_threads);
     static MemorySegment allocate(ggml_backend_set_n_threads_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$119.const$0, fi, constants$62.const$4, scope);
+        return RuntimeHelper.upcallStub(constants$120.const$3, fi, constants$63.const$0, scope);
     }
     static ggml_backend_set_n_threads_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _backend, int _n_threads) -> {
+        return (java.lang.foreign.MemorySegment _backend, int _n_threads) -> {
             try {
-                constants$119.const$1.invokeExact(symbol, _backend, _n_threads);
+                constants$120.const$4.invokeExact(symbol, _backend, _n_threads);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

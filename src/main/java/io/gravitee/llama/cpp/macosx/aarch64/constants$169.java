@@ -12,29 +12,33 @@ final class constants$169 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$169() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_model_is_recurrent",
-        constants$35.const$4
+        "llama_model_n_head_kv",
+        constants$5.const$4
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_model_quantize",
-        constants$19.const$2
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_FLOAT,
+        RuntimeHelper.POINTER
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_adapter_lora_init",
-        constants$12.const$5
+        "llama_model_rope_freq_scale_train",
+        constants$169.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_adapter_lora_free",
-        constants$0.const$3
+        "llama_vocab_type",
+        constants$5.const$4
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_INT,
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_vocab_n_tokens",
+        constants$5.const$4
+    );
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_INT,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        JAVA_FLOAT
+        RuntimeHelper.POINTER,
+        JAVA_LONG
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_set_adapter_lora",
-        constants$169.const$4
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "llama_model_meta_val_str",
+        constants$169.const$5
     );
 }
 

@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$65 {
@@ -10,46 +12,31 @@ final class constants$65 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$65() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_reshape_4d",
-        constants$64.const$0
+        "ggml_diag_mask_zero",
+        constants$60.const$2
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_view_1d",
-        constants$63.const$3
+        "ggml_diag_mask_zero_inplace",
+        constants$60.const$2
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_view_2d",
-        constants$64.const$0
+        "ggml_soft_max",
+        constants$9.const$0
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_soft_max_inplace",
+        constants$9.const$0
+    );
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_view_3d",
-        constants$65.const$3
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG
+        JAVA_FLOAT,
+        JAVA_FLOAT
     );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_view_4d",
-        constants$65.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_soft_max_ext",
+        constants$65.const$4
     );
 }
 

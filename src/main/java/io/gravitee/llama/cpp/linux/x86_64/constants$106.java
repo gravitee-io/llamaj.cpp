@@ -3,38 +3,34 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$106 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$106() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        JAVA_BYTE,
-        JAVA_LONG,
-        JAVA_LONG
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_event_record",
+        constants$10.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_memset",
-        constants$106.const$0
+        "ggml_backend_event_synchronize",
+        constants$11.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_synchronize",
-        constants$14.const$2
+        "ggml_backend_event_wait",
+        constants$10.const$5
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_plan_create",
-        constants$11.const$1
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_plan_free",
-        constants$13.const$3
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_plan_compute",
-        constants$9.const$5
-    );
+    static final StructLayout const$3 = MemoryLayout.structLayout(
+        JAVA_BOOLEAN.withName("async"),
+        JAVA_BOOLEAN.withName("host_buffer"),
+        JAVA_BOOLEAN.withName("buffer_from_host_ptr"),
+        JAVA_BOOLEAN.withName("events")
+    ).withName("ggml_backend_dev_caps");
+    static final VarHandle const$4 = constants$106.const$3.varHandle(MemoryLayout.PathElement.groupElement("async"));
+    static final VarHandle const$5 = constants$106.const$3.varHandle(MemoryLayout.PathElement.groupElement("host_buffer"));
 }
 
 

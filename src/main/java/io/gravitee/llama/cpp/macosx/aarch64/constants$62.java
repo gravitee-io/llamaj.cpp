@@ -15,27 +15,27 @@ final class constants$62 {
         "ggml_group_norm_inplace",
         constants$61.const$5
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_l2_norm",
+        constants$61.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_l2_norm_inplace",
+        constants$61.const$0
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         JAVA_FLOAT
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
         "ggml_rms_norm_back",
-        constants$62.const$1
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_mul_mat",
-        constants$14.const$0
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        JAVA_INT
+        constants$62.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_mul_mat_set_prec",
-        constants$62.const$4
+        "ggml_mul_mat",
+        constants$14.const$0
     );
 }
 

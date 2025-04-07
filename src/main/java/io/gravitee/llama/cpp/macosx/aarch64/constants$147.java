@@ -11,37 +11,23 @@ final class constants$147 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$147() {}
-    static final StructLayout const$0 = MemoryLayout.structLayout(
-        JAVA_INT.withName("tag"),
-        MemoryLayout.sequenceLayout(128, JAVA_BYTE).withName("key"),
+    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(llama_progress_callback.class, "apply", constants$146.const$5);
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        constants$146.const$5
+    );
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        JAVA_INT.withName("n_tokens"),
         MemoryLayout.paddingLayout(4),
-        MemoryLayout.unionLayout(
-            JAVA_LONG.withName("val_i64"),
-            JAVA_DOUBLE.withName("val_f64"),
-            JAVA_BOOLEAN.withName("val_bool"),
-            MemoryLayout.sequenceLayout(128, JAVA_BYTE).withName("val_str")
-        ).withName("$anon$0")
-    ).withName("llama_model_kv_override");
-    static final VarHandle const$1 = constants$147.const$0.varHandle(PathElement.groupElement("tag"));
-    static final VarHandle const$2 = constants$147.const$0.varHandle(PathElement.groupElement("$anon$0"), PathElement.groupElement("val_i64"));
-    static final VarHandle const$3 = constants$147.const$0.varHandle(PathElement.groupElement("$anon$0"), PathElement.groupElement("val_f64"));
-    static final VarHandle const$4 = constants$147.const$0.varHandle(PathElement.groupElement("$anon$0"), PathElement.groupElement("val_bool"));
-    static final StructLayout const$5 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("devices"),
-        JAVA_INT.withName("n_gpu_layers"),
-        JAVA_INT.withName("split_mode"),
-        JAVA_INT.withName("main_gpu"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("tensor_split"),
-        RuntimeHelper.POINTER.withName("progress_callback"),
-        RuntimeHelper.POINTER.withName("progress_callback_user_data"),
-        RuntimeHelper.POINTER.withName("kv_overrides"),
-        JAVA_BOOLEAN.withName("vocab_only"),
-        JAVA_BOOLEAN.withName("use_mmap"),
-        JAVA_BOOLEAN.withName("use_mlock"),
-        JAVA_BOOLEAN.withName("check_tensors"),
-        MemoryLayout.paddingLayout(4)
-    ).withName("llama_model_params");
+        RuntimeHelper.POINTER.withName("token"),
+        RuntimeHelper.POINTER.withName("embd"),
+        RuntimeHelper.POINTER.withName("pos"),
+        RuntimeHelper.POINTER.withName("n_seq_id"),
+        RuntimeHelper.POINTER.withName("seq_id"),
+        RuntimeHelper.POINTER.withName("logits")
+    ).withName("llama_batch");
+    static final VarHandle const$3 = constants$147.const$2.varHandle(MemoryLayout.PathElement.groupElement("n_tokens"));
+    static final VarHandle const$4 = constants$147.const$2.varHandle(MemoryLayout.PathElement.groupElement("token"));
+    static final VarHandle const$5 = constants$147.const$2.varHandle(MemoryLayout.PathElement.groupElement("embd"));
 }
 
 

@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_backend_compare_graph_backend$callback {
 
-    boolean apply(int node_index, MemorySegment t1, MemorySegment t2, MemorySegment user_data);
+    boolean apply(int node_index, java.lang.foreign.MemorySegment t1, java.lang.foreign.MemorySegment t2, java.lang.foreign.MemorySegment user_data);
     static MemorySegment allocate(ggml_backend_compare_graph_backend$callback fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$128.const$3, fi, constants$128.const$0, scope);
+        return RuntimeHelper.upcallStub(constants$130.const$1, fi, constants$129.const$4, scope);
     }
     static ggml_backend_compare_graph_backend$callback ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (int _node_index, MemorySegment _t1, MemorySegment _t2, MemorySegment _user_data) -> {
+        return (int _node_index, java.lang.foreign.MemorySegment _t1, java.lang.foreign.MemorySegment _t2, java.lang.foreign.MemorySegment _user_data) -> {
             try {
-                return (boolean)constants$128.const$2.invokeExact(symbol, _node_index, _t1, _t2, _user_data);
+                return (boolean)constants$130.const$0.invokeExact(symbol, _node_index, _t1, _t2, _user_data);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

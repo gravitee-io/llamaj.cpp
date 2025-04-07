@@ -12,28 +12,28 @@ final class constants$165 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$165() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_pooling_type",
-        constants$5.const$4
+        "llama_time_us",
+        constants$36.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_model_get_vocab",
-        constants$16.const$0
+        "llama_max_devices",
+        constants$36.const$5
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_model_rope_type",
-        constants$5.const$4
+        "llama_supports_mmap",
+        constants$132.const$5
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_model_n_ctx_train",
-        constants$5.const$4
+        "llama_supports_mlock",
+        constants$132.const$5
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_model_n_embd",
-        constants$5.const$4
+        "llama_supports_gpu_offload",
+        constants$132.const$5
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_model_n_layer",
-        constants$5.const$4
+        "llama_supports_rpc",
+        constants$132.const$5
     );
 }
 

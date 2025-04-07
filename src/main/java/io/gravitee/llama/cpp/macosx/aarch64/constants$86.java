@@ -11,21 +11,21 @@ final class constants$86 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$86() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom1_inplace_f32",
+    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(ggml_map_binary_f32$fun.class, "apply", constants$83.const$3);
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_map_binary_f32",
+        constants$63.const$2
+    );
+    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_map_binary_inplace_f32$fun.class, "apply", constants$83.const$3);
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_map_binary_inplace_f32",
+        constants$63.const$2
+    );
+    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_map_custom1_f32$fun.class, "apply", constants$17.const$5);
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_map_custom1_f32",
         constants$14.const$0
     );
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_map_custom2_f32$fun.class, "apply", constants$83.const$1);
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom2_f32",
-        constants$63.const$0
-    );
-    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(ggml_map_custom2_inplace_f32$fun.class, "apply", constants$83.const$1);
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom2_inplace_f32",
-        constants$63.const$0
-    );
-    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_map_custom3_f32$fun.class, "apply", constants$83.const$4);
 }
 
 

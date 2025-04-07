@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct ggml_backend_graph_copy {
@@ -18,10 +20,10 @@ import java.lang.foreign.*;
 public class ggml_backend_graph_copy {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$121.const$2;
+        return constants$119.const$0;
     }
     public static VarHandle buffer$VH() {
-        return constants$121.const$3;
+        return constants$119.const$1;
     }
     /**
      * Getter for field:
@@ -30,7 +32,7 @@ public class ggml_backend_graph_copy {
      * }
      */
     public static MemorySegment buffer$get(MemorySegment seg) {
-        return (MemorySegment)constants$121.const$3.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$119.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -39,16 +41,16 @@ public class ggml_backend_graph_copy {
      * }
      */
     public static void buffer$set(MemorySegment seg, MemorySegment x) {
-        constants$121.const$3.set(seg, x);
+        constants$119.const$1.set(seg, x);
     }
     public static MemorySegment buffer$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$121.const$3.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$119.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void buffer$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$121.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$119.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle ctx_allocated$VH() {
-        return constants$121.const$4;
+        return constants$119.const$2;
     }
     /**
      * Getter for field:
@@ -57,7 +59,7 @@ public class ggml_backend_graph_copy {
      * }
      */
     public static MemorySegment ctx_allocated$get(MemorySegment seg) {
-        return (MemorySegment)constants$121.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$119.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -66,16 +68,16 @@ public class ggml_backend_graph_copy {
      * }
      */
     public static void ctx_allocated$set(MemorySegment seg, MemorySegment x) {
-        constants$121.const$4.set(seg, x);
+        constants$119.const$2.set(seg, x);
     }
     public static MemorySegment ctx_allocated$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$121.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$119.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void ctx_allocated$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$121.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$119.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle ctx_unallocated$VH() {
-        return constants$121.const$5;
+        return constants$119.const$3;
     }
     /**
      * Getter for field:
@@ -84,7 +86,7 @@ public class ggml_backend_graph_copy {
      * }
      */
     public static MemorySegment ctx_unallocated$get(MemorySegment seg) {
-        return (MemorySegment)constants$121.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$119.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -93,16 +95,16 @@ public class ggml_backend_graph_copy {
      * }
      */
     public static void ctx_unallocated$set(MemorySegment seg, MemorySegment x) {
-        constants$121.const$5.set(seg, x);
+        constants$119.const$3.set(seg, x);
     }
     public static MemorySegment ctx_unallocated$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$121.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$119.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void ctx_unallocated$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$121.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$119.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle graph$VH() {
-        return constants$122.const$0;
+        return constants$119.const$4;
     }
     /**
      * Getter for field:
@@ -111,7 +113,7 @@ public class ggml_backend_graph_copy {
      * }
      */
     public static MemorySegment graph$get(MemorySegment seg) {
-        return (MemorySegment)constants$122.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$119.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -120,13 +122,13 @@ public class ggml_backend_graph_copy {
      * }
      */
     public static void graph$set(MemorySegment seg, MemorySegment x) {
-        constants$122.const$0.set(seg, x);
+        constants$119.const$4.set(seg, x);
     }
     public static MemorySegment graph$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$122.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$119.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void graph$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$122.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$119.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

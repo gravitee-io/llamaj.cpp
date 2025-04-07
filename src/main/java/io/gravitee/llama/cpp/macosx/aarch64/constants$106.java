@@ -12,28 +12,28 @@ final class constants$106 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$106() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_get_device",
-        constants$16.const$0
+        "ggml_backend_alloc_ctx_tensors_from_buft",
+        constants$12.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_name",
-        constants$16.const$0
+        "ggml_backend_alloc_ctx_tensors",
+        constants$12.const$5
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_free",
-        constants$0.const$3
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_get_base",
+        "ggml_backend_buft_name",
         constants$16.const$0
     );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_buft_alloc_buffer",
+        constants$47.const$2
+    );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_get_size",
+        "ggml_backend_buft_get_alignment",
         constants$15.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_init_tensor",
-        constants$17.const$5
+        "ggml_backend_buft_get_max_size",
+        constants$15.const$0
     );
 }
 

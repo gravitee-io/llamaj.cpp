@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_map_custom3_inplace_f32$fun {
 
-    void apply(MemorySegment _x0, MemorySegment _x1, MemorySegment _x2, MemorySegment _x3);
+    void apply(java.lang.foreign.MemorySegment _x0, java.lang.foreign.MemorySegment _x1, java.lang.foreign.MemorySegment _x2, java.lang.foreign.MemorySegment _x3);
     static MemorySegment allocate(ggml_map_custom3_inplace_f32$fun fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$87.const$1, fi, constants$83.const$4, scope);
+        return RuntimeHelper.upcallStub(constants$88.const$2, fi, constants$84.const$5, scope);
     }
     static ggml_map_custom3_inplace_f32$fun ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment __x0, MemorySegment __x1, MemorySegment __x2, MemorySegment __x3) -> {
+        return (java.lang.foreign.MemorySegment __x0, java.lang.foreign.MemorySegment __x1, java.lang.foreign.MemorySegment __x2, java.lang.foreign.MemorySegment __x3) -> {
             try {
-                constants$84.const$0.invokeExact(symbol, __x0, __x1, __x2, __x3);
+                constants$85.const$1.invokeExact(symbol, __x0, __x1, __x2, __x3);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

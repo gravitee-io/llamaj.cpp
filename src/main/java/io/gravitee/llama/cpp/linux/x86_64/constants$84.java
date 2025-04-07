@@ -3,34 +3,41 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$84 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$84() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_map_custom3_inplace",
+        constants$83.const$4
     );
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_custom1_op_t.class, "apply", constants$84.const$0);
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_cross_entropy_loss",
+        constants$9.const$5
+    );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        constants$84.const$0
+        "ggml_cross_entropy_loss_back",
+        constants$58.const$0
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.ofVoid(
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_custom2_op_t.class, "apply", constants$84.const$3);
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_opt_step_adamw",
         constants$84.const$3
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_build_forward_expand",
+        constants$10.const$5
     );
 }
 

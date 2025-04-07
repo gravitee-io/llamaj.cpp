@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct llama_sampler_chain_params {
@@ -15,10 +17,10 @@ import java.lang.foreign.*;
 public class llama_sampler_chain_params {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$151.const$2;
+        return constants$149.const$4;
     }
     public static VarHandle no_perf$VH() {
-        return constants$151.const$3;
+        return constants$149.const$5;
     }
     /**
      * Getter for field:
@@ -27,7 +29,7 @@ public class llama_sampler_chain_params {
      * }
      */
     public static boolean no_perf$get(MemorySegment seg) {
-        return (boolean)constants$151.const$3.get(seg);
+        return (boolean)constants$149.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -36,13 +38,13 @@ public class llama_sampler_chain_params {
      * }
      */
     public static void no_perf$set(MemorySegment seg, boolean x) {
-        constants$151.const$3.set(seg, x);
+        constants$149.const$5.set(seg, x);
     }
     public static boolean no_perf$get(MemorySegment seg, long index) {
-        return (boolean)constants$151.const$3.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$149.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void no_perf$set(MemorySegment seg, long index, boolean x) {
-        constants$151.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$149.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

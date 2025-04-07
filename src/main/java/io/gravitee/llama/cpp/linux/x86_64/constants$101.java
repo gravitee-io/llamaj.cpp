@@ -3,34 +3,37 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$101 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$101() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_get_device",
-        constants$10.const$5
+        "ggml_backend_buffer_reset",
+        constants$11.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_name",
+        "ggml_backend_tensor_copy",
         constants$10.const$5
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_free",
-        constants$14.const$2
+        "ggml_backend_guid",
+        constants$8.const$3
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_get_base",
-        constants$10.const$5
+        "ggml_backend_name",
+        constants$8.const$3
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_get_size",
-        constants$23.const$3
+        "ggml_backend_free",
+        constants$11.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_init_tensor",
-        constants$9.const$5
+        "ggml_backend_get_default_buffer_type",
+        constants$8.const$3
     );
 }
 

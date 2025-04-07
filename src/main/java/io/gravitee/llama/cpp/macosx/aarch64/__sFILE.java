@@ -48,7 +48,7 @@ public class __sFILE {
      * }
      */
     public static MemorySegment _p$get(MemorySegment seg) {
-        return (MemorySegment)constants$6.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$6.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -60,7 +60,7 @@ public class __sFILE {
         constants$6.const$4.set(seg, x);
     }
     public static MemorySegment _p$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$6.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$6.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void _p$set(MemorySegment seg, long index, MemorySegment x) {
         constants$6.const$4.set(seg.asSlice(index*sizeof()), x);
@@ -213,7 +213,7 @@ public class __sFILE {
      * }
      */
     public static MemorySegment _cookie$get(MemorySegment seg) {
-        return (MemorySegment)constants$7.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$7.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -225,7 +225,7 @@ public class __sFILE {
         constants$7.const$4.set(seg, x);
     }
     public static MemorySegment _cookie$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$7.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$7.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void _cookie$set(MemorySegment seg, long index, MemorySegment x) {
         constants$7.const$4.set(seg.asSlice(index*sizeof()), x);
@@ -237,13 +237,13 @@ public class __sFILE {
      */
     public interface _close {
 
-        int apply(MemorySegment _x0);
+        int apply(java.lang.foreign.MemorySegment _x0);
         static MemorySegment allocate(_close fi, Arena scope) {
             return RuntimeHelper.upcallStub(constants$7.const$5, fi, constants$5.const$4, scope);
         }
         static _close ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment __x0) -> {
+            return (java.lang.foreign.MemorySegment __x0) -> {
                 try {
                     return (int)constants$8.const$0.invokeExact(symbol, __x0);
                 } catch (Throwable ex$) {
@@ -263,7 +263,7 @@ public class __sFILE {
      * }
      */
     public static MemorySegment _close$get(MemorySegment seg) {
-        return (MemorySegment)constants$8.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$8.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -275,7 +275,7 @@ public class __sFILE {
         constants$8.const$1.set(seg, x);
     }
     public static MemorySegment _close$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$8.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$8.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void _close$set(MemorySegment seg, long index, MemorySegment x) {
         constants$8.const$1.set(seg.asSlice(index*sizeof()), x);
@@ -290,13 +290,13 @@ public class __sFILE {
      */
     public interface _read {
 
-        int apply(MemorySegment _x0, MemorySegment _x1, int _x2);
+        int apply(java.lang.foreign.MemorySegment _x0, java.lang.foreign.MemorySegment _x1, int _x2);
         static MemorySegment allocate(_read fi, Arena scope) {
             return RuntimeHelper.upcallStub(constants$8.const$2, fi, constants$5.const$0, scope);
         }
         static _read ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment __x0, MemorySegment __x1, int __x2) -> {
+            return (java.lang.foreign.MemorySegment __x0, java.lang.foreign.MemorySegment __x1, int __x2) -> {
                 try {
                     return (int)constants$8.const$3.invokeExact(symbol, __x0, __x1, __x2);
                 } catch (Throwable ex$) {
@@ -316,7 +316,7 @@ public class __sFILE {
      * }
      */
     public static MemorySegment _read$get(MemorySegment seg) {
-        return (MemorySegment)constants$8.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$8.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -328,7 +328,7 @@ public class __sFILE {
         constants$8.const$4.set(seg, x);
     }
     public static MemorySegment _read$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$8.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$8.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void _read$set(MemorySegment seg, long index, MemorySegment x) {
         constants$8.const$4.set(seg.asSlice(index*sizeof()), x);
@@ -343,13 +343,13 @@ public class __sFILE {
      */
     public interface _seek {
 
-        long apply(MemorySegment _x0, long _x1, int _x2);
+        long apply(java.lang.foreign.MemorySegment _x0, long _x1, int _x2);
         static MemorySegment allocate(_seek fi, Arena scope) {
             return RuntimeHelper.upcallStub(constants$9.const$0, fi, constants$8.const$5, scope);
         }
         static _seek ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment __x0, long __x1, int __x2) -> {
+            return (java.lang.foreign.MemorySegment __x0, long __x1, int __x2) -> {
                 try {
                     return (long)constants$9.const$1.invokeExact(symbol, __x0, __x1, __x2);
                 } catch (Throwable ex$) {
@@ -369,7 +369,7 @@ public class __sFILE {
      * }
      */
     public static MemorySegment _seek$get(MemorySegment seg) {
-        return (MemorySegment)constants$9.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$9.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -381,7 +381,7 @@ public class __sFILE {
         constants$9.const$2.set(seg, x);
     }
     public static MemorySegment _seek$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$9.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$9.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void _seek$set(MemorySegment seg, long index, MemorySegment x) {
         constants$9.const$2.set(seg.asSlice(index*sizeof()), x);
@@ -396,13 +396,13 @@ public class __sFILE {
      */
     public interface _write {
 
-        int apply(MemorySegment _x0, MemorySegment _x1, int _x2);
+        int apply(java.lang.foreign.MemorySegment _x0, java.lang.foreign.MemorySegment _x1, int _x2);
         static MemorySegment allocate(_write fi, Arena scope) {
             return RuntimeHelper.upcallStub(constants$9.const$3, fi, constants$5.const$0, scope);
         }
         static _write ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment __x0, MemorySegment __x1, int __x2) -> {
+            return (java.lang.foreign.MemorySegment __x0, java.lang.foreign.MemorySegment __x1, int __x2) -> {
                 try {
                     return (int)constants$8.const$3.invokeExact(symbol, __x0, __x1, __x2);
                 } catch (Throwable ex$) {
@@ -422,7 +422,7 @@ public class __sFILE {
      * }
      */
     public static MemorySegment _write$get(MemorySegment seg) {
-        return (MemorySegment)constants$9.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$9.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -434,7 +434,7 @@ public class __sFILE {
         constants$9.const$4.set(seg, x);
     }
     public static MemorySegment _write$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$9.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$9.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void _write$set(MemorySegment seg, long index, MemorySegment x) {
         constants$9.const$4.set(seg.asSlice(index*sizeof()), x);
@@ -455,7 +455,7 @@ public class __sFILE {
      * }
      */
     public static MemorySegment _extra$get(MemorySegment seg) {
-        return (MemorySegment)constants$9.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$9.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -467,7 +467,7 @@ public class __sFILE {
         constants$9.const$5.set(seg, x);
     }
     public static MemorySegment _extra$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$9.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$9.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void _extra$set(MemorySegment seg, long index, MemorySegment x) {
         constants$9.const$5.set(seg.asSlice(index*sizeof()), x);

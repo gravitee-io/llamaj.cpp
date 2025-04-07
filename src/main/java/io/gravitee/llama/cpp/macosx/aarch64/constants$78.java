@@ -12,40 +12,30 @@ final class constants$78 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$78() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_timestep_embedding",
-        constants$77.const$5
+        "ggml_upscale_ext",
+        constants$69.const$0
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_argsort",
-        constants$65.const$2
+        "ggml_pad",
+        constants$69.const$0
     );
     static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_FLOAT
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_arange",
+        "ggml_pad_reflect_1d",
         constants$78.const$2
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_top_k",
-        constants$65.const$2
+        "ggml_timestep_embedding",
+        constants$78.const$2
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_FLOAT
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_flash_attn_ext",
-        constants$78.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_argsort",
+        constants$65.const$4
     );
 }
 

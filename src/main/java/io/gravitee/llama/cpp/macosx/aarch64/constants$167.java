@@ -12,31 +12,28 @@ final class constants$167 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$167() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_model_meta_count",
+        "llama_n_layer",
         constants$5.const$4
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_LONG
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_n_head",
+        constants$5.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_model_meta_key_by_index",
-        constants$167.const$1
+        "llama_n_vocab",
+        constants$5.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_model_meta_val_str_by_index",
-        constants$167.const$1
+        "llama_get_model",
+        constants$16.const$0
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_get_kv_self",
+        constants$16.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_model_desc",
-        constants$167.const$4
+        "llama_pooling_type",
+        constants$5.const$4
     );
 }
 

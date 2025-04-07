@@ -11,30 +11,24 @@ final class constants$116 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$116() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_description",
-        constants$16.const$0
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_memory",
-        constants$83.const$1
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_type",
-        constants$5.const$4
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_get_props",
-        constants$17.const$5
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_backend_reg",
-        constants$16.const$0
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_init",
-        constants$12.const$5
-    );
+    static final VarHandle const$0 = constants$115.const$3.varHandle(MemoryLayout.PathElement.groupElement("buffer_from_host_ptr"));
+    static final VarHandle const$1 = constants$115.const$3.varHandle(MemoryLayout.PathElement.groupElement("events"));
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("name"),
+        RuntimeHelper.POINTER.withName("description"),
+        JAVA_LONG.withName("memory_free"),
+        JAVA_LONG.withName("memory_total"),
+        JAVA_INT.withName("type"),
+        MemoryLayout.structLayout(
+            JAVA_BOOLEAN.withName("async"),
+            JAVA_BOOLEAN.withName("host_buffer"),
+            JAVA_BOOLEAN.withName("buffer_from_host_ptr"),
+            JAVA_BOOLEAN.withName("events")
+        ).withName("caps")
+    ).withName("ggml_backend_dev_props");
+    static final VarHandle const$3 = constants$116.const$2.varHandle(MemoryLayout.PathElement.groupElement("name"));
+    static final VarHandle const$4 = constants$116.const$2.varHandle(MemoryLayout.PathElement.groupElement("description"));
+    static final VarHandle const$5 = constants$116.const$2.varHandle(MemoryLayout.PathElement.groupElement("memory_free"));
 }
 
 

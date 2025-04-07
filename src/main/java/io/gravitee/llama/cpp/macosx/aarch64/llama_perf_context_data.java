@@ -22,10 +22,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class llama_perf_context_data {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$200.const$4;
+        return constants$206.const$4;
     }
     public static VarHandle t_start_ms$VH() {
-        return constants$200.const$5;
+        return constants$206.const$5;
     }
     /**
      * Getter for field:
@@ -34,7 +34,7 @@ public class llama_perf_context_data {
      * }
      */
     public static double t_start_ms$get(MemorySegment seg) {
-        return (double)constants$200.const$5.get(seg);
+        return (double)constants$206.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -43,16 +43,16 @@ public class llama_perf_context_data {
      * }
      */
     public static void t_start_ms$set(MemorySegment seg, double x) {
-        constants$200.const$5.set(seg, x);
+        constants$206.const$5.set(seg, x);
     }
     public static double t_start_ms$get(MemorySegment seg, long index) {
-        return (double)constants$200.const$5.get(seg.asSlice(index*sizeof()));
+        return (double)constants$206.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void t_start_ms$set(MemorySegment seg, long index, double x) {
-        constants$200.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$206.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle t_load_ms$VH() {
-        return constants$201.const$0;
+        return constants$207.const$0;
     }
     /**
      * Getter for field:
@@ -61,7 +61,7 @@ public class llama_perf_context_data {
      * }
      */
     public static double t_load_ms$get(MemorySegment seg) {
-        return (double)constants$201.const$0.get(seg);
+        return (double)constants$207.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -70,16 +70,16 @@ public class llama_perf_context_data {
      * }
      */
     public static void t_load_ms$set(MemorySegment seg, double x) {
-        constants$201.const$0.set(seg, x);
+        constants$207.const$0.set(seg, x);
     }
     public static double t_load_ms$get(MemorySegment seg, long index) {
-        return (double)constants$201.const$0.get(seg.asSlice(index*sizeof()));
+        return (double)constants$207.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void t_load_ms$set(MemorySegment seg, long index, double x) {
-        constants$201.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$207.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle t_p_eval_ms$VH() {
-        return constants$201.const$1;
+        return constants$207.const$1;
     }
     /**
      * Getter for field:
@@ -88,7 +88,7 @@ public class llama_perf_context_data {
      * }
      */
     public static double t_p_eval_ms$get(MemorySegment seg) {
-        return (double)constants$201.const$1.get(seg);
+        return (double)constants$207.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -97,16 +97,16 @@ public class llama_perf_context_data {
      * }
      */
     public static void t_p_eval_ms$set(MemorySegment seg, double x) {
-        constants$201.const$1.set(seg, x);
+        constants$207.const$1.set(seg, x);
     }
     public static double t_p_eval_ms$get(MemorySegment seg, long index) {
-        return (double)constants$201.const$1.get(seg.asSlice(index*sizeof()));
+        return (double)constants$207.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void t_p_eval_ms$set(MemorySegment seg, long index, double x) {
-        constants$201.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$207.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle t_eval_ms$VH() {
-        return constants$201.const$2;
+        return constants$207.const$2;
     }
     /**
      * Getter for field:
@@ -115,7 +115,7 @@ public class llama_perf_context_data {
      * }
      */
     public static double t_eval_ms$get(MemorySegment seg) {
-        return (double)constants$201.const$2.get(seg);
+        return (double)constants$207.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -124,16 +124,16 @@ public class llama_perf_context_data {
      * }
      */
     public static void t_eval_ms$set(MemorySegment seg, double x) {
-        constants$201.const$2.set(seg, x);
+        constants$207.const$2.set(seg, x);
     }
     public static double t_eval_ms$get(MemorySegment seg, long index) {
-        return (double)constants$201.const$2.get(seg.asSlice(index*sizeof()));
+        return (double)constants$207.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void t_eval_ms$set(MemorySegment seg, long index, double x) {
-        constants$201.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$207.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle n_p_eval$VH() {
-        return constants$201.const$3;
+        return constants$207.const$3;
     }
     /**
      * Getter for field:
@@ -142,7 +142,7 @@ public class llama_perf_context_data {
      * }
      */
     public static int n_p_eval$get(MemorySegment seg) {
-        return (int)constants$201.const$3.get(seg);
+        return (int)constants$207.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -151,16 +151,16 @@ public class llama_perf_context_data {
      * }
      */
     public static void n_p_eval$set(MemorySegment seg, int x) {
-        constants$201.const$3.set(seg, x);
+        constants$207.const$3.set(seg, x);
     }
     public static int n_p_eval$get(MemorySegment seg, long index) {
-        return (int)constants$201.const$3.get(seg.asSlice(index*sizeof()));
+        return (int)constants$207.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void n_p_eval$set(MemorySegment seg, long index, int x) {
-        constants$201.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$207.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle n_eval$VH() {
-        return constants$201.const$4;
+        return constants$207.const$4;
     }
     /**
      * Getter for field:
@@ -169,7 +169,7 @@ public class llama_perf_context_data {
      * }
      */
     public static int n_eval$get(MemorySegment seg) {
-        return (int)constants$201.const$4.get(seg);
+        return (int)constants$207.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -178,13 +178,13 @@ public class llama_perf_context_data {
      * }
      */
     public static void n_eval$set(MemorySegment seg, int x) {
-        constants$201.const$4.set(seg, x);
+        constants$207.const$4.set(seg, x);
     }
     public static int n_eval$get(MemorySegment seg, long index) {
-        return (int)constants$201.const$4.get(seg.asSlice(index*sizeof()));
+        return (int)constants$207.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void n_eval$set(MemorySegment seg, long index, int x) {
-        constants$201.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$207.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

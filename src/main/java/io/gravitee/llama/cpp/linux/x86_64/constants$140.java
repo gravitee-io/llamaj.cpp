@@ -2,19 +2,37 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
-
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$140 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$140() {}
-    static final VarHandle const$0 = constants$139.const$4.varHandle(PathElement.groupElement("token"));
-    static final VarHandle const$1 = constants$139.const$4.varHandle(PathElement.groupElement("embd"));
-    static final VarHandle const$2 = constants$139.const$4.varHandle(PathElement.groupElement("pos"));
-    static final VarHandle const$3 = constants$139.const$4.varHandle(PathElement.groupElement("n_seq_id"));
-    static final VarHandle const$4 = constants$139.const$4.varHandle(PathElement.groupElement("seq_id"));
-    static final VarHandle const$5 = constants$139.const$4.varHandle(PathElement.groupElement("logits"));
+    static final StructLayout const$0 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("devices"),
+        RuntimeHelper.POINTER.withName("tensor_buft_overrides"),
+        JAVA_INT.withName("n_gpu_layers"),
+        JAVA_INT.withName("split_mode"),
+        JAVA_INT.withName("main_gpu"),
+        MemoryLayout.paddingLayout(4),
+        RuntimeHelper.POINTER.withName("tensor_split"),
+        RuntimeHelper.POINTER.withName("progress_callback"),
+        RuntimeHelper.POINTER.withName("progress_callback_user_data"),
+        RuntimeHelper.POINTER.withName("kv_overrides"),
+        JAVA_BOOLEAN.withName("vocab_only"),
+        JAVA_BOOLEAN.withName("use_mmap"),
+        JAVA_BOOLEAN.withName("use_mlock"),
+        JAVA_BOOLEAN.withName("check_tensors"),
+        MemoryLayout.paddingLayout(4)
+    ).withName("llama_model_params");
+    static final VarHandle const$1 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("devices"));
+    static final VarHandle const$2 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("tensor_buft_overrides"));
+    static final VarHandle const$3 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("n_gpu_layers"));
+    static final VarHandle const$4 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("split_mode"));
+    static final VarHandle const$5 = constants$140.const$0.varHandle(MemoryLayout.PathElement.groupElement("main_gpu"));
 }
 
 

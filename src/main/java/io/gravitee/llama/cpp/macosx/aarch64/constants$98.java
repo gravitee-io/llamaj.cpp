@@ -11,21 +11,29 @@ final class constants$98 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$98() {}
-    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(ggml_from_float_t.class, "apply", constants$31.const$4);
-    static final StructLayout const$1 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("type_name"),
-        JAVA_LONG.withName("blck_size"),
-        JAVA_LONG.withName("blck_size_interleave"),
-        JAVA_LONG.withName("type_size"),
-        JAVA_BOOLEAN.withName("is_quantized"),
-        MemoryLayout.paddingLayout(7),
-        RuntimeHelper.POINTER.withName("to_float"),
-        RuntimeHelper.POINTER.withName("from_float_ref")
-    ).withName("ggml_type_traits");
-    static final VarHandle const$2 = constants$98.const$1.varHandle(PathElement.groupElement("type_name"));
-    static final VarHandle const$3 = constants$98.const$1.varHandle(PathElement.groupElement("blck_size"));
-    static final VarHandle const$4 = constants$98.const$1.varHandle(PathElement.groupElement("blck_size_interleave"));
-    static final VarHandle const$5 = constants$98.const$1.varHandle(PathElement.groupElement("type_size"));
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_log_set",
+        constants$17.const$5
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_set_zero",
+        constants$16.const$0
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.ofVoid(
+        JAVA_INT
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_quantize_init",
+        constants$98.const$2
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_quantize_free",
+        constants$36.const$3
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_quantize_requires_imatrix",
+        constants$40.const$5
+    );
 }
 
 

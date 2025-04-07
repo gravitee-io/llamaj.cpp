@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct ggml_backend_buffer_type* (*ggml_backend_split_buffer_type_t)(int main_device,float* tensor_split);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_backend_split_buffer_type_t {
 
-    MemorySegment apply(int main_device, MemorySegment tensor_split);
+    java.lang.foreign.MemorySegment apply(int main_device, java.lang.foreign.MemorySegment tensor_split);
     static MemorySegment allocate(ggml_backend_split_buffer_type_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$113.const$4, fi, constants$12.const$2, scope);
+        return RuntimeHelper.upcallStub(constants$111.const$1, fi, constants$10.const$0, scope);
     }
     static ggml_backend_split_buffer_type_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (int _main_device, MemorySegment _tensor_split) -> {
+        return (int _main_device, java.lang.foreign.MemorySegment _tensor_split) -> {
             try {
-                return (MemorySegment)constants$113.const$5.invokeExact(symbol, _main_device, _tensor_split);
+                return (java.lang.foreign.MemorySegment)constants$111.const$2.invokeExact(symbol, _main_device, _tensor_split);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

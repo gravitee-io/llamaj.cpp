@@ -11,28 +11,20 @@ final class constants$128 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$128() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_sched_set_eval_callback",
+        constants$84.const$2
     );
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_backend_eval_callback.class, "apply", constants$128.const$0);
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        constants$128.const$0
-    );
-    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(ggml_backend_compare_graph_backend$callback.class, "apply", constants$128.const$0);
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_compare_graph_backend",
-        constants$128.const$4
-    );
+    static final StructLayout const$1 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("buffer"),
+        RuntimeHelper.POINTER.withName("ctx_allocated"),
+        RuntimeHelper.POINTER.withName("ctx_unallocated"),
+        RuntimeHelper.POINTER.withName("graph")
+    ).withName("ggml_backend_graph_copy");
+    static final VarHandle const$2 = constants$128.const$1.varHandle(MemoryLayout.PathElement.groupElement("buffer"));
+    static final VarHandle const$3 = constants$128.const$1.varHandle(MemoryLayout.PathElement.groupElement("ctx_allocated"));
+    static final VarHandle const$4 = constants$128.const$1.varHandle(MemoryLayout.PathElement.groupElement("ctx_unallocated"));
+    static final VarHandle const$5 = constants$128.const$1.varHandle(MemoryLayout.PathElement.groupElement("graph"));
 }
 
 

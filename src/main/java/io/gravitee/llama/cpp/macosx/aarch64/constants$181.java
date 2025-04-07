@@ -11,26 +11,32 @@ final class constants$181 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$181() {}
-    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(llama_set_abort_callback$abort_callback.class, "apply", constants$35.const$4);
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_copy_state_data",
+        constants$107.const$0
+    );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_set_abort_callback",
-        constants$83.const$1
+        "llama_state_set_data",
+        constants$180.const$5
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_synchronize",
-        constants$0.const$3
+        "llama_set_state_data",
+        constants$107.const$0
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_get_logits",
-        constants$16.const$0
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        RuntimeHelper.POINTER
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_get_logits_ith",
-        constants$93.const$5
+        "llama_state_load_file",
+        constants$181.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_get_embeddings",
-        constants$16.const$0
+        "llama_load_session_file",
+        constants$181.const$3
     );
 }
 

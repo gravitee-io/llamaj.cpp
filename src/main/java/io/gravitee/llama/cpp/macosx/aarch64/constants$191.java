@@ -11,12 +11,30 @@ final class constants$191 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$191() {}
-    static final VarHandle const$0 = constants$190.const$2.varHandle(PathElement.groupElement("accept"));
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(llama_sampler_i.apply.class, "apply", constants$17.const$5);
-    static final VarHandle const$2 = constants$190.const$2.varHandle(PathElement.groupElement("apply"));
-    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(llama_sampler_i.reset.class, "apply", constants$0.const$3);
-    static final VarHandle const$4 = constants$190.const$2.varHandle(PathElement.groupElement("reset"));
-    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(llama_sampler_i.clone.class, "apply", constants$16.const$0);
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_token_get_score",
+        constants$135.const$0
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_token_get_attr",
+        constants$133.const$5
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_token_is_eog",
+        constants$188.const$0
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_token_is_control",
+        constants$188.const$0
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_token_bos",
+        constants$5.const$4
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_token_eos",
+        constants$5.const$4
+    );
 }
 
 

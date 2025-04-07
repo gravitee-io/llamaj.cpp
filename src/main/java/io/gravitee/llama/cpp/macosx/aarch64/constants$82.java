@@ -11,21 +11,45 @@ final class constants$82 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$82() {}
-    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(ggml_unary_op_f32_t.class, "apply", constants$81.const$5);
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        constants$81.const$5
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_add_rel_pos",
+        constants$63.const$2
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.ofVoid(
-        JAVA_INT,
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_add_rel_pos_inplace",
+        constants$63.const$2
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_rwkv_wkv6",
+        constants$80.const$4
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_FLOAT
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_gated_linear_attn",
+        constants$82.const$3
+    );
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(ggml_binary_op_f32_t.class, "apply", constants$82.const$2);
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        constants$82.const$2
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "ggml_rwkv_wkv7",
+        constants$82.const$5
     );
-    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_custom1_op_f32_t.class, "apply", constants$17.const$5);
 }
 
 

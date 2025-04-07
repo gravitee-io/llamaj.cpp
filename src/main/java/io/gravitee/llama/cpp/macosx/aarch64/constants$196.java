@@ -11,30 +11,12 @@ final class constants$196 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$196() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_min_p",
-        constants$195.const$5
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_typical",
-        constants$195.const$5
-    );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_FLOAT
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_temp",
-        constants$196.const$2
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_FLOAT
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_temp_ext",
-        constants$196.const$4
-    );
+    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(llama_sampler_i.name.class, "apply", constants$16.const$0);
+    static final VarHandle const$1 = constants$195.const$5.varHandle(MemoryLayout.PathElement.groupElement("name"));
+    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(llama_sampler_i.accept.class, "apply", constants$63.const$0);
+    static final VarHandle const$3 = constants$195.const$5.varHandle(MemoryLayout.PathElement.groupElement("accept"));
+    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(llama_sampler_i.apply.class, "apply", constants$17.const$5);
+    static final VarHandle const$5 = constants$195.const$5.varHandle(MemoryLayout.PathElement.groupElement("apply"));
 }
 
 

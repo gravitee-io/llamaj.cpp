@@ -11,7 +11,14 @@ final class constants$101 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$101() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(MemoryLayout.structLayout(
+    static final VarHandle const$0 = constants$99.const$5.varHandle(MemoryLayout.PathElement.groupElement("to_float"));
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_type_traits.from_float_ref.class, "apply", constants$31.const$4);
+    static final VarHandle const$2 = constants$99.const$5.varHandle(MemoryLayout.PathElement.groupElement("from_float_ref"));
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_get_type_traits",
+        constants$30.const$4
+    );
+    static final StructLayout const$4 = MemoryLayout.structLayout(
         MemoryLayout.sequenceLayout(512, JAVA_BOOLEAN).withName("cpumask"),
         JAVA_INT.withName("n_threads"),
         JAVA_INT.withName("prio"),
@@ -19,28 +26,8 @@ final class constants$101 {
         JAVA_BOOLEAN.withName("strict_cpu"),
         JAVA_BOOLEAN.withName("paused"),
         MemoryLayout.paddingLayout(2)
-    ).withName("ggml_threadpool_params"),
-        JAVA_INT
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_threadpool_params_default",
-        constants$101.const$0
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_threadpool_params_init",
-        constants$62.const$4
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_threadpool_params_match",
-        constants$36.const$1
-    );
-    static final StructLayout const$4 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("buffer"),
-        RuntimeHelper.POINTER.withName("base"),
-        JAVA_LONG.withName("alignment"),
-        JAVA_LONG.withName("offset")
-    ).withName("ggml_tallocr");
-    static final VarHandle const$5 = constants$101.const$4.varHandle(PathElement.groupElement("buffer"));
+    ).withName("ggml_threadpool_params");
+    static final VarHandle const$5 = constants$101.const$4.varHandle(MemoryLayout.PathElement.groupElement("n_threads"));
 }
 
 

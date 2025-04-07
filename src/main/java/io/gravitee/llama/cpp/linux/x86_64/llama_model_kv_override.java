@@ -2,9 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * struct llama_model_kv_override {
@@ -22,10 +24,10 @@ import java.lang.foreign.*;
 public class llama_model_kv_override {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$141.const$0;
+        return constants$138.const$4;
     }
     public static VarHandle tag$VH() {
-        return constants$141.const$1;
+        return constants$138.const$5;
     }
     /**
      * Getter for field:
@@ -34,7 +36,7 @@ public class llama_model_kv_override {
      * }
      */
     public static int tag$get(MemorySegment seg) {
-        return (int)constants$141.const$1.get(seg);
+        return (int)constants$138.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -43,19 +45,19 @@ public class llama_model_kv_override {
      * }
      */
     public static void tag$set(MemorySegment seg, int x) {
-        constants$141.const$1.set(seg, x);
+        constants$138.const$5.set(seg, x);
     }
     public static int tag$get(MemorySegment seg, long index) {
-        return (int)constants$141.const$1.get(seg.asSlice(index*sizeof()));
+        return (int)constants$138.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void tag$set(MemorySegment seg, long index, int x) {
-        constants$141.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$138.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static MemorySegment key$slice(MemorySegment seg) {
         return seg.asSlice(4, 128);
     }
     public static VarHandle val_i64$VH() {
-        return constants$141.const$2;
+        return constants$139.const$0;
     }
     /**
      * Getter for field:
@@ -64,7 +66,7 @@ public class llama_model_kv_override {
      * }
      */
     public static long val_i64$get(MemorySegment seg) {
-        return (long)constants$141.const$2.get(seg);
+        return (long)constants$139.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -73,16 +75,16 @@ public class llama_model_kv_override {
      * }
      */
     public static void val_i64$set(MemorySegment seg, long x) {
-        constants$141.const$2.set(seg, x);
+        constants$139.const$0.set(seg, x);
     }
     public static long val_i64$get(MemorySegment seg, long index) {
-        return (long)constants$141.const$2.get(seg.asSlice(index*sizeof()));
+        return (long)constants$139.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void val_i64$set(MemorySegment seg, long index, long x) {
-        constants$141.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$139.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle val_f64$VH() {
-        return constants$141.const$3;
+        return constants$139.const$1;
     }
     /**
      * Getter for field:
@@ -91,7 +93,7 @@ public class llama_model_kv_override {
      * }
      */
     public static double val_f64$get(MemorySegment seg) {
-        return (double)constants$141.const$3.get(seg);
+        return (double)constants$139.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -100,16 +102,16 @@ public class llama_model_kv_override {
      * }
      */
     public static void val_f64$set(MemorySegment seg, double x) {
-        constants$141.const$3.set(seg, x);
+        constants$139.const$1.set(seg, x);
     }
     public static double val_f64$get(MemorySegment seg, long index) {
-        return (double)constants$141.const$3.get(seg.asSlice(index*sizeof()));
+        return (double)constants$139.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void val_f64$set(MemorySegment seg, long index, double x) {
-        constants$141.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$139.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle val_bool$VH() {
-        return constants$141.const$4;
+        return constants$139.const$2;
     }
     /**
      * Getter for field:
@@ -118,7 +120,7 @@ public class llama_model_kv_override {
      * }
      */
     public static boolean val_bool$get(MemorySegment seg) {
-        return (boolean)constants$141.const$4.get(seg);
+        return (boolean)constants$139.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -127,13 +129,13 @@ public class llama_model_kv_override {
      * }
      */
     public static void val_bool$set(MemorySegment seg, boolean x) {
-        constants$141.const$4.set(seg, x);
+        constants$139.const$2.set(seg, x);
     }
     public static boolean val_bool$get(MemorySegment seg, long index) {
-        return (boolean)constants$141.const$4.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$139.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void val_bool$set(MemorySegment seg, long index, boolean x) {
-        constants$141.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$139.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static MemorySegment val_str$slice(MemorySegment seg) {
         return seg.asSlice(136, 128);

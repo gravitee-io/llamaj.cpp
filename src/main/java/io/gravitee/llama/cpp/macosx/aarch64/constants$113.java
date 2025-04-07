@@ -12,28 +12,28 @@ final class constants$113 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$113() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_get_device",
-        constants$16.const$0
+        "ggml_backend_graph_plan_create",
+        constants$12.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_new",
-        constants$16.const$0
+        "ggml_backend_graph_plan_free",
+        constants$17.const$5
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_free",
-        constants$0.const$3
+        "ggml_backend_graph_plan_compute",
+        constants$12.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_record",
-        constants$17.const$5
+        "ggml_backend_graph_compute",
+        constants$12.const$1
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_synchronize",
-        constants$0.const$3
+        "ggml_backend_graph_compute_async",
+        constants$12.const$1
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_wait",
-        constants$17.const$5
+        "ggml_backend_supports_op",
+        constants$36.const$1
     );
 }
 

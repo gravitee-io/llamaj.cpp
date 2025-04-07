@@ -14,13 +14,13 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface llama_set_abort_callback$abort_callback {
 
-    boolean apply(MemorySegment data);
+    boolean apply(java.lang.foreign.MemorySegment data);
     static MemorySegment allocate(llama_set_abort_callback$abort_callback fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$181.const$0, fi, constants$35.const$4, scope);
+        return RuntimeHelper.upcallStub(constants$186.const$1, fi, constants$35.const$4, scope);
     }
     static llama_set_abort_callback$abort_callback ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _data) -> {
+        return (java.lang.foreign.MemorySegment _data) -> {
             try {
                 return (boolean)constants$36.const$0.invokeExact(symbol, _data);
             } catch (Throwable ex$) {

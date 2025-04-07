@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$188 {
@@ -11,11 +13,11 @@ final class constants$188 {
     private constants$188() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
         "llama_sampler_clone",
-        constants$10.const$5
+        constants$8.const$3
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
         "llama_sampler_free",
-        constants$14.const$2
+        constants$11.const$4
     );
     static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         MemoryLayout.structLayout(
@@ -28,11 +30,11 @@ final class constants$188 {
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
         "llama_sampler_chain_add",
-        constants$13.const$3
+        constants$10.const$5
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
         "llama_sampler_chain_get",
-        constants$89.const$2
+        constants$86.const$4
     );
 }
 

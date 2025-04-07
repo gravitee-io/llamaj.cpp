@@ -29,8 +29,8 @@ final class constants$33 {
         JAVA_BOOLEAN.withName("no_alloc"),
         MemoryLayout.paddingLayout(7)
     ).withName("ggml_init_params");
-    static final VarHandle const$4 = constants$33.const$3.varHandle(PathElement.groupElement("mem_size"));
-    static final VarHandle const$5 = constants$33.const$3.varHandle(PathElement.groupElement("mem_buffer"));
+    static final VarHandle const$4 = constants$33.const$3.varHandle(MemoryLayout.PathElement.groupElement("mem_size"));
+    static final VarHandle const$5 = constants$33.const$3.varHandle(MemoryLayout.PathElement.groupElement("mem_buffer"));
 }
 
 

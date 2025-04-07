@@ -11,46 +11,23 @@ final class constants$198 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$198() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_grammar",
-        constants$14.const$0
-    );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        RuntimeHelper.POINTER,
-        JAVA_LONG
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_grammar_lazy",
-        constants$198.const$1
-    );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_FLOAT
+    static final StructLayout const$0 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("iface"),
+        RuntimeHelper.POINTER.withName("ctx")
+    ).withName("llama_sampler");
+    static final VarHandle const$1 = constants$198.const$0.varHandle(MemoryLayout.PathElement.groupElement("iface"));
+    static final VarHandle const$2 = constants$198.const$0.varHandle(MemoryLayout.PathElement.groupElement("ctx"));
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init",
+        constants$12.const$5
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_penalties",
-        constants$198.const$3
+        "llama_sampler_name",
+        constants$16.const$0
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_INT,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_LONG
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_dry",
-        constants$198.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_sampler_accept",
+        constants$63.const$0
     );
 }
 

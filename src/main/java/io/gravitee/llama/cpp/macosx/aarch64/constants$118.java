@@ -12,24 +12,28 @@ final class constants$118 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$118() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_name",
-        constants$16.const$0
+        "ggml_backend_dev_get_props",
+        constants$17.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_dev_count",
-        constants$15.const$0
+        "ggml_backend_dev_backend_reg",
+        constants$16.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_dev_get",
-        constants$47.const$2
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_get_proc_address",
+        "ggml_backend_dev_init",
         constants$12.const$5
     );
-    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_backend_split_buffer_type_t.class, "apply", constants$20.const$1);
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_buffer_type",
+        constants$16.const$0
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_host_buffer_type",
+        constants$16.const$0
+    );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        constants$20.const$1
+        "ggml_backend_dev_buffer_from_host_ptr",
+        constants$66.const$3
     );
 }
 

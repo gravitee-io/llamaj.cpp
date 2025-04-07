@@ -58,7 +58,7 @@ public class _opaque_pthread_t {
      * }
      */
     public static MemorySegment __cleanup_stack$get(MemorySegment seg) {
-        return (MemorySegment)constants$4.const$3.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$4.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -70,7 +70,7 @@ public class _opaque_pthread_t {
         constants$4.const$3.set(seg, x);
     }
     public static MemorySegment __cleanup_stack$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$4.const$3.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$4.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void __cleanup_stack$set(MemorySegment seg, long index, MemorySegment x) {
         constants$4.const$3.set(seg.asSlice(index*sizeof()), x);

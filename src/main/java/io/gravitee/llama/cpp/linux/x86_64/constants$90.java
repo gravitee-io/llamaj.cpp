@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$90 {
@@ -10,28 +12,29 @@ final class constants$90 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$90() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_graph_add_node",
-        constants$13.const$3
+        "ggml_quantize_free",
+        constants$30.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_graph_overhead",
-        constants$34.const$0
+        "ggml_quantize_requires_imatrix",
+        constants$35.const$0
     );
     static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_LONG,
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
         JAVA_LONG,
-        JAVA_BOOLEAN
+        JAVA_LONG,
+        JAVA_LONG,
+        RuntimeHelper.POINTER
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_graph_overhead_custom",
+        "ggml_quantize_chunk",
         constants$90.const$2
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_graph_get_tensor",
-        constants$11.const$1
-    );
+    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_to_float_t.class, "apply", constants$11.const$2);
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_graph_get_grad",
-        constants$11.const$1
+        constants$11.const$2
     );
 }
 

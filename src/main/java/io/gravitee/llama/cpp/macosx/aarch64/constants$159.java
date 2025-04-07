@@ -11,67 +11,15 @@ final class constants$159 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$159() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_INT.withName("n_ctx"),
-        JAVA_INT.withName("n_batch"),
-        JAVA_INT.withName("n_ubatch"),
-        JAVA_INT.withName("n_seq_max"),
-        JAVA_INT.withName("n_threads"),
-        JAVA_INT.withName("n_threads_batch"),
-        JAVA_INT.withName("rope_scaling_type"),
-        JAVA_INT.withName("pooling_type"),
-        JAVA_INT.withName("attention_type"),
-        JAVA_FLOAT.withName("rope_freq_base"),
-        JAVA_FLOAT.withName("rope_freq_scale"),
-        JAVA_FLOAT.withName("yarn_ext_factor"),
-        JAVA_FLOAT.withName("yarn_attn_factor"),
-        JAVA_FLOAT.withName("yarn_beta_fast"),
-        JAVA_FLOAT.withName("yarn_beta_slow"),
-        JAVA_INT.withName("yarn_orig_ctx"),
-        JAVA_FLOAT.withName("defrag_thold"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("cb_eval"),
-        RuntimeHelper.POINTER.withName("cb_eval_user_data"),
-        JAVA_INT.withName("type_k"),
-        JAVA_INT.withName("type_v"),
-        JAVA_BOOLEAN.withName("logits_all"),
-        JAVA_BOOLEAN.withName("embeddings"),
-        JAVA_BOOLEAN.withName("offload_kqv"),
-        JAVA_BOOLEAN.withName("flash_attn"),
-        JAVA_BOOLEAN.withName("no_perf"),
-        MemoryLayout.paddingLayout(3),
-        RuntimeHelper.POINTER.withName("abort_callback"),
-        RuntimeHelper.POINTER.withName("abort_callback_data")
-    ).withName("llama_context_params"));
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_context_default_params",
-        constants$159.const$0
-    );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_BOOLEAN.withName("no_perf")
-    ).withName("llama_sampler_chain_params"));
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_sampler_chain_default_params",
-        constants$159.const$2
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_INT.withName("nthread"),
-        JAVA_INT.withName("ftype"),
-        JAVA_INT.withName("output_tensor_type"),
-        JAVA_INT.withName("token_embedding_type"),
-        JAVA_BOOLEAN.withName("allow_requantize"),
-        JAVA_BOOLEAN.withName("quantize_output_tensor"),
-        JAVA_BOOLEAN.withName("only_copy"),
-        JAVA_BOOLEAN.withName("pure"),
-        JAVA_BOOLEAN.withName("keep_split"),
-        MemoryLayout.paddingLayout(3),
-        RuntimeHelper.POINTER.withName("imatrix"),
-        RuntimeHelper.POINTER.withName("kv_overrides")
-    ).withName("llama_model_quantize_params"));
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_model_quantize_default_params",
-        constants$159.const$4
-    );
+    static final VarHandle const$0 = constants$157.const$4.varHandle(MemoryLayout.PathElement.groupElement("pure"));
+    static final VarHandle const$1 = constants$157.const$4.varHandle(MemoryLayout.PathElement.groupElement("keep_split"));
+    static final VarHandle const$2 = constants$157.const$4.varHandle(MemoryLayout.PathElement.groupElement("imatrix"));
+    static final VarHandle const$3 = constants$157.const$4.varHandle(MemoryLayout.PathElement.groupElement("kv_overrides"));
+    static final StructLayout const$4 = MemoryLayout.structLayout(
+        JAVA_INT.withName("token"),
+        JAVA_FLOAT.withName("bias")
+    ).withName("llama_logit_bias");
+    static final VarHandle const$5 = constants$159.const$4.varHandle(MemoryLayout.PathElement.groupElement("token"));
 }
 
 

@@ -11,36 +11,33 @@ final class constants$75 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$75() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_conv_1d_ph",
-        constants$71.const$2
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_conv_1d_dw",
-        constants$74.const$4
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_conv_1d_dw_ph",
-        constants$71.const$2
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_conv_transpose_1d",
-        constants$74.const$4
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
         JAVA_INT,
         JAVA_INT,
         JAVA_INT
     );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_conv_1d",
+        constants$75.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_conv_1d_ph",
+        constants$71.const$4
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_conv_1d_dw",
+        constants$75.const$0
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_conv_1d_dw_ph",
+        constants$71.const$4
+    );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_conv_2d",
-        constants$75.const$4
+        "ggml_conv_transpose_1d",
+        constants$75.const$0
     );
 }
 

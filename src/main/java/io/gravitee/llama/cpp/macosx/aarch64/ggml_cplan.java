@@ -22,10 +22,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class ggml_cplan {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$129.const$4;
+        return constants$131.const$2;
     }
     public static VarHandle work_size$VH() {
-        return constants$129.const$5;
+        return constants$131.const$3;
     }
     /**
      * Getter for field:
@@ -34,7 +34,7 @@ public class ggml_cplan {
      * }
      */
     public static long work_size$get(MemorySegment seg) {
-        return (long)constants$129.const$5.get(seg);
+        return (long)constants$131.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -43,16 +43,16 @@ public class ggml_cplan {
      * }
      */
     public static void work_size$set(MemorySegment seg, long x) {
-        constants$129.const$5.set(seg, x);
+        constants$131.const$3.set(seg, x);
     }
     public static long work_size$get(MemorySegment seg, long index) {
-        return (long)constants$129.const$5.get(seg.asSlice(index*sizeof()));
+        return (long)constants$131.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void work_size$set(MemorySegment seg, long index, long x) {
-        constants$129.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$131.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle work_data$VH() {
-        return constants$130.const$0;
+        return constants$131.const$4;
     }
     /**
      * Getter for field:
@@ -61,7 +61,7 @@ public class ggml_cplan {
      * }
      */
     public static MemorySegment work_data$get(MemorySegment seg) {
-        return (MemorySegment)constants$130.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$131.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -70,16 +70,16 @@ public class ggml_cplan {
      * }
      */
     public static void work_data$set(MemorySegment seg, MemorySegment x) {
-        constants$130.const$0.set(seg, x);
+        constants$131.const$4.set(seg, x);
     }
     public static MemorySegment work_data$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$130.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$131.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void work_data$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$130.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$131.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle n_threads$VH() {
-        return constants$130.const$1;
+        return constants$131.const$5;
     }
     /**
      * Getter for field:
@@ -88,7 +88,7 @@ public class ggml_cplan {
      * }
      */
     public static int n_threads$get(MemorySegment seg) {
-        return (int)constants$130.const$1.get(seg);
+        return (int)constants$131.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -97,16 +97,16 @@ public class ggml_cplan {
      * }
      */
     public static void n_threads$set(MemorySegment seg, int x) {
-        constants$130.const$1.set(seg, x);
+        constants$131.const$5.set(seg, x);
     }
     public static int n_threads$get(MemorySegment seg, long index) {
-        return (int)constants$130.const$1.get(seg.asSlice(index*sizeof()));
+        return (int)constants$131.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void n_threads$set(MemorySegment seg, long index, int x) {
-        constants$130.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$131.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle threadpool$VH() {
-        return constants$130.const$2;
+        return constants$132.const$0;
     }
     /**
      * Getter for field:
@@ -115,7 +115,7 @@ public class ggml_cplan {
      * }
      */
     public static MemorySegment threadpool$get(MemorySegment seg) {
-        return (MemorySegment)constants$130.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$132.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -124,13 +124,13 @@ public class ggml_cplan {
      * }
      */
     public static void threadpool$set(MemorySegment seg, MemorySegment x) {
-        constants$130.const$2.set(seg, x);
+        constants$132.const$0.set(seg, x);
     }
     public static MemorySegment threadpool$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$130.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$132.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void threadpool$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$130.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$132.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     /**
      * {@snippet lang=c :
@@ -139,13 +139,13 @@ public class ggml_cplan {
      */
     public interface abort_callback {
 
-        boolean apply(MemorySegment data);
+        boolean apply(java.lang.foreign.MemorySegment data);
         static MemorySegment allocate(abort_callback fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$130.const$3, fi, constants$35.const$4, scope);
+            return RuntimeHelper.upcallStub(constants$132.const$1, fi, constants$35.const$4, scope);
         }
         static abort_callback ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment _data) -> {
+            return (java.lang.foreign.MemorySegment _data) -> {
                 try {
                     return (boolean)constants$36.const$0.invokeExact(symbol, _data);
                 } catch (Throwable ex$) {
@@ -156,7 +156,7 @@ public class ggml_cplan {
     }
 
     public static VarHandle abort_callback$VH() {
-        return constants$130.const$4;
+        return constants$132.const$2;
     }
     /**
      * Getter for field:
@@ -165,7 +165,7 @@ public class ggml_cplan {
      * }
      */
     public static MemorySegment abort_callback$get(MemorySegment seg) {
-        return (MemorySegment)constants$130.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$132.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -174,19 +174,19 @@ public class ggml_cplan {
      * }
      */
     public static void abort_callback$set(MemorySegment seg, MemorySegment x) {
-        constants$130.const$4.set(seg, x);
+        constants$132.const$2.set(seg, x);
     }
     public static MemorySegment abort_callback$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$130.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$132.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void abort_callback$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$130.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$132.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static abort_callback abort_callback(MemorySegment segment, Arena scope) {
         return abort_callback.ofAddress(abort_callback$get(segment), scope);
     }
     public static VarHandle abort_callback_data$VH() {
-        return constants$130.const$5;
+        return constants$132.const$3;
     }
     /**
      * Getter for field:
@@ -195,7 +195,7 @@ public class ggml_cplan {
      * }
      */
     public static MemorySegment abort_callback_data$get(MemorySegment seg) {
-        return (MemorySegment)constants$130.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$132.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -204,13 +204,13 @@ public class ggml_cplan {
      * }
      */
     public static void abort_callback_data$set(MemorySegment seg, MemorySegment x) {
-        constants$130.const$5.set(seg, x);
+        constants$132.const$3.set(seg, x);
     }
     public static MemorySegment abort_callback_data$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$130.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$132.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void abort_callback_data$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$130.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$132.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

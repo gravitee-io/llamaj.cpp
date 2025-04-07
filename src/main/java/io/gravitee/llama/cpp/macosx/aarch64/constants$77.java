@@ -11,7 +11,26 @@ final class constants$77 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$77() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_pool_1d",
+        constants$69.const$0
+    );
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_pool_2d",
+        constants$77.const$1
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
@@ -23,31 +42,13 @@ final class constants$77 {
         JAVA_FLOAT,
         JAVA_FLOAT
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_pool_2d_back",
-        constants$77.const$0
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_upscale",
-        constants$65.const$2
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_upscale_ext",
-        constants$68.const$5
-    );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_pad",
-        constants$68.const$5
+        "ggml_pool_2d_back",
+        constants$77.const$3
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_pad_reflect_1d",
-        constants$77.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_upscale",
+        constants$65.const$4
     );
 }
 

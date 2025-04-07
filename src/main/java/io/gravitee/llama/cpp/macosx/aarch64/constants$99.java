@@ -11,15 +11,34 @@ final class constants$99 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$99() {}
-    static final VarHandle const$0 = constants$98.const$1.varHandle(PathElement.groupElement("is_quantized"));
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_type_traits.to_float.class, "apply", constants$31.const$4);
-    static final VarHandle const$2 = constants$98.const$1.varHandle(PathElement.groupElement("to_float"));
-    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(ggml_type_traits.from_float_ref.class, "apply", constants$31.const$4);
-    static final VarHandle const$4 = constants$98.const$1.varHandle(PathElement.groupElement("from_float_ref"));
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_get_type_traits",
-        constants$30.const$4
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_LONG,
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG,
+        RuntimeHelper.POINTER
     );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_quantize_chunk",
+        constants$99.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_to_float_t.class, "apply", constants$31.const$4);
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        constants$31.const$4
+    );
+    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_from_float_t.class, "apply", constants$31.const$4);
+    static final StructLayout const$5 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("type_name"),
+        JAVA_LONG.withName("blck_size"),
+        JAVA_LONG.withName("blck_size_interleave"),
+        JAVA_LONG.withName("type_size"),
+        JAVA_BOOLEAN.withName("is_quantized"),
+        MemoryLayout.paddingLayout(7),
+        RuntimeHelper.POINTER.withName("to_float"),
+        RuntimeHelper.POINTER.withName("from_float_ref")
+    ).withName("ggml_type_traits");
 }
 
 

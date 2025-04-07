@@ -4,29 +4,27 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
-
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$136 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$136() {}
-    static final VarHandle const$0 = constants$135.const$3.varHandle(PathElement.groupElement("vec_dot_type"));
-    static final VarHandle const$1 = constants$135.const$3.varHandle(PathElement.groupElement("nrows"));
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_get_type_traits_cpu",
-        constants$28.const$0
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_init",
-        constants$33.const$5
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_init",
-        constants$10.const$3
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_is_cpu",
-        constants$33.const$0
+    static final StructLayout const$0 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("data"),
+        JAVA_LONG.withName("size"),
+        JAVA_LONG.withName("selected"),
+        JAVA_BOOLEAN.withName("sorted"),
+        MemoryLayout.paddingLayout(7)
+    ).withName("llama_token_data_array");
+    static final VarHandle const$1 = constants$136.const$0.varHandle(MemoryLayout.PathElement.groupElement("data"));
+    static final VarHandle const$2 = constants$136.const$0.varHandle(MemoryLayout.PathElement.groupElement("size"));
+    static final VarHandle const$3 = constants$136.const$0.varHandle(MemoryLayout.PathElement.groupElement("selected"));
+    static final VarHandle const$4 = constants$136.const$0.varHandle(MemoryLayout.PathElement.groupElement("sorted"));
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        JAVA_FLOAT,
+        RuntimeHelper.POINTER
     );
 }
 

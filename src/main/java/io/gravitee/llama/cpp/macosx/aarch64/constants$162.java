@@ -11,29 +11,39 @@ final class constants$162 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$162() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_new_context_with_model",
-        constants$161.const$5
-    );
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        JAVA_INT.withName("nthread"),
+        JAVA_INT.withName("ftype"),
+        JAVA_INT.withName("output_tensor_type"),
+        JAVA_INT.withName("token_embedding_type"),
+        JAVA_BOOLEAN.withName("allow_requantize"),
+        JAVA_BOOLEAN.withName("quantize_output_tensor"),
+        JAVA_BOOLEAN.withName("only_copy"),
+        JAVA_BOOLEAN.withName("pure"),
+        JAVA_BOOLEAN.withName("keep_split"),
+        MemoryLayout.paddingLayout(3),
+        RuntimeHelper.POINTER.withName("imatrix"),
+        RuntimeHelper.POINTER.withName("kv_overrides")
+    ).withName("llama_model_quantize_params"));
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_free",
-        constants$0.const$3
+        "llama_model_quantize_default_params",
+        constants$162.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_time_us",
-        constants$36.const$5
+        "llama_backend_init",
+        constants$36.const$3
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_max_devices",
-        constants$36.const$5
+        "llama_backend_free",
+        constants$36.const$3
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_supports_mmap",
-        constants$131.const$1
+        "llama_numa_init",
+        constants$98.const$2
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_supports_mlock",
-        constants$131.const$1
+        "llama_attach_threadpool",
+        constants$84.const$2
     );
 }
 

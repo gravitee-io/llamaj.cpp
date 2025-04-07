@@ -2,8 +2,11 @@
 
 package io.gravitee.llama.cpp.linux.x86_64;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
-
+import static java.lang.foreign.ValueLayout.*;
 /**
  * {@snippet :
  * void (*ggml_log_callback)(enum ggml_log_level level,char* text,void* user_data);
@@ -11,15 +14,15 @@ import java.lang.foreign.*;
  */
 public interface ggml_log_callback {
 
-    void apply(int level, MemorySegment text, MemorySegment user_data);
+    void apply(int level, java.lang.foreign.MemorySegment text, java.lang.foreign.MemorySegment user_data);
     static MemorySegment allocate(ggml_log_callback fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$91.const$5, fi, constants$79.const$5, scope);
+        return RuntimeHelper.upcallStub(constants$89.const$1, fi, constants$77.const$0, scope);
     }
     static ggml_log_callback ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (int _level, MemorySegment _text, MemorySegment _user_data) -> {
+        return (int _level, java.lang.foreign.MemorySegment _text, java.lang.foreign.MemorySegment _user_data) -> {
             try {
-                constants$80.const$1.invokeExact(symbol, _level, _text, _user_data);
+                constants$77.const$2.invokeExact(symbol, _level, _text, _user_data);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

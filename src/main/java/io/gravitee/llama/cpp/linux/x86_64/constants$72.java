@@ -3,6 +3,8 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$72 {
@@ -15,27 +17,37 @@ final class constants$72 {
         RuntimeHelper.POINTER,
         JAVA_INT,
         JAVA_INT,
-        JAVA_INT
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_conv_1d",
+        "ggml_pool_2d_back",
         constants$72.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_conv_1d_ph",
-        constants$68.const$4
+        "ggml_upscale",
+        constants$60.const$2
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_conv_1d_dw",
-        constants$72.const$0
+        "ggml_upscale_ext",
+        constants$63.const$5
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_conv_1d_dw_ph",
-        constants$68.const$4
+        "ggml_pad",
+        constants$63.const$5
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_conv_transpose_1d",
-        constants$72.const$0
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT
+    );
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "ggml_pad_reflect_1d",
+        constants$72.const$5
     );
 }
 

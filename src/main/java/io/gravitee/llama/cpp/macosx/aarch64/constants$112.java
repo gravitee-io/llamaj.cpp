@@ -11,29 +11,33 @@ final class constants$112 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$112() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_compute",
-        constants$12.const$1
+    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        JAVA_LONG
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_compute_async",
-        constants$12.const$1
+        "ggml_backend_tensor_set",
+        constants$112.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_supports_op",
-        constants$36.const$1
+        "ggml_backend_tensor_get",
+        constants$112.const$0
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_supports_buft",
-        constants$36.const$1
+    static final FunctionDescriptor const$3 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_BYTE,
+        JAVA_LONG,
+        JAVA_LONG
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_offload_op",
-        constants$36.const$1
+        "ggml_backend_tensor_memset",
+        constants$112.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_copy_async",
-        constants$83.const$4
+        "ggml_backend_synchronize",
+        constants$0.const$3
     );
 }
 

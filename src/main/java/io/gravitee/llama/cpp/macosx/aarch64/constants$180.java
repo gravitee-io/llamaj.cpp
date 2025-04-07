@@ -12,28 +12,33 @@ final class constants$180 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$180() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_decode",
-        constants$179.const$4
+        "llama_kv_cache_defrag",
+        constants$0.const$3
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_set_n_threads",
-        constants$132.const$4
+        "llama_kv_cache_can_shift",
+        constants$35.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_n_threads",
-        constants$5.const$4
+        "llama_kv_cache_update",
+        constants$0.const$3
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_n_threads_batch",
-        constants$5.const$4
+        "llama_state_get_size",
+        constants$15.const$0
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_set_embeddings",
-        constants$45.const$0
+        "llama_get_state_size",
+        constants$15.const$0
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_set_causal_attn",
-        constants$45.const$0
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_LONG,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG
+    );
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "llama_state_get_data",
+        constants$180.const$5
     );
 }
 

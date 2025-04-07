@@ -3,34 +3,31 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
-
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
+import java.lang.foreign.*;
+import static java.lang.foreign.ValueLayout.*;
 final class constants$108 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$108() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_get_device",
-        constants$10.const$5
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_new",
-        constants$10.const$5
-    );
+    static final VarHandle const$0 = constants$107.const$2.varHandle(MemoryLayout.PathElement.groupElement("memory_total"));
+    static final VarHandle const$1 = constants$107.const$2.varHandle(MemoryLayout.PathElement.groupElement("type"));
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_free",
-        constants$14.const$2
+        "ggml_backend_dev_name",
+        constants$8.const$3
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_record",
-        constants$13.const$3
+        "ggml_backend_dev_description",
+        constants$8.const$3
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_synchronize",
-        constants$14.const$2
+        "ggml_backend_dev_memory",
+        constants$78.const$2
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_event_wait",
-        constants$13.const$3
+        "ggml_backend_dev_type",
+        constants$7.const$1
     );
 }
 

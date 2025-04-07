@@ -11,12 +11,22 @@ final class constants$148 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$148() {}
-    static final VarHandle const$0 = constants$147.const$5.varHandle(PathElement.groupElement("devices"));
-    static final VarHandle const$1 = constants$147.const$5.varHandle(PathElement.groupElement("n_gpu_layers"));
-    static final VarHandle const$2 = constants$147.const$5.varHandle(PathElement.groupElement("split_mode"));
-    static final VarHandle const$3 = constants$147.const$5.varHandle(PathElement.groupElement("main_gpu"));
-    static final VarHandle const$4 = constants$147.const$5.varHandle(PathElement.groupElement("tensor_split"));
-    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(llama_model_params.progress_callback.class, "apply", constants$145.const$1);
+    static final VarHandle const$0 = constants$147.const$2.varHandle(MemoryLayout.PathElement.groupElement("pos"));
+    static final VarHandle const$1 = constants$147.const$2.varHandle(MemoryLayout.PathElement.groupElement("n_seq_id"));
+    static final VarHandle const$2 = constants$147.const$2.varHandle(MemoryLayout.PathElement.groupElement("seq_id"));
+    static final VarHandle const$3 = constants$147.const$2.varHandle(MemoryLayout.PathElement.groupElement("logits"));
+    static final StructLayout const$4 = MemoryLayout.structLayout(
+        JAVA_INT.withName("tag"),
+        MemoryLayout.sequenceLayout(128, JAVA_BYTE).withName("key"),
+        MemoryLayout.paddingLayout(4),
+        MemoryLayout.unionLayout(
+            JAVA_LONG.withName("val_i64"),
+            JAVA_DOUBLE.withName("val_f64"),
+            JAVA_BOOLEAN.withName("val_bool"),
+            MemoryLayout.sequenceLayout(128, JAVA_BYTE).withName("val_str")
+        ).withName("$anon$0")
+    ).withName("llama_model_kv_override");
+    static final VarHandle const$5 = constants$148.const$4.varHandle(MemoryLayout.PathElement.groupElement("tag"));
 }
 
 

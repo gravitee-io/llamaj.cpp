@@ -11,46 +11,29 @@ final class constants$189 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$189() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_BOOLEAN,
-        JAVA_BOOLEAN
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_vocab_sep",
+        constants$5.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_tokenize",
-        constants$189.const$0
+        "llama_vocab_nl",
+        constants$5.const$4
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_BOOLEAN
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_vocab_pad",
+        constants$5.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_token_to_piece",
-        constants$189.const$2
+        "llama_vocab_get_add_bos",
+        constants$35.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_detokenize",
-        constants$189.const$0
+        "llama_vocab_get_add_eos",
+        constants$35.const$4
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_BOOLEAN,
-        RuntimeHelper.POINTER,
-        JAVA_INT
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_chat_apply_template",
-        constants$189.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_vocab_fim_pre",
+        constants$5.const$4
     );
 }
 

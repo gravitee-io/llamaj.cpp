@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_vec_dot_t {
 
-    void apply(int n, MemorySegment s, long bs, MemorySegment x, long bx, MemorySegment y, long by, int nrc);
+    void apply(int n, java.lang.foreign.MemorySegment s, long bs, java.lang.foreign.MemorySegment x, long bx, java.lang.foreign.MemorySegment y, long by, int nrc);
     static MemorySegment allocate(ggml_vec_dot_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$140.const$4, fi, constants$140.const$3, scope);
+        return RuntimeHelper.upcallStub(constants$142.const$2, fi, constants$142.const$1, scope);
     }
     static ggml_vec_dot_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (int _n, MemorySegment _s, long _bs, MemorySegment _x, long _bx, MemorySegment _y, long _by, int _nrc) -> {
+        return (int _n, java.lang.foreign.MemorySegment _s, long _bs, java.lang.foreign.MemorySegment _x, long _bx, java.lang.foreign.MemorySegment _y, long _by, int _nrc) -> {
             try {
-                constants$140.const$5.invokeExact(symbol, _n, _s, _bs, _x, _bx, _y, _by, _nrc);
+                constants$142.const$3.invokeExact(symbol, _n, _s, _bs, _x, _bx, _y, _by, _nrc);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

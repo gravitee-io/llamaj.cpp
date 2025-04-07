@@ -11,12 +11,12 @@ final class constants$154 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$154() {}
-    static final VarHandle const$0 = constants$150.const$1.varHandle(PathElement.groupElement("logits_all"));
-    static final VarHandle const$1 = constants$150.const$1.varHandle(PathElement.groupElement("embeddings"));
-    static final VarHandle const$2 = constants$150.const$1.varHandle(PathElement.groupElement("offload_kqv"));
-    static final VarHandle const$3 = constants$150.const$1.varHandle(PathElement.groupElement("flash_attn"));
-    static final VarHandle const$4 = constants$150.const$1.varHandle(PathElement.groupElement("no_perf"));
-    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(llama_context_params.abort_callback.class, "apply", constants$35.const$4);
+    static final VarHandle const$0 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("attention_type"));
+    static final VarHandle const$1 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("rope_freq_base"));
+    static final VarHandle const$2 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("rope_freq_scale"));
+    static final VarHandle const$3 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("yarn_ext_factor"));
+    static final VarHandle const$4 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("yarn_attn_factor"));
+    static final VarHandle const$5 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("yarn_beta_fast"));
 }
 
 

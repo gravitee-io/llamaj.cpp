@@ -3,41 +3,39 @@
 package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$16 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$16() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "getc_unlocked",
+        constants$7.const$1
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "vsnprintf",
-        constants$16.const$0
+        "getchar_unlocked",
+        constants$15.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "vasprintf",
-        constants$15.const$1
+        "fgetc_unlocked",
+        constants$7.const$1
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandleVariadic(
-        "__asprintf",
-        constants$9.const$5
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "fputc",
+        constants$14.const$0
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandleVariadic(
-        "asprintf",
-        constants$9.const$5
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "putc",
+        constants$14.const$0
     );
     static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_INT,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+        JAVA_INT
     );
     static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "vdprintf",
+        "putchar",
         constants$16.const$5
     );
 }

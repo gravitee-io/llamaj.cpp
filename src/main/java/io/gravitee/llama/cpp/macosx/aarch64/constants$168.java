@@ -12,27 +12,27 @@ final class constants$168 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$168() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_model_size",
-        constants$15.const$0
+        "llama_model_get_vocab",
+        constants$16.const$0
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_model_chat_template",
-        constants$12.const$5
+        "llama_model_rope_type",
+        constants$5.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_model_n_params",
-        constants$15.const$0
+        "llama_model_n_ctx_train",
+        constants$5.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_model_has_encoder",
-        constants$35.const$4
+        "llama_model_n_embd",
+        constants$5.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_model_has_decoder",
-        constants$35.const$4
+        "llama_model_n_layer",
+        constants$5.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_model_decoder_start_token",
+        "llama_model_n_head",
         constants$5.const$4
     );
 }

@@ -11,12 +11,12 @@ final class constants$153 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$153() {}
-    static final VarHandle const$0 = constants$150.const$1.varHandle(PathElement.groupElement("defrag_thold"));
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(llama_context_params.cb_eval.class, "apply", constants$123.const$0);
-    static final VarHandle const$2 = constants$150.const$1.varHandle(PathElement.groupElement("cb_eval"));
-    static final VarHandle const$3 = constants$150.const$1.varHandle(PathElement.groupElement("cb_eval_user_data"));
-    static final VarHandle const$4 = constants$150.const$1.varHandle(PathElement.groupElement("type_k"));
-    static final VarHandle const$5 = constants$150.const$1.varHandle(PathElement.groupElement("type_v"));
+    static final VarHandle const$0 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("n_ubatch"));
+    static final VarHandle const$1 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("n_seq_max"));
+    static final VarHandle const$2 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("n_threads"));
+    static final VarHandle const$3 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("n_threads_batch"));
+    static final VarHandle const$4 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("rope_scaling_type"));
+    static final VarHandle const$5 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("pooling_type"));
 }
 
 

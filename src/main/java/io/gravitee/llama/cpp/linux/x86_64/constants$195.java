@@ -4,6 +4,7 @@ package io.gravitee.llama.cpp.linux.x86_64;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 import java.lang.foreign.*;
 import static java.lang.foreign.ValueLayout.*;
 final class constants$195 {
@@ -12,11 +13,11 @@ final class constants$195 {
     private constants$195() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
         "llama_print_system_info",
-        constants$10.const$3
+        constants$8.const$1
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
         "llama_log_set",
-        constants$13.const$3
+        constants$10.const$5
     );
     static final StructLayout const$2 = MemoryLayout.structLayout(
         JAVA_DOUBLE.withName("t_start_ms"),
@@ -26,9 +27,9 @@ final class constants$195 {
         JAVA_INT.withName("n_p_eval"),
         JAVA_INT.withName("n_eval")
     ).withName("llama_perf_context_data");
-    static final VarHandle const$3 = constants$195.const$2.varHandle(PathElement.groupElement("t_start_ms"));
-    static final VarHandle const$4 = constants$195.const$2.varHandle(PathElement.groupElement("t_load_ms"));
-    static final VarHandle const$5 = constants$195.const$2.varHandle(PathElement.groupElement("t_p_eval_ms"));
+    static final VarHandle const$3 = constants$195.const$2.varHandle(MemoryLayout.PathElement.groupElement("t_start_ms"));
+    static final VarHandle const$4 = constants$195.const$2.varHandle(MemoryLayout.PathElement.groupElement("t_load_ms"));
+    static final VarHandle const$5 = constants$195.const$2.varHandle(MemoryLayout.PathElement.groupElement("t_p_eval_ms"));
 }
 
 

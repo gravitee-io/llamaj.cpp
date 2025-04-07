@@ -11,19 +11,30 @@ final class constants$119 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$119() {}
-    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(ggml_backend_set_n_threads_t.class, "apply", constants$62.const$4);
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        constants$62.const$4
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_supports_op",
+        constants$36.const$1
     );
-    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_backend_dev_get_extra_bufts_t.class, "apply", constants$16.const$0);
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_supports_buft",
+        constants$36.const$1
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_offload_op",
+        constants$36.const$1
+    );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_reg_name",
         constants$16.const$0
     );
-    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_backend_set_abort_callback_t.class, "apply", constants$83.const$1);
-    static final StructLayout const$5 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("name"),
-        RuntimeHelper.POINTER.withName("value")
-    ).withName("ggml_backend_feature");
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_reg_dev_count",
+        constants$15.const$0
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_backend_reg_dev_get",
+        constants$47.const$2
+    );
 }
 
 

@@ -11,20 +11,12 @@ final class constants$100 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$100() {}
-    static final StructLayout const$0 = MemoryLayout.structLayout(
-        MemoryLayout.sequenceLayout(512, JAVA_BOOLEAN).withName("cpumask"),
-        JAVA_INT.withName("n_threads"),
-        JAVA_INT.withName("prio"),
-        JAVA_INT.withName("poll"),
-        JAVA_BOOLEAN.withName("strict_cpu"),
-        JAVA_BOOLEAN.withName("paused"),
-        MemoryLayout.paddingLayout(2)
-    ).withName("ggml_threadpool_params");
-    static final VarHandle const$1 = constants$100.const$0.varHandle(PathElement.groupElement("n_threads"));
-    static final VarHandle const$2 = constants$100.const$0.varHandle(PathElement.groupElement("prio"));
-    static final VarHandle const$3 = constants$100.const$0.varHandle(PathElement.groupElement("poll"));
-    static final VarHandle const$4 = constants$100.const$0.varHandle(PathElement.groupElement("strict_cpu"));
-    static final VarHandle const$5 = constants$100.const$0.varHandle(PathElement.groupElement("paused"));
+    static final VarHandle const$0 = constants$99.const$5.varHandle(MemoryLayout.PathElement.groupElement("type_name"));
+    static final VarHandle const$1 = constants$99.const$5.varHandle(MemoryLayout.PathElement.groupElement("blck_size"));
+    static final VarHandle const$2 = constants$99.const$5.varHandle(MemoryLayout.PathElement.groupElement("blck_size_interleave"));
+    static final VarHandle const$3 = constants$99.const$5.varHandle(MemoryLayout.PathElement.groupElement("type_size"));
+    static final VarHandle const$4 = constants$99.const$5.varHandle(MemoryLayout.PathElement.groupElement("is_quantized"));
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_type_traits.to_float.class, "apply", constants$31.const$4);
 }
 
 

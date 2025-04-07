@@ -12,30 +12,28 @@ final class constants$140 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$140() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_vxe",
+        "ggml_cpu_has_neon",
         constants$15.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_wasm_simd",
+        "ggml_cpu_has_arm_fma",
         constants$15.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_llamafile",
+        "ggml_cpu_has_fp16_va",
         constants$15.const$4
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.ofVoid(
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_INT
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_dotprod",
+        constants$15.const$4
     );
-    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_vec_dot_t.class, "apply", constants$140.const$3);
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_matmul_int8",
+        constants$15.const$4
+    );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        constants$140.const$3
+        "ggml_cpu_has_sve",
+        constants$15.const$4
     );
 }
 

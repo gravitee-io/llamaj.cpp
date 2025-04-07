@@ -11,34 +11,29 @@ final class constants$110 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$110() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_LONG
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_buffer_reset",
+        constants$0.const$3
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_set_async",
-        constants$110.const$0
+        "ggml_backend_tensor_copy",
+        constants$17.const$5
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_get_async",
-        constants$110.const$0
+        "ggml_backend_guid",
+        constants$16.const$0
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_LONG
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_name",
+        constants$16.const$0
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_set",
-        constants$110.const$3
+        "ggml_backend_free",
+        constants$0.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_get",
-        constants$110.const$3
+        "ggml_backend_get_default_buffer_type",
+        constants$16.const$0
     );
 }
 
