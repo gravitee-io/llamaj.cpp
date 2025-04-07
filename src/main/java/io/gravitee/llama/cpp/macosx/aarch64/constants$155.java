@@ -11,25 +11,12 @@ final class constants$155 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$155() {}
-    static final VarHandle const$0 = constants$150.const$1.varHandle(PathElement.groupElement("abort_callback"));
-    static final VarHandle const$1 = constants$150.const$1.varHandle(PathElement.groupElement("abort_callback_data"));
-    static final StructLayout const$2 = MemoryLayout.structLayout(
-        JAVA_INT.withName("nthread"),
-        JAVA_INT.withName("ftype"),
-        JAVA_INT.withName("output_tensor_type"),
-        JAVA_INT.withName("token_embedding_type"),
-        JAVA_BOOLEAN.withName("allow_requantize"),
-        JAVA_BOOLEAN.withName("quantize_output_tensor"),
-        JAVA_BOOLEAN.withName("only_copy"),
-        JAVA_BOOLEAN.withName("pure"),
-        JAVA_BOOLEAN.withName("keep_split"),
-        MemoryLayout.paddingLayout(3),
-        RuntimeHelper.POINTER.withName("imatrix"),
-        RuntimeHelper.POINTER.withName("kv_overrides")
-    ).withName("llama_model_quantize_params");
-    static final VarHandle const$3 = constants$155.const$2.varHandle(PathElement.groupElement("nthread"));
-    static final VarHandle const$4 = constants$155.const$2.varHandle(PathElement.groupElement("ftype"));
-    static final VarHandle const$5 = constants$155.const$2.varHandle(PathElement.groupElement("output_tensor_type"));
+    static final VarHandle const$0 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("yarn_beta_slow"));
+    static final VarHandle const$1 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("yarn_orig_ctx"));
+    static final VarHandle const$2 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("defrag_thold"));
+    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(llama_context_params.cb_eval.class, "apply", constants$124.const$4);
+    static final VarHandle const$4 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("cb_eval"));
+    static final VarHandle const$5 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("cb_eval_user_data"));
 }
 
 

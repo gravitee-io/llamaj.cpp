@@ -11,33 +11,21 @@ final class constants$174 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$174() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_seq_cp",
-        constants$174.const$0
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_seq_keep",
-        constants$62.const$4
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_seq_add",
-        constants$174.const$0
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_seq_div",
-        constants$174.const$0
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_kv_cache_seq_pos_max",
-        constants$132.const$2
-    );
+    static final StructLayout const$0 = MemoryLayout.structLayout(
+        JAVA_INT.withName("n_cells"),
+        JAVA_INT.withName("n_seq_max"),
+        JAVA_INT.withName("token_count"),
+        JAVA_INT.withName("used_cells"),
+        JAVA_INT.withName("max_contiguous"),
+        JAVA_INT.withName("max_contiguous_idx"),
+        RuntimeHelper.POINTER.withName("cells"),
+        RuntimeHelper.POINTER.withName("cells_sequences")
+    ).withName("llama_kv_cache_view");
+    static final VarHandle const$1 = constants$174.const$0.varHandle(MemoryLayout.PathElement.groupElement("n_cells"));
+    static final VarHandle const$2 = constants$174.const$0.varHandle(MemoryLayout.PathElement.groupElement("n_seq_max"));
+    static final VarHandle const$3 = constants$174.const$0.varHandle(MemoryLayout.PathElement.groupElement("token_count"));
+    static final VarHandle const$4 = constants$174.const$0.varHandle(MemoryLayout.PathElement.groupElement("used_cells"));
+    static final VarHandle const$5 = constants$174.const$0.varHandle(MemoryLayout.PathElement.groupElement("max_contiguous"));
 }
 
 

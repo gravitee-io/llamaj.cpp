@@ -11,29 +11,29 @@ final class constants$109 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$109() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_name",
-        constants$16.const$0
+    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_BYTE
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_free",
-        constants$0.const$3
+        "ggml_backend_buffer_clear",
+        constants$109.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_get_default_buffer_type",
-        constants$16.const$0
+        "ggml_backend_buffer_is_host",
+        constants$35.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_alloc_buffer",
-        constants$47.const$2
+        "ggml_backend_buffer_set_usage",
+        constants$63.const$0
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_get_alignment",
-        constants$15.const$0
+        "ggml_backend_buffer_get_usage",
+        constants$5.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_get_max_size",
-        constants$15.const$0
+        "ggml_backend_buffer_get_type",
+        constants$16.const$0
     );
 }
 

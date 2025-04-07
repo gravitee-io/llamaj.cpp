@@ -14,13 +14,13 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface funopen$x1 {
 
-    int apply(MemorySegment _x0, MemorySegment _x1, int _x2);
+    int apply(java.lang.foreign.MemorySegment _x0, java.lang.foreign.MemorySegment _x1, int _x2);
     static MemorySegment allocate(funopen$x1 fi, Arena scope) {
         return RuntimeHelper.upcallStub(constants$28.const$1, fi, constants$5.const$0, scope);
     }
     static funopen$x1 ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment __x0, MemorySegment __x1, int __x2) -> {
+        return (java.lang.foreign.MemorySegment __x0, java.lang.foreign.MemorySegment __x1, int __x2) -> {
             try {
                 return (int)constants$8.const$3.invokeExact(symbol, __x0, __x1, __x2);
             } catch (Throwable ex$) {

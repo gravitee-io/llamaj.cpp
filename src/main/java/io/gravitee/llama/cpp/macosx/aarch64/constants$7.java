@@ -11,11 +11,11 @@ final class constants$7 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$7() {}
-    static final VarHandle const$0 = constants$6.const$3.varHandle(PathElement.groupElement("_w"));
-    static final VarHandle const$1 = constants$6.const$3.varHandle(PathElement.groupElement("_flags"));
-    static final VarHandle const$2 = constants$6.const$3.varHandle(PathElement.groupElement("_file"));
-    static final VarHandle const$3 = constants$6.const$3.varHandle(PathElement.groupElement("_lbfsize"));
-    static final VarHandle const$4 = constants$6.const$3.varHandle(PathElement.groupElement("_cookie"));
+    static final VarHandle const$0 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_w"));
+    static final VarHandle const$1 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_flags"));
+    static final VarHandle const$2 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_file"));
+    static final VarHandle const$3 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_lbfsize"));
+    static final VarHandle const$4 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_cookie"));
     static final MethodHandle const$5 = RuntimeHelper.upcallHandle(__sFILE._close.class, "apply", constants$5.const$4);
 }
 

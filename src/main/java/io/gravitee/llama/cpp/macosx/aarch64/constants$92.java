@@ -11,32 +11,31 @@ final class constants$92 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$92() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_build_forward_expand",
-        constants$17.const$5
-    );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.ofVoid(
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        JAVA_BOOLEAN
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        RuntimeHelper.POINTER
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_build_backward_expand",
-        constants$92.const$1
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_map_custom3",
+        constants$92.const$0
     );
+    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_map_custom3_inplace$fun.class, "apply", constants$89.const$4);
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_new_graph",
-        constants$16.const$0
+        "ggml_map_custom3_inplace",
+        constants$92.const$0
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_BOOLEAN
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_cross_entropy_loss",
+        constants$14.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_new_graph_custom",
-        constants$92.const$4
+        "ggml_cross_entropy_loss_back",
+        constants$63.const$2
     );
 }
 

@@ -23,10 +23,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class llama_batch {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$145.const$4;
+        return constants$147.const$2;
     }
     public static VarHandle n_tokens$VH() {
-        return constants$145.const$5;
+        return constants$147.const$3;
     }
     /**
      * Getter for field:
@@ -35,7 +35,7 @@ public class llama_batch {
      * }
      */
     public static int n_tokens$get(MemorySegment seg) {
-        return (int)constants$145.const$5.get(seg);
+        return (int)constants$147.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -44,16 +44,16 @@ public class llama_batch {
      * }
      */
     public static void n_tokens$set(MemorySegment seg, int x) {
-        constants$145.const$5.set(seg, x);
+        constants$147.const$3.set(seg, x);
     }
     public static int n_tokens$get(MemorySegment seg, long index) {
-        return (int)constants$145.const$5.get(seg.asSlice(index*sizeof()));
+        return (int)constants$147.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void n_tokens$set(MemorySegment seg, long index, int x) {
-        constants$145.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$147.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle token$VH() {
-        return constants$146.const$0;
+        return constants$147.const$4;
     }
     /**
      * Getter for field:
@@ -62,7 +62,7 @@ public class llama_batch {
      * }
      */
     public static MemorySegment token$get(MemorySegment seg) {
-        return (MemorySegment)constants$146.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$147.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -71,16 +71,16 @@ public class llama_batch {
      * }
      */
     public static void token$set(MemorySegment seg, MemorySegment x) {
-        constants$146.const$0.set(seg, x);
+        constants$147.const$4.set(seg, x);
     }
     public static MemorySegment token$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$146.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$147.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void token$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$146.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$147.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle embd$VH() {
-        return constants$146.const$1;
+        return constants$147.const$5;
     }
     /**
      * Getter for field:
@@ -89,7 +89,7 @@ public class llama_batch {
      * }
      */
     public static MemorySegment embd$get(MemorySegment seg) {
-        return (MemorySegment)constants$146.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$147.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -98,16 +98,16 @@ public class llama_batch {
      * }
      */
     public static void embd$set(MemorySegment seg, MemorySegment x) {
-        constants$146.const$1.set(seg, x);
+        constants$147.const$5.set(seg, x);
     }
     public static MemorySegment embd$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$146.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$147.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void embd$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$146.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$147.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle pos$VH() {
-        return constants$146.const$2;
+        return constants$148.const$0;
     }
     /**
      * Getter for field:
@@ -116,7 +116,7 @@ public class llama_batch {
      * }
      */
     public static MemorySegment pos$get(MemorySegment seg) {
-        return (MemorySegment)constants$146.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$148.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -125,16 +125,16 @@ public class llama_batch {
      * }
      */
     public static void pos$set(MemorySegment seg, MemorySegment x) {
-        constants$146.const$2.set(seg, x);
+        constants$148.const$0.set(seg, x);
     }
     public static MemorySegment pos$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$146.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$148.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void pos$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$146.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$148.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle n_seq_id$VH() {
-        return constants$146.const$3;
+        return constants$148.const$1;
     }
     /**
      * Getter for field:
@@ -143,7 +143,7 @@ public class llama_batch {
      * }
      */
     public static MemorySegment n_seq_id$get(MemorySegment seg) {
-        return (MemorySegment)constants$146.const$3.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$148.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -152,16 +152,16 @@ public class llama_batch {
      * }
      */
     public static void n_seq_id$set(MemorySegment seg, MemorySegment x) {
-        constants$146.const$3.set(seg, x);
+        constants$148.const$1.set(seg, x);
     }
     public static MemorySegment n_seq_id$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$146.const$3.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$148.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void n_seq_id$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$146.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$148.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle seq_id$VH() {
-        return constants$146.const$4;
+        return constants$148.const$2;
     }
     /**
      * Getter for field:
@@ -170,7 +170,7 @@ public class llama_batch {
      * }
      */
     public static MemorySegment seq_id$get(MemorySegment seg) {
-        return (MemorySegment)constants$146.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$148.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -179,16 +179,16 @@ public class llama_batch {
      * }
      */
     public static void seq_id$set(MemorySegment seg, MemorySegment x) {
-        constants$146.const$4.set(seg, x);
+        constants$148.const$2.set(seg, x);
     }
     public static MemorySegment seq_id$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$146.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$148.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void seq_id$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$146.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$148.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle logits$VH() {
-        return constants$146.const$5;
+        return constants$148.const$3;
     }
     /**
      * Getter for field:
@@ -197,7 +197,7 @@ public class llama_batch {
      * }
      */
     public static MemorySegment logits$get(MemorySegment seg) {
-        return (MemorySegment)constants$146.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$148.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -206,13 +206,13 @@ public class llama_batch {
      * }
      */
     public static void logits$set(MemorySegment seg, MemorySegment x) {
-        constants$146.const$5.set(seg, x);
+        constants$148.const$3.set(seg, x);
     }
     public static MemorySegment logits$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$146.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$148.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void logits$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$146.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$148.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

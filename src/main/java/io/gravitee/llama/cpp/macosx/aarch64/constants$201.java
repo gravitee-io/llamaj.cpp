@@ -11,16 +11,30 @@ final class constants$201 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$201() {}
-    static final VarHandle const$0 = constants$200.const$4.varHandle(PathElement.groupElement("t_load_ms"));
-    static final VarHandle const$1 = constants$200.const$4.varHandle(PathElement.groupElement("t_p_eval_ms"));
-    static final VarHandle const$2 = constants$200.const$4.varHandle(PathElement.groupElement("t_eval_ms"));
-    static final VarHandle const$3 = constants$200.const$4.varHandle(PathElement.groupElement("n_p_eval"));
-    static final VarHandle const$4 = constants$200.const$4.varHandle(PathElement.groupElement("n_eval"));
-    static final StructLayout const$5 = MemoryLayout.structLayout(
-        JAVA_DOUBLE.withName("t_sample_ms"),
-        JAVA_INT.withName("n_sample"),
-        MemoryLayout.paddingLayout(4)
-    ).withName("llama_perf_sampler_data");
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_softmax",
+        constants$18.const$4
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_top_k",
+        constants$30.const$4
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        JAVA_FLOAT,
+        JAVA_LONG
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_top_p",
+        constants$201.const$2
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_min_p",
+        constants$201.const$2
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_typical",
+        constants$201.const$2
+    );
 }
 
 

@@ -12,29 +12,27 @@ final class constants$124 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$124() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_reserve",
-        constants$36.const$1
+        "ggml_backend_load",
+        constants$16.const$0
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_n_backends",
-        constants$5.const$4
+        "ggml_backend_unload",
+        constants$0.const$3
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_backend",
-        constants$93.const$5
+        "ggml_backend_load_all",
+        constants$36.const$3
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_n_splits",
-        constants$5.const$4
+        "ggml_backend_load_all_from_path",
+        constants$0.const$3
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_n_copies",
-        constants$5.const$4
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        RuntimeHelper.POINTER,
+        JAVA_BOOLEAN,
+        RuntimeHelper.POINTER
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_get_buffer_size",
-        constants$105.const$3
-    );
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_backend_sched_eval_callback.class, "apply", constants$124.const$4);
 }
 
 

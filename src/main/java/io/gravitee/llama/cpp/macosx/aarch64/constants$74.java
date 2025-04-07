@@ -11,7 +11,21 @@ final class constants$74 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$74() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_rope_multi_back",
+        constants$72.const$3
+    );
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_FLOAT,
+        JAVA_FLOAT
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_clamp",
+        constants$74.const$1
+    );
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
@@ -24,11 +38,11 @@ final class constants$74 {
         JAVA_BOOLEAN,
         JAVA_INT
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
         "ggml_im2col",
-        constants$74.const$0
+        constants$74.const$3
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
@@ -41,21 +55,9 @@ final class constants$74 {
         JAVA_INT,
         JAVA_BOOLEAN
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
         "ggml_im2col_back",
-        constants$74.const$2
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_conv_1d",
-        constants$74.const$4
+        constants$74.const$5
     );
 }
 

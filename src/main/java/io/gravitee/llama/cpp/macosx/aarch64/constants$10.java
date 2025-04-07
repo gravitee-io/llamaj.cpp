@@ -11,9 +11,9 @@ final class constants$10 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$10() {}
-    static final VarHandle const$0 = constants$6.const$3.varHandle(PathElement.groupElement("_ur"));
-    static final VarHandle const$1 = constants$6.const$3.varHandle(PathElement.groupElement("_blksize"));
-    static final VarHandle const$2 = constants$6.const$3.varHandle(PathElement.groupElement("_offset"));
+    static final VarHandle const$0 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_ur"));
+    static final VarHandle const$1 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_blksize"));
+    static final VarHandle const$2 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_offset"));
     static final VarHandle const$3 = RuntimeHelper.POINTER.varHandle();
     static final MemorySegment const$4 = RuntimeHelper.lookupGlobalVariable("__stdinp", RuntimeHelper.POINTER);
     static final MemorySegment const$5 = RuntimeHelper.lookupGlobalVariable("__stdoutp", RuntimeHelper.POINTER);

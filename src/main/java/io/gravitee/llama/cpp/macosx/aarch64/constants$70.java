@@ -12,31 +12,28 @@ final class constants$70 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$70() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_diag_mask_zero",
-        constants$65.const$2
+        "ggml_diag_mask_inf",
+        constants$65.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_diag_mask_zero_inplace",
-        constants$65.const$2
+        "ggml_diag_mask_inf_inplace",
+        constants$65.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_diag_mask_zero",
+        constants$65.const$4
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_diag_mask_zero_inplace",
+        constants$65.const$4
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
         "ggml_soft_max",
         constants$12.const$5
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
         "ggml_soft_max_inplace",
         constants$12.const$5
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_FLOAT,
-        JAVA_FLOAT
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_soft_max_ext",
-        constants$70.const$4
     );
 }
 

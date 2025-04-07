@@ -12,28 +12,28 @@ final class constants$185 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$185() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_vocab_fim_pad",
-        constants$5.const$4
+        "llama_decode",
+        constants$184.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_vocab_fim_rep",
-        constants$5.const$4
+        "llama_set_n_threads",
+        constants$134.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_vocab_fim_sep",
+        "llama_n_threads",
         constants$5.const$4
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_token_get_text",
-        constants$93.const$5
+        "llama_n_threads_batch",
+        constants$5.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_token_get_score",
-        constants$133.const$4
+        "llama_set_embeddings",
+        constants$45.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_token_get_attr",
-        constants$132.const$2
+        "llama_set_causal_attn",
+        constants$45.const$0
     );
 }
 

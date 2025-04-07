@@ -15,7 +15,7 @@ final class constants$0 {
         MemoryLayout.sequenceLayout(128, JAVA_BYTE).withName("__mbstate8"),
         JAVA_LONG.withName("_mbstateL")
     ).withName("__mbstate_t");
-    static final VarHandle const$1 = constants$0.const$0.varHandle(PathElement.groupElement("_mbstateL"));
+    static final VarHandle const$1 = constants$0.const$0.varHandle(MemoryLayout.PathElement.groupElement("_mbstateL"));
     static final StructLayout const$2 = MemoryLayout.structLayout(
         RuntimeHelper.POINTER.withName("__routine"),
         RuntimeHelper.POINTER.withName("__arg"),

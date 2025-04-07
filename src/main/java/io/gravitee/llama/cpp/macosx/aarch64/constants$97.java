@@ -12,30 +12,23 @@ final class constants$97 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$97() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_quantize_free",
-        constants$36.const$3
+        "ggml_graph_export",
+        constants$17.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_quantize_requires_imatrix",
-        constants$40.const$5
+        "ggml_graph_import",
+        constants$14.const$0
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_LONG,
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_graph_print",
+        constants$0.const$3
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_quantize_chunk",
-        constants$97.const$2
+        "ggml_graph_dump_dot",
+        constants$84.const$2
     );
-    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_to_float_t.class, "apply", constants$31.const$4);
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        constants$31.const$4
-    );
+    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_log_callback.class, "apply", constants$83.const$0);
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_log_set$log_callback.class, "apply", constants$83.const$0);
 }
 
 

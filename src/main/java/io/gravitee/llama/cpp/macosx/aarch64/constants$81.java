@@ -12,34 +12,31 @@ final class constants$81 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$81() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_add_rel_pos",
-        constants$63.const$0
+        "ggml_win_part",
+        constants$65.const$4
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_add_rel_pos_inplace",
-        constants$63.const$0
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_rwkv_wkv6",
-        constants$79.const$5
+        "ggml_win_unpart",
+        constants$81.const$1
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_FLOAT
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_unary",
+        constants$65.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_gated_linear_attn",
-        constants$81.const$3
+        "ggml_unary_inplace",
+        constants$65.const$4
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.ofVoid(
-        JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_get_rel_pos",
+        constants$78.const$2
     );
 }
 

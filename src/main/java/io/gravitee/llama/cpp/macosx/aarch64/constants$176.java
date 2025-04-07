@@ -12,31 +12,28 @@ final class constants$176 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$176() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_copy_state_data",
-        constants$105.const$3
+        "llama_kv_cache_view_update",
+        constants$17.const$5
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_state_set_data",
-        constants$175.const$5
+        "llama_kv_self_n_tokens",
+        constants$5.const$4
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_set_state_data",
-        constants$105.const$3
+        "llama_get_kv_cache_token_count",
+        constants$5.const$4
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_used_cells",
+        constants$5.const$4
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_state_load_file",
-        constants$176.const$3
+        "llama_get_kv_cache_used_cells",
+        constants$5.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_load_session_file",
-        constants$176.const$3
+        "llama_kv_self_clear",
+        constants$0.const$3
     );
 }
 

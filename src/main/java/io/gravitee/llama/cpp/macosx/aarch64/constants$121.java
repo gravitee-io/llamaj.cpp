@@ -12,29 +12,16 @@ final class constants$121 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$121() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_by_name",
         constants$16.const$0
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_count",
-        constants$36.const$5
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_get",
-        constants$120.const$5
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_by_name",
-        constants$16.const$0
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_by_type",
-        constants$30.const$4
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_init_by_name",
-        constants$12.const$5
-    );
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_backend_set_abort_callback_t.class, "apply", constants$84.const$2);
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("name"),
+        RuntimeHelper.POINTER.withName("value")
+    ).withName("ggml_backend_feature");
+    static final VarHandle const$3 = constants$121.const$2.varHandle(MemoryLayout.PathElement.groupElement("name"));
+    static final VarHandle const$4 = constants$121.const$2.varHandle(MemoryLayout.PathElement.groupElement("value"));
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_backend_get_features_t.class, "apply", constants$16.const$0);
 }
 
 

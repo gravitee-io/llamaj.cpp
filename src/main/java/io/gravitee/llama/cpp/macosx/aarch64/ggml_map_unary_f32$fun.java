@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_map_unary_f32$fun {
 
-    void apply(int _x0, MemorySegment _x1, MemorySegment _x2);
+    void apply(int _x0, java.lang.foreign.MemorySegment _x1, java.lang.foreign.MemorySegment _x2);
     static MemorySegment allocate(ggml_map_unary_f32$fun fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$84.const$1, fi, constants$81.const$5, scope);
+        return RuntimeHelper.upcallStub(constants$85.const$2, fi, constants$83.const$0, scope);
     }
     static ggml_map_unary_f32$fun ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (int __x0, MemorySegment __x1, MemorySegment __x2) -> {
+        return (int __x0, java.lang.foreign.MemorySegment __x1, java.lang.foreign.MemorySegment __x2) -> {
             try {
-                constants$82.const$1.invokeExact(symbol, __x0, __x1, __x2);
+                constants$83.const$2.invokeExact(symbol, __x0, __x1, __x2);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

@@ -11,33 +11,27 @@ final class constants$127 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$127() {}
-    static final VarHandle const$0 = constants$126.const$3.varHandle(PathElement.groupElement("ctx_unallocated"));
-    static final VarHandle const$1 = constants$126.const$3.varHandle(PathElement.groupElement("graph"));
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("buffer"),
-        RuntimeHelper.POINTER.withName("ctx_allocated"),
-        RuntimeHelper.POINTER.withName("ctx_unallocated"),
-        RuntimeHelper.POINTER.withName("graph")
-    ).withName("ggml_backend_graph_copy"),
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_sched_alloc_graph",
+        constants$36.const$1
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_sched_graph_compute",
+        constants$12.const$1
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_backend_sched_graph_compute_async",
+        constants$12.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_copy",
-        constants$127.const$2
+        "ggml_backend_sched_synchronize",
+        constants$0.const$3
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.ofVoid(
-        MemoryLayout.structLayout(
-            RuntimeHelper.POINTER.withName("buffer"),
-            RuntimeHelper.POINTER.withName("ctx_allocated"),
-            RuntimeHelper.POINTER.withName("ctx_unallocated"),
-            RuntimeHelper.POINTER.withName("graph")
-        ).withName("ggml_backend_graph_copy")
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_sched_reset",
+        constants$0.const$3
     );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_graph_copy_free",
-        constants$127.const$4
-    );
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_backend_sched_set_eval_callback$callback.class, "apply", constants$124.const$4);
 }
 
 

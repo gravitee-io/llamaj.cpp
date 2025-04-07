@@ -17,10 +17,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class llama_sampler_chain_params {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$157.const$5;
+        return constants$160.const$1;
     }
     public static VarHandle no_perf$VH() {
-        return constants$158.const$0;
+        return constants$160.const$2;
     }
     /**
      * Getter for field:
@@ -29,7 +29,7 @@ public class llama_sampler_chain_params {
      * }
      */
     public static boolean no_perf$get(MemorySegment seg) {
-        return (boolean)constants$158.const$0.get(seg);
+        return (boolean)constants$160.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -38,13 +38,13 @@ public class llama_sampler_chain_params {
      * }
      */
     public static void no_perf$set(MemorySegment seg, boolean x) {
-        constants$158.const$0.set(seg, x);
+        constants$160.const$2.set(seg, x);
     }
     public static boolean no_perf$get(MemorySegment seg, long index) {
-        return (boolean)constants$158.const$0.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$160.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void no_perf$set(MemorySegment seg, long index, boolean x) {
-        constants$158.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$160.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_backend_sched_eval_callback {
 
-    boolean apply(MemorySegment t, boolean ask, MemorySegment user_data);
+    boolean apply(java.lang.foreign.MemorySegment t, boolean ask, java.lang.foreign.MemorySegment user_data);
     static MemorySegment allocate(ggml_backend_sched_eval_callback fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$123.const$1, fi, constants$123.const$0, scope);
+        return RuntimeHelper.upcallStub(constants$124.const$5, fi, constants$124.const$4, scope);
     }
     static ggml_backend_sched_eval_callback ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _t, boolean _ask, MemorySegment _user_data) -> {
+        return (java.lang.foreign.MemorySegment _t, boolean _ask, java.lang.foreign.MemorySegment _user_data) -> {
             try {
-                return (boolean)constants$123.const$2.invokeExact(symbol, _t, _ask, _user_data);
+                return (boolean)constants$125.const$0.invokeExact(symbol, _t, _ask, _user_data);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

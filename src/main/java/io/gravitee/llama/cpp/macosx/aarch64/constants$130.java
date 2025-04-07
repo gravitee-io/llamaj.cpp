@@ -11,12 +11,29 @@ final class constants$130 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$130() {}
-    static final VarHandle const$0 = constants$129.const$4.varHandle(PathElement.groupElement("work_data"));
-    static final VarHandle const$1 = constants$129.const$4.varHandle(PathElement.groupElement("n_threads"));
-    static final VarHandle const$2 = constants$129.const$4.varHandle(PathElement.groupElement("threadpool"));
-    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(ggml_cplan.abort_callback.class, "apply", constants$35.const$4);
-    static final VarHandle const$4 = constants$129.const$4.varHandle(PathElement.groupElement("abort_callback"));
-    static final VarHandle const$5 = constants$129.const$4.varHandle(PathElement.groupElement("abort_callback_data"));
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        constants$129.const$4
+    );
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_backend_compare_graph_backend$callback.class, "apply", constants$129.const$4);
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_compare_graph_backend",
+        constants$130.const$2
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_tensor_alloc",
+        constants$19.const$2
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_backend_view_init",
+        constants$5.const$4
+    );
 }
 
 

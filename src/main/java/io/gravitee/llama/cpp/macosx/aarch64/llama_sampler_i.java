@@ -22,7 +22,7 @@ import static java.lang.foreign.ValueLayout.*;
 public class llama_sampler_i {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$190.const$2;
+        return constants$195.const$5;
     }
     /**
      * {@snippet lang=c :
@@ -31,15 +31,15 @@ public class llama_sampler_i {
      */
     public interface name {
 
-        MemorySegment apply(MemorySegment reg);
+        java.lang.foreign.MemorySegment apply(java.lang.foreign.MemorySegment reg);
         static MemorySegment allocate(name fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$190.const$3, fi, constants$16.const$0, scope);
+            return RuntimeHelper.upcallStub(constants$196.const$0, fi, constants$16.const$0, scope);
         }
         static name ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment _reg) -> {
+            return (java.lang.foreign.MemorySegment _reg) -> {
                 try {
-                    return (MemorySegment)constants$119.const$3.invokeExact(symbol, _reg);
+                    return (java.lang.foreign.MemorySegment)constants$121.const$0.invokeExact(symbol, _reg);
                 } catch (Throwable ex$) {
                     throw new AssertionError("should not reach here", ex$);
                 }
@@ -48,7 +48,7 @@ public class llama_sampler_i {
     }
 
     public static VarHandle name$VH() {
-        return constants$190.const$4;
+        return constants$196.const$1;
     }
     /**
      * Getter for field:
@@ -57,7 +57,7 @@ public class llama_sampler_i {
      * }
      */
     public static MemorySegment name$get(MemorySegment seg) {
-        return (MemorySegment)constants$190.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$196.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -66,13 +66,13 @@ public class llama_sampler_i {
      * }
      */
     public static void name$set(MemorySegment seg, MemorySegment x) {
-        constants$190.const$4.set(seg, x);
+        constants$196.const$1.set(seg, x);
     }
     public static MemorySegment name$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$190.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$196.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void name$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$190.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$196.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static name name(MemorySegment segment, Arena scope) {
         return name.ofAddress(name$get(segment), scope);
@@ -84,15 +84,15 @@ public class llama_sampler_i {
      */
     public interface accept {
 
-        void apply(MemorySegment backend, int n_threads);
+        void apply(java.lang.foreign.MemorySegment backend, int n_threads);
         static MemorySegment allocate(accept fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$190.const$5, fi, constants$62.const$4, scope);
+            return RuntimeHelper.upcallStub(constants$196.const$2, fi, constants$63.const$0, scope);
         }
         static accept ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment _backend, int _n_threads) -> {
+            return (java.lang.foreign.MemorySegment _backend, int _n_threads) -> {
                 try {
-                    constants$119.const$1.invokeExact(symbol, _backend, _n_threads);
+                    constants$120.const$4.invokeExact(symbol, _backend, _n_threads);
                 } catch (Throwable ex$) {
                     throw new AssertionError("should not reach here", ex$);
                 }
@@ -101,7 +101,7 @@ public class llama_sampler_i {
     }
 
     public static VarHandle accept$VH() {
-        return constants$191.const$0;
+        return constants$196.const$3;
     }
     /**
      * Getter for field:
@@ -110,7 +110,7 @@ public class llama_sampler_i {
      * }
      */
     public static MemorySegment accept$get(MemorySegment seg) {
-        return (MemorySegment)constants$191.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$196.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -119,13 +119,13 @@ public class llama_sampler_i {
      * }
      */
     public static void accept$set(MemorySegment seg, MemorySegment x) {
-        constants$191.const$0.set(seg, x);
+        constants$196.const$3.set(seg, x);
     }
     public static MemorySegment accept$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$191.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$196.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void accept$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$191.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$196.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static accept accept(MemorySegment segment, Arena scope) {
         return accept.ofAddress(accept$get(segment), scope);
@@ -137,15 +137,15 @@ public class llama_sampler_i {
      */
     public interface apply {
 
-        void apply(MemorySegment _x0, MemorySegment _x1);
+        void apply(java.lang.foreign.MemorySegment _x0, java.lang.foreign.MemorySegment _x1);
         static MemorySegment allocate(apply fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$191.const$1, fi, constants$17.const$5, scope);
+            return RuntimeHelper.upcallStub(constants$196.const$4, fi, constants$17.const$5, scope);
         }
         static apply ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment __x0, MemorySegment __x1) -> {
+            return (java.lang.foreign.MemorySegment __x0, java.lang.foreign.MemorySegment __x1) -> {
                 try {
-                    constants$83.const$0.invokeExact(symbol, __x0, __x1);
+                    constants$84.const$1.invokeExact(symbol, __x0, __x1);
                 } catch (Throwable ex$) {
                     throw new AssertionError("should not reach here", ex$);
                 }
@@ -154,7 +154,7 @@ public class llama_sampler_i {
     }
 
     public static VarHandle apply$VH() {
-        return constants$191.const$2;
+        return constants$196.const$5;
     }
     /**
      * Getter for field:
@@ -163,7 +163,7 @@ public class llama_sampler_i {
      * }
      */
     public static MemorySegment apply$get(MemorySegment seg) {
-        return (MemorySegment)constants$191.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$196.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -172,13 +172,13 @@ public class llama_sampler_i {
      * }
      */
     public static void apply$set(MemorySegment seg, MemorySegment x) {
-        constants$191.const$2.set(seg, x);
+        constants$196.const$5.set(seg, x);
     }
     public static MemorySegment apply$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$191.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$196.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void apply$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$191.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$196.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static apply apply(MemorySegment segment, Arena scope) {
         return apply.ofAddress(apply$get(segment), scope);
@@ -190,13 +190,13 @@ public class llama_sampler_i {
      */
     public interface reset {
 
-        void apply(MemorySegment _x0);
+        void apply(java.lang.foreign.MemorySegment _x0);
         static MemorySegment allocate(reset fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$191.const$3, fi, constants$0.const$3, scope);
+            return RuntimeHelper.upcallStub(constants$197.const$0, fi, constants$0.const$3, scope);
         }
         static reset ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment __x0) -> {
+            return (java.lang.foreign.MemorySegment __x0) -> {
                 try {
                     constants$0.const$5.invokeExact(symbol, __x0);
                 } catch (Throwable ex$) {
@@ -207,7 +207,7 @@ public class llama_sampler_i {
     }
 
     public static VarHandle reset$VH() {
-        return constants$191.const$4;
+        return constants$197.const$1;
     }
     /**
      * Getter for field:
@@ -216,7 +216,7 @@ public class llama_sampler_i {
      * }
      */
     public static MemorySegment reset$get(MemorySegment seg) {
-        return (MemorySegment)constants$191.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$197.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -225,13 +225,13 @@ public class llama_sampler_i {
      * }
      */
     public static void reset$set(MemorySegment seg, MemorySegment x) {
-        constants$191.const$4.set(seg, x);
+        constants$197.const$1.set(seg, x);
     }
     public static MemorySegment reset$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$191.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$197.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void reset$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$191.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$197.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static reset reset(MemorySegment segment, Arena scope) {
         return reset.ofAddress(reset$get(segment), scope);
@@ -243,15 +243,15 @@ public class llama_sampler_i {
      */
     public interface clone {
 
-        MemorySegment apply(MemorySegment reg);
+        java.lang.foreign.MemorySegment apply(java.lang.foreign.MemorySegment reg);
         static MemorySegment allocate(clone fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$191.const$5, fi, constants$16.const$0, scope);
+            return RuntimeHelper.upcallStub(constants$197.const$2, fi, constants$16.const$0, scope);
         }
         static clone ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment _reg) -> {
+            return (java.lang.foreign.MemorySegment _reg) -> {
                 try {
-                    return (MemorySegment)constants$119.const$3.invokeExact(symbol, _reg);
+                    return (java.lang.foreign.MemorySegment)constants$121.const$0.invokeExact(symbol, _reg);
                 } catch (Throwable ex$) {
                     throw new AssertionError("should not reach here", ex$);
                 }
@@ -260,7 +260,7 @@ public class llama_sampler_i {
     }
 
     public static VarHandle clone$VH() {
-        return constants$192.const$0;
+        return constants$197.const$3;
     }
     /**
      * Getter for field:
@@ -269,7 +269,7 @@ public class llama_sampler_i {
      * }
      */
     public static MemorySegment clone$get(MemorySegment seg) {
-        return (MemorySegment)constants$192.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$197.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -278,13 +278,13 @@ public class llama_sampler_i {
      * }
      */
     public static void clone$set(MemorySegment seg, MemorySegment x) {
-        constants$192.const$0.set(seg, x);
+        constants$197.const$3.set(seg, x);
     }
     public static MemorySegment clone$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$192.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$197.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void clone$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$192.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$197.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static clone clone(MemorySegment segment, Arena scope) {
         return clone.ofAddress(clone$get(segment), scope);
@@ -296,13 +296,13 @@ public class llama_sampler_i {
      */
     public interface free {
 
-        void apply(MemorySegment _x0);
+        void apply(java.lang.foreign.MemorySegment _x0);
         static MemorySegment allocate(free fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$192.const$1, fi, constants$0.const$3, scope);
+            return RuntimeHelper.upcallStub(constants$197.const$4, fi, constants$0.const$3, scope);
         }
         static free ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment __x0) -> {
+            return (java.lang.foreign.MemorySegment __x0) -> {
                 try {
                     constants$0.const$5.invokeExact(symbol, __x0);
                 } catch (Throwable ex$) {
@@ -313,7 +313,7 @@ public class llama_sampler_i {
     }
 
     public static VarHandle free$VH() {
-        return constants$192.const$2;
+        return constants$197.const$5;
     }
     /**
      * Getter for field:
@@ -322,7 +322,7 @@ public class llama_sampler_i {
      * }
      */
     public static MemorySegment free$get(MemorySegment seg) {
-        return (MemorySegment)constants$192.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$197.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -331,13 +331,13 @@ public class llama_sampler_i {
      * }
      */
     public static void free$set(MemorySegment seg, MemorySegment x) {
-        constants$192.const$2.set(seg, x);
+        constants$197.const$5.set(seg, x);
     }
     public static MemorySegment free$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$192.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$197.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void free$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$192.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$197.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static free free(MemorySegment segment, Arena scope) {
         return free.ofAddress(free$get(segment), scope);

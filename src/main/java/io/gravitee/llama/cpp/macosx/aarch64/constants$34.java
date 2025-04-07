@@ -11,7 +11,7 @@ final class constants$34 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$34() {}
-    static final VarHandle const$0 = constants$33.const$3.varHandle(PathElement.groupElement("no_alloc"));
+    static final VarHandle const$0 = constants$33.const$3.varHandle(MemoryLayout.PathElement.groupElement("no_alloc"));
     static final StructLayout const$1 = MemoryLayout.structLayout(
         JAVA_INT.withName("type"),
         MemoryLayout.paddingLayout(4),
@@ -29,10 +29,10 @@ final class constants$34 {
         RuntimeHelper.POINTER.withName("extra"),
         MemoryLayout.sequenceLayout(8, JAVA_BYTE).withName("padding")
     ).withName("ggml_tensor");
-    static final VarHandle const$2 = constants$34.const$1.varHandle(PathElement.groupElement("type"));
-    static final VarHandle const$3 = constants$34.const$1.varHandle(PathElement.groupElement("buffer"));
-    static final VarHandle const$4 = constants$34.const$1.varHandle(PathElement.groupElement("op"));
-    static final VarHandle const$5 = constants$34.const$1.varHandle(PathElement.groupElement("flags"));
+    static final VarHandle const$2 = constants$34.const$1.varHandle(MemoryLayout.PathElement.groupElement("type"));
+    static final VarHandle const$3 = constants$34.const$1.varHandle(MemoryLayout.PathElement.groupElement("buffer"));
+    static final VarHandle const$4 = constants$34.const$1.varHandle(MemoryLayout.PathElement.groupElement("op"));
+    static final VarHandle const$5 = constants$34.const$1.varHandle(MemoryLayout.PathElement.groupElement("flags"));
 }
 
 

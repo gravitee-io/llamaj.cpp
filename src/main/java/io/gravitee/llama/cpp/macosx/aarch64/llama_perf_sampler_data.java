@@ -18,10 +18,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class llama_perf_sampler_data {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$201.const$5;
+        return constants$207.const$5;
     }
     public static VarHandle t_sample_ms$VH() {
-        return constants$202.const$0;
+        return constants$208.const$0;
     }
     /**
      * Getter for field:
@@ -30,7 +30,7 @@ public class llama_perf_sampler_data {
      * }
      */
     public static double t_sample_ms$get(MemorySegment seg) {
-        return (double)constants$202.const$0.get(seg);
+        return (double)constants$208.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -39,16 +39,16 @@ public class llama_perf_sampler_data {
      * }
      */
     public static void t_sample_ms$set(MemorySegment seg, double x) {
-        constants$202.const$0.set(seg, x);
+        constants$208.const$0.set(seg, x);
     }
     public static double t_sample_ms$get(MemorySegment seg, long index) {
-        return (double)constants$202.const$0.get(seg.asSlice(index*sizeof()));
+        return (double)constants$208.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void t_sample_ms$set(MemorySegment seg, long index, double x) {
-        constants$202.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$208.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle n_sample$VH() {
-        return constants$202.const$1;
+        return constants$208.const$1;
     }
     /**
      * Getter for field:
@@ -57,7 +57,7 @@ public class llama_perf_sampler_data {
      * }
      */
     public static int n_sample$get(MemorySegment seg) {
-        return (int)constants$202.const$1.get(seg);
+        return (int)constants$208.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -66,13 +66,13 @@ public class llama_perf_sampler_data {
      * }
      */
     public static void n_sample$set(MemorySegment seg, int x) {
-        constants$202.const$1.set(seg, x);
+        constants$208.const$1.set(seg, x);
     }
     public static int n_sample$get(MemorySegment seg, long index) {
-        return (int)constants$202.const$1.get(seg.asSlice(index*sizeof()));
+        return (int)constants$208.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void n_sample$set(MemorySegment seg, long index, int x) {
-        constants$202.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$208.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

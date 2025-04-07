@@ -69,7 +69,7 @@ public class ggml_tensor {
      * }
      */
     public static MemorySegment buffer$get(MemorySegment seg) {
-        return (MemorySegment)constants$34.const$3.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$34.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -81,7 +81,7 @@ public class ggml_tensor {
         constants$34.const$3.set(seg, x);
     }
     public static MemorySegment buffer$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$34.const$3.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$34.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void buffer$set(MemorySegment seg, long index, MemorySegment x) {
         constants$34.const$3.set(seg.asSlice(index*sizeof()), x);
@@ -162,7 +162,7 @@ public class ggml_tensor {
      * }
      */
     public static MemorySegment view_src$get(MemorySegment seg) {
-        return (MemorySegment)constants$35.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$35.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -174,7 +174,7 @@ public class ggml_tensor {
         constants$35.const$0.set(seg, x);
     }
     public static MemorySegment view_src$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$35.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$35.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void view_src$set(MemorySegment seg, long index, MemorySegment x) {
         constants$35.const$0.set(seg.asSlice(index*sizeof()), x);
@@ -216,7 +216,7 @@ public class ggml_tensor {
      * }
      */
     public static MemorySegment data$get(MemorySegment seg) {
-        return (MemorySegment)constants$35.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$35.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -228,7 +228,7 @@ public class ggml_tensor {
         constants$35.const$2.set(seg, x);
     }
     public static MemorySegment data$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$35.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$35.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void data$set(MemorySegment seg, long index, MemorySegment x) {
         constants$35.const$2.set(seg.asSlice(index*sizeof()), x);
@@ -246,7 +246,7 @@ public class ggml_tensor {
      * }
      */
     public static MemorySegment extra$get(MemorySegment seg) {
-        return (MemorySegment)constants$35.const$3.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$35.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -258,7 +258,7 @@ public class ggml_tensor {
         constants$35.const$3.set(seg, x);
     }
     public static MemorySegment extra$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$35.const$3.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$35.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void extra$set(MemorySegment seg, long index, MemorySegment x) {
         constants$35.const$3.set(seg.asSlice(index*sizeof()), x);

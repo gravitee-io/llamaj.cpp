@@ -13,31 +13,32 @@ final class constants$177 {
     private constants$177() {}
     static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_BOOLEAN,
         RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_state_save_file",
-        constants$177.const$0
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_save_session_file",
-        constants$177.const$0
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_state_seq_get_size",
-        constants$104.const$1
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_LONG,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
+        JAVA_INT,
+        JAVA_INT,
         JAVA_INT
     );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_seq_rm",
+        constants$177.const$0
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_seq_cp",
+        constants$177.const$2
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_kv_self_seq_keep",
+        constants$63.const$0
+    );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_state_seq_get_data",
-        constants$177.const$4
+        "llama_kv_self_seq_add",
+        constants$177.const$2
     );
 }
 

@@ -22,11 +22,10 @@ public final class LlamaModelParams extends MemorySegmentAware {
     public LlamaModelParams(Arena arena) {
         super(llama_model_params_ofAddress(llama_model_default_params(arena), arena));
         this.maxDevices = (int) llama_max_devices();
-        this.tensorSplit(arena, default_tensor_split(maxDevices));
     }
 
-    private static float[] default_tensor_split(int maxDevices) {
-        if(maxDevices > 0){
+    public float[] buildDefaultTensorSplit() {
+        if (maxDevices > 0) {
             float[] tensorSplit = new float[maxDevices];
             Arrays.fill(tensorSplit, 1f / maxDevices);
             return tensorSplit;

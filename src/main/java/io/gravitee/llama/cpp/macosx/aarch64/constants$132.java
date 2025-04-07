@@ -11,30 +11,18 @@ final class constants$132 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$132() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_set_i32",
-        constants$93.const$5
+    static final VarHandle const$0 = constants$131.const$2.varHandle(MemoryLayout.PathElement.groupElement("threadpool"));
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_cplan.abort_callback.class, "apply", constants$35.const$4);
+    static final VarHandle const$2 = constants$131.const$2.varHandle(MemoryLayout.PathElement.groupElement("abort_callback"));
+    static final VarHandle const$3 = constants$131.const$2.varHandle(MemoryLayout.PathElement.groupElement("abort_callback_data"));
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_numa_init",
+        constants$98.const$2
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_set_f32",
-        constants$131.const$4
-    );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_INT
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_get_i32_1d",
-        constants$132.const$2
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.ofVoid(
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_set_i32_1d",
-        constants$132.const$4
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_BOOLEAN);
+    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
+        "ggml_is_numa",
+        constants$132.const$5
     );
 }
 

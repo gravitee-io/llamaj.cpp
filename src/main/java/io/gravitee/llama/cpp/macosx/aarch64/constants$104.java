@@ -11,29 +11,30 @@ final class constants$104 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$104() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_gallocr_alloc_graph",
-        constants$36.const$1
-    );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_LONG,
-        RuntimeHelper.POINTER,
-        JAVA_INT
+    static final VarHandle const$0 = constants$103.const$2.varHandle(MemoryLayout.PathElement.groupElement("offset"));
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("buffer"),
+        RuntimeHelper.POINTER.withName("base"),
+        JAVA_LONG.withName("alignment"),
+        JAVA_LONG.withName("offset")
+    ).withName("ggml_tallocr"),
+        RuntimeHelper.POINTER
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_gallocr_get_buffer_size",
+        "ggml_tallocr_new",
         constants$104.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_alloc_ctx_tensors_from_buft",
-        constants$12.const$5
+        "ggml_tallocr_alloc",
+        constants$12.const$1
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_alloc_ctx_tensors",
-        constants$12.const$5
+        "ggml_gallocr_new",
+        constants$16.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buft_name",
-        constants$16.const$0
+        "ggml_gallocr_new_n",
+        constants$95.const$1
     );
 }
 

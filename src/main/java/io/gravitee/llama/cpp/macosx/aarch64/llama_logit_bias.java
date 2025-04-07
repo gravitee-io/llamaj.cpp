@@ -18,10 +18,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class llama_logit_bias {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$157.const$2;
+        return constants$159.const$4;
     }
     public static VarHandle token$VH() {
-        return constants$157.const$3;
+        return constants$159.const$5;
     }
     /**
      * Getter for field:
@@ -30,7 +30,7 @@ public class llama_logit_bias {
      * }
      */
     public static int token$get(MemorySegment seg) {
-        return (int)constants$157.const$3.get(seg);
+        return (int)constants$159.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -39,16 +39,16 @@ public class llama_logit_bias {
      * }
      */
     public static void token$set(MemorySegment seg, int x) {
-        constants$157.const$3.set(seg, x);
+        constants$159.const$5.set(seg, x);
     }
     public static int token$get(MemorySegment seg, long index) {
-        return (int)constants$157.const$3.get(seg.asSlice(index*sizeof()));
+        return (int)constants$159.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void token$set(MemorySegment seg, long index, int x) {
-        constants$157.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$159.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle bias$VH() {
-        return constants$157.const$4;
+        return constants$160.const$0;
     }
     /**
      * Getter for field:
@@ -57,7 +57,7 @@ public class llama_logit_bias {
      * }
      */
     public static float bias$get(MemorySegment seg) {
-        return (float)constants$157.const$4.get(seg);
+        return (float)constants$160.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -66,13 +66,13 @@ public class llama_logit_bias {
      * }
      */
     public static void bias$set(MemorySegment seg, float x) {
-        constants$157.const$4.set(seg, x);
+        constants$160.const$0.set(seg, x);
     }
     public static float bias$get(MemorySegment seg, long index) {
-        return (float)constants$157.const$4.get(seg.asSlice(index*sizeof()));
+        return (float)constants$160.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void bias$set(MemorySegment seg, long index, float x) {
-        constants$157.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$160.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

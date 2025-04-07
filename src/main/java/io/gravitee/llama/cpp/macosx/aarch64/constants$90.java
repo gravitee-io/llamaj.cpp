@@ -11,36 +11,25 @@ final class constants$90 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$90() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        constants$89.const$4
+    );
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_map_custom1$fun.class, "apply", constants$88.const$4);
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         JAVA_INT,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom2",
-        constants$90.const$0
-    );
-    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_map_custom2_inplace$fun.class, "apply", constants$88.const$0);
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom2_inplace",
-        constants$90.const$0
+        "ggml_map_custom1",
+        constants$90.const$2
     );
-    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_map_custom3$fun.class, "apply", constants$88.const$3);
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_map_custom3",
-        constants$90.const$5
+    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(ggml_map_custom1_inplace$fun.class, "apply", constants$88.const$4);
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_map_custom1_inplace",
+        constants$90.const$2
     );
 }
 

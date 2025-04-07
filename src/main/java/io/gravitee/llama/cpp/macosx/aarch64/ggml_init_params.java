@@ -58,7 +58,7 @@ public class ggml_init_params {
      * }
      */
     public static MemorySegment mem_buffer$get(MemorySegment seg) {
-        return (MemorySegment)constants$33.const$5.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$33.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -70,7 +70,7 @@ public class ggml_init_params {
         constants$33.const$5.set(seg, x);
     }
     public static MemorySegment mem_buffer$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$33.const$5.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$33.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void mem_buffer$set(MemorySegment seg, long index, MemorySegment x) {
         constants$33.const$5.set(seg.asSlice(index*sizeof()), x);

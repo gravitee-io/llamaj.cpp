@@ -12,28 +12,28 @@ final class constants$108 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$108() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_set_usage",
-        constants$62.const$4
+        "ggml_backend_buffer_get_base",
+        constants$16.const$0
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_get_usage",
-        constants$5.const$4
+        "ggml_backend_buffer_get_size",
+        constants$15.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_get_type",
-        constants$16.const$0
+        "ggml_backend_buffer_init_tensor",
+        constants$12.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_buffer_reset",
-        constants$0.const$3
+        "ggml_backend_buffer_get_alignment",
+        constants$15.const$0
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_tensor_copy",
-        constants$17.const$5
+        "ggml_backend_buffer_get_max_size",
+        constants$15.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_guid",
-        constants$16.const$0
+        "ggml_backend_buffer_get_alloc_size",
+        constants$107.const$0
     );
 }
 

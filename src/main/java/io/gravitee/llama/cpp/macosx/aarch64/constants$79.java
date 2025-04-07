@@ -11,42 +11,37 @@ final class constants$79 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$79() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_flash_attn_ext_set_prec",
-        constants$62.const$4
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_flash_attn_ext_get_prec",
-        constants$5.const$4
+        "ggml_arange",
+        constants$79.const$0
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_BOOLEAN
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_top_k",
+        constants$65.const$4
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_flash_attn_back",
-        constants$79.const$2
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_ssm_conv",
-        constants$14.const$0
+        "ggml_flash_attn_ext",
+        constants$79.const$3
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_ssm_scan",
-        constants$79.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_flash_attn_ext_set_prec",
+        constants$63.const$0
     );
 }
 

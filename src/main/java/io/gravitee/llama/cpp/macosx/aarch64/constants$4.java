@@ -11,14 +11,14 @@ final class constants$4 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$4() {}
-    static final VarHandle const$0 = constants$3.const$5.varHandle(PathElement.groupElement("__sig"));
+    static final VarHandle const$0 = constants$3.const$5.varHandle(MemoryLayout.PathElement.groupElement("__sig"));
     static final StructLayout const$1 = MemoryLayout.structLayout(
         JAVA_LONG.withName("__sig"),
         RuntimeHelper.POINTER.withName("__cleanup_stack"),
         MemoryLayout.sequenceLayout(8176, JAVA_BYTE).withName("__opaque")
     ).withName("_opaque_pthread_t");
-    static final VarHandle const$2 = constants$4.const$1.varHandle(PathElement.groupElement("__sig"));
-    static final VarHandle const$3 = constants$4.const$1.varHandle(PathElement.groupElement("__cleanup_stack"));
+    static final VarHandle const$2 = constants$4.const$1.varHandle(MemoryLayout.PathElement.groupElement("__sig"));
+    static final VarHandle const$3 = constants$4.const$1.varHandle(MemoryLayout.PathElement.groupElement("__cleanup_stack"));
     static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_INT,
         JAVA_INT,
         RuntimeHelper.POINTER,

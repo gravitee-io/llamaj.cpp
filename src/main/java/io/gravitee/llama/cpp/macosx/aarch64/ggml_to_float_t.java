@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_to_float_t {
 
-    void apply(MemorySegment x, MemorySegment y, long k);
+    void apply(java.lang.foreign.MemorySegment x, java.lang.foreign.MemorySegment y, long k);
     static MemorySegment allocate(ggml_to_float_t fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$97.const$4, fi, constants$31.const$4, scope);
+        return RuntimeHelper.upcallStub(constants$99.const$2, fi, constants$31.const$4, scope);
     }
     static ggml_to_float_t ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _x, MemorySegment _y, long _k) -> {
+        return (java.lang.foreign.MemorySegment _x, java.lang.foreign.MemorySegment _y, long _k) -> {
             try {
-                constants$97.const$5.invokeExact(symbol, _x, _y, _k);
+                constants$99.const$3.invokeExact(symbol, _x, _y, _k);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

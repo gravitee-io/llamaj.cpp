@@ -12,26 +12,25 @@ final class constants$131 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$131() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_numa_init",
-        constants$96.const$5
+        "ggml_backend_cpu_buffer_from_ptr",
+        constants$47.const$2
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_BOOLEAN);
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_is_numa",
-        constants$131.const$1
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_cpu_buffer_type",
+        constants$18.const$4
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_new_i32",
-        constants$93.const$5
-    );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_FLOAT
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_new_f32",
-        constants$131.const$4
-    );
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        JAVA_LONG.withName("work_size"),
+        RuntimeHelper.POINTER.withName("work_data"),
+        JAVA_INT.withName("n_threads"),
+        MemoryLayout.paddingLayout(4),
+        RuntimeHelper.POINTER.withName("threadpool"),
+        RuntimeHelper.POINTER.withName("abort_callback"),
+        RuntimeHelper.POINTER.withName("abort_callback_data")
+    ).withName("ggml_cplan");
+    static final VarHandle const$3 = constants$131.const$2.varHandle(MemoryLayout.PathElement.groupElement("work_size"));
+    static final VarHandle const$4 = constants$131.const$2.varHandle(MemoryLayout.PathElement.groupElement("work_data"));
+    static final VarHandle const$5 = constants$131.const$2.varHandle(MemoryLayout.PathElement.groupElement("n_threads"));
 }
 
 

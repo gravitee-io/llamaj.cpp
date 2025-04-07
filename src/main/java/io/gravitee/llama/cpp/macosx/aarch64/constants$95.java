@@ -12,28 +12,28 @@ final class constants$95 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$95() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_graph_get_tensor",
-        constants$12.const$5
+        "ggml_graph_size",
+        constants$5.const$4
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_graph_get_grad",
-        constants$12.const$5
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_graph_get_grad_acc",
-        constants$12.const$5
+        "ggml_graph_node",
+        constants$95.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_graph_export",
-        constants$17.const$5
+        "ggml_graph_nodes",
+        constants$16.const$0
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_graph_import",
-        constants$14.const$0
+        "ggml_graph_n_nodes",
+        constants$5.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_graph_print",
-        constants$0.const$3
+        "ggml_graph_add_node",
+        constants$17.const$5
     );
 }
 

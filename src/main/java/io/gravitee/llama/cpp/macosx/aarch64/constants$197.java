@@ -11,40 +11,12 @@ final class constants$197 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$197() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_LONG,
-        JAVA_INT
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_xtc",
-        constants$197.const$0
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_top_n_sigma",
-        constants$196.const$2
-    );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_FLOAT,
-        JAVA_FLOAT,
-        JAVA_INT
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_mirostat",
-        constants$197.const$3
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_FLOAT,
-        JAVA_FLOAT
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_sampler_init_mirostat_v2",
-        constants$197.const$5
-    );
+    static final MethodHandle const$0 = RuntimeHelper.upcallHandle(llama_sampler_i.reset.class, "apply", constants$0.const$3);
+    static final VarHandle const$1 = constants$195.const$5.varHandle(MemoryLayout.PathElement.groupElement("reset"));
+    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(llama_sampler_i.clone.class, "apply", constants$16.const$0);
+    static final VarHandle const$3 = constants$195.const$5.varHandle(MemoryLayout.PathElement.groupElement("clone"));
+    static final MethodHandle const$4 = RuntimeHelper.upcallHandle(llama_sampler_i.free.class, "apply", constants$0.const$3);
+    static final VarHandle const$5 = constants$195.const$5.varHandle(MemoryLayout.PathElement.groupElement("free"));
 }
 
 

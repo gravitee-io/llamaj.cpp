@@ -11,29 +11,31 @@ final class constants$202 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$202() {}
-    static final VarHandle const$0 = constants$201.const$5.varHandle(PathElement.groupElement("t_sample_ms"));
-    static final VarHandle const$1 = constants$201.const$5.varHandle(PathElement.groupElement("n_sample"));
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_DOUBLE.withName("t_start_ms"),
-        JAVA_DOUBLE.withName("t_load_ms"),
-        JAVA_DOUBLE.withName("t_p_eval_ms"),
-        JAVA_DOUBLE.withName("t_eval_ms"),
-        JAVA_INT.withName("n_p_eval"),
-        JAVA_INT.withName("n_eval")
-    ).withName("llama_perf_context_data"),
-        RuntimeHelper.POINTER
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        JAVA_FLOAT
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_temp",
+        constants$202.const$0
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_perf_context",
+        "llama_sampler_init_temp_ext",
         constants$202.const$2
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_perf_context_print",
-        constants$0.const$3
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_LONG,
+        JAVA_INT
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_perf_context_reset",
-        constants$0.const$3
+        "llama_sampler_init_xtc",
+        constants$202.const$4
     );
 }
 

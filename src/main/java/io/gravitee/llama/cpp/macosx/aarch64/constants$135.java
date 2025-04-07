@@ -11,42 +11,33 @@ final class constants$135 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$135() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_threadpool_new",
-        constants$16.const$0
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_FLOAT,
+        RuntimeHelper.POINTER,
+        JAVA_INT
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_threadpool_free",
-        constants$0.const$3
+        "ggml_get_f32_1d",
+        constants$135.const$0
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_threadpool_get_n_threads",
-        constants$5.const$4
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_threadpool_pause",
-        constants$0.const$3
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_threadpool_resume",
-        constants$0.const$3
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_LONG.withName("work_size"),
-        RuntimeHelper.POINTER.withName("work_data"),
-        JAVA_INT.withName("n_threads"),
-        MemoryLayout.paddingLayout(4),
-        RuntimeHelper.POINTER.withName("threadpool"),
-        RuntimeHelper.POINTER.withName("abort_callback"),
-        RuntimeHelper.POINTER.withName("abort_callback_data")
-    ).withName("ggml_cplan"),
+    static final FunctionDescriptor const$2 = FunctionDescriptor.ofVoid(
         RuntimeHelper.POINTER,
         JAVA_INT,
-        RuntimeHelper.POINTER
+        JAVA_FLOAT
     );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_graph_plan",
-        constants$135.const$5
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_set_f32_1d",
+        constants$135.const$2
+    );
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_FLOAT,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_get_f32_nd",
+        constants$135.const$4
     );
 }
 

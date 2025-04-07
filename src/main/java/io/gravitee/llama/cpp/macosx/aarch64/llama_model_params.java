@@ -11,6 +11,7 @@ import static java.lang.foreign.ValueLayout.*;
  * {@snippet lang=c :
  * struct llama_model_params {
  *     struct ggml_backend_device** devices;
+ *     struct llama_model_tensor_buft_override* tensor_buft_overrides;
  *     int n_gpu_layers;
  *     enum llama_split_mode split_mode;
  *     int main_gpu;
@@ -28,10 +29,10 @@ import static java.lang.foreign.ValueLayout.*;
 public class llama_model_params {
 
     public static MemoryLayout $LAYOUT() {
-        return constants$147.const$5;
+        return constants$150.const$0;
     }
     public static VarHandle devices$VH() {
-        return constants$148.const$0;
+        return constants$150.const$1;
     }
     /**
      * Getter for field:
@@ -40,7 +41,7 @@ public class llama_model_params {
      * }
      */
     public static MemorySegment devices$get(MemorySegment seg) {
-        return (MemorySegment)constants$148.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$150.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -49,16 +50,43 @@ public class llama_model_params {
      * }
      */
     public static void devices$set(MemorySegment seg, MemorySegment x) {
-        constants$148.const$0.set(seg, x);
+        constants$150.const$1.set(seg, x);
     }
     public static MemorySegment devices$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$148.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$150.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void devices$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$148.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$150.const$1.set(seg.asSlice(index*sizeof()), x);
+    }
+    public static VarHandle tensor_buft_overrides$VH() {
+        return constants$150.const$2;
+    }
+    /**
+     * Getter for field:
+     * {@snippet lang=c :
+     * struct llama_model_tensor_buft_override* tensor_buft_overrides;
+     * }
+     */
+    public static MemorySegment tensor_buft_overrides$get(MemorySegment seg) {
+        return (java.lang.foreign.MemorySegment)constants$150.const$2.get(seg);
+    }
+    /**
+     * Setter for field:
+     * {@snippet lang=c :
+     * struct llama_model_tensor_buft_override* tensor_buft_overrides;
+     * }
+     */
+    public static void tensor_buft_overrides$set(MemorySegment seg, MemorySegment x) {
+        constants$150.const$2.set(seg, x);
+    }
+    public static MemorySegment tensor_buft_overrides$get(MemorySegment seg, long index) {
+        return (java.lang.foreign.MemorySegment)constants$150.const$2.get(seg.asSlice(index*sizeof()));
+    }
+    public static void tensor_buft_overrides$set(MemorySegment seg, long index, MemorySegment x) {
+        constants$150.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle n_gpu_layers$VH() {
-        return constants$148.const$1;
+        return constants$150.const$3;
     }
     /**
      * Getter for field:
@@ -67,7 +95,7 @@ public class llama_model_params {
      * }
      */
     public static int n_gpu_layers$get(MemorySegment seg) {
-        return (int)constants$148.const$1.get(seg);
+        return (int)constants$150.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -76,16 +104,16 @@ public class llama_model_params {
      * }
      */
     public static void n_gpu_layers$set(MemorySegment seg, int x) {
-        constants$148.const$1.set(seg, x);
+        constants$150.const$3.set(seg, x);
     }
     public static int n_gpu_layers$get(MemorySegment seg, long index) {
-        return (int)constants$148.const$1.get(seg.asSlice(index*sizeof()));
+        return (int)constants$150.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void n_gpu_layers$set(MemorySegment seg, long index, int x) {
-        constants$148.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$150.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle split_mode$VH() {
-        return constants$148.const$2;
+        return constants$150.const$4;
     }
     /**
      * Getter for field:
@@ -94,7 +122,7 @@ public class llama_model_params {
      * }
      */
     public static int split_mode$get(MemorySegment seg) {
-        return (int)constants$148.const$2.get(seg);
+        return (int)constants$150.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -103,16 +131,16 @@ public class llama_model_params {
      * }
      */
     public static void split_mode$set(MemorySegment seg, int x) {
-        constants$148.const$2.set(seg, x);
+        constants$150.const$4.set(seg, x);
     }
     public static int split_mode$get(MemorySegment seg, long index) {
-        return (int)constants$148.const$2.get(seg.asSlice(index*sizeof()));
+        return (int)constants$150.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void split_mode$set(MemorySegment seg, long index, int x) {
-        constants$148.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$150.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle main_gpu$VH() {
-        return constants$148.const$3;
+        return constants$150.const$5;
     }
     /**
      * Getter for field:
@@ -121,7 +149,7 @@ public class llama_model_params {
      * }
      */
     public static int main_gpu$get(MemorySegment seg) {
-        return (int)constants$148.const$3.get(seg);
+        return (int)constants$150.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -130,16 +158,16 @@ public class llama_model_params {
      * }
      */
     public static void main_gpu$set(MemorySegment seg, int x) {
-        constants$148.const$3.set(seg, x);
+        constants$150.const$5.set(seg, x);
     }
     public static int main_gpu$get(MemorySegment seg, long index) {
-        return (int)constants$148.const$3.get(seg.asSlice(index*sizeof()));
+        return (int)constants$150.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void main_gpu$set(MemorySegment seg, long index, int x) {
-        constants$148.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$150.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle tensor_split$VH() {
-        return constants$148.const$4;
+        return constants$151.const$0;
     }
     /**
      * Getter for field:
@@ -148,7 +176,7 @@ public class llama_model_params {
      * }
      */
     public static MemorySegment tensor_split$get(MemorySegment seg) {
-        return (MemorySegment)constants$148.const$4.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$151.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -157,13 +185,13 @@ public class llama_model_params {
      * }
      */
     public static void tensor_split$set(MemorySegment seg, MemorySegment x) {
-        constants$148.const$4.set(seg, x);
+        constants$151.const$0.set(seg, x);
     }
     public static MemorySegment tensor_split$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$148.const$4.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$151.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void tensor_split$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$148.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$151.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     /**
      * {@snippet lang=c :
@@ -172,15 +200,15 @@ public class llama_model_params {
      */
     public interface progress_callback {
 
-        boolean apply(float progress, MemorySegment user_data);
+        boolean apply(float progress, java.lang.foreign.MemorySegment user_data);
         static MemorySegment allocate(progress_callback fi, Arena scope) {
-            return RuntimeHelper.upcallStub(constants$148.const$5, fi, constants$145.const$1, scope);
+            return RuntimeHelper.upcallStub(constants$151.const$1, fi, constants$146.const$5, scope);
         }
         static progress_callback ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (float _progress, MemorySegment _user_data) -> {
+            return (float _progress, java.lang.foreign.MemorySegment _user_data) -> {
                 try {
-                    return (boolean)constants$145.const$3.invokeExact(symbol, _progress, _user_data);
+                    return (boolean)constants$147.const$1.invokeExact(symbol, _progress, _user_data);
                 } catch (Throwable ex$) {
                     throw new AssertionError("should not reach here", ex$);
                 }
@@ -189,7 +217,7 @@ public class llama_model_params {
     }
 
     public static VarHandle progress_callback$VH() {
-        return constants$149.const$0;
+        return constants$151.const$2;
     }
     /**
      * Getter for field:
@@ -198,7 +226,7 @@ public class llama_model_params {
      * }
      */
     public static MemorySegment progress_callback$get(MemorySegment seg) {
-        return (MemorySegment)constants$149.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$151.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -207,19 +235,19 @@ public class llama_model_params {
      * }
      */
     public static void progress_callback$set(MemorySegment seg, MemorySegment x) {
-        constants$149.const$0.set(seg, x);
+        constants$151.const$2.set(seg, x);
     }
     public static MemorySegment progress_callback$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$149.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$151.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void progress_callback$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$149.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$151.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static progress_callback progress_callback(MemorySegment segment, Arena scope) {
         return progress_callback.ofAddress(progress_callback$get(segment), scope);
     }
     public static VarHandle progress_callback_user_data$VH() {
-        return constants$149.const$1;
+        return constants$151.const$3;
     }
     /**
      * Getter for field:
@@ -228,7 +256,7 @@ public class llama_model_params {
      * }
      */
     public static MemorySegment progress_callback_user_data$get(MemorySegment seg) {
-        return (MemorySegment)constants$149.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$151.const$3.get(seg);
     }
     /**
      * Setter for field:
@@ -237,16 +265,16 @@ public class llama_model_params {
      * }
      */
     public static void progress_callback_user_data$set(MemorySegment seg, MemorySegment x) {
-        constants$149.const$1.set(seg, x);
+        constants$151.const$3.set(seg, x);
     }
     public static MemorySegment progress_callback_user_data$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$149.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$151.const$3.get(seg.asSlice(index*sizeof()));
     }
     public static void progress_callback_user_data$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$149.const$1.set(seg.asSlice(index*sizeof()), x);
+        constants$151.const$3.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle kv_overrides$VH() {
-        return constants$149.const$2;
+        return constants$151.const$4;
     }
     /**
      * Getter for field:
@@ -255,7 +283,7 @@ public class llama_model_params {
      * }
      */
     public static MemorySegment kv_overrides$get(MemorySegment seg) {
-        return (MemorySegment)constants$149.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$151.const$4.get(seg);
     }
     /**
      * Setter for field:
@@ -264,16 +292,16 @@ public class llama_model_params {
      * }
      */
     public static void kv_overrides$set(MemorySegment seg, MemorySegment x) {
-        constants$149.const$2.set(seg, x);
+        constants$151.const$4.set(seg, x);
     }
     public static MemorySegment kv_overrides$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$149.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$151.const$4.get(seg.asSlice(index*sizeof()));
     }
     public static void kv_overrides$set(MemorySegment seg, long index, MemorySegment x) {
-        constants$149.const$2.set(seg.asSlice(index*sizeof()), x);
+        constants$151.const$4.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle vocab_only$VH() {
-        return constants$149.const$3;
+        return constants$151.const$5;
     }
     /**
      * Getter for field:
@@ -282,7 +310,7 @@ public class llama_model_params {
      * }
      */
     public static boolean vocab_only$get(MemorySegment seg) {
-        return (boolean)constants$149.const$3.get(seg);
+        return (boolean)constants$151.const$5.get(seg);
     }
     /**
      * Setter for field:
@@ -291,16 +319,16 @@ public class llama_model_params {
      * }
      */
     public static void vocab_only$set(MemorySegment seg, boolean x) {
-        constants$149.const$3.set(seg, x);
+        constants$151.const$5.set(seg, x);
     }
     public static boolean vocab_only$get(MemorySegment seg, long index) {
-        return (boolean)constants$149.const$3.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$151.const$5.get(seg.asSlice(index*sizeof()));
     }
     public static void vocab_only$set(MemorySegment seg, long index, boolean x) {
-        constants$149.const$3.set(seg.asSlice(index*sizeof()), x);
+        constants$151.const$5.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle use_mmap$VH() {
-        return constants$149.const$4;
+        return constants$152.const$0;
     }
     /**
      * Getter for field:
@@ -309,7 +337,7 @@ public class llama_model_params {
      * }
      */
     public static boolean use_mmap$get(MemorySegment seg) {
-        return (boolean)constants$149.const$4.get(seg);
+        return (boolean)constants$152.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -318,16 +346,16 @@ public class llama_model_params {
      * }
      */
     public static void use_mmap$set(MemorySegment seg, boolean x) {
-        constants$149.const$4.set(seg, x);
+        constants$152.const$0.set(seg, x);
     }
     public static boolean use_mmap$get(MemorySegment seg, long index) {
-        return (boolean)constants$149.const$4.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$152.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void use_mmap$set(MemorySegment seg, long index, boolean x) {
-        constants$149.const$4.set(seg.asSlice(index*sizeof()), x);
+        constants$152.const$0.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle use_mlock$VH() {
-        return constants$149.const$5;
+        return constants$152.const$1;
     }
     /**
      * Getter for field:
@@ -336,7 +364,7 @@ public class llama_model_params {
      * }
      */
     public static boolean use_mlock$get(MemorySegment seg) {
-        return (boolean)constants$149.const$5.get(seg);
+        return (boolean)constants$152.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -345,16 +373,16 @@ public class llama_model_params {
      * }
      */
     public static void use_mlock$set(MemorySegment seg, boolean x) {
-        constants$149.const$5.set(seg, x);
+        constants$152.const$1.set(seg, x);
     }
     public static boolean use_mlock$get(MemorySegment seg, long index) {
-        return (boolean)constants$149.const$5.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$152.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void use_mlock$set(MemorySegment seg, long index, boolean x) {
-        constants$149.const$5.set(seg.asSlice(index*sizeof()), x);
+        constants$152.const$1.set(seg.asSlice(index*sizeof()), x);
     }
     public static VarHandle check_tensors$VH() {
-        return constants$150.const$0;
+        return constants$152.const$2;
     }
     /**
      * Getter for field:
@@ -363,7 +391,7 @@ public class llama_model_params {
      * }
      */
     public static boolean check_tensors$get(MemorySegment seg) {
-        return (boolean)constants$150.const$0.get(seg);
+        return (boolean)constants$152.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -372,13 +400,13 @@ public class llama_model_params {
      * }
      */
     public static void check_tensors$set(MemorySegment seg, boolean x) {
-        constants$150.const$0.set(seg, x);
+        constants$152.const$2.set(seg, x);
     }
     public static boolean check_tensors$get(MemorySegment seg, long index) {
-        return (boolean)constants$150.const$0.get(seg.asSlice(index*sizeof()));
+        return (boolean)constants$152.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void check_tensors$set(MemorySegment seg, long index, boolean x) {
-        constants$150.const$0.set(seg.asSlice(index*sizeof()), x);
+        constants$152.const$2.set(seg.asSlice(index*sizeof()), x);
     }
     public static long sizeof() { return $LAYOUT().byteSize(); }
     public static MemorySegment allocate(SegmentAllocator allocator) { return allocator.allocate($LAYOUT()); }

@@ -11,27 +11,34 @@ final class constants$203 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$203() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(MemoryLayout.structLayout(
-        JAVA_DOUBLE.withName("t_sample_ms"),
-        JAVA_INT.withName("n_sample"),
-        MemoryLayout.paddingLayout(4)
-    ).withName("llama_perf_sampler_data"),
-        RuntimeHelper.POINTER
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_top_n_sigma",
+        constants$202.const$0
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_perf_sampler",
-        constants$203.const$0
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_FLOAT,
+        JAVA_FLOAT,
+        JAVA_INT
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_perf_sampler_print",
-        constants$0.const$3
+        "llama_sampler_init_mirostat",
+        constants$203.const$1
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_perf_sampler_reset",
-        constants$0.const$3
+    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_FLOAT,
+        JAVA_FLOAT
     );
-    static final MemorySegment const$4 = MemorySegment.ofAddress(0L);
-    static final MemorySegment const$5 = RuntimeHelper.CONSTANT_ALLOCATOR.allocateUtf8String("$DARWIN_EXTSN");
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_mirostat_v2",
+        constants$203.const$3
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_grammar",
+        constants$14.const$0
+    );
 }
 
 

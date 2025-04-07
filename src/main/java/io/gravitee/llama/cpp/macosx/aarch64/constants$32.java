@@ -18,7 +18,7 @@ final class constants$32 {
     static final StructLayout const$1 = MemoryLayout.structLayout(
         JAVA_SHORT.withName("bits")
     ).withName("ggml_bf16_t");
-    static final VarHandle const$2 = constants$32.const$1.varHandle(PathElement.groupElement("bits"));
+    static final VarHandle const$2 = constants$32.const$1.varHandle(MemoryLayout.PathElement.groupElement("bits"));
     static final FunctionDescriptor const$3 = FunctionDescriptor.of(MemoryLayout.structLayout(
         JAVA_SHORT.withName("bits")
     ).withName("ggml_bf16_t"),

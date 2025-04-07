@@ -11,12 +11,15 @@ final class constants$149 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$149() {}
-    static final VarHandle const$0 = constants$147.const$5.varHandle(PathElement.groupElement("progress_callback"));
-    static final VarHandle const$1 = constants$147.const$5.varHandle(PathElement.groupElement("progress_callback_user_data"));
-    static final VarHandle const$2 = constants$147.const$5.varHandle(PathElement.groupElement("kv_overrides"));
-    static final VarHandle const$3 = constants$147.const$5.varHandle(PathElement.groupElement("vocab_only"));
-    static final VarHandle const$4 = constants$147.const$5.varHandle(PathElement.groupElement("use_mmap"));
-    static final VarHandle const$5 = constants$147.const$5.varHandle(PathElement.groupElement("use_mlock"));
+    static final VarHandle const$0 = constants$148.const$4.varHandle(MemoryLayout.PathElement.groupElement("$anon$0"), MemoryLayout.PathElement.groupElement("val_i64"));
+    static final VarHandle const$1 = constants$148.const$4.varHandle(MemoryLayout.PathElement.groupElement("$anon$0"), MemoryLayout.PathElement.groupElement("val_f64"));
+    static final VarHandle const$2 = constants$148.const$4.varHandle(MemoryLayout.PathElement.groupElement("$anon$0"), MemoryLayout.PathElement.groupElement("val_bool"));
+    static final StructLayout const$3 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("pattern"),
+        RuntimeHelper.POINTER.withName("buft")
+    ).withName("llama_model_tensor_buft_override");
+    static final VarHandle const$4 = constants$149.const$3.varHandle(MemoryLayout.PathElement.groupElement("pattern"));
+    static final VarHandle const$5 = constants$149.const$3.varHandle(MemoryLayout.PathElement.groupElement("buft"));
 }
 
 

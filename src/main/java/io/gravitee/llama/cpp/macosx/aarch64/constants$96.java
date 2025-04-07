@@ -12,25 +12,28 @@ final class constants$96 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$96() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_graph_dump_dot",
-        constants$83.const$1
+        "ggml_graph_overhead",
+        constants$36.const$5
     );
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_log_callback.class, "apply", constants$81.const$5);
-    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_log_set$log_callback.class, "apply", constants$81.const$5);
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_LONG,
+        JAVA_LONG,
+        JAVA_BOOLEAN
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_graph_overhead_custom",
+        constants$96.const$1
+    );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_log_set",
-        constants$17.const$5
+        "ggml_graph_get_tensor",
+        constants$12.const$5
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_set_zero",
-        constants$16.const$0
+        "ggml_graph_get_grad",
+        constants$12.const$5
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.ofVoid(
-        JAVA_INT
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_quantize_init",
-        constants$96.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_graph_get_grad_acc",
+        constants$12.const$5
     );
 }
 

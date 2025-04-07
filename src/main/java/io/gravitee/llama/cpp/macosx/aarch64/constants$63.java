@@ -11,31 +11,31 @@ final class constants$63 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$63() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_INT
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_mul_mat_set_prec",
+        constants$63.const$0
+    );
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
         "ggml_mul_mat_id",
-        constants$63.const$0
+        constants$63.const$2
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
         "ggml_out_prod",
         constants$14.const$0
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
         "ggml_scale",
         constants$61.const$0
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_scale_inplace",
-        constants$61.const$0
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_set",
-        constants$51.const$5
     );
 }
 

@@ -12,27 +12,29 @@ final class constants$200 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$200() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_split_prefix",
-        constants$199.const$5
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_print_system_info",
-        constants$18.const$4
-    );
-    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(llama_log_set$log_callback.class, "apply", constants$81.const$5);
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_log_set",
+        "llama_sampler_chain_add",
         constants$17.const$5
     );
-    static final StructLayout const$4 = MemoryLayout.structLayout(
-        JAVA_DOUBLE.withName("t_start_ms"),
-        JAVA_DOUBLE.withName("t_load_ms"),
-        JAVA_DOUBLE.withName("t_p_eval_ms"),
-        JAVA_DOUBLE.withName("t_eval_ms"),
-        JAVA_INT.withName("n_p_eval"),
-        JAVA_INT.withName("n_eval")
-    ).withName("llama_perf_context_data");
-    static final VarHandle const$5 = constants$200.const$4.varHandle(PathElement.groupElement("t_start_ms"));
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_sampler_chain_get",
+        constants$95.const$1
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_sampler_chain_n",
+        constants$5.const$4
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_sampler_chain_remove",
+        constants$95.const$1
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_greedy",
+        constants$18.const$4
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_sampler_init_dist",
+        constants$30.const$4
+    );
 }
 
 

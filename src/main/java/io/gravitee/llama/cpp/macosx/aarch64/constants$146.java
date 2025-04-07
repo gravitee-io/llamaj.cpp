@@ -11,12 +11,21 @@ final class constants$146 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$146() {}
-    static final VarHandle const$0 = constants$145.const$4.varHandle(PathElement.groupElement("token"));
-    static final VarHandle const$1 = constants$145.const$4.varHandle(PathElement.groupElement("embd"));
-    static final VarHandle const$2 = constants$145.const$4.varHandle(PathElement.groupElement("pos"));
-    static final VarHandle const$3 = constants$145.const$4.varHandle(PathElement.groupElement("n_seq_id"));
-    static final VarHandle const$4 = constants$145.const$4.varHandle(PathElement.groupElement("seq_id"));
-    static final VarHandle const$5 = constants$145.const$4.varHandle(PathElement.groupElement("logits"));
+    static final StructLayout const$0 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("data"),
+        JAVA_LONG.withName("size"),
+        JAVA_LONG.withName("selected"),
+        JAVA_BOOLEAN.withName("sorted"),
+        MemoryLayout.paddingLayout(7)
+    ).withName("llama_token_data_array");
+    static final VarHandle const$1 = constants$146.const$0.varHandle(MemoryLayout.PathElement.groupElement("data"));
+    static final VarHandle const$2 = constants$146.const$0.varHandle(MemoryLayout.PathElement.groupElement("size"));
+    static final VarHandle const$3 = constants$146.const$0.varHandle(MemoryLayout.PathElement.groupElement("selected"));
+    static final VarHandle const$4 = constants$146.const$0.varHandle(MemoryLayout.PathElement.groupElement("sorted"));
+    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        JAVA_FLOAT,
+        RuntimeHelper.POINTER
+    );
 }
 
 

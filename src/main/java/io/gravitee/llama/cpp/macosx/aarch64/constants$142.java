@@ -11,27 +11,32 @@ final class constants$142 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$142() {}
-    static final VarHandle const$0 = constants$141.const$0.varHandle(PathElement.groupElement("nrows"));
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_get_type_traits_cpu",
-        constants$30.const$4
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_cpu_has_llamafile",
+        constants$15.const$4
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_init",
-        constants$36.const$3
+    static final FunctionDescriptor const$1 = FunctionDescriptor.ofVoid(
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        JAVA_INT
     );
+    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_vec_dot_t.class, "apply", constants$142.const$1);
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_init",
-        constants$18.const$4
+        constants$142.const$1
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_is_cpu",
-        constants$35.const$4
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_cpu_set_n_threads",
-        constants$62.const$4
-    );
+    static final StructLayout const$4 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("from_float"),
+        RuntimeHelper.POINTER.withName("vec_dot"),
+        JAVA_INT.withName("vec_dot_type"),
+        MemoryLayout.paddingLayout(4),
+        JAVA_LONG.withName("nrows")
+    ).withName("ggml_type_traits_cpu");
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_type_traits_cpu.from_float.class, "apply", constants$31.const$4);
 }
 
 

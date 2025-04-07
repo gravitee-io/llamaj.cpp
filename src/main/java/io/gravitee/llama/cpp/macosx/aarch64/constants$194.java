@@ -12,29 +12,37 @@ final class constants$194 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$194() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_sampler_free",
-        constants$0.const$3
+        "llama_token_fim_sep",
+        constants$5.const$4
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        MemoryLayout.structLayout(
-            JAVA_BOOLEAN.withName("no_perf")
-        ).withName("llama_sampler_chain_params")
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_vocab_cls",
+        constants$5.const$4
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_sampler_chain_init",
-        constants$194.const$1
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_INT,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_BOOLEAN,
+        JAVA_BOOLEAN
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_sampler_chain_add",
-        constants$17.const$5
+        "llama_tokenize",
+        constants$194.const$2
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_sampler_chain_get",
-        constants$93.const$5
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_INT,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_BOOLEAN
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_sampler_chain_n",
-        constants$5.const$4
+        "llama_token_to_piece",
+        constants$194.const$4
     );
 }
 

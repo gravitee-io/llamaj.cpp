@@ -11,15 +11,30 @@ final class constants$192 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$192() {}
-    static final VarHandle const$0 = constants$190.const$2.varHandle(PathElement.groupElement("clone"));
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(llama_sampler_i.free.class, "apply", constants$0.const$3);
-    static final VarHandle const$2 = constants$190.const$2.varHandle(PathElement.groupElement("free"));
-    static final StructLayout const$3 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("iface"),
-        RuntimeHelper.POINTER.withName("ctx")
-    ).withName("llama_sampler");
-    static final VarHandle const$4 = constants$192.const$3.varHandle(PathElement.groupElement("iface"));
-    static final VarHandle const$5 = constants$192.const$3.varHandle(PathElement.groupElement("ctx"));
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_token_eot",
+        constants$5.const$4
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "llama_token_cls",
+        constants$5.const$4
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_token_sep",
+        constants$5.const$4
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_token_nl",
+        constants$5.const$4
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_token_pad",
+        constants$5.const$4
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_add_bos_token",
+        constants$35.const$4
+    );
 }
 
 

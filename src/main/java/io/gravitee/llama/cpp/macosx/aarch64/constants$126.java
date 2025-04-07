@@ -12,22 +12,29 @@ final class constants$126 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$126() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_reset",
-        constants$0.const$3
+        "ggml_backend_sched_get_backend",
+        constants$95.const$1
     );
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_backend_sched_set_eval_callback$callback.class, "apply", constants$123.const$0);
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_sched_get_n_splits",
+        constants$5.const$4
+    );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_set_eval_callback",
-        constants$83.const$1
+        "ggml_backend_sched_get_n_copies",
+        constants$5.const$4
     );
-    static final StructLayout const$3 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("buffer"),
-        RuntimeHelper.POINTER.withName("ctx_allocated"),
-        RuntimeHelper.POINTER.withName("ctx_unallocated"),
-        RuntimeHelper.POINTER.withName("graph")
-    ).withName("ggml_backend_graph_copy");
-    static final VarHandle const$4 = constants$126.const$3.varHandle(PathElement.groupElement("buffer"));
-    static final VarHandle const$5 = constants$126.const$3.varHandle(PathElement.groupElement("ctx_allocated"));
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_sched_get_buffer_size",
+        constants$107.const$0
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "ggml_backend_sched_set_tensor_backend",
+        constants$84.const$2
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "ggml_backend_sched_get_tensor_backend",
+        constants$12.const$5
+    );
 }
 
 

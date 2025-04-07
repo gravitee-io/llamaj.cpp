@@ -11,29 +11,33 @@ final class constants$136 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$136() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_graph_compute",
-        constants$12.const$1
+    static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_FLOAT
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_graph_compute_with_ctx",
-        constants$5.const$0
+        "ggml_set_f32_nd",
+        constants$136.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_sse3",
-        constants$15.const$4
+        "ggml_threadpool_new",
+        constants$16.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_ssse3",
-        constants$15.const$4
+        "ggml_threadpool_free",
+        constants$0.const$3
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_avx",
-        constants$15.const$4
+        "ggml_threadpool_get_n_threads",
+        constants$5.const$4
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_cpu_has_avx_vnni",
-        constants$15.const$4
+        "ggml_threadpool_pause",
+        constants$0.const$3
     );
 }
 

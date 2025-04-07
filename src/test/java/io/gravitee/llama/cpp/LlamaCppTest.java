@@ -44,7 +44,7 @@ abstract class LlamaCppTest {
             You are the best at guessing capitals. Respond to the best of your ability. Just answer with the capital.
             If asked for the capital of France, answer Paris.
             If asked for the UK or England, answer London.
-            If asked for the capital of France, answer Paris.
+            If asked for the capital of Poland, answer Warsaw.
             """;
 
     static Path getModelPath() {

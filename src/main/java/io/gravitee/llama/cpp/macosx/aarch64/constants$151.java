@@ -11,12 +11,12 @@ final class constants$151 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$151() {}
-    static final VarHandle const$0 = constants$150.const$1.varHandle(PathElement.groupElement("n_threads"));
-    static final VarHandle const$1 = constants$150.const$1.varHandle(PathElement.groupElement("n_threads_batch"));
-    static final VarHandle const$2 = constants$150.const$1.varHandle(PathElement.groupElement("rope_scaling_type"));
-    static final VarHandle const$3 = constants$150.const$1.varHandle(PathElement.groupElement("pooling_type"));
-    static final VarHandle const$4 = constants$150.const$1.varHandle(PathElement.groupElement("attention_type"));
-    static final VarHandle const$5 = constants$150.const$1.varHandle(PathElement.groupElement("rope_freq_base"));
+    static final VarHandle const$0 = constants$150.const$0.varHandle(MemoryLayout.PathElement.groupElement("tensor_split"));
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(llama_model_params.progress_callback.class, "apply", constants$146.const$5);
+    static final VarHandle const$2 = constants$150.const$0.varHandle(MemoryLayout.PathElement.groupElement("progress_callback"));
+    static final VarHandle const$3 = constants$150.const$0.varHandle(MemoryLayout.PathElement.groupElement("progress_callback_user_data"));
+    static final VarHandle const$4 = constants$150.const$0.varHandle(MemoryLayout.PathElement.groupElement("kv_overrides"));
+    static final VarHandle const$5 = constants$150.const$0.varHandle(MemoryLayout.PathElement.groupElement("vocab_only"));
 }
 
 

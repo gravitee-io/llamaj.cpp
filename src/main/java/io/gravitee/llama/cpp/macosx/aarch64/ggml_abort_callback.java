@@ -14,13 +14,13 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_abort_callback {
 
-    boolean apply(MemorySegment data);
+    boolean apply(java.lang.foreign.MemorySegment data);
     static MemorySegment allocate(ggml_abort_callback fi, Arena scope) {
         return RuntimeHelper.upcallStub(constants$35.const$5, fi, constants$35.const$4, scope);
     }
     static ggml_abort_callback ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _data) -> {
+        return (java.lang.foreign.MemorySegment _data) -> {
             try {
                 return (boolean)constants$36.const$0.invokeExact(symbol, _data);
             } catch (Throwable ex$) {

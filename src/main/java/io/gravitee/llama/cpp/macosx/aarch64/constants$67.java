@@ -11,29 +11,33 @@ final class constants$67 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$67() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_cont_4d",
+        constants$67.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
         "ggml_reshape",
         constants$14.const$0
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_reshape_1d",
-        constants$65.const$5
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_reshape_2d",
-        constants$66.const$0
-    );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_reshape_3d",
-        constants$66.const$2
+        "ggml_reshape_1d",
+        constants$66.const$1
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_reshape_4d",
-        constants$66.const$4
+        "ggml_reshape_2d",
+        constants$66.const$3
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_view_1d",
-        constants$66.const$0
+        "ggml_reshape_3d",
+        constants$66.const$5
     );
 }
 

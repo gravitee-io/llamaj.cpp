@@ -16,8 +16,8 @@ final class constants$6 {
         JAVA_INT.withName("_size"),
         MemoryLayout.paddingLayout(4)
     ).withName("__sbuf");
-    static final VarHandle const$1 = constants$6.const$0.varHandle(PathElement.groupElement("_base"));
-    static final VarHandle const$2 = constants$6.const$0.varHandle(PathElement.groupElement("_size"));
+    static final VarHandle const$1 = constants$6.const$0.varHandle(MemoryLayout.PathElement.groupElement("_base"));
+    static final VarHandle const$2 = constants$6.const$0.varHandle(MemoryLayout.PathElement.groupElement("_size"));
     static final StructLayout const$3 = MemoryLayout.structLayout(
         RuntimeHelper.POINTER.withName("_p"),
         JAVA_INT.withName("_r"),
@@ -55,8 +55,8 @@ final class constants$6 {
         MemoryLayout.paddingLayout(4),
         JAVA_LONG.withName("_offset")
     ).withName("__sFILE");
-    static final VarHandle const$4 = constants$6.const$3.varHandle(PathElement.groupElement("_p"));
-    static final VarHandle const$5 = constants$6.const$3.varHandle(PathElement.groupElement("_r"));
+    static final VarHandle const$4 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_p"));
+    static final VarHandle const$5 = constants$6.const$3.varHandle(MemoryLayout.PathElement.groupElement("_r"));
 }
 
 

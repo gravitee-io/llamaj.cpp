@@ -11,33 +11,33 @@ final class constants$182 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$182() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_get_embeddings_ith",
-        constants$93.const$5
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_BOOLEAN,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_get_embeddings_seq",
-        constants$93.const$5
+        "llama_state_save_file",
+        constants$182.const$0
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_vocab_get_text",
-        constants$93.const$5
+        "llama_save_session_file",
+        constants$182.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_vocab_get_score",
-        constants$133.const$4
+        "llama_state_seq_get_size",
+        constants$105.const$5
     );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_vocab_get_attr",
-        constants$132.const$2
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(JAVA_BOOLEAN,
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_LONG,
         RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
         JAVA_INT
     );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "llama_vocab_is_eog",
-        constants$182.const$5
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_state_seq_get_data",
+        constants$182.const$4
     );
 }
 

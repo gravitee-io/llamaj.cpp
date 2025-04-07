@@ -11,10 +11,10 @@ final class constants$35 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$35() {}
-    static final VarHandle const$0 = constants$34.const$1.varHandle(PathElement.groupElement("view_src"));
-    static final VarHandle const$1 = constants$34.const$1.varHandle(PathElement.groupElement("view_offs"));
-    static final VarHandle const$2 = constants$34.const$1.varHandle(PathElement.groupElement("data"));
-    static final VarHandle const$3 = constants$34.const$1.varHandle(PathElement.groupElement("extra"));
+    static final VarHandle const$0 = constants$34.const$1.varHandle(MemoryLayout.PathElement.groupElement("view_src"));
+    static final VarHandle const$1 = constants$34.const$1.varHandle(MemoryLayout.PathElement.groupElement("view_offs"));
+    static final VarHandle const$2 = constants$34.const$1.varHandle(MemoryLayout.PathElement.groupElement("data"));
+    static final VarHandle const$3 = constants$34.const$1.varHandle(MemoryLayout.PathElement.groupElement("extra"));
     static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_BOOLEAN,
         RuntimeHelper.POINTER
     );

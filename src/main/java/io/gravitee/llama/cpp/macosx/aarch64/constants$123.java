@@ -11,29 +11,29 @@ final class constants$123 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$123() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        RuntimeHelper.POINTER,
-        JAVA_BOOLEAN,
-        RuntimeHelper.POINTER
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_get",
+        constants$122.const$2
     );
-    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_backend_sched_eval_callback.class, "apply", constants$123.const$0);
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_backend_dev_by_name",
+        constants$16.const$0
+    );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        constants$123.const$0
+        "ggml_backend_dev_by_type",
+        constants$30.const$4
     );
-    static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_LONG,
-        JAVA_BOOLEAN
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "ggml_backend_init_by_name",
+        constants$12.const$5
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_new",
-        constants$123.const$3
+        "ggml_backend_init_by_type",
+        constants$20.const$1
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_sched_free",
-        constants$0.const$3
+        "ggml_backend_init_best",
+        constants$18.const$4
     );
 }
 

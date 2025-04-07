@@ -11,35 +11,33 @@ final class constants$65 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$65() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_set_2d_inplace",
-        constants$64.const$4
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG,
+        JAVA_LONG
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_set_2d",
+        constants$65.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "ggml_set_2d_inplace",
+        constants$65.const$0
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
         "ggml_cpy",
         constants$14.const$0
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         JAVA_INT
     );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
         "ggml_cast",
-        constants$65.const$2
-    );
-    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_cont",
-        constants$12.const$5
-    );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_cont_1d",
-        constants$65.const$5
+        constants$65.const$4
     );
 }
 

@@ -11,24 +11,19 @@ final class constants$120 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$120() {}
-    static final VarHandle const$0 = constants$119.const$5.varHandle(PathElement.groupElement("name"));
-    static final VarHandle const$1 = constants$119.const$5.varHandle(PathElement.groupElement("value"));
-    static final MethodHandle const$2 = RuntimeHelper.upcallHandle(ggml_backend_get_features_t.class, "apply", constants$16.const$0);
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_device_register",
-        constants$0.const$3
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "ggml_backend_reg_get_proc_address",
+        constants$12.const$5
     );
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(ggml_backend_split_buffer_type_t.class, "apply", constants$20.const$1);
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        constants$20.const$1
+    );
+    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(ggml_backend_set_n_threads_t.class, "apply", constants$63.const$0);
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_count",
-        constants$36.const$5
+        constants$63.const$0
     );
-    static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        JAVA_LONG
-    );
-    static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_backend_reg_get",
-        constants$120.const$5
-    );
+    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(ggml_backend_dev_get_extra_bufts_t.class, "apply", constants$16.const$0);
 }
 
 

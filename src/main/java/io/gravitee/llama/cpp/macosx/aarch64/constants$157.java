@@ -11,17 +11,25 @@ final class constants$157 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$157() {}
-    static final VarHandle const$0 = constants$155.const$2.varHandle(PathElement.groupElement("imatrix"));
-    static final VarHandle const$1 = constants$155.const$2.varHandle(PathElement.groupElement("kv_overrides"));
-    static final StructLayout const$2 = MemoryLayout.structLayout(
-        JAVA_INT.withName("token"),
-        JAVA_FLOAT.withName("bias")
-    ).withName("llama_logit_bias");
-    static final VarHandle const$3 = constants$157.const$2.varHandle(PathElement.groupElement("token"));
-    static final VarHandle const$4 = constants$157.const$2.varHandle(PathElement.groupElement("bias"));
-    static final StructLayout const$5 = MemoryLayout.structLayout(
-        JAVA_BOOLEAN.withName("no_perf")
-    ).withName("llama_sampler_chain_params");
+    static final VarHandle const$0 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("no_perf"));
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(llama_context_params.abort_callback.class, "apply", constants$35.const$4);
+    static final VarHandle const$2 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("abort_callback"));
+    static final VarHandle const$3 = constants$152.const$3.varHandle(MemoryLayout.PathElement.groupElement("abort_callback_data"));
+    static final StructLayout const$4 = MemoryLayout.structLayout(
+        JAVA_INT.withName("nthread"),
+        JAVA_INT.withName("ftype"),
+        JAVA_INT.withName("output_tensor_type"),
+        JAVA_INT.withName("token_embedding_type"),
+        JAVA_BOOLEAN.withName("allow_requantize"),
+        JAVA_BOOLEAN.withName("quantize_output_tensor"),
+        JAVA_BOOLEAN.withName("only_copy"),
+        JAVA_BOOLEAN.withName("pure"),
+        JAVA_BOOLEAN.withName("keep_split"),
+        MemoryLayout.paddingLayout(3),
+        RuntimeHelper.POINTER.withName("imatrix"),
+        RuntimeHelper.POINTER.withName("kv_overrides")
+    ).withName("llama_model_quantize_params");
+    static final VarHandle const$5 = constants$157.const$4.varHandle(MemoryLayout.PathElement.groupElement("nthread"));
 }
 
 

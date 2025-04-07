@@ -12,28 +12,25 @@ final class constants$186 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$186() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_token_is_eog",
-        constants$182.const$5
+        "llama_set_warmup",
+        constants$45.const$0
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_token_is_control",
-        constants$182.const$5
-    );
+    static final MethodHandle const$1 = RuntimeHelper.upcallHandle(llama_set_abort_callback$abort_callback.class, "apply", constants$35.const$4);
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "llama_token_bos",
-        constants$5.const$4
+        "llama_set_abort_callback",
+        constants$84.const$2
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_token_eos",
-        constants$5.const$4
+        "llama_synchronize",
+        constants$0.const$3
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "llama_token_eot",
-        constants$5.const$4
+        "llama_get_logits",
+        constants$16.const$0
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "llama_token_cls",
-        constants$5.const$4
+        "llama_get_logits_ith",
+        constants$95.const$1
     );
 }
 

@@ -12,22 +12,16 @@ final class constants$68 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$68() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_view_2d",
-        constants$66.const$4
+        "ggml_reshape_4d",
+        constants$67.const$0
     );
-    static final FunctionDescriptor const$1 = FunctionDescriptor.of(RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_view_1d",
+        constants$66.const$3
     );
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_view_3d",
-        constants$68.const$1
+        "ggml_view_2d",
+        constants$67.const$0
     );
     static final FunctionDescriptor const$3 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
@@ -37,24 +31,26 @@ final class constants$68 {
         JAVA_LONG,
         JAVA_LONG,
         JAVA_LONG,
-        JAVA_LONG,
-        JAVA_LONG,
         JAVA_LONG
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_view_4d",
+        "ggml_view_3d",
         constants$68.const$3
     );
     static final FunctionDescriptor const$5 = FunctionDescriptor.of(RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
         RuntimeHelper.POINTER,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG,
+        JAVA_LONG
     );
     static final MethodHandle const$6 = RuntimeHelper.downcallHandle(
-        "ggml_permute",
+        "ggml_view_4d",
         constants$68.const$5
     );
 }

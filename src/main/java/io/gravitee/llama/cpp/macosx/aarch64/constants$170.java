@@ -12,29 +12,32 @@ final class constants$170 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$170() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "llama_rm_adapter_lora",
-        constants$12.const$1
+        "llama_model_meta_count",
+        constants$5.const$4
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_clear_adapter_lora",
-        constants$0.const$3
+    static final FunctionDescriptor const$1 = FunctionDescriptor.of(JAVA_INT,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        RuntimeHelper.POINTER,
+        JAVA_LONG
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        JAVA_LONG,
-        JAVA_INT,
-        JAVA_INT,
-        JAVA_INT
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_model_meta_key_by_index",
+        constants$170.const$1
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "llama_apply_adapter_cvec",
-        constants$170.const$2
+        "llama_model_meta_val_str_by_index",
+        constants$170.const$1
     );
-    static final StructLayout const$4 = MemoryLayout.structLayout(
-        JAVA_INT.withName("pos")
-    ).withName("llama_kv_cache_view_cell");
-    static final VarHandle const$5 = constants$170.const$4.varHandle(PathElement.groupElement("pos"));
+    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_INT,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_LONG
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_model_desc",
+        constants$170.const$4
+    );
 }
 
 

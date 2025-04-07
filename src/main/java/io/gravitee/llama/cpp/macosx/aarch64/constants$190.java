@@ -11,25 +11,30 @@ final class constants$190 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$190() {}
-    static final FunctionDescriptor const$0 = FunctionDescriptor.of(JAVA_INT,
-        RuntimeHelper.POINTER,
-        JAVA_LONG
+    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+        "llama_vocab_fim_suf",
+        constants$5.const$4
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "llama_chat_builtin_templates",
-        constants$190.const$0
+        "llama_vocab_fim_mid",
+        constants$5.const$4
     );
-    static final StructLayout const$2 = MemoryLayout.structLayout(
-        RuntimeHelper.POINTER.withName("name"),
-        RuntimeHelper.POINTER.withName("accept"),
-        RuntimeHelper.POINTER.withName("apply"),
-        RuntimeHelper.POINTER.withName("reset"),
-        RuntimeHelper.POINTER.withName("clone"),
-        RuntimeHelper.POINTER.withName("free")
-    ).withName("llama_sampler_i");
-    static final MethodHandle const$3 = RuntimeHelper.upcallHandle(llama_sampler_i.name.class, "apply", constants$16.const$0);
-    static final VarHandle const$4 = constants$190.const$2.varHandle(PathElement.groupElement("name"));
-    static final MethodHandle const$5 = RuntimeHelper.upcallHandle(llama_sampler_i.accept.class, "apply", constants$62.const$4);
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
+        "llama_vocab_fim_pad",
+        constants$5.const$4
+    );
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
+        "llama_vocab_fim_rep",
+        constants$5.const$4
+    );
+    static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
+        "llama_vocab_fim_sep",
+        constants$5.const$4
+    );
+    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
+        "llama_token_get_text",
+        constants$95.const$1
+    );
 }
 
 

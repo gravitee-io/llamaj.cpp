@@ -14,13 +14,13 @@ final class constants$134 {
     static final FunctionDescriptor const$0 = FunctionDescriptor.ofVoid(
         RuntimeHelper.POINTER,
         JAVA_INT,
-        JAVA_FLOAT
+        JAVA_INT
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_set_f32_1d",
+        "ggml_set_i32_1d",
         constants$134.const$0
     );
-    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_FLOAT,
+    static final FunctionDescriptor const$2 = FunctionDescriptor.of(JAVA_INT,
         RuntimeHelper.POINTER,
         JAVA_INT,
         JAVA_INT,
@@ -28,7 +28,7 @@ final class constants$134 {
         JAVA_INT
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_get_f32_nd",
+        "ggml_get_i32_nd",
         constants$134.const$2
     );
     static final FunctionDescriptor const$4 = FunctionDescriptor.ofVoid(
@@ -37,10 +37,10 @@ final class constants$134 {
         JAVA_INT,
         JAVA_INT,
         JAVA_INT,
-        JAVA_FLOAT
+        JAVA_INT
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_set_f32_nd",
+        "ggml_set_i32_nd",
         constants$134.const$4
     );
 }

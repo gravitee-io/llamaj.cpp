@@ -12,31 +12,22 @@ final class constants$103 {
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$103() {}
     static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_gallocr_new",
-        constants$16.const$0
+        "ggml_threadpool_params_init",
+        constants$63.const$0
     );
     static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_gallocr_new_n",
-        constants$93.const$5
-    );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_gallocr_free",
-        constants$0.const$3
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_gallocr_reserve",
+        "ggml_threadpool_params_match",
         constants$36.const$1
     );
-    static final FunctionDescriptor const$4 = FunctionDescriptor.of(JAVA_BOOLEAN,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER,
-        RuntimeHelper.POINTER
-    );
-    static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_gallocr_reserve_n",
-        constants$103.const$4
-    );
+    static final StructLayout const$2 = MemoryLayout.structLayout(
+        RuntimeHelper.POINTER.withName("buffer"),
+        RuntimeHelper.POINTER.withName("base"),
+        JAVA_LONG.withName("alignment"),
+        JAVA_LONG.withName("offset")
+    ).withName("ggml_tallocr");
+    static final VarHandle const$3 = constants$103.const$2.varHandle(MemoryLayout.PathElement.groupElement("buffer"));
+    static final VarHandle const$4 = constants$103.const$2.varHandle(MemoryLayout.PathElement.groupElement("base"));
+    static final VarHandle const$5 = constants$103.const$2.varHandle(MemoryLayout.PathElement.groupElement("alignment"));
 }
 
 

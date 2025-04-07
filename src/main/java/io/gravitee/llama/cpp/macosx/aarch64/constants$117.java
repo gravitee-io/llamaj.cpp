@@ -11,29 +11,23 @@ final class constants$117 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$117() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_buffer_type",
-        constants$16.const$0
-    );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_host_buffer_type",
-        constants$16.const$0
-    );
+    static final VarHandle const$0 = constants$116.const$2.varHandle(MemoryLayout.PathElement.groupElement("memory_total"));
+    static final VarHandle const$1 = constants$116.const$2.varHandle(MemoryLayout.PathElement.groupElement("type"));
     static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_buffer_from_host_ptr",
-        constants$66.const$0
+        "ggml_backend_dev_name",
+        constants$16.const$0
     );
     static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_supports_op",
-        constants$36.const$1
+        "ggml_backend_dev_description",
+        constants$16.const$0
     );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_supports_buft",
-        constants$36.const$1
+        "ggml_backend_dev_memory",
+        constants$84.const$2
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_backend_dev_offload_op",
-        constants$36.const$1
+        "ggml_backend_dev_type",
+        constants$5.const$4
     );
 }
 

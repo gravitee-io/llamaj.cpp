@@ -11,29 +11,33 @@ final class constants$69 {
 
     // Suppresses default constructor, ensuring non-instantiability.
     private constants$69() {}
-    static final MethodHandle const$0 = RuntimeHelper.downcallHandle(
+    static final FunctionDescriptor const$0 = FunctionDescriptor.of(RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        RuntimeHelper.POINTER,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT,
+        JAVA_INT
+    );
+    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+        "ggml_permute",
+        constants$69.const$0
+    );
+    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
         "ggml_transpose",
         constants$12.const$5
     );
-    static final MethodHandle const$1 = RuntimeHelper.downcallHandle(
+    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
         "ggml_get_rows",
         constants$14.const$0
     );
-    static final MethodHandle const$2 = RuntimeHelper.downcallHandle(
-        "ggml_get_rows_back",
-        constants$63.const$0
-    );
-    static final MethodHandle const$3 = RuntimeHelper.downcallHandle(
-        "ggml_diag",
-        constants$12.const$5
-    );
     static final MethodHandle const$4 = RuntimeHelper.downcallHandle(
-        "ggml_diag_mask_inf",
-        constants$65.const$2
+        "ggml_get_rows_back",
+        constants$63.const$2
     );
     static final MethodHandle const$5 = RuntimeHelper.downcallHandle(
-        "ggml_diag_mask_inf_inplace",
-        constants$65.const$2
+        "ggml_diag",
+        constants$12.const$5
     );
 }
 

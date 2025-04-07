@@ -14,15 +14,15 @@ import static java.lang.foreign.ValueLayout.*;
  */
 public interface ggml_map_custom2_inplace_f32$fun {
 
-    void apply(MemorySegment backend, MemorySegment abort_callback, MemorySegment abort_callback_data);
+    void apply(java.lang.foreign.MemorySegment backend, java.lang.foreign.MemorySegment abort_callback, java.lang.foreign.MemorySegment abort_callback_data);
     static MemorySegment allocate(ggml_map_custom2_inplace_f32$fun fi, Arena scope) {
-        return RuntimeHelper.upcallStub(constants$86.const$3, fi, constants$83.const$1, scope);
+        return RuntimeHelper.upcallStub(constants$87.const$4, fi, constants$84.const$2, scope);
     }
     static ggml_map_custom2_inplace_f32$fun ofAddress(MemorySegment addr, Arena arena) {
         MemorySegment symbol = addr.reinterpret(arena, null);
-        return (MemorySegment _backend, MemorySegment _abort_callback, MemorySegment _abort_callback_data) -> {
+        return (java.lang.foreign.MemorySegment _backend, java.lang.foreign.MemorySegment _abort_callback, java.lang.foreign.MemorySegment _abort_callback_data) -> {
             try {
-                constants$83.const$3.invokeExact(symbol, _backend, _abort_callback, _abort_callback_data);
+                constants$84.const$4.invokeExact(symbol, _backend, _abort_callback, _abort_callback_data);
             } catch (Throwable ex$) {
                 throw new AssertionError("should not reach here", ex$);
             }

@@ -28,13 +28,13 @@ public class __darwin_pthread_handler_rec {
      */
     public interface __routine {
 
-        void apply(MemorySegment _x0);
+        void apply(java.lang.foreign.MemorySegment _x0);
         static MemorySegment allocate(__routine fi, Arena scope) {
             return RuntimeHelper.upcallStub(constants$0.const$4, fi, constants$0.const$3, scope);
         }
         static __routine ofAddress(MemorySegment addr, Arena arena) {
             MemorySegment symbol = addr.reinterpret(arena, null);
-            return (MemorySegment __x0) -> {
+            return (java.lang.foreign.MemorySegment __x0) -> {
                 try {
                     constants$0.const$5.invokeExact(symbol, __x0);
                 } catch (Throwable ex$) {
@@ -54,7 +54,7 @@ public class __darwin_pthread_handler_rec {
      * }
      */
     public static MemorySegment __routine$get(MemorySegment seg) {
-        return (MemorySegment)constants$1.const$0.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$1.const$0.get(seg);
     }
     /**
      * Setter for field:
@@ -66,7 +66,7 @@ public class __darwin_pthread_handler_rec {
         constants$1.const$0.set(seg, x);
     }
     public static MemorySegment __routine$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$1.const$0.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$1.const$0.get(seg.asSlice(index*sizeof()));
     }
     public static void __routine$set(MemorySegment seg, long index, MemorySegment x) {
         constants$1.const$0.set(seg.asSlice(index*sizeof()), x);
@@ -84,7 +84,7 @@ public class __darwin_pthread_handler_rec {
      * }
      */
     public static MemorySegment __arg$get(MemorySegment seg) {
-        return (MemorySegment)constants$1.const$1.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$1.const$1.get(seg);
     }
     /**
      * Setter for field:
@@ -96,7 +96,7 @@ public class __darwin_pthread_handler_rec {
         constants$1.const$1.set(seg, x);
     }
     public static MemorySegment __arg$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$1.const$1.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$1.const$1.get(seg.asSlice(index*sizeof()));
     }
     public static void __arg$set(MemorySegment seg, long index, MemorySegment x) {
         constants$1.const$1.set(seg.asSlice(index*sizeof()), x);
@@ -111,7 +111,7 @@ public class __darwin_pthread_handler_rec {
      * }
      */
     public static MemorySegment __next$get(MemorySegment seg) {
-        return (MemorySegment)constants$1.const$2.get(seg);
+        return (java.lang.foreign.MemorySegment)constants$1.const$2.get(seg);
     }
     /**
      * Setter for field:
@@ -123,7 +123,7 @@ public class __darwin_pthread_handler_rec {
         constants$1.const$2.set(seg, x);
     }
     public static MemorySegment __next$get(MemorySegment seg, long index) {
-        return (MemorySegment)constants$1.const$2.get(seg.asSlice(index*sizeof()));
+        return (java.lang.foreign.MemorySegment)constants$1.const$2.get(seg.asSlice(index*sizeof()));
     }
     public static void __next$set(MemorySegment seg, long index, MemorySegment x) {
         constants$1.const$2.set(seg.asSlice(index*sizeof()), x);
