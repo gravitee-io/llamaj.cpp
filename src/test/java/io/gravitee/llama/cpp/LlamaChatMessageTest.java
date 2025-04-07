@@ -28,7 +28,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class LlamaChatMessageTest {
+public class LlamaChatMessageTest extends LlamaCppTest{
 
     public static Stream<Arguments> params_that_must_init_message() {
         return Stream.of(
