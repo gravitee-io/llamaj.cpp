@@ -15,7 +15,7 @@
         <junit-jupiter-api.version>5.11.4</junit-jupiter-api.version>
         <assertj-core.version>3.27.3</assertj-core.version>
         <reflections.version>0.10.2</reflections.version>
-        <llama.cpp.version>b5046</llama.cpp.version>
+        <llama.cpp.version>b5076</llama.cpp.version>
         <llama.cpp.dir>${project.basedir}/../llama.cpp</llama.cpp.dir>
         <jextract.dir>${project.basedir}/../jextract/bin</jextract.dir>
     </properties>
