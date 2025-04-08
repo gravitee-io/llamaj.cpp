@@ -10,8 +10,76 @@ A port of llama.cpp in the JVM using jextract.
 
 ## Build
 
+
+1. Get `jextract`
+
+On Linux:
+
+Since we are using JDK 21 you can download a prebuilt version of `jextract`
+
 ```bash
-$ mvn clean install
+$ wget https://download.java.net/java/early_access/jextract/21/1/openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+$ tar -xzf openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+$ rm openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+$ echo 'export PATH="$(pwd)/jextract/bin:$PATH"' >> ~/.bashrc
+```
+
+On MacOS:
+For JDK21, there is not a version of jextract for MacOS aarch64, only for x86_64, so we have to build it ourselves
+
+```bash
+$ git clone https://github.com/openjdk/jextract
+$ cd jextract
+$ git checkout jdk21
+```
+
+Make sure your `$JAVA_HOME` points to your jdk21
+
+Since jextract for jdk21 uses gradle with a jdk17 version, we need to upgrade gradle version:
+```bash
+$ sed -i '' 's#gradle-7\.3\.3-bin\.zip#gradle-8.5-bin.zip#g' gradle/wrapper/gradle-wrapper.properties
+```
+
+Install llvm:
+```bash
+$ brew install llvm
+```
+
+Then execute the gradle command:
+```bash
+$ sh ./gradlew -Pjdk21_home=$JAVA_HOME -Pllvm_home=$(brew --prefix llvm) clean verify
+```
+
+Set `jextract` binaries to your path:
+```bash
+$ ln -sf $(pwd)/build/jextract/bin $(pwd)/bin
+$ echo "PATH=$PATH:$(pwd)/bin" >> ~/.zshrc
+$ source ~/.zshrc
+```
+
+3. Generate the sources
+
+4. Go to your `llama.cpp` path and execute:
+
+For Linux x86_64
+```bash
+$ jextract -t io.gravitee.llama.cpp.linux.x86_64 \
+           --source \
+           --include-dir ggml/include \
+           --output /path/to/gravitee-llama-cpp/src/main/java/ include/llama.h
+```
+For MacOs aarch64
+```bash
+$ jextract -t io.gravitee.llama.cpp.macosx.aarch64 \
+           --source \
+           --include-dir ggml/include \
+           --output /path/to/gravitee-llama-cpp/src/main/java/ include/llama.h
+```
+
+```bash
+$ mvn clean generate-sources -Pmacosx-aarch64,linux-x86_64
+$ export LLAMA_CPP_LIB_PATH="$HOME_DIR/gravitee-llama-cpp/target/generated-sources/<<macosx|linux>>"
+$ mvn install
 ```
 
 ## Run
@@ -67,69 +135,3 @@ You can use the environment variable `LLAMA_CPP_LIB_PATH=/path/to/llama.cpp/buil
 This will directly load the dynamically shared object library files (`.so` for linux, `.dylib` for macos) 
 You can also decide to copy these files into a temporary folder using the environment variable `LLAMA_CPP_USE_TMP_LIB_PATH=true`
 The path temporary file will be used to loaad the shared object libraries
-
-## Build jextract sources yourself
-
-1. Get `jextract`
-
-On Linux:
-
-Since we are using JDK 21 you can download a prebuilt version of `jextract`
-
-```bash
-$ wget https://download.java.net/java/early_access/jextract/21/1/openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-$ tar -xzf openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-$ rm openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-$ echo 'export PATH="$(pwd)/jextract/bin:$PATH"' >> ~/.bashrc
-```
-
-On MacOS:
-For JDK21, there is not a version of jextract for MacOS aarch64, only for x86_64, so we have to build it ourselves
-
-```bash
-$ git clone https://github.com/openjdk/jextract
-$ cd jextract
-$ git checkout jdk21
-```
-
-Make sure your `$JAVA_HOME` points to your jdk21
-
-Since jextract for jdk21 uses gradle with a jdk17 version, we need to upgrade gradle version:
-```bash
-$ sed -i '' 's#gradle-7\.3\.3-bin\.zip#gradle-8.5-bin.zip#g' gradle/wrapper/gradle-wrapper.properties
-```
-
-Install llvm:
-```bash
-$ brew install llvm
-```
-
-Then execute the gradle command:
-```bash
-$ sh ./gradlew -Pjdk21_home=$JAVA_HOME -Pllvm_home=$(brew --prefix llvm) clean verify
-```
-
-Set `jextract` binaries to your path:
-```bash
-$ echo "PATH=$PATH:$(pwd)/bin" >> ~/.zshrc
-$ source ~/.zshrc
-```
-
-3. Generate the sources
-
-4. Go to your `llama.cpp` path and execute:
-
-For Linux x86_64
-```bash
-$ jextract -t io.gravitee.llama.cpp.linux.x86_64 \
-           --source \
-           --include-dir ggml/include \
-           --output /path/to/gravitee-llama-cpp/src/main/java/ include/llama.h
-```
-For MacOs aarch64
-```bash
-$ jextract -t io.gravitee.llama.cpp.macosx.aarch64 \
-           --source \
-           --include-dir ggml/include \
-           --output /path/to/gravitee-llama-cpp/src/main/java/ include/llama.h
-```
