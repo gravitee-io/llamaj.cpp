@@ -20,12 +20,11 @@ package io.gravitee.llama.cpp.platform;
  * @author GraviteeSource Team
  */
 public record Platform(OperatingSystem os, Architecture architecture) {
+  public String runtime() {
+    return os.getOsName() + "_" + architecture.getArch();
+  }
 
-    public String runtime() {
-        return os.getOsName() + "_" + architecture.getArch();
-    }
-
-    public String getPackage() {
-        return os.getOsName() + "." + architecture.getArch();
-    }
+  public String getPackage() {
+    return os.getOsName() + "." + architecture.getArch();
+  }
 }

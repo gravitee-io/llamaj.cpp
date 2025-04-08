@@ -20,26 +20,27 @@ package io.gravitee.llama.cpp.platform;
  * @author GraviteeSource Team
  */
 public enum OperatingSystem {
-    MAC_OS_X("macosx"), LINUX("linux");
+  MAC_OS_X("macosx"),
+  LINUX("linux");
 
-    private final String osName;
+  private final String osName;
 
-    OperatingSystem(String osName) {
-        this.osName = osName;
+  OperatingSystem(String osName) {
+    this.osName = osName;
+  }
+
+  public static OperatingSystem fromSystem() {
+    String osName = System.getProperty("os.name").toLowerCase();
+    if (osName.contains("mac")) {
+      return MAC_OS_X;
     }
-
-    public static OperatingSystem fromSystem() {
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.contains("mac")) {
-            return MAC_OS_X;
-        }
-        if (osName.contains("linux")) {
-            return LINUX;
-        }
-        throw new IllegalArgumentException("Unsupported operating system: " + osName);
+    if (osName.contains("linux")) {
+      return LINUX;
     }
+    throw new IllegalArgumentException("Unsupported operating system: " + osName);
+  }
 
-    public String getOsName() {
-        return osName;
-    }
+  public String getOsName() {
+    return osName;
+  }
 }

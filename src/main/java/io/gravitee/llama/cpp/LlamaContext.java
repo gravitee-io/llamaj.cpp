@@ -21,25 +21,25 @@ import static io.gravitee.llama.cpp.LlamaRuntime.*;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaContext extends MemorySegmentAware implements Freeable{
+public final class LlamaContext extends MemorySegmentAware implements Freeable {
 
-    private final int nCtx;
+  private final int nCtx;
 
-    public LlamaContext(LlamaModel model, LlamaContextParams params) {
-        super(llama_init_from_model(model.segment, params.segment));
-        this.nCtx = params.nCtx();
-    }
+  public LlamaContext(LlamaModel model, LlamaContextParams params) {
+    super(llama_init_from_model(model.segment, params.segment));
+    this.nCtx = params.nCtx();
+  }
 
-    public int nCtx() {
-        return nCtx;
-    }
+  public int nCtx() {
+    return nCtx;
+  }
 
-    public int nCtxUsedCells() {
-        return llama_get_kv_cache_used_cells(this.segment);
-    }
+  public int nCtxUsedCells() {
+    return llama_get_kv_cache_used_cells(this.segment);
+  }
 
-    @Override
-    public void free() {
-        llama_free(this);
-    }
+  @Override
+  public void free() {
+    llama_free(this);
+  }
 }

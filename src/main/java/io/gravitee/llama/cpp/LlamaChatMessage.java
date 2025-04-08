@@ -15,10 +15,10 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
+
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
-
-import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -26,23 +26,22 @@ import static io.gravitee.llama.cpp.LlamaRuntime.*;
  */
 public final class LlamaChatMessage extends MemorySegmentAware {
 
-    public LlamaChatMessage(SegmentAllocator arena, Role role, String content) {
-        super(initMessage(arena, role, content));
-    }
+  public LlamaChatMessage(SegmentAllocator arena, Role role, String content) {
+    super(initMessage(arena, role, content));
+  }
 
-    private static MemorySegment initMessage(SegmentAllocator allocator, Role role, String content) {
-        var llamaChatMessage = llama_chat_message_allocate(allocator);
-        llama_chat_message_content(llamaChatMessage, allocator.allocateUtf8String(content));
-        llama_chat_message_role(llamaChatMessage, allocator.allocateUtf8String(role.getLabel()));
-        return llamaChatMessage;
-    }
+  private static MemorySegment initMessage(SegmentAllocator allocator, Role role, String content) {
+    var llamaChatMessage = llama_chat_message_allocate(allocator);
+    llama_chat_message_content(llamaChatMessage, allocator.allocateUtf8String(content));
+    llama_chat_message_role(llamaChatMessage, allocator.allocateUtf8String(role.getLabel()));
+    return llamaChatMessage;
+  }
 
-    public Role getRole() {
-        return Role.fromLabel(llama_chat_message_role(this.segment).getUtf8String(0));
-    }
+  public Role getRole() {
+    return Role.fromLabel(llama_chat_message_role(this.segment).getUtf8String(0));
+  }
 
-    public String getContent() {
-        return llama_chat_message_content(this.segment).getUtf8String(0);
-    }
-
+  public String getContent() {
+    return llama_chat_message_content(this.segment).getUtf8String(0);
+  }
 }

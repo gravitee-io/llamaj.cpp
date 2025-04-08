@@ -20,14 +20,14 @@ package io.gravitee.llama.cpp;
  * @author GraviteeSource Team
  */
 public enum PoolingType {
-    UNSPECIFIED,
-    NONE,
-    MEAN,
-    CLS,
-    LAST,
-    RANK;
+  UNSPECIFIED,
+  NONE,
+  MEAN,
+  CLS,
+  LAST,
+  RANK;
 
-    public static PoolingType fromOrdinal(int ordinal) {
-        return values()[ordinal];
-    }
+  public static PoolingType fromOrdinal(int ordinal) {
+    return values()[ordinal];
+  }
 }

@@ -1,0 +1,15 @@
+{
+  "extends": [
+    "config:base"
+  ],
+  "automerge": true,
+  "automergeType": "pr",
+  "packageRules": [
+    {
+      "fileMatch": [".*pom.xml"],
+      "depTypeList": ["dependencies", "devDependencies"],
+      "updateTypes": ["minor", "patch"],
+      "automerge": true
+    }
+  ]
+}

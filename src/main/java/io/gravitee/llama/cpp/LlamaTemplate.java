@@ -15,13 +15,12 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentAllocator;
-import java.lang.foreign.ValueLayout;
-
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_chat_apply_template;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_chat_template;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.ValueLayout;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -29,38 +28,32 @@ import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_chat_template;
  */
 public final class LlamaTemplate extends MemorySegmentAware {
 
-    public LlamaTemplate(LlamaModel llamaModel) {
-        super(llama_model_chat_template(llamaModel.segment, MemorySegment.NULL));
+  public LlamaTemplate(LlamaModel llamaModel) {
+    super(llama_model_chat_template(llamaModel.segment, MemorySegment.NULL));
+  }
+
+  public String applyTemplate(SegmentAllocator allocator, LlamaChatMessages messages, int nCtx) {
+    var templateBuffer = allocator.allocateArray(ValueLayout.JAVA_CHAR, nCtx);
+
+    int newLength = llama_chat_apply_template(
+      segment,
+      messages.segment,
+      messages.getMessages().size(),
+      true,
+      templateBuffer,
+      nCtx
+    );
+
+    if (newLength > nCtx) {
+      templateBuffer = allocator.allocateArray(ValueLayout.JAVA_CHAR, newLength);
+      newLength =
+        llama_chat_apply_template(segment, messages.segment, messages.getMessages().size(), true, templateBuffer, newLength);
     }
 
-    public String applyTemplate(SegmentAllocator allocator, LlamaChatMessages messages, int nCtx) {
-        var templateBuffer = allocator.allocateArray(ValueLayout.JAVA_CHAR, nCtx);
-        
-        int newLength = llama_chat_apply_template(
-                segment,
-                messages.segment,
-                messages.getMessages().size(),
-                true,
-                templateBuffer,
-                nCtx
-        );
-
-        if (newLength > nCtx) {
-            templateBuffer = allocator.allocateArray(ValueLayout.JAVA_CHAR, newLength);
-            newLength = llama_chat_apply_template(
-                    segment,
-                    messages.segment,
-                    messages.getMessages().size(),
-                    true,
-                    templateBuffer,
-                    newLength
-            );
-        }
-
-        if (newLength < 0) {
-            throw new IllegalStateException("failed to apply the chat template.");
-        }
-
-        return templateBuffer.getUtf8String(0);
+    if (newLength < 0) {
+      throw new IllegalStateException("failed to apply the chat template.");
     }
+
+    return templateBuffer.getUtf8String(0);
+  }
 }

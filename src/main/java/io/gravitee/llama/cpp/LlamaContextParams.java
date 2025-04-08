@@ -15,8 +15,6 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.lang.foreign.Arena;
-
 import static io.gravitee.llama.cpp.LlamaRuntime.attention_type;
 import static io.gravitee.llama.cpp.LlamaRuntime.flash_attn;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_context_default_params;
@@ -30,6 +28,7 @@ import static io.gravitee.llama.cpp.LlamaRuntime.no_perf;
 import static io.gravitee.llama.cpp.LlamaRuntime.offload_kqv;
 import static io.gravitee.llama.cpp.LlamaRuntime.pooling_type;
 
+import java.lang.foreign.Arena;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -37,115 +36,115 @@ import static io.gravitee.llama.cpp.LlamaRuntime.pooling_type;
  */
 public final class LlamaContextParams extends MemorySegmentAware {
 
-    public LlamaContextParams(Arena arena) {
-        super(llama_context_default_params(arena));
-    }
+  public LlamaContextParams(Arena arena) {
+    super(llama_context_default_params(arena));
+  }
 
-    public int nCtx(){
-        return n_ctx(this.segment);
-    }
+  public int nCtx() {
+    return n_ctx(this.segment);
+  }
 
-    public LlamaContextParams nCtx(int nCtx){
-        n_ctx(this.segment, nCtx);
-        return this;
-    }
+  public LlamaContextParams nCtx(int nCtx) {
+    n_ctx(this.segment, nCtx);
+    return this;
+  }
 
-    public int nBatch(){
-        return n_batch(this.segment);
-    }
+  public int nBatch() {
+    return n_batch(this.segment);
+  }
 
-    public LlamaContextParams nBatch(int nBatch){
-        n_batch(this.segment, nBatch);
-        return this;
-    }
+  public LlamaContextParams nBatch(int nBatch) {
+    n_batch(this.segment, nBatch);
+    return this;
+  }
 
-    public int nUBatch(){
-        return n_ubatch(this.segment);
-    }
+  public int nUBatch() {
+    return n_ubatch(this.segment);
+  }
 
-    public LlamaContextParams nUBatch(int nUBatch){
-        n_ubatch(this.segment, nUBatch);
-        return this;
-    }
+  public LlamaContextParams nUBatch(int nUBatch) {
+    n_ubatch(this.segment, nUBatch);
+    return this;
+  }
 
-    public int nSeqMax(){
-        return n_seq_max(this.segment);
-    }
+  public int nSeqMax() {
+    return n_seq_max(this.segment);
+  }
 
-    public LlamaContextParams nSeqMax(int nSeqMax){
-        n_seq_max(this.segment, nSeqMax);
-        return this;
-    }
+  public LlamaContextParams nSeqMax(int nSeqMax) {
+    n_seq_max(this.segment, nSeqMax);
+    return this;
+  }
 
-    public int nThreads(){
-        return n_threads(this.segment);
-    }
+  public int nThreads() {
+    return n_threads(this.segment);
+  }
 
-    public LlamaContextParams nThreads(int nThreads){
-        n_threads(this.segment, nThreads);
-        return this;
-    }
+  public LlamaContextParams nThreads(int nThreads) {
+    n_threads(this.segment, nThreads);
+    return this;
+  }
 
-    public int nThreadsBatch(){
-        return n_threads_batch(this.segment);
-    }
+  public int nThreadsBatch() {
+    return n_threads_batch(this.segment);
+  }
 
-    public LlamaContextParams nThreadsBatch(int nThreadsBatch){
-        n_threads_batch(this.segment, nThreadsBatch);
-        return this;
-    }
+  public LlamaContextParams nThreadsBatch(int nThreadsBatch) {
+    n_threads_batch(this.segment, nThreadsBatch);
+    return this;
+  }
 
-    public PoolingType poolingType(){
-        return PoolingType.fromOrdinal(pooling_type(this.segment) + 1);
-    }
+  public PoolingType poolingType() {
+    return PoolingType.fromOrdinal(pooling_type(this.segment) + 1);
+  }
 
-    public LlamaContextParams poolingType(PoolingType poolingType){
-        pooling_type(this.segment, poolingType.ordinal() - 1);
-        return this;
-    }
+  public LlamaContextParams poolingType(PoolingType poolingType) {
+    pooling_type(this.segment, poolingType.ordinal() - 1);
+    return this;
+  }
 
-    public AttentionType attentionType(){
-        return AttentionType.fromOrdinal(attention_type(this.segment) + 1);
-    }
+  public AttentionType attentionType() {
+    return AttentionType.fromOrdinal(attention_type(this.segment) + 1);
+  }
 
-    public LlamaContextParams attentionType(AttentionType attentionType){
-        attention_type(this.segment, attentionType.ordinal() - 1);
-        return this;
-    }
+  public LlamaContextParams attentionType(AttentionType attentionType) {
+    attention_type(this.segment, attentionType.ordinal() - 1);
+    return this;
+  }
 
-    public boolean embeddings(){
-        return LlamaRuntime.embeddings(this.segment);
-    }
+  public boolean embeddings() {
+    return LlamaRuntime.embeddings(this.segment);
+  }
 
-    public LlamaContextParams embeddings(boolean embeddings) {
-        LlamaRuntime.embeddings(this.segment, embeddings);
-        return this;
-    }
+  public LlamaContextParams embeddings(boolean embeddings) {
+    LlamaRuntime.embeddings(this.segment, embeddings);
+    return this;
+  }
 
-    public boolean offloadKQV(){
-        return offload_kqv(this.segment);
-    }
+  public boolean offloadKQV() {
+    return offload_kqv(this.segment);
+  }
 
-    public LlamaContextParams offloadKQV(boolean offloadKQV) {
-        offload_kqv(this.segment, offloadKQV);
-        return this;
-    }
+  public LlamaContextParams offloadKQV(boolean offloadKQV) {
+    offload_kqv(this.segment, offloadKQV);
+    return this;
+  }
 
-    public boolean flashAttn(){
-        return flash_attn(this.segment);
-    }
+  public boolean flashAttn() {
+    return flash_attn(this.segment);
+  }
 
-    public LlamaContextParams flashAttn(boolean flashAttn) {
-        flash_attn(this.segment, flashAttn);
-        return this;
-    }
+  public LlamaContextParams flashAttn(boolean flashAttn) {
+    flash_attn(this.segment, flashAttn);
+    return this;
+  }
 
-    public boolean noPerf(){
-        return no_perf(this.segment);
-    }
+  public boolean noPerf() {
+    return no_perf(this.segment);
+  }
 
-    public LlamaContextParams noPerf(boolean embeddings) {
-        no_perf(this.segment, embeddings);
-        return this;
-    }
+  public LlamaContextParams noPerf(boolean embeddings) {
+    no_perf(this.segment, embeddings);
+    return this;
+  }
 }

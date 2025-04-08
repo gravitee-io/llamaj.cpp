@@ -16,12 +16,6 @@ executors:
     working_directory: /home/circleci
     resource_class: medium
 
-  llama_cpp_light_x86-64_cpu:
-    docker:
-      - image: ghcr.io/ggml-org/llama.cpp:light
-    working_directory: /home/circleci
-    resource_class: small
-
 commands:
   git_config:
     description: This command runs the git config in your pipeline, for the bot user configured in your secret manager. It requires [bash]
@@ -32,21 +26,26 @@ commands:
       - keeper/env-export:
           secret-url: keeper://IZd-yvsMopfQEa_0j1SDvg/custom_field/email
           var-name: GIT_USER_EMAIL
-      - keeper/env-export:
-          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
-          var-name: GITHUB_TOKEN
-      - gh/setup
       - run:
           name: Git Config
           command: |
             cd $HOME_DIR/gravitee-llama-cpp/
             git config --global user.name "${GIT_USER_NAME}"
             git config --global user.email "${GIT_USER_EMAIL}"
-            
+
+  git_auth:
+    description: This command runs the git config in your pipeline, for the bot user configured in your secret manager. It requires [bash]
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - run:
+          name: Git Config
+          command: |
+            cd $HOME_DIR/gravitee-llama-cpp/
+
             ORG_REPO=$(git --no-pager config remote.origin.url | sed -E 's/git@github.com:(.*).git/\1/')
             git remote set-url origin "https://$GITHUB_TOKEN@github.com/$ORG_REPO.git"
-            
-            cd /home/circleci/
 
   install-java-macos:
     steps:
@@ -56,23 +55,23 @@ commands:
             JDK_URL="https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_macos-aarch64_bin.tar.gz"
             INSTALL_DIR="/Library/Java/JavaVirtualMachines"
             JDK_DIR="jdk-21.0.2.jdk"
-            
+
             # Create installation directory if it doesn't exist
             sudo mkdir -p $INSTALL_DIR
             cd $INSTALL_DIR
-            
+
             # Download and extract JDK
             sudo curl -L -o jdk.tar.gz $JDK_URL
             sudo tar -xzf jdk.tar.gz
             sudo rm jdk.tar.gz
-            
+
             cd ~/
             # Set JAVA_HOME and update PATH
             echo 'source ~/.zprofile' >> ~/.zshrc
             echo 'export JAVA_HOME="'$INSTALL_DIR'/'$JDK_DIR'/Contents/Home"' >> ~/.zprofile
             echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> ~/.zprofile
             source ~/.zprofile
-            
+
             java -version
 
   install-maven-macos:
@@ -83,11 +82,11 @@ commands:
             MAVEN_URL="https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz"
             INSTALL_DIR="/opt/maven"
             MAVEN_DIR="apache-maven-3.9.9"
-            
+
             # Create installation directory
             sudo mkdir -p $INSTALL_DIR
             cd $INSTALL_DIR
-            
+
             # Download and extract Maven
             sudo curl -L -o maven.tar.gz $MAVEN_URL
             sudo tar -xzf maven.tar.gz --strip-components=1
@@ -97,7 +96,7 @@ commands:
             echo 'export MAVEN_HOME="'$INSTALL_DIR'"' >> ~/.zprofile
             echo 'export PATH="$MAVEN_HOME/bin:$PATH"' >> ~/.zprofile
             source ~/.zprofile
-            
+
             # Verify installation
             sudo mvn -version
 
@@ -113,8 +112,8 @@ commands:
           command: |
             export DEBIAN_FRONTEND=noninteractive 
             export TZ=Etc/UTC
-            
-            apt -y install locales git jq curl wget unzip build-essential tzdata
+
+            apt -y install locales git jq curl wget tzdata
             locale-gen C.UTF-8
       - gh/install
 
@@ -123,7 +122,13 @@ commands:
       - run:
           name: Java dependencies
           command: |
-            apt -y install openjdk-21-jdk maven 
+            apt -y install openjdk-21-jdk maven
+
+  install_dependencies_jextract:
+    steps:
+      - run:
+          name: Locale dependencies
+          command: apt -y install unzip build-essential
 
   build_jextract:
     steps:
@@ -154,7 +159,7 @@ commands:
             mv jextract-21 "$HOME_DIR/jextract"
             rm openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
 
-  download-model:
+  download_model:
     parameters:
       model_url:
         type: string
@@ -174,21 +179,23 @@ commands:
       platform:
         type: string
     steps:
+      - attach_workspace:
+          at: /tmp/
       - run:
           name: Run Tests
           command: |
             cd $HOME_DIR/gravitee-llama-cpp
             export LLAMA_CPP_LIB_PATH="$HOME_DIR/gravitee-llama-cpp/target/generated-sources/<< parameters.os >>/<< parameters.platform >>/"
-            
+
             if [[ << parameters.os >> == "macosx" ]]; then
               source ~/.zprofile
             elif [[ << parameters.os >> == "linux" ]]; then
               source ~/.bashrc
               export LD_LIBRARY_PATH="$LLAMA_CPP_LIB_PATH:$LD_LIBRARY_PATH"
             fi
-            
-            mvn clean generate-sources -Pmacosx-aarch64,linux-x86_64
-            mvn install
+
+            mvn -s /tmp/.gravitee.settings.xml clean generate-sources -Pmacosx-aarch64,linux-x86_64
+            mvn -s /tmp/.gravitee.settings.xml install
 
   get_jextract:
     parameters:
@@ -206,63 +213,154 @@ commands:
             elif [[ << parameters.os >> == 'macosx' ]]; then
               echo "export LLAMA_CPP_VERSION=$LLAMA_CPP_VERSION" >> ~/.zprofile
             fi
-            
+
             git clone -b $LLAMA_CPP_VERSION --single-branch https://github.com/ggml-org/llama.cpp "$HOME_DIR/llama.cpp"
       - when:
           condition:
             and:
-              - equal: [ 'linux', << parameters.os >> ]
+              - equal: ["linux", << parameters.os >>]
           steps:
             - download_jextract
       - when:
           condition:
             and:
-              - equal: [ 'macosx', << parameters.os >> ]
+              - equal: ["macosx", << parameters.os >>]
           steps:
             - build_jextract
 
-  push_updated_libs:
+  update_llama_cpp_version:
+    steps:
+      - run:
+          name: Update llama.cpp version
+          command: bash $HOME_DIR/gravitee-llama-cpp/scripts/update_llama_cpp_version.sh
+
+  generate_sources:
     parameters:
       os:
         type: string
       platform:
         type: string
     steps:
+      - attach_workspace:
+          at: /tmp/
       - run:
-          name: "Push to github"
+          name: Generate sources
           command: |
-            REPO_DIR=$HOME_DIR/gravitee-llama-cpp/
-            cd $REPO_DIR
-
-            TARGET_SOURCE_DIR=$REPO_DIR/src/main/
-
+            cd $HOME_DIR/gravitee-llama-cpp
+            cp /tmp/.gravitee.settings.xml .
+            
             OS=<< parameters.os >>
             PLATFORM=<< parameters.platform >>
-            cd $REPO_DIR
 
-            # Copy java bindings into repository
-            rm -r $TARGET_SOURCE_DIR/java/io/gravitee/llama/cpp/$OS/$PLATFORM/
-            cp -r $HOME_DIR/llama.cpp/java/* $TARGET_SOURCE_DIR/java/
+            if [[ << parameters.os >> == "macosx" ]]; then
+              source ~/.zprofile
+            elif [[ << parameters.os >> == "linux" ]]; then
+              source ~/.bashrc
+            fi
 
-            # Copy native libs
-            NATIVE_LIB_SOURCE=$TARGET_SOURCE_DIR/resources/$OS/$PLATFORM/
-            rm $NATIVE_LIB_SOURCE/*
-            cp $HOME_DIR/llama-cpp/lib/$OS/$PLATFORM/* $NATIVE_LIB_SOURCE/
+            mvn -s .gravitee.settings.xml clean generate-sources -P$OS-$PLATFORM
+      - when:
+          condition:
+            and:
+              - equal: ["linux", << parameters.os >>]
+          steps:
+            - persist_to_workspace:
+                root: "/home/circleci/gravitee-llama-cpp"
+                paths: [
+                  "target/generated-sources/linux",
+                  "target/generated-sources/io/gravitee/llama/cpp/linux",
+                ]
+      - when:
+          condition:
+            and:
+              - equal: ["macosx", << parameters.os >>]
+          steps:
+            - persist_to_workspace:
+                root: "/Users/distiller/gravitee-llama-cpp"
+                paths: [
+                  "target/generated-sources/macosx",
+                  "target/generated-sources/io/gravitee/llama/cpp/macosx",
+                ]
 
-            # Push to git
-            BRANCH_NAME="chore/llama-cpp-$LLAMA_CPP_VERSION-$OS-$PLATFORM"
-            git checkout -b $BRANCH_NAME
-            mvn versions:set -DgenerateBackupPoms=false -DnewVersion="$LLAMA_CPP_VERSION"
+  release_tag:
+    steps:
+      - attach_workspace:
+          at: gravitee-llama-cpp
+      - run:
+          name: Install npm
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+            apt install -y nodejs
+            node -v
+            npm -v
+      - run:
+          name: Install semantic-release
+          command: |
+            npm install -g \
+              semver \
+              conventional-changelog-cli \
+              conventional-recommended-bump \
+              conventional-changelog-conventionalcommits \
+      - run:
+          name: Tag release version
+          command: bash -x $HOME_DIR/gravitee-llama-cpp/scripts/release_tag.sh
+      - persist_to_workspace:
+          root: "/home/circleci/"
+          paths: [
+            "gravitee-llama-cpp"
+          ]
+            
+  github_release:
+    steps:
+      - attach_workspace:
+          at: .
+      - gh/install
+      - git_config
+      - git_auth
+      - gh/setup
+      - run:
+          name: Github Release
+          command: bash $HOME_DIR/gravitee-llama-cpp/scripts/github_release.sh
 
-            git add --all  
-            git commit -m "chore: version set for llama.cpp v$LLAMA_CPP_VERSION on $OS $PLATFORM"
-            git push origin $BRANCH_NAME
+  maven_deploy:
+    steps:
+      - attach_workspace:
+          at: .
+      - prepare-gpg
+      - run:
+          name: Maven Deploy
+          command: |
+            cd $HOME_DIR/gravitee-llama-cpp/
+            mvn -s .gravitee.settings.xml -B -P gio-artifactory-release,gio-release deploy -DskipTests=true
 
-            gh pr create --title "chore: llama.cpp v$LLAMA_CPP_VERSION on $OS $PLATFORM" \
-              --body "This PR updates llama.cpp v$LLAMA_CPP_VERSION for $OS-$PLATFORM"
-
+  prepare-gpg:
+    description: Prepare GPG command
+    steps:
+      - keeper/install
+      - run:
+          command: |
+            ksm secret notation keeper://riW92t8X4tk4ZmQc8-FZ4Q/custom_field/armor_format_pub_key > pub.key
+            gpg --import pub.key
+            
+            ksm secret notation keeper://riW92t8X4tk4ZmQc8-FZ4Q/custom_field/armor_format_private_key > private.key
+            gpg --import --batch private.key
 
 jobs:
+  setup:
+    docker:
+      - image: 'cimg/base:stable'
+    resource_class: small
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://7CgijuGiFDSLynRJt1Dm9w/custom_field/xml
+          var-name: MAVEN_SETTINGS
+      - run:
+          command: echo $MAVEN_SETTINGS > .gravitee.settings.xml
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .gravitee.settings.xml
+
   build_and_test_macos:
     executor: macos-executor
     environment:
@@ -275,7 +373,7 @@ jobs:
           "llama-cpp-version": b5076
       - checkout:
           path: "/Users/distiller/gravitee-llama-cpp"
-      - download-model:
+      - download_model:
           model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
           model_path: "models/Llama-3.2-1B-Instruct-IQ3_M.gguf"
       - run-tests:
@@ -289,15 +387,49 @@ jobs:
     steps:
       - install_dependencies
       - install_java_dependencies
+      - install_dependencies_jextract
       - get_jextract:
           os: "linux"
           "llama-cpp-version": b5076
       - checkout:
           path: "/home/circleci/gravitee-llama-cpp"
-      - download-model:
+      - download_model:
           model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
           model_path: "models/Llama-3.2-1B-Instruct-IQ3_M.gguf"
       - run-tests:
+          os: "linux"
+          platform: "x86_64"
+
+  build_sources_macos:
+    executor: macos-executor
+    environment:
+      HOME_DIR: "/Users/distiller"
+    steps:
+      - install-java-macos
+      - install-maven-macos
+      - get_jextract:
+          os: "macosx"
+          "llama-cpp-version": b5076
+      - checkout:
+          path: "/Users/distiller/gravitee-llama-cpp"
+      - generate_sources:
+          os: "macosx"
+          platform: "aarch64"
+
+  build_sources_linux:
+    executor: ubuntu_linux_x86_64
+    environment:
+      HOME_DIR: "/home/circleci"
+    steps:
+      - install_dependencies
+      - install_java_dependencies
+      - install_dependencies_jextract
+      - get_jextract:
+          os: "linux"
+          "llama-cpp-version": b5076
+      - checkout:
+          path: "/home/circleci/gravitee-llama-cpp"
+      - generate_sources:
           os: "linux"
           platform: "x86_64"
 
@@ -313,33 +445,51 @@ jobs:
           path: "/home/circleci/gravitee-llama-cpp"
       - gh/install
       - git_config
-      - run:
-          name: Update llama.cpp version
-          command: |
-            git clone --single-branch https://github.com/ggml-org/llama.cpp "$HOME_DIR/llama.cpp"
-            cd $HOME_DIR/llama.cpp 
-            NEW_LLAMA_CPP_VERSION=$(gh release ls --limit 1 --json tagName  | jq ".[0].tagName" | tr -d \")
-            
-            cd $HOME_DIR/gravitee-llama-cpp/
-            OLD_LLAMA_CPP_VERSION=$(egrep -io "<llama.cpp.version>(b[0-9]+)</llama.cpp.version>" pom.xml | egrep -io "b[0-9]+")
-            
-            branch_name="chore/llama.cpp-$OLD_LLAMA_CPP_VERSION-to-$NEW_LLAMA_CPP_VERSION"
-            git checkout -b $branch_name
-              
-            sed -ri "s#$OLD_LLAMA_CPP_VERSION#$NEW_LLAMA_CPP_VERSION#g" pom.xml
-            sed -ri "s#$OLD_LLAMA_CPP_VERSION#$NEW_LLAMA_CPP_VERSION#g" .circleci/config.yml
-            
-            git add pom.xml .circleci/config.yml
-            git commit -m "chore(deps): update llama.cpp from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION"
-            git push origin $branch_name
-            
-             gh pr create --title "chore(deps): update llama.cpp from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION" \
-              --body "This PR updates llama.cpp from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION"
-            
+      - git_auth
+      - gh/setup
+      - update_llama_cpp_version
+
+  release_tag:
+    executor: ubuntu_linux_x86_64
+    environment:
+      HOME_DIR: "/home/circleci/"
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+    steps:
+      - install_dependencies
+      - install_java_dependencies
+      - checkout:
+          path: "/home/circleci/gravitee-llama-cpp"
+      - git_config
+      - release_tag
+
+  github_release:
+    executor: ubuntu_linux_x86_64
+    environment:
+      HOME_DIR: "/home/circleci/"
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+    steps:
+      - install_dependencies
+      - install_java_dependencies
+      - github_release
+
+  maven_deploy:
+    executor: ubuntu_linux_x86_64
+    environment:
+      HOME_DIR: "/home/circleci/"
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+    steps:
+      - install_dependencies
+      - install_java_dependencies
+      - install_dependencies_jextract
+      - maven_deploy
+
 parameters:
   gio_action:
     type: enum
-    enum: [ push_commit, update_libraries ]
+    enum: [push_commit, update_libraries]
     default: push_commit
     description: ""
 
@@ -349,17 +499,77 @@ workflows:
   build-and-test:
     when:
       and:
-        - equal: [ push_commit , << pipeline.parameters.gio_action >> ]
+        - equal: [push_commit, << pipeline.parameters.gio_action >>]
+        - not:
+            equal: [ "main", << pipeline.git.branch >> ]
     jobs:
-      - build_and_test_macos
-      - build_and_test_linux
+      - setup:
+          name: Setup
+          context:
+            - cicd-orchestrator
+      - build_and_test_macos:
+          name: Build and Test -- MacOs
+          requires:
+            - Setup
+          context:
+            - cicd-orchestrator
+      - build_and_test_linux:
+          name: Build and Test -- Linux x86_64
+          requires:
+            - Setup
+          context:
+            - cicd-orchestrator
 
   update_llama_cpp:
     when:
       and:
-        - equal: [ update_libraries , << pipeline.parameters.gio_action >> ]
+        - equal: [update_libraries, << pipeline.parameters.gio_action >>]
+        - not:
+            equal: [ "main", << pipeline.git.branch >> ]
     jobs:
       - update_llama_cpp:
+          context:
+            - cicd-orchestrator
+
+  semantic_release:
+    when:
+      and:
+        - equal: [ push_commit, << pipeline.parameters.gio_action >> ]
+        - equal: ["main", << pipeline.git.branch >>]
+    jobs:
+      - setup:
+          name: Setup
+          context:
+            - cicd-orchestrator
+      - build_sources_linux:
+          name: Build sources - Linux
+          requires:
+            - Setup
+          context:
+            - cicd-orchestrator
+      - build_sources_macos:
+          name: Build sources - Macosx
+          requires:
+            - Setup
+          context:
+            - cicd-orchestrator
+      - release_tag:
+          name: Release Tag
+          requires:
+            - Build sources - Linux
+            - Build sources - Macosx
+          context:
+            - cicd-orchestrator
+      - github_release:
+          name: Github Release
+          requires:
+            - Release Tag
+          context:
+            - cicd-orchestrator
+      - maven_deploy:
+          name: Maven Deploy
+          requires:
+            - Release Tag
           context:
             - cicd-orchestrator
 

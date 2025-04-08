@@ -8,10 +8,23 @@ A port of llama.cpp in the JVM using jextract.
 - mvn
 - MacOS M-series / Linux x86_64 (CPU)
 
+## How to use
+```
+    <dependencies>
+        ...
+        <dependency>
+            <groupId>io.gravitee.llama.cpp</groupId>
+            <artifactId>gravitee-llama-cpp</artifactId>
+            <version>x.x.x</version>
+        <dependency>
+    </dependencies>
+```
+
 ## Build
 
-
 1. Get `jextract`
+
+/!\ Make sure the `jextract` folder is in the same path level as your repository /!\
 
 On Linux:
 
@@ -56,27 +69,18 @@ $ ln -sf $(pwd)/build/jextract/bin $(pwd)/bin
 $ echo "PATH=$PATH:$(pwd)/bin" >> ~/.zshrc
 $ source ~/.zshrc
 ```
+3. Clone llama.cpp
 
-3. Generate the sources
+/!\ Make sure `llama.cpp` folder is in the same path level as your repository /!\
 
-4. Go to your `llama.cpp` path and execute:
-
-For Linux x86_64
 ```bash
-$ jextract -t io.gravitee.llama.cpp.linux.x86_64 \
-           --source \
-           --include-dir ggml/include \
-           --output /path/to/gravitee-llama-cpp/src/main/java/ include/llama.h
-```
-For MacOs aarch64
-```bash
-$ jextract -t io.gravitee.llama.cpp.macosx.aarch64 \
-           --source \
-           --include-dir ggml/include \
-           --output /path/to/gravitee-llama-cpp/src/main/java/ include/llama.h
+$ git clone https://github.com/ggml-org/llama.cpp
 ```
 
+5. Download binaries and generate the sources
+
 ```bash
+$ cd gravitee-llama-cpp/
 $ mvn clean generate-sources -Pmacosx-aarch64,linux-x86_64
 $ export LLAMA_CPP_LIB_PATH="$HOME_DIR/gravitee-llama-cpp/target/generated-sources/<<macosx|linux>>"
 $ mvn install
@@ -91,14 +95,17 @@ $ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
 
 On linux don't forget to link your libraries with the environment variable below:
 ```bash
+$ mkdir $HOME/.llama.cpp
 $ export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
 ```
-`
+
 There are plenty of models on HuggingFace, we suggest the one [here](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF)
 
 ## Use your own llama.cpp build
 
 1. Clone `llama.cpp` repository
+
+/!\ Make sure the jextract folder is in the same path level as your repository /!\
 
 ```bash
 $ git clone https://github.com/ggml-org/llama.cpp
