@@ -20,11 +20,11 @@ package io.gravitee.llama.cpp;
  * @author GraviteeSource Team
  */
 public enum SplitMode {
-    NONE, // Single GPU
-    LAYER, // Split layers and KV across GPUs
-    ROW; // Split layers and KV acorss GPUs, use tensor parallelism if supported
+  NONE, // Single GPU
+  LAYER, // Split layers and KV across GPUs
+  ROW; // Split layers and KV acorss GPUs, use tensor parallelism if supported
 
-    public static SplitMode fromOrdinal(int ordinal) {
-        return values()[ordinal];
-    }
+  public static SplitMode fromOrdinal(int ordinal) {
+    return values()[ordinal];
+  }
 }

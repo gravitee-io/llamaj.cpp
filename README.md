@@ -91,6 +91,7 @@ $ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
 
 On linux don't forget to link your libraries with the environment variable below:
 ```bash
+$ mkdir $HOME/.llama.cpp
 $ export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
 ```
 `

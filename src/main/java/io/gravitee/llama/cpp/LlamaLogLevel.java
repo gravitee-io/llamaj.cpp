@@ -20,10 +20,10 @@ package io.gravitee.llama.cpp;
  * @author GraviteeSource Team
  */
 public enum LlamaLogLevel {
-    NONE,
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR,
-    CONT, // continue previous log
+  NONE,
+  DEBUG,
+  INFO,
+  WARN,
+  ERROR,
+  CONT, // continue previous log
 }

@@ -1,4 +1,3 @@
-
 /*
  * Copyright © 2015 The Gravitee team (http://gravitee.io)
  *
@@ -16,12 +15,12 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_chat_message_allocateArray;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_chat_message_sizeof;
+
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.List;
-
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_chat_message_allocateArray;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_chat_message_sizeof;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -29,25 +28,25 @@ import static io.gravitee.llama.cpp.LlamaRuntime.llama_chat_message_sizeof;
  */
 public final class LlamaChatMessages extends MemorySegmentAware {
 
-    private final List<LlamaChatMessage> messages;
+  private final List<LlamaChatMessage> messages;
 
-    public LlamaChatMessages(Arena arena, List<LlamaChatMessage> messages) {
-        super(initMessages(arena, messages));
-        this.messages = messages;
-    }
+  public LlamaChatMessages(Arena arena, List<LlamaChatMessage> messages) {
+    super(initMessages(arena, messages));
+    this.messages = messages;
+  }
 
-    private static MemorySegment initMessages(Arena arena, List<LlamaChatMessage> messages) {
-        long structSize = llama_chat_message_sizeof();
-        var chatArray = llama_chat_message_allocateArray(messages.size(), arena);
-        for (var index = 0; index < messages.size(); index++) {
-            var messageSegment = messages.get(index).segment;
-            long structOffset = index * structSize;
-            chatArray.asSlice(structOffset, structSize).copyFrom(messageSegment);
-        }
-        return chatArray;
+  private static MemorySegment initMessages(Arena arena, List<LlamaChatMessage> messages) {
+    long structSize = llama_chat_message_sizeof();
+    var chatArray = llama_chat_message_allocateArray(messages.size(), arena);
+    for (var index = 0; index < messages.size(); index++) {
+      var messageSegment = messages.get(index).segment;
+      long structOffset = index * structSize;
+      chatArray.asSlice(structOffset, structSize).copyFrom(messageSegment);
     }
+    return chatArray;
+  }
 
-    public List<LlamaChatMessage> getMessages() {
-        return messages;
-    }
+  public List<LlamaChatMessage> getMessages() {
+    return messages;
+  }
 }

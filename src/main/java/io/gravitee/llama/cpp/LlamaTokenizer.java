@@ -15,12 +15,11 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentAllocator;
-
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_tokenize;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -28,44 +27,45 @@ import static java.lang.foreign.ValueLayout.JAVA_INT;
  */
 public final class LlamaTokenizer {
 
-    private final LlamaVocab vocab;
-    private final LlamaContext context;
+  private final LlamaVocab vocab;
+  private final LlamaContext context;
 
-    public LlamaTokenizer(LlamaVocab vocab, LlamaContext context) {
-        this.vocab = vocab;
-        this.context = context;
+  public LlamaTokenizer(LlamaVocab vocab, LlamaContext context) {
+    this.vocab = vocab;
+    this.context = context;
+  }
+
+  public TokenizerResponse tokenize(SegmentAllocator allocator, String prompt) {
+    boolean isFirst = this.context.nCtxUsedCells() == 0;
+
+    var promptSegment = this.getPromptSegment(allocator, prompt, isFirst);
+
+    int nbPromptTokens = promptSegment.size();
+    var tokenBuffer = allocator.allocateArray(JAVA_INT, nbPromptTokens);
+
+    if (llama_tokenize(vocab.segment, promptSegment.data, prompt.length(), tokenBuffer, nbPromptTokens, isFirst, true) < 0) {
+      throw new IllegalStateException("Failed to tokenize");
     }
 
-    public TokenizerResponse tokenize(SegmentAllocator allocator, String prompt) {
-        boolean isFirst = this.context.nCtxUsedCells() == 0;
+    return new TokenizerResponse(tokenBuffer, nbPromptTokens);
+  }
 
-        var promptSegment = this.getPromptSegment(allocator, prompt, isFirst);
+  public PromptSegment getPromptSegment(SegmentAllocator allocator, String prompt, boolean isFirst) {
+    var promptSegment = allocator.allocateUtf8String(prompt);
+    int nbPromptTokens = -llama_tokenize(
+      vocab.segment,
+      promptSegment,
+      prompt.length(),
+      MemorySegment.NULL,
+      0,
+      isFirst,
+      true
+    );
 
-        int nbPromptTokens = promptSegment.size();
-        var tokenBuffer = allocator.allocateArray(JAVA_INT, nbPromptTokens);
+    return new PromptSegment(promptSegment, nbPromptTokens);
+  }
 
-        if (llama_tokenize(vocab.segment, promptSegment.data, prompt.length(), tokenBuffer, nbPromptTokens, isFirst, true) < 0) {
-            throw new IllegalStateException("Failed to tokenize");
-        }
+  public record PromptSegment(MemorySegment data, int size) {}
 
-        return new TokenizerResponse(tokenBuffer, nbPromptTokens);
-    }
-
-    public PromptSegment getPromptSegment(SegmentAllocator allocator, String prompt, boolean isFirst) {
-        var promptSegment = allocator.allocateUtf8String(prompt);
-        int nbPromptTokens = -llama_tokenize(
-                vocab.segment,
-                promptSegment,
-                prompt.length(),
-                MemorySegment.NULL,
-                0,
-                isFirst,
-                true
-        );
-
-        return new PromptSegment(promptSegment, nbPromptTokens);
-    }
-
-    public record PromptSegment(MemorySegment data, int size){}
-    public record TokenizerResponse(MemorySegment data, int size){}
+  public record TokenizerResponse(MemorySegment data, int size) {}
 }

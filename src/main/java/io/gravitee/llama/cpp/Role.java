@@ -22,22 +22,25 @@ import java.util.Arrays;
  * @author GraviteeSource Team
  */
 public enum Role {
-    ASSISTANT("assistant"), SYSTEM("system"), USER("user");
+  ASSISTANT("assistant"),
+  SYSTEM("system"),
+  USER("user");
 
-    private final String label;
+  private final String label;
 
-    Role(String label) {
-        this.label = label;
-    }
+  Role(String label) {
+    this.label = label;
+  }
 
-    public String getLabel() {
-        return label;
-    }
+  public String getLabel() {
+    return label;
+  }
 
-    public static Role fromLabel(String label) {
-        return Arrays.stream(Role.values())
-                .filter(role -> role.label.equals(label))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid role: " + label));
-    }
+  public static Role fromLabel(String label) {
+    return Arrays
+      .stream(Role.values())
+      .filter(role -> role.label.equals(label))
+      .findFirst()
+      .orElseThrow(() -> new IllegalArgumentException("Invalid role: " + label));
+  }
 }

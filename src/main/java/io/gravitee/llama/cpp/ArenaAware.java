@@ -1,4 +1,3 @@
-
 /*
  * Copyright © 2015 The Gravitee team (http://gravitee.io)
  *
@@ -24,10 +23,9 @@ import java.lang.foreign.Arena;
  */
 abstract class ArenaAware {
 
-    Arena arena;
+  Arena arena;
 
-    ArenaAware(Arena allocator) {
-        this.arena = allocator;
-    }
-
+  ArenaAware(Arena allocator) {
+    this.arena = allocator;
+  }
 }

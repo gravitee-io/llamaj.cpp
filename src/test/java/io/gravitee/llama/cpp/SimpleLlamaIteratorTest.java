@@ -15,18 +15,17 @@
  */
 package io.gravitee.llama.cpp;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
 import java.util.Random;
 import java.util.stream.Stream;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -34,65 +33,63 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  */
 class SimpleLlamaIteratorTest extends LlamaCppTest {
 
-    static Stream<Arguments> params_that_allow_llama_generation() {
-        return Stream.of(
-                Arguments.of(SYSTEM, "What is the capital of France?", "Paris"),
-                Arguments.of(SYSTEM, "What is the capital of England?", "London"),
-                Arguments.of(SYSTEM, "What is the capital of Poland?", "Warsaw")
-        );
+  static Stream<Arguments> params_that_allow_llama_generation() {
+    return Stream.of(
+      Arguments.of(SYSTEM, "What is the capital of France?", "Paris"),
+      Arguments.of(SYSTEM, "What is the capital of England?", "London"),
+      Arguments.of(SYSTEM, "What is the capital of Poland?", "Warsaw")
+    );
+  }
+
+  private static Arena arena;
+
+  @BeforeAll
+  public static void beforeAll() {
+    LlamaCppTest.beforeAll();
+    LlamaRuntime.ggml_backend_load_all();
+    arena = Arena.ofConfined();
+  }
+
+  @ParameterizedTest
+  @MethodSource("params_that_allow_llama_generation")
+  void llama_simple_generation(String system, String input, String expected) {
+    String output = "";
+    int inputToken = -1;
+    int outputToken = -1;
+    var logger = new LlamaLogger(arena);
+    logger.setLogging(LlamaLogLevel.ERROR);
+
+    var modelParameters = new LlamaModelParams(arena);
+    Path absolutePath = getModelPath();
+
+    var model = new LlamaModel(arena, absolutePath, modelParameters);
+
+    var contextParams = new LlamaContextParams(arena);
+
+    var vocab = new LlamaVocab(model);
+    var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
+
+    var it = new LlamaIterator(arena, model, contextParams, vocab, sampler).initialize(prompt);
+    while (it.hasNext()) {
+      output += it.next().content();
     }
 
-    private static Arena arena;
+    it.close();
+    inputToken = it.getInputTokens();
+    outputToken = it.getInputTokens();
 
-    @BeforeAll
-    public static void beforeAll() {
-        LlamaCppTest.beforeAll();
-        LlamaRuntime.ggml_backend_load_all();
-        arena = Arena.ofConfined();
-    }
+    assertThat(inputToken).isGreaterThan(0);
+    assertThat(outputToken).isGreaterThan(0);
+    assertThat(output).containsIgnoringCase(expected);
+    System.out.println(output);
 
-    @ParameterizedTest
-    @MethodSource("params_that_allow_llama_generation")
-    void llama_simple_generation(String system, String input, String expected) {
-        String output = "";
-        int inputToken = -1;
-        int outputToken = -1;
-        var logger = new LlamaLogger(arena);
-        logger.setLogging(LlamaLogLevel.ERROR);
+    sampler.free();
+    model.free();
+  }
 
-        var modelParameters = new LlamaModelParams(arena);
-        Path absolutePath = getModelPath();
-
-        var model = new LlamaModel(arena, absolutePath, modelParameters);
-
-        var contextParams = new LlamaContextParams(arena);
-
-        var vocab = new LlamaVocab(model);
-        var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
-        var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
-
-
-        var it = new LlamaIterator(arena, model, contextParams, vocab, sampler)
-                .initialize(prompt);
-        while (it.hasNext()) {
-            output += it.next().content();
-        }
-
-        it.close();
-        inputToken = it.getInputTokens();
-        outputToken = it.getInputTokens();
-
-        assertThat(inputToken).isGreaterThan(0);
-        assertThat(outputToken).isGreaterThan(0);
-        assertThat(output).containsIgnoringCase(expected);
-        System.out.println(output);
-
-        sampler.free();
-        model.free();
-    }
-
-    @AfterAll
-    public static void afterAll() {
-        arena = null;
-    }
+  @AfterAll
+  public static void afterAll() {
+    arena = null;
+  }
 }

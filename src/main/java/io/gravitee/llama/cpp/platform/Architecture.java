@@ -20,34 +20,35 @@ package io.gravitee.llama.cpp.platform;
  * @author GraviteeSource Team
  */
 public enum Architecture {
-    X86_64("x86_64"), AARCH64("aarch64");
+  X86_64("x86_64"),
+  AARCH64("aarch64");
 
-    private static final String AMD_64 = "amd64";
-    private static final String OS_ARCH = "os.arch";
+  private static final String AMD_64 = "amd64";
+  private static final String OS_ARCH = "os.arch";
 
-    private static final String X86_64_VALUE = "x86_64";
-    private static final String AARCH64_VALUE = "aarch64";
+  private static final String X86_64_VALUE = "x86_64";
+  private static final String AARCH64_VALUE = "aarch64";
 
-    private final String arch;
+  private final String arch;
 
-    Architecture(String arch) {
-        this.arch = arch;
+  Architecture(String arch) {
+    this.arch = arch;
+  }
+
+  public static Architecture fromSystem() {
+    var osArch = System.getProperty(OS_ARCH).toLowerCase();
+    if (osArch.contains(X86_64_VALUE) || osArch.contains(AMD_64)) {
+      return X86_64;
     }
 
-    public static Architecture fromSystem() {
-        var osArch = System.getProperty(OS_ARCH).toLowerCase();
-        if (osArch.contains(X86_64_VALUE) || osArch.contains(AMD_64)) {
-            return X86_64;
-        }
-
-        if (osArch.contains(AARCH64_VALUE)) {
-            return AARCH64;
-        }
-
-        throw new IllegalArgumentException("Unsupported operating system: " + osArch);
+    if (osArch.contains(AARCH64_VALUE)) {
+      return AARCH64;
     }
 
-    public String getArch() {
-        return arch;
-    }
+    throw new IllegalArgumentException("Unsupported operating system: " + osArch);
+  }
+
+  public String getArch() {
+    return arch;
+  }
 }
