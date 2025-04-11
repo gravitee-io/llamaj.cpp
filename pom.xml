@@ -1,6 +1,29 @@
+<!--
+
+    Copyright © 2015 The Gravitee team (http://gravitee.io)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.gravitee</groupId>
+        <artifactId>gravitee-parent</artifactId>
+        <version>23.1.0</version>
+    </parent>
 
     <groupId>io.gravitee.llama.cpp</groupId>
     <artifactId>gravitee-llama-cpp</artifactId>
@@ -8,7 +31,13 @@
     <packaging>jar</packaging>
 
     <name>gravitee-llama-cpp</name>
-    <url>http://maven.apache.org</url>
+    <url>https://github.com/gravitee-io-labs/gravitee-llama-cpp</url>
+
+    <scm>
+        <url>https://github.com/gravitee-io-labs/gravitee-llama-cpp</url>
+        <connection>scm:git:git://github.com/gravitee-io-labs/gravitee-llama-cpp</connection>
+        <developerConnection>scm:git:git@github.com:gravitee-io-labs/gravitee-llama-cpp</developerConnection>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -171,6 +200,32 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <properties>
+                        <owner>The Gravitee team</owner>
+                        <email>http://gravitee.io</email>
+                    </properties>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
+                            <excludes>
+                                <exclude>CONTRIBUTING.adoc</exclude>
+                                <exclude>LICENSE.txt</exclude>
+                                <exclude>.circleci/config.yml</exclude>
+                                <exclude>README.md</exclude>
+                                <exclude>SECURITY.md</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
+                    <mapping>
+                        <ts>SLASHSTAR_STYLE</ts>
+                        <js>SLASHSTAR_STYLE</js>
+                    </mapping>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
@@ -197,6 +252,27 @@
                                 <source>${project.build.directory}/generated-sources</source>
                             </sources>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.hubspot.maven.plugins</groupId>
+                <artifactId>prettier-maven-plugin</artifactId>
+                <version>0.22</version>
+                <configuration>
+                    <prettierJavaVersion>2.0.0</prettierJavaVersion>
+                    <printWidth>125</printWidth>
+                    <inputGlobs>
+                        <inputGlob>src/{main,test}/**/*.java</inputGlob>
+                        <inputGlob>.github/*.json</inputGlob>
+                    </inputGlobs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

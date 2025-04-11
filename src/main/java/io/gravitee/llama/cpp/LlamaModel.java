@@ -15,11 +15,10 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.lang.foreign.*;
-import java.nio.file.Path;
-
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_load_from_file;
 
+import java.lang.foreign.*;
+import java.nio.file.Path;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -27,20 +26,20 @@ import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_load_from_file;
  */
 public final class LlamaModel extends MemorySegmentAware implements Freeable {
 
-    public LlamaModel(SegmentAllocator arena, Path modelPath, LlamaModelParams params) {
-        this(llama_model_load_from_file(getModelAsString(arena, modelPath), params.segment));
-    }
+  public LlamaModel(SegmentAllocator arena, Path modelPath, LlamaModelParams params) {
+    this(llama_model_load_from_file(getModelAsString(arena, modelPath), params.segment));
+  }
 
-    public LlamaModel(MemorySegment segment) {
-        super(segment);
-    }
+  public LlamaModel(MemorySegment segment) {
+    super(segment);
+  }
 
-    private static MemorySegment getModelAsString(SegmentAllocator arena, Path modelPath) {
-        return arena.allocateUtf8String(modelPath.toAbsolutePath().toString());
-    }
+  private static MemorySegment getModelAsString(SegmentAllocator arena, Path modelPath) {
+    return arena.allocateUtf8String(modelPath.toAbsolutePath().toString());
+  }
 
-    @Override
-    public void free() {
-        LlamaRuntime.llama_model_free(this);
-    }
+  @Override
+  public void free() {
+    LlamaRuntime.llama_model_free(this);
+  }
 }

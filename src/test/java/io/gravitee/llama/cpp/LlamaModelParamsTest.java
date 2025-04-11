@@ -15,15 +15,14 @@
  */
 package io.gravitee.llama.cpp;
 
-import org.junit.jupiter.api.Test;
-
-import java.lang.foreign.Arena;
-import java.util.Arrays;
-
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_supports_gpu_offload;
 import static io.gravitee.llama.cpp.SplitMode.LAYER;
 import static io.gravitee.llama.cpp.SplitMode.NONE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+import java.lang.foreign.Arena;
+import java.util.Arrays;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -31,33 +30,33 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  */
 class LlamaModelParamsTest extends LlamaCppTest {
 
-    @Test
-    void should_create_LlamaModelParams_with_custom() {
-        try (Arena arena = Arena.ofConfined()) {
-            long maxDevices = LlamaRuntime.llama_max_devices();
-            int mainGpu = (int) (maxDevices / 2);
-            var gpuEnabled = llama_supports_gpu_offload();
+  @Test
+  void should_create_LlamaModelParams_with_custom() {
+    try (Arena arena = Arena.ofConfined()) {
+      long maxDevices = LlamaRuntime.llama_max_devices();
+      int mainGpu = (int) (maxDevices / 2);
+      var gpuEnabled = llama_supports_gpu_offload();
 
-            var modelParams = new LlamaModelParams(arena)
-                    .nGpuLayers(gpuEnabled ? 99 : 0)
-                    .splitMode(LAYER)
-                    .mainGpu(mainGpu)
-                    .vocabOnly(true)
-                    .useMmap(false)
-                    .useMlock(true)
-                    .checkTensors(true);
+      var modelParams = new LlamaModelParams(arena)
+        .nGpuLayers(gpuEnabled ? 99 : 0)
+        .splitMode(LAYER)
+        .mainGpu(mainGpu)
+        .vocabOnly(true)
+        .useMmap(false)
+        .useMlock(true)
+        .checkTensors(true);
 
-            float[] tensorSplit = modelParams.buildDefaultTensorSplit();
-            modelParams.tensorSplit(arena, tensorSplit);
+      float[] tensorSplit = modelParams.buildDefaultTensorSplit();
+      modelParams.tensorSplit(arena, tensorSplit);
 
-            assertThat(modelParams.nGpuLayers()).isEqualTo(gpuEnabled ? 99 : 0);
-            assertThat(modelParams.splitMode()).isEqualTo(LAYER);
-            assertThat(modelParams.mainGpu()).isEqualTo(mainGpu);
-            assertThat(modelParams.tensorSplit()).containsExactly(tensorSplit);
-            assertThat(modelParams.vocabOnly()).isTrue();
-            assertThat(modelParams.useMmap()).isFalse();
-            assertThat(modelParams.useMlock()).isTrue();
-            assertThat(modelParams.checkTensors()).isTrue();
-        }
+      assertThat(modelParams.nGpuLayers()).isEqualTo(gpuEnabled ? 99 : 0);
+      assertThat(modelParams.splitMode()).isEqualTo(LAYER);
+      assertThat(modelParams.mainGpu()).isEqualTo(mainGpu);
+      assertThat(modelParams.tensorSplit()).containsExactly(tensorSplit);
+      assertThat(modelParams.vocabOnly()).isTrue();
+      assertThat(modelParams.useMmap()).isFalse();
+      assertThat(modelParams.useMlock()).isTrue();
+      assertThat(modelParams.checkTensors()).isTrue();
     }
+  }
 }

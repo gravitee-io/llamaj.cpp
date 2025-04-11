@@ -15,21 +15,17 @@
  */
 package io.gravitee.llama.cpp.platform;
 
-
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
 public final class PlatformResolver {
 
-    private static final Platform INSTANCE = new Platform(
-            OperatingSystem.fromSystem(),
-            Architecture.fromSystem()
-    );
+  private static final Platform INSTANCE = new Platform(OperatingSystem.fromSystem(), Architecture.fromSystem());
 
-    private PlatformResolver() {}
+  private PlatformResolver() {}
 
-    public static Platform platform() {
-        return INSTANCE;
-    }
+  public static Platform platform() {
+    return INSTANCE;
+  }
 }

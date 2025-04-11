@@ -15,19 +15,18 @@
  */
 package io.gravitee.llama.cpp;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -35,91 +34,93 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  */
 class TunedLlamaIteratorTest extends LlamaCppTest {
 
-    static final int SEED = new Random().nextInt();
+  static final int SEED = new Random().nextInt();
 
-    static final String ENGLISH_GRAMMAR = """
+  static final String ENGLISH_GRAMMAR =
+    """
             root        ::= en-char+ ([ \\t\\n] en-char+)*
             en-char     ::= letter | digit | punctuation
             letter      ::= [a-zA-Z]
             digit       ::= [0-9]
             punctuation ::= [!"#$%&'()*+,-./:;<=>?@[\\\\\\]^_`{|}~]
             """;
-    static Stream<Arguments> params_that_allow_llama_generation() {
-        return Stream.of(
-                Arguments.of(SYSTEM, "What is the capital of France?", "Paris"),
-                Arguments.of(SYSTEM, "What is the capital of the UK?", "London"),
-                Arguments.of(SYSTEM, "What is the capital of Poland?", "Warsaw")
-        );
+
+  static Stream<Arguments> params_that_allow_llama_generation() {
+    return Stream.of(
+      Arguments.of(SYSTEM, "What is the capital of France?", "Paris"),
+      Arguments.of(SYSTEM, "What is the capital of the UK?", "London"),
+      Arguments.of(SYSTEM, "What is the capital of Poland?", "Warsaw")
+    );
+  }
+
+  private static Arena arena;
+
+  @BeforeAll
+  public static void beforeAll() {
+    LlamaCppTest.beforeAll();
+    LlamaRuntime.ggml_backend_load_all();
+    arena = Arena.ofAuto();
+  }
+
+  @ParameterizedTest
+  @MethodSource("params_that_allow_llama_generation")
+  void llama_tuned_generation(String system, String input, String expected) {
+    String output = "";
+    int inputToken = -1;
+    int outputToken = -1;
+    var logger = new LlamaLogger(arena);
+    logger.setLogging(LlamaLogLevel.ERROR);
+
+    var modelParameters = new LlamaModelParams(arena);
+    Path absolutePath = getModelPath();
+    var model = new LlamaModel(arena, absolutePath, modelParameters);
+
+    var contextParams = new LlamaContextParams(arena)
+      .nCtx(512)
+      .nBatch(512)
+      .nThreads(16)
+      .nThreadsBatch(16)
+      .attentionType(AttentionType.CAUSAL)
+      .embeddings(false)
+      .offloadKQV(true)
+      .flashAttn(true)
+      .noPerf(true);
+
+    var vocab = new LlamaVocab(model);
+    var sampler = new LlamaSampler(arena)
+      .seed(SEED)
+      .temperature(0.75f)
+      .topK(40)
+      .topP(0.2f, 40)
+      .minP(0.05f, 40)
+      .mirostat(SEED, 3, 0.1f)
+      .grammar(vocab, ENGLISH_GRAMMAR, "root")
+      .penalties(10, 1.2f, 0.3f, 0.0f);
+
+    var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
+
+    var it = new LlamaIterator(arena, model, contextParams, vocab, sampler)
+      .setStopStrings(List.of("."))
+      .setQuota(10)
+      .initialize(prompt);
+    for (; it.hasNext();) {
+      output += it.next().content();
     }
+    it.close();
+    inputToken = it.getInputTokens();
+    outputToken = it.getOutputTokens();
 
-    private static Arena arena;
+    assertThat(inputToken).isGreaterThan(0);
+    assertThat(outputToken).isGreaterThan(0);
+    assertThat(output).containsIgnoringCase(expected);
+    System.out.println(output);
 
-    @BeforeAll
-    public static void beforeAll() {
-        LlamaCppTest.beforeAll();
-        LlamaRuntime.ggml_backend_load_all();
-        arena = Arena.ofAuto();
-    }
+    sampler.free();
+    model.free();
+  }
 
-    @ParameterizedTest
-    @MethodSource("params_that_allow_llama_generation")
-    void llama_tuned_generation(String system, String input, String expected) {
-        String output = "";
-        int inputToken = -1;
-        int outputToken = -1;
-        var logger = new LlamaLogger(arena);
-        logger.setLogging(LlamaLogLevel.ERROR);
-
-        var modelParameters = new LlamaModelParams(arena);
-        Path absolutePath = getModelPath();
-        var model = new LlamaModel(arena, absolutePath, modelParameters);
-
-        var contextParams = new LlamaContextParams(arena)
-                .nCtx(512)
-                .nBatch(512)
-                .nThreads(16)
-                .nThreadsBatch(16)
-                .attentionType(AttentionType.CAUSAL)
-                .embeddings(false)
-                .offloadKQV(true)
-                .flashAttn(true)
-                .noPerf(true);
-
-        var vocab = new LlamaVocab(model);
-        var sampler = new LlamaSampler(arena)
-                .seed(SEED)
-                .temperature(0.75f)
-                .topK(40)
-                .topP(0.2f, 40)
-                .minP(0.05f, 40)
-                .mirostat(SEED, 3, 0.1f)
-                .grammar(vocab, ENGLISH_GRAMMAR, "root")
-                .penalties(10, 1.2f, 0.3f, 0.0f);
-
-        var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
-
-        var it = new LlamaIterator(arena, model, contextParams, vocab, sampler)
-                .setStopStrings(List.of("."))
-                .setQuota(10)
-                .initialize(prompt);
-        for (; it.hasNext(); ) {
-            output += it.next().content();
-        }
-        it.close();
-        inputToken = it.getInputTokens();
-        outputToken = it.getOutputTokens();
-
-        assertThat(inputToken).isGreaterThan(0);
-        assertThat(outputToken).isGreaterThan(0);
-        assertThat(output).containsIgnoringCase(expected);
-        System.out.println(output);
-
-        sampler.free();
-        model.free();
-    }
-
-    @AfterAll
-    public static void afterAll() {
-        arena = null;
-    }
+  @AfterAll
+  public static void afterAll() {
+    arena = null;
+  }
 }

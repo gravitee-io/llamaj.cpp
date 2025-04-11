@@ -23,9 +23,9 @@ import java.lang.foreign.MemorySegment;
  */
 abstract class MemorySegmentAware {
 
-    final MemorySegment segment;
+  final MemorySegment segment;
 
-    MemorySegmentAware(MemorySegment segment) {
-        this.segment = segment;
-    }
+  MemorySegmentAware(MemorySegment segment) {
+    this.segment = segment;
+  }
 }

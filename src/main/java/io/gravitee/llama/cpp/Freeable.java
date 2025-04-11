@@ -20,6 +20,5 @@ package io.gravitee.llama.cpp;
  * @author GraviteeSource Team
  */
 public interface Freeable {
-
-    void free();
+  void free();
 }

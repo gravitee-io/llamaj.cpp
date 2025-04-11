@@ -15,10 +15,9 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.lang.foreign.SegmentAllocator;
-
 import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
+import java.lang.foreign.SegmentAllocator;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -26,61 +25,64 @@ import static io.gravitee.llama.cpp.LlamaRuntime.*;
  */
 public final class LlamaSampler extends MemorySegmentAware implements Freeable {
 
-    private final SegmentAllocator allocator;
+  private final SegmentAllocator allocator;
 
-    public LlamaSampler(SegmentAllocator allocator) {
-        super(llama_sampler_chain_init(llama_sampler_chain_default_params(allocator)));
-        this.allocator = allocator;
-    }
+  public LlamaSampler(SegmentAllocator allocator) {
+    super(llama_sampler_chain_init(llama_sampler_chain_default_params(allocator)));
+    this.allocator = allocator;
+  }
 
-    public int sample(LlamaContext context) {
-        return llama_sampler_sample(this.segment, context.segment, -1);
-    }
+  public int sample(LlamaContext context) {
+    return llama_sampler_sample(this.segment, context.segment, -1);
+  }
 
-    public LlamaSampler temperature(float temperature) {
-        llama_sampler_chain_add(this.segment, llama_sampler_init_temp(temperature));
-        return this;
-    }
+  public LlamaSampler temperature(float temperature) {
+    llama_sampler_chain_add(this.segment, llama_sampler_init_temp(temperature));
+    return this;
+  }
 
-    public LlamaSampler topK(int topK) {
-        llama_sampler_chain_add(this.segment, llama_sampler_init_top_k(topK));
-        return this;
-    }
+  public LlamaSampler topK(int topK) {
+    llama_sampler_chain_add(this.segment, llama_sampler_init_top_k(topK));
+    return this;
+  }
 
-    public LlamaSampler topP(float topP, int minKeep) {
-        llama_sampler_chain_add(this.segment, llama_sampler_init_top_p(topP, minKeep));
-        return this;
-    }
+  public LlamaSampler topP(float topP, int minKeep) {
+    llama_sampler_chain_add(this.segment, llama_sampler_init_top_p(topP, minKeep));
+    return this;
+  }
 
-    public LlamaSampler minP(float minP, int minKeep) {
-        llama_sampler_chain_add(this.segment, llama_sampler_init_min_p(minP, minKeep));
-        return this;
-    }
+  public LlamaSampler minP(float minP, int minKeep) {
+    llama_sampler_chain_add(this.segment, llama_sampler_init_min_p(minP, minKeep));
+    return this;
+  }
 
-    public LlamaSampler mirostat(int seed, float tau, float eta) {
-        llama_sampler_chain_add(this.segment, llama_sampler_init_mirostat_v2(seed, tau, eta));
-        return this;
-    }
+  public LlamaSampler mirostat(int seed, float tau, float eta) {
+    llama_sampler_chain_add(this.segment, llama_sampler_init_mirostat_v2(seed, tau, eta));
+    return this;
+  }
 
-    public LlamaSampler grammar(LlamaVocab vocab, String grammar, String root) {
-        var grammarSegment = allocator.allocateUtf8String(grammar);
-        var rootSegment = allocator.allocateUtf8String(root);
-        llama_sampler_chain_add(this.segment, llama_sampler_init_grammar(vocab.segment, grammarSegment, rootSegment));
-        return this;
-    }
+  public LlamaSampler grammar(LlamaVocab vocab, String grammar, String root) {
+    var grammarSegment = allocator.allocateUtf8String(grammar);
+    var rootSegment = allocator.allocateUtf8String(root);
+    llama_sampler_chain_add(this.segment, llama_sampler_init_grammar(vocab.segment, grammarSegment, rootSegment));
+    return this;
+  }
 
-    public LlamaSampler penalties(int penaltyLastN, float penaltyRepeat, float penaltyFreq, float penaltyPresent) {
-        llama_sampler_chain_add(this.segment, llama_sampler_init_penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent));
-        return this;
-    }
+  public LlamaSampler penalties(int penaltyLastN, float penaltyRepeat, float penaltyFreq, float penaltyPresent) {
+    llama_sampler_chain_add(
+      this.segment,
+      llama_sampler_init_penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent)
+    );
+    return this;
+  }
 
-    public LlamaSampler seed(int seed) {
-        llama_sampler_chain_add(this.segment, llama_sampler_init_dist(seed));
-        return this;
-    }
+  public LlamaSampler seed(int seed) {
+    llama_sampler_chain_add(this.segment, llama_sampler_init_dist(seed));
+    return this;
+  }
 
-    @Override
-    public void free() {
-        llama_sampler_free(this);
-    }
+  @Override
+  public void free() {
+    llama_sampler_free(this);
+  }
 }
