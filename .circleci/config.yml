@@ -370,7 +370,7 @@ jobs:
       - install-maven-macos
       - get_jextract:
           os: "macosx"
-          "llama-cpp-version": b5076
+          "llama-cpp-version": b5115
       - checkout:
           path: "/Users/distiller/gravitee-llama-cpp"
       - download_model:
@@ -390,7 +390,7 @@ jobs:
       - install_dependencies_jextract
       - get_jextract:
           os: "linux"
-          "llama-cpp-version": b5076
+          "llama-cpp-version": b5115
       - checkout:
           path: "/home/circleci/gravitee-llama-cpp"
       - download_model:
@@ -409,7 +409,7 @@ jobs:
       - install-maven-macos
       - get_jextract:
           os: "macosx"
-          "llama-cpp-version": b5076
+          "llama-cpp-version": b5115
       - checkout:
           path: "/Users/distiller/gravitee-llama-cpp"
       - generate_sources:
@@ -426,7 +426,7 @@ jobs:
       - install_dependencies_jextract
       - get_jextract:
           os: "linux"
-          "llama-cpp-version": b5076
+          "llama-cpp-version": b5115
       - checkout:
           path: "/home/circleci/gravitee-llama-cpp"
       - generate_sources:
