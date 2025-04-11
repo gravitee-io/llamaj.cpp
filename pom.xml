@@ -216,6 +216,7 @@
                                 <exclude>.circleci/config.yml</exclude>
                                 <exclude>README.md</exclude>
                                 <exclude>SECURITY.md</exclude>
+                                <exclude>.gravitee.settings.xml</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>
