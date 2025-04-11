@@ -524,8 +524,7 @@ workflows:
     when:
       and:
         - equal: [update_libraries, << pipeline.parameters.gio_action >>]
-        - not:
-            equal: [ "main", << pipeline.git.branch >> ]
+        - equal: [ "main", << pipeline.git.branch >> ]
     jobs:
       - update_llama_cpp:
           context:
@@ -582,4 +581,7 @@ workflows:
               only:
                 - main
     jobs:
-      - update_llama_cpp
+      - update_llama_cpp:
+          context:
+            - cicd-orchestrator
+
