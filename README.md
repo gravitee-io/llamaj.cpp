@@ -9,6 +9,8 @@ A port of llama.cpp in the JVM using jextract.
 - MacOS M-series / Linux x86_64 (CPU)
 
 ## How to use
+
+Include the dependency in your pom.xml
 ```
     <dependencies>
         ...
@@ -82,7 +84,7 @@ $ git clone https://github.com/ggml-org/llama.cpp
 ```bash
 $ cd gravitee-llama-cpp/
 $ mvn clean generate-sources -Pmacosx-aarch64,linux-x86_64
-$ export LLAMA_CPP_LIB_PATH="$HOME_DIR/gravitee-llama-cpp/target/generated-sources/<<macosx|linux>>"
+$ export LLAMA_CPP_LIB_PATH="$HOME_DIR/gravitee-llama-cpp/target/generated-sources/<<macosx|linux>>/<<x86_64|aarch64>>"
 $ mvn install
 ```
 
