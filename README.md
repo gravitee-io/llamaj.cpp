@@ -1,4 +1,4 @@
-# Gravitee Llama.cpp
+#  Llamaj.cpp
 
 A port of llama.cpp in the JVM using jextract.
 
@@ -16,7 +16,7 @@ Include the dependency in your pom.xml
         ...
         <dependency>
             <groupId>io.gravitee.llama.cpp</groupId>
-            <artifactId>gravitee-llama-cpp</artifactId>
+            <artifactId>llamaj-cpp</artifactId>
             <version>x.x.x</version>
         <dependency>
     </dependencies>
@@ -82,9 +82,9 @@ $ git clone https://github.com/ggml-org/llama.cpp
 5. Download binaries and generate the sources
 
 ```bash
-$ cd gravitee-llama-cpp/
+$ cd llamaj.cpp/
 $ mvn clean generate-sources -Pmacosx-aarch64,linux-x86_64
-$ export LLAMA_CPP_LIB_PATH="$HOME_DIR/gravitee-llama-cpp/target/generated-sources/<<macosx|linux>>/<<x86_64|aarch64>>"
+$ export LLAMA_CPP_LIB_PATH="$HOME_DIR/llamaj.cpp/target/generated-sources/<<macosx|linux>>/<<x86_64|aarch64>>"
 $ mvn install
 ```
 

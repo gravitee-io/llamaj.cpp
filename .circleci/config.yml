@@ -29,7 +29,7 @@ commands:
       - run:
           name: Git Config
           command: |
-            cd $HOME_DIR/gravitee-llama-cpp/
+            cd $HOME_DIR/llamaj.cpp/
             git config --global user.name "${GIT_USER_NAME}"
             git config --global user.email "${GIT_USER_EMAIL}"
 
@@ -42,7 +42,7 @@ commands:
       - run:
           name: Git Config
           command: |
-            cd $HOME_DIR/gravitee-llama-cpp/
+            cd $HOME_DIR/llamaj.cpp/
 
             ORG_REPO=$(git --no-pager config remote.origin.url | sed -E 's/git@github.com:(.*).git/\1/')
             git remote set-url origin "https://$GITHUB_TOKEN@github.com/$ORG_REPO.git"
@@ -169,8 +169,8 @@ commands:
       - run:
           name: Download Model
           command: |
-            mkdir -p $HOME_DIR/gravitee-llama-cpp/models/
-            curl -L -o $HOME_DIR/gravitee-llama-cpp/<< parameters.model_path >> << parameters.model_url >>
+            mkdir -p $HOME_DIR/llamaj.cpp/models/
+            curl -L -o $HOME_DIR/llamaj.cpp/<< parameters.model_path >> << parameters.model_url >>
 
   run-tests:
     parameters:
@@ -184,8 +184,8 @@ commands:
       - run:
           name: Run Tests
           command: |
-            cd $HOME_DIR/gravitee-llama-cpp
-            export LLAMA_CPP_LIB_PATH="$HOME_DIR/gravitee-llama-cpp/target/generated-sources/<< parameters.os >>/<< parameters.platform >>/"
+            cd $HOME_DIR/llamaj.cpp
+            export LLAMA_CPP_LIB_PATH="$HOME_DIR/llamaj.cpp/target/generated-sources/<< parameters.os >>/<< parameters.platform >>/"
 
             if [[ << parameters.os >> == "macosx" ]]; then
               source ~/.zprofile
@@ -232,7 +232,7 @@ commands:
     steps:
       - run:
           name: Update llama.cpp version
-          command: bash $HOME_DIR/gravitee-llama-cpp/scripts/update_llama_cpp_version.sh
+          command: bash $HOME_DIR/llamaj.cpp/scripts/update_llama_cpp_version.sh
 
   generate_sources:
     parameters:
@@ -246,7 +246,7 @@ commands:
       - run:
           name: Generate sources
           command: |
-            cd $HOME_DIR/gravitee-llama-cpp
+            cd $HOME_DIR/llamaj.cpp
             cp /tmp/.gravitee.settings.xml .
             
             OS=<< parameters.os >>
@@ -265,7 +265,7 @@ commands:
               - equal: ["linux", << parameters.os >>]
           steps:
             - persist_to_workspace:
-                root: "/home/circleci/gravitee-llama-cpp"
+                root: "/home/circleci/llamaj.cpp"
                 paths: [
                   "target/generated-sources/linux",
                   "target/generated-sources/io/gravitee/llama/cpp/linux",
@@ -276,7 +276,7 @@ commands:
               - equal: ["macosx", << parameters.os >>]
           steps:
             - persist_to_workspace:
-                root: "/Users/distiller/gravitee-llama-cpp"
+                root: "/Users/distiller/llamaj.cpp"
                 paths: [
                   "target/generated-sources/macosx",
                   "target/generated-sources/io/gravitee/llama/cpp/macosx",
@@ -285,7 +285,7 @@ commands:
   release_tag:
     steps:
       - attach_workspace:
-          at: gravitee-llama-cpp
+          at: llamaj.cpp
       - run:
           name: Install npm
           command: |
@@ -303,11 +303,11 @@ commands:
               conventional-changelog-conventionalcommits \
       - run:
           name: Tag release version
-          command: bash -x $HOME_DIR/gravitee-llama-cpp/scripts/release_tag.sh
+          command: bash -x $HOME_DIR/llamaj.cpp/scripts/release_tag.sh
       - persist_to_workspace:
           root: "/home/circleci/"
           paths: [
-            "gravitee-llama-cpp"
+            "llamaj.cpp"
           ]
             
   github_release:
@@ -320,7 +320,7 @@ commands:
       - gh/setup
       - run:
           name: Github Release
-          command: bash $HOME_DIR/gravitee-llama-cpp/scripts/github_release.sh
+          command: bash $HOME_DIR/llamaj.cpp/scripts/github_release.sh
 
   maven_deploy:
     steps:
@@ -330,7 +330,7 @@ commands:
       - run:
           name: Maven Deploy
           command: |
-            cd $HOME_DIR/gravitee-llama-cpp/
+            cd $HOME_DIR/llamaj.cpp/
             mvn -s .gravitee.settings.xml -B -P gio-artifactory-release,gio-release deploy -DskipTests=true
 
   prepare-gpg:
@@ -372,7 +372,7 @@ jobs:
           os: "macosx"
           "llama-cpp-version": b5115
       - checkout:
-          path: "/Users/distiller/gravitee-llama-cpp"
+          path: "/Users/distiller/llamaj.cpp"
       - download_model:
           model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
           model_path: "models/Llama-3.2-1B-Instruct-IQ3_M.gguf"
@@ -392,7 +392,7 @@ jobs:
           os: "linux"
           "llama-cpp-version": b5115
       - checkout:
-          path: "/home/circleci/gravitee-llama-cpp"
+          path: "/home/circleci/llamaj.cpp"
       - download_model:
           model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
           model_path: "models/Llama-3.2-1B-Instruct-IQ3_M.gguf"
@@ -411,7 +411,7 @@ jobs:
           os: "macosx"
           "llama-cpp-version": b5115
       - checkout:
-          path: "/Users/distiller/gravitee-llama-cpp"
+          path: "/Users/distiller/llamaj.cpp"
       - generate_sources:
           os: "macosx"
           platform: "aarch64"
@@ -428,7 +428,7 @@ jobs:
           os: "linux"
           "llama-cpp-version": b5115
       - checkout:
-          path: "/home/circleci/gravitee-llama-cpp"
+          path: "/home/circleci/llamaj.cpp"
       - generate_sources:
           os: "linux"
           platform: "x86_64"
@@ -442,7 +442,7 @@ jobs:
     steps:
       - install_dependencies
       - checkout:
-          path: "/home/circleci/gravitee-llama-cpp"
+          path: "/home/circleci/llamaj.cpp"
       - gh/install
       - git_config
       - git_auth
@@ -459,7 +459,7 @@ jobs:
       - install_dependencies
       - install_java_dependencies
       - checkout:
-          path: "/home/circleci/gravitee-llama-cpp"
+          path: "/home/circleci/llamaj.cpp"
       - git_config
       - release_tag
 

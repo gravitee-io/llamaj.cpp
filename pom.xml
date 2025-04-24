@@ -26,17 +26,17 @@
     </parent>
 
     <groupId>io.gravitee.llama.cpp</groupId>
-    <artifactId>gravitee-llama-cpp</artifactId>
+    <artifactId>llamaj.cpp</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
 
-    <name>gravitee-llama-cpp</name>
-    <url>https://github.com/gravitee-io-labs/gravitee-llama-cpp</url>
+    <name>Gravitee.io - llamaj.cpp</name>
+    <url>https://github.com/gravitee-io/llamaj.cpp</url>
 
     <scm>
-        <url>https://github.com/gravitee-io-labs/gravitee-llama-cpp</url>
-        <connection>scm:git:git://github.com/gravitee-io-labs/gravitee-llama-cpp</connection>
-        <developerConnection>scm:git:git@github.com:gravitee-io-labs/gravitee-llama-cpp</developerConnection>
+        <url>https://github.com/gravitee-io/llamaj.cpp</url>
+        <connection>scm:git:git://github.com/gravitee-io/llamaj.cpp</connection>
+        <developerConnection>scm:git:git@github.com:gravitee-io/llamaj.cpp</developerConnection>
     </scm>
 
     <properties>
