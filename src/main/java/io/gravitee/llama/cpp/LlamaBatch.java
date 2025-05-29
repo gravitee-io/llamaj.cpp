@@ -15,9 +15,7 @@
  */
 package io.gravitee.llama.cpp;
 
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_batch_free;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_batch_get_one;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_decode;
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
@@ -54,7 +52,7 @@ public final class LlamaBatch extends MemorySegmentAware implements Freeable {
   }
 
   public int nTokens() {
-    return llama_batch.n_tokens$get(segment);
+    return llama_batch_n_tokens(segment);
   }
 
   @Override

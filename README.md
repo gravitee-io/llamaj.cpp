@@ -1,6 +1,6 @@
 #  Llamaj.cpp
 
-A port of llama.cpp in the JVM using jextract.
+llamaj.cpp (contraction of llama.cpp and java/jextract) is a port of llama.cpp in the JVM using jextract.
 
 ## Requirements
 
@@ -26,7 +26,7 @@ Include the dependency in your pom.xml
 
 1. Get `jextract`
 
-/!\ Make sure the `jextract` folder is in the same path level as your repository /!\
+> Make sure the `jextract` folder is in the same path level as your repository
 
 On Linux:
 
@@ -73,7 +73,7 @@ $ source ~/.zshrc
 ```
 3. Clone llama.cpp
 
-/!\ Make sure `llama.cpp` folder is in the same path level as your repository /!\
+> Make sure `llama.cpp` folder is in the same path level as your repository
 
 ```bash
 $ git clone https://github.com/ggml-org/llama.cpp
@@ -95,7 +95,7 @@ $ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
     -Dexec.args="/path/to/model/model.gguf 'You are a helpful assistant. Answer question to the best of your ability'"
 ```
 
-On linux don't forget to link your libraries with the environment variable below:
+On linux, don't forget to link your libraries with the environment variable below:
 ```bash
 $ mkdir $HOME/.llama.cpp
 $ export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
@@ -107,7 +107,7 @@ There are plenty of models on HuggingFace, we suggest the one [here](https://hug
 
 1. Clone `llama.cpp` repository
 
-/!\ Make sure the jextract folder is in the same path level as your repository /!\
+> Make sure the jextract folder is in the same path level as your repository
 
 ```bash
 $ git clone https://github.com/ggml-org/llama.cpp
@@ -116,7 +116,7 @@ $ cd llama.cpp
 
 2. Compile sources
 
-Make sure you have gcc / g++ compiler
+> Make sure you have gcc / g++ compiler
 
 ```bash
 $ gcc --help
@@ -143,4 +143,4 @@ Please refer to the [llama.cpp](https://github.com/ggml-org/llama.cpp/blob/maste
 You can use the environment variable `LLAMA_CPP_LIB_PATH=/path/to/llama.cpp/build/bin/`
 This will directly load the dynamically shared object library files (`.so` for linux, `.dylib` for macos) 
 You can also decide to copy these files into a temporary folder using the environment variable `LLAMA_CPP_USE_TMP_LIB_PATH=true`
-The path temporary file will be used to loaad the shared object libraries
+The path temporary file will be used to load the shared object libraries

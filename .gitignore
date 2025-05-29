@@ -40,3 +40,6 @@ build/
 hs_err_pid*.log
 
 models/*
+.java-version
+
+models/

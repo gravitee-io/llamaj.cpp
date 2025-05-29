@@ -99,7 +99,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
 
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var it = new LlamaIterator(arena, model, contextParams, vocab, sampler)
+    var it = new SimpleLlamaIterator(arena, model, contextParams, vocab, sampler)
       .setStopStrings(List.of("."))
       .setQuota(10)
       .initialize(prompt);

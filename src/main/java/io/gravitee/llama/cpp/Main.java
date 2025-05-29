@@ -65,13 +65,11 @@ public class Main {
 
       String prompt = buildPrompt(model, systemMessage, input, contextParams);
 
-      var it = new LlamaIterator(ARENA, model, contextParams, vocab, sampler).setQuota(256).initialize(prompt);
+      LlamaIterator iterator = new SimpleLlamaIterator(ARENA, model, contextParams, vocab, sampler)
+              .setQuota(256).
+              initialize(prompt);
 
-      while (it.hasNext()) {
-        System.out.print(it.next().content());
-      }
-
-      it.close();
+      iterator.stream().map(LlamaOutput::content).forEach(System.out::println);
 
       System.out.println();
     }

@@ -17,7 +17,6 @@ package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
-import io.gravitee.llama.cpp.platform.PlatformResolver;
 import java.lang.foreign.*;
 import java.util.function.Consumer;
 
@@ -34,7 +33,8 @@ public final class LlamaLogger extends ArenaAware {
     super(arena);
   }
 
-  private void logCallback(int level, MemorySegment text, MemorySegment user_data) {
+  @SuppressWarnings("unused")
+  public void logCallback(int level, MemorySegment text, MemorySegment user_data) {
     if (this.level.ordinal() <= level) {
       this.logger.accept(text.getUtf8String(0));
     }
@@ -44,21 +44,18 @@ public final class LlamaLogger extends ArenaAware {
     this.level = level;
     this.logger = logger;
 
-    String runtime = PlatformResolver.platform().runtime();
-    MemorySegment callbackSegment =
-      switch (runtime) {
-        case MACOSX_AARCH_64 -> {
-          io.gravitee.llama.cpp.macosx.aarch64.ggml_log_callback logCallback = this::logCallback;
-          yield io.gravitee.llama.cpp.macosx.aarch64.ggml_log_callback.allocate(logCallback, arena);
-        }
-        case LINUX_X86_64 -> {
-          io.gravitee.llama.cpp.linux.x86_64.ggml_log_callback logCallback = this::logCallback;
-          yield io.gravitee.llama.cpp.linux.x86_64.ggml_log_callback.allocate(logCallback, arena);
-        }
-        default -> throw new IllegalStateException("Unexpected value: " + runtime);
-      };
-
-    llama_log_set(callbackSegment, MemorySegment.NULL);
+    try {
+      var callbackSegment = LlamaRuntime.instantiateCallbackSegment(
+        "ggml_log_callback",
+        "allocate",
+        this,
+        "logCallback",
+        arena
+      );
+      llama_log_set(callbackSegment, MemorySegment.NULL);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public void setLogging(LlamaLogLevel level) {

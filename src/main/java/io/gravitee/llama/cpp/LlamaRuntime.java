@@ -19,6 +19,9 @@ import io.gravitee.llama.cpp.platform.PlatformResolver;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -26,213 +29,116 @@ import java.lang.foreign.SegmentAllocator;
  */
 public final class LlamaRuntime {
 
-  private static final String runtime = PlatformResolver.platform().runtime();
   public static final String MACOSX_AARCH_64 = "macosx_aarch64";
   public static final String LINUX_X86_64 = "linux_x86_64";
+
+  private static final Class<MemorySegment> MEM_SEG_CLASS = MemorySegment.class;
+
+  private static final String pkg = PlatformResolver.platform().getPackage();
+  private static final String runtime = PlatformResolver.platform().runtime();
+  private static final String basePackage = "io.gravitee.llama.cpp.%s.".formatted(pkg);
 
   private LlamaRuntime() {}
 
   /* load backends */
   public static void ggml_backend_load_all() {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.ggml_backend_load_all();
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.ggml_backend_load_all();
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_h("ggml_backend_load_all", new Class<?>[] {});
   }
 
   /* logging */
   static void llama_log_set(MemorySegment m1, MemorySegment m2) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_log_set(m1, m2);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_log_set(m1, m2);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_h("llama_log_set", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, m1, m2);
   }
 
   /* Model Parameters */
   static MemorySegment llama_model_params_ofAddress(MemorySegment segment, Arena arena) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.ofAddress(segment, arena);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.ofAddress(segment, arena);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return invoke("llama_model_params", "ofAddress", new Class<?>[] { MEM_SEG_CLASS, Arena.class }, segment, arena);
   }
 
   static MemorySegment llama_model_default_params(Arena arena) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_model_default_params(arena);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_model_default_params(arena);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_model_default_params", new Class<?>[] { SegmentAllocator.class }, arena);
   }
 
   static long llama_max_devices() {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_max_devices();
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_max_devices();
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_max_devices", new Class<?>[] {});
   }
 
   static int n_gpu_layers(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.n_gpu_layers$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.n_gpu_layers$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_model_params("n_gpu_layers$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void n_gpu_layers(MemorySegment segment, int layers) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.n_gpu_layers$set(segment, layers);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.n_gpu_layers$set(segment, layers);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_model_params("n_gpu_layers$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, layers);
   }
 
   static int split_mode(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.split_mode$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.split_mode$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_model_params("split_mode$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void split_mode(MemorySegment segment, int ordinal) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.split_mode$set(segment, ordinal);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.split_mode$set(segment, ordinal);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_model_params("split_mode$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, ordinal);
   }
 
   static int main_gpu(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.main_gpu$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.main_gpu$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_model_params("main_gpu$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void main_gpu(MemorySegment segment, int mainGpu) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.main_gpu$set(segment, mainGpu);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.main_gpu$set(segment, mainGpu);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_model_params("main_gpu$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, mainGpu);
   }
 
   static MemorySegment tensor_split(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.tensor_split$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.tensor_split$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_model_params("tensor_split$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void tensor_split(MemorySegment segment, MemorySegment tensorSplit) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.tensor_split$set(segment, tensorSplit);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.tensor_split$set(segment, tensorSplit);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_model_params("tensor_split$set", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, segment, tensorSplit);
   }
 
   static boolean vocab_only(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.vocab_only$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.vocab_only$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_model_params("vocab_only$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void vocab_only(MemorySegment segment, boolean vocabOnly) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.vocab_only$set(segment, vocabOnly);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.vocab_only$set(segment, vocabOnly);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_model_params("vocab_only$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, vocabOnly);
   }
 
   static boolean use_mmap(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.use_mmap$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.use_mmap$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_model_params("use_mmap$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void use_mmap(MemorySegment segment, boolean useMmap) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.use_mmap$set(segment, useMmap);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.use_mmap$set(segment, useMmap);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_model_params("use_mmap$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, useMmap);
   }
 
   static boolean use_mlock(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.use_mlock$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.use_mlock$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_model_params("use_mlock$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void use_mlock(MemorySegment segment, boolean useMlock) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.use_mlock$set(segment, useMlock);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.use_mlock$set(segment, useMlock);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_model_params("use_mlock$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, useMlock);
   }
 
   static boolean check_tensors(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.check_tensors$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.check_tensors$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_model_params("check_tensors$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void check_tensors(MemorySegment segment, boolean checkTensors) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_model_params.check_tensors$set(
-        segment,
-        checkTensors
-      );
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_model_params.check_tensors$set(segment, checkTensors);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_model_params("check_tensors$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, checkTensors);
   }
 
   /* Model */
-  static MemorySegment llama_model_load_from_file(MemorySegment modelPath, MemorySegment modelParams) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_model_load_from_file(
-        modelPath,
-        modelParams
-      );
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_model_load_from_file(modelPath, modelParams);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+  static MemorySegment llama_model_load_from_file(MemorySegment modelPath, MemorySegment path) {
+    return llama_h("llama_model_load_from_file", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, modelPath, path);
   }
 
   /* Vocab */
   static MemorySegment llama_model_get_vocab(MemorySegment model) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_model_get_vocab(model);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_model_get_vocab(model);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_model_get_vocab", new Class<?>[] { MEM_SEG_CLASS }, model);
   }
 
   static boolean llama_vocab_is_eog(MemorySegment vocab, int tokenId) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_vocab_is_eog(vocab, tokenId);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_vocab_is_eog(vocab, tokenId);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_vocab_is_eog", new Class<?>[] { MEM_SEG_CLASS, int.class }, vocab, tokenId);
   }
 
   static int llama_token_to_piece(
@@ -243,107 +149,62 @@ public final class LlamaRuntime {
     int lstrip,
     boolean special
   ) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_token_to_piece(
-        vocab,
-        token,
-        buf,
-        length,
-        lstrip,
-        special
-      );
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_token_to_piece(
-        vocab,
-        token,
-        buf,
-        length,
-        lstrip,
-        special
-      );
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    Class<?>[] parameterTypes = { MEM_SEG_CLASS, int.class, MEM_SEG_CLASS, int.class, int.class, boolean.class };
+    return llama_h("llama_token_to_piece", parameterTypes, vocab, token, buf, length, lstrip, special);
   }
 
   /* Sampler */
 
   static MemorySegment llama_sampler_chain_init(MemorySegment sampler) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_chain_init(sampler);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_chain_init(sampler);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_sampler_chain_init", new Class<?>[] { MEM_SEG_CLASS }, sampler);
   }
 
   static MemorySegment llama_sampler_chain_default_params(SegmentAllocator allocator) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_chain_default_params(allocator);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_chain_default_params(allocator);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_sampler_chain_default_params", new Class<?>[] { SegmentAllocator.class }, allocator);
   }
 
   static int llama_sampler_sample(MemorySegment sampler, MemorySegment context, int idx) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_sample(sampler, context, idx);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_sample(sampler, context, idx);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h(
+      "llama_sampler_sample",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, int.class },
+      sampler,
+      context,
+      idx
+    );
   }
 
   static void llama_sampler_chain_add(MemorySegment sampler, MemorySegment config) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_chain_add(sampler, config);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_chain_add(sampler, config);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_h("llama_sampler_chain_add", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, sampler, config);
   }
 
   static MemorySegment llama_sampler_init_temp(float temperature) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_init_temp(temperature);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_init_temp(temperature);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_sampler_init_temp", new Class<?>[] { float.class }, temperature);
   }
 
   static MemorySegment llama_sampler_init_top_k(int topK) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_init_top_k(topK);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_init_top_k(topK);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_sampler_init_top_k", new Class<?>[] { int.class }, topK);
   }
 
-  static MemorySegment llama_sampler_init_top_p(float topP, int minKeep) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_init_top_p(topP, minKeep);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_init_top_p(topP, minKeep);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+  static MemorySegment llama_sampler_init_top_p(float topP, long minKeep) {
+    return llama_h("llama_sampler_init_top_p", new Class<?>[] { float.class, long.class }, topP, minKeep);
   }
 
-  static MemorySegment llama_sampler_init_min_p(float minP, int minKeep) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_init_min_p(minP, minKeep);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_init_min_p(minP, minKeep);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+  static MemorySegment llama_sampler_init_min_p(float minP, long minKeep) {
+    return llama_h("llama_sampler_init_min_p", new Class<?>[] { float.class, long.class }, minP, minKeep);
   }
 
   static MemorySegment llama_sampler_init_mirostat_v2(int seed, float tau, float eta) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_init_mirostat_v2(seed, tau, eta);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_init_mirostat_v2(seed, tau, eta);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_sampler_init_mirostat_v2", new Class<?>[] { int.class, float.class, float.class }, seed, tau, eta);
   }
 
   static MemorySegment llama_sampler_init_grammar(MemorySegment vocab, MemorySegment grammar, MemorySegment root) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_init_grammar(vocab, grammar, root);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_init_grammar(vocab, grammar, root);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h(
+      "llama_sampler_init_grammar",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, MEM_SEG_CLASS },
+      vocab,
+      grammar,
+      root
+    );
   }
 
   static MemorySegment llama_sampler_init_penalties(
@@ -352,292 +213,133 @@ public final class LlamaRuntime {
     float penaltyFreq,
     float penaltyPresent
   ) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_init_penalties(
-        penaltyLastN,
-        penaltyRepeat,
-        penaltyFreq,
-        penaltyPresent
-      );
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_init_penalties(
-        penaltyLastN,
-        penaltyRepeat,
-        penaltyFreq,
-        penaltyPresent
-      );
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h(
+      "llama_sampler_init_penalties",
+      new Class<?>[] { int.class, float.class, float.class, float.class },
+      penaltyLastN,
+      penaltyRepeat,
+      penaltyFreq,
+      penaltyPresent
+    );
   }
 
   static MemorySegment llama_sampler_init_dist(int seed) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_init_dist(seed);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_init_dist(seed);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_sampler_init_dist", new Class<?>[] { int.class }, seed);
   }
 
   /* Context Params */
   static MemorySegment llama_context_default_params(SegmentAllocator allocator) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_context_default_params(allocator);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_context_default_params(allocator);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_context_default_params", new Class<?>[] { SegmentAllocator.class }, allocator);
   }
 
   static int n_ctx(MemorySegment contextParams) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_ctx$get(contextParams);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_ctx$get(contextParams);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("n_ctx$get", new Class<?>[] { MEM_SEG_CLASS }, contextParams);
   }
 
   static void n_ctx(MemorySegment segment, int nCtx) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_ctx$set(segment, nCtx);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_ctx$set(segment, nCtx);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("n_ctx$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nCtx);
   }
 
   static int n_batch(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_batch$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_batch$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("n_batch$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void n_batch(MemorySegment segment, int nBatch) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_batch$set(segment, nBatch);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_batch$set(segment, nBatch);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("n_batch$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nBatch);
   }
 
   static int n_ubatch(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_ubatch$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_ubatch$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("n_ubatch$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void n_ubatch(MemorySegment segment, int nUBatch) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_ubatch$set(segment, nUBatch);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_ubatch$set(segment, nUBatch);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("n_ubatch$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nUBatch);
   }
 
   static int n_seq_max(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_seq_max$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_seq_max$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("n_seq_max$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void n_seq_max(MemorySegment segment, int nSeqMax) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_seq_max$set(segment, nSeqMax);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_seq_max$set(segment, nSeqMax);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("n_seq_max$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nSeqMax);
   }
 
   static int n_threads(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_threads$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_threads$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("n_threads$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void n_threads(MemorySegment segment, int nThreads) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_threads$set(segment, nThreads);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_threads$set(segment, nThreads);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("n_threads$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nThreads);
   }
 
   static int n_threads_batch(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_threads_batch$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_threads_batch$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("n_threads_batch$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void n_threads_batch(MemorySegment segment, int nThreadBatch) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.n_threads_batch$set(
-        segment,
-        nThreadBatch
-      );
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.n_threads_batch$set(
-        segment,
-        nThreadBatch
-      );
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("n_threads_batch$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nThreadBatch);
   }
 
   static int pooling_type(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.pooling_type$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.pooling_type$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("pooling_type$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void pooling_type(MemorySegment segment, int ordinal) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.pooling_type$set(segment, ordinal);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.pooling_type$set(segment, ordinal);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("pooling_type$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, ordinal);
   }
 
   static int attention_type(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.attention_type$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.attention_type$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("attention_type$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void attention_type(MemorySegment segment, int ordinal) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.attention_type$set(segment, ordinal);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.attention_type$set(segment, ordinal);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("attention_type$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, ordinal);
   }
 
   static boolean embeddings(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.embeddings$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.embeddings$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("embeddings$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void embeddings(MemorySegment segment, boolean embeddings) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.embeddings$set(segment, embeddings);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.embeddings$set(segment, embeddings);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("embeddings$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, embeddings);
   }
 
   static boolean offload_kqv(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.offload_kqv$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.offload_kqv$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("offload_kqv$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void offload_kqv(MemorySegment segment, boolean offloadKQV) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.offload_kqv$set(segment, offloadKQV);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.offload_kqv$set(segment, offloadKQV);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("offload_kqv$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, offloadKQV);
   }
 
   static boolean flash_attn(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.flash_attn$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.flash_attn$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("flash_attn$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void flash_attn(MemorySegment segment, boolean flashAttn) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.flash_attn$set(segment, flashAttn);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.flash_attn$set(segment, flashAttn);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("flash_attn$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, flashAttn);
   }
 
   static boolean no_perf(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.no_perf$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.no_perf$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_context_params("no_perf$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
   static void no_perf(MemorySegment segment, boolean flashAttn) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_context_params.no_perf$set(segment, flashAttn);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_context_params.no_perf$set(segment, flashAttn);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_context_params("no_perf$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, flashAttn);
   }
 
   /* Context */
   static MemorySegment llama_init_from_model(MemorySegment model, MemorySegment params) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_init_from_model(model, params);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_init_from_model(model, params);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
-  }
-
-  static void llama_kv_cache_clear(MemorySegment context) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_kv_cache_clear(context);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_kv_cache_clear(context);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    return llama_h("llama_init_from_model", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, params);
   }
 
   static int llama_get_kv_cache_used_cells(MemorySegment context) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_get_kv_cache_used_cells(context);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_get_kv_cache_used_cells(context);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
-  }
-
-  public static void llama_kv_cache_seq_rm(MemorySegment ctx, int seq_id, int p0, int p1) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_kv_cache_seq_rm(ctx, seq_id, p0, p1);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_kv_cache_seq_rm(ctx, seq_id, p0, p1);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
-  }
-
-  public static void llama_kv_cache_seq_add(MemorySegment ctx, int seq_id, int p0, int p1, int delta) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_kv_cache_seq_add(
-        ctx,
-        seq_id,
-        p0,
-        p1,
-        delta
-      );
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_kv_cache_seq_add(ctx, seq_id, p0, p1, delta);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    return llama_h("llama_get_kv_cache_used_cells", new Class<?>[] { MEM_SEG_CLASS }, context);
   }
 
   /* Chat Template */
   static MemorySegment llama_model_chat_template(MemorySegment model, MemorySegment name) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_model_chat_template(model, name);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_model_chat_template(model, name);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_model_chat_template", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, name);
   }
 
   static int llama_chat_apply_template(
@@ -648,82 +350,45 @@ public final class LlamaRuntime {
     MemorySegment buf,
     int length
   ) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_chat_apply_template(
-        tmpl,
-        chat,
-        n_msg,
-        add_ass,
-        buf,
-        length
-      );
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_chat_apply_template(
-        tmpl,
-        chat,
-        n_msg,
-        add_ass,
-        buf,
-        length
-      );
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h(
+      "llama_chat_apply_template",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, long.class, boolean.class, MEM_SEG_CLASS, int.class },
+      tmpl,
+      chat,
+      n_msg,
+      add_ass,
+      buf,
+      length
+    );
   }
 
   /* Chat Message */
   static MemorySegment llama_chat_message_allocate(SegmentAllocator allocator) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_chat_message.allocate(allocator);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_chat_message.allocate(allocator);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_chat_message("allocate", new Class[] { SegmentAllocator.class }, allocator);
   }
 
-  static MemorySegment llama_chat_message_allocateArray(int size, SegmentAllocator allocator) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_chat_message.allocateArray(size, allocator);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_chat_message.allocateArray(size, allocator);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+  static MemorySegment llama_chat_message_allocateArray(long size, SegmentAllocator allocator) {
+    return llama_chat_message("allocateArray", new Class[] { long.class, SegmentAllocator.class }, size, allocator);
   }
 
   static MemorySegment llama_chat_message_role(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_chat_message.role$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_chat_message.role$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_chat_message("role$get", new Class[] { MEM_SEG_CLASS }, segment);
   }
 
   static void llama_chat_message_role(MemorySegment message, MemorySegment role) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_chat_message.role$set(message, role);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_chat_message.role$set(message, role);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_chat_message("role$set", new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, message, role);
   }
 
   static MemorySegment llama_chat_message_content(MemorySegment segment) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_chat_message.content$get(segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_chat_message.content$get(segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_chat_message("content$get", new Class[] { MEM_SEG_CLASS }, segment);
   }
 
   static void llama_chat_message_content(MemorySegment message, MemorySegment content) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_chat_message.content$set(message, content);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_chat_message.content$set(message, content);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_chat_message("content$set", new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, message, content);
   }
 
   static long llama_chat_message_sizeof() {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_chat_message.sizeof();
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_chat_message.sizeof();
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_chat_message("sizeof", new Class[] {});
   }
 
   /* Tokenizer */
@@ -736,86 +401,187 @@ public final class LlamaRuntime {
     boolean add_special,
     boolean parse_special
   ) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_tokenize(
-        vocab,
-        text,
-        text_len,
-        tokens,
-        n_tokens_max,
-        add_special,
-        parse_special
-      );
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_tokenize(
-        vocab,
-        text,
-        text_len,
-        tokens,
-        n_tokens_max,
-        add_special,
-        parse_special
-      );
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h(
+      "llama_tokenize",
+      new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS, int.class, MEM_SEG_CLASS, int.class, boolean.class, boolean.class },
+      vocab,
+      text,
+      text_len,
+      tokens,
+      n_tokens_max,
+      add_special,
+      parse_special
+    );
   }
 
   /* Batch */
   static MemorySegment llama_batch_get_one(SegmentAllocator allocator, MemorySegment segment, int size) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_batch_get_one(allocator, segment, size);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_batch_get_one(allocator, segment, size);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h(
+      "llama_batch_get_one",
+      new Class[] { SegmentAllocator.class, MEM_SEG_CLASS, int.class },
+      allocator,
+      segment,
+      size
+    );
+  }
+
+  static int llama_batch_n_tokens(MemorySegment batch) {
+    return invoke("llama_batch", "n_tokens$get", new Class[] { MEM_SEG_CLASS }, batch);
   }
 
   static int llama_decode(MemorySegment context, MemorySegment batch) {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_decode(context, batch);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_decode(context, batch);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_decode", new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, context, batch);
   }
 
   /* Free Memory */
   static void llama_batch_free(LlamaBatch batch) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_batch_free(batch.segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_batch_free(batch.segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_h("llama_batch_free", new Class[] { MEM_SEG_CLASS }, batch.segment);
   }
 
   static void llama_free(LlamaContext context) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_free(context.segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_free(context.segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_h("llama_free", new Class[] { MEM_SEG_CLASS }, context.segment);
   }
 
   static void llama_sampler_free(LlamaSampler sampler) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_sampler_free(sampler.segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_sampler_free(sampler.segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_h("llama_sampler_free", new Class[] { MEM_SEG_CLASS }, sampler.segment);
   }
 
   static void llama_model_free(LlamaModel model) {
-    switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_model_free(model.segment);
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_model_free(model.segment);
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    }
+    llama_h("llama_model_free", new Class[] { MEM_SEG_CLASS }, model.segment);
   }
 
   /* Utils */
 
   public static boolean llama_supports_gpu_offload() {
-    return switch (runtime) {
-      case MACOSX_AARCH_64 -> io.gravitee.llama.cpp.macosx.aarch64.llama_h.llama_supports_gpu_offload();
-      case LINUX_X86_64 -> io.gravitee.llama.cpp.linux.x86_64.llama_h.llama_supports_gpu_offload();
-      default -> throw new IllegalStateException("Unexpected value: " + runtime);
-    };
+    return llama_h("llama_supports_gpu_offload", new Class[] {});
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific llama_h class.
+   *
+   * @param methodName      The name of the method to invoke.
+   * @param parameterTypes  An array of Class objects representing the parameter types of the method.
+   * @param args            The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T llama_h(String methodName, Class<?>[] parameterTypes, Object... args) {
+    return invoke("llama_h", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific llama_model_params class.
+   *
+   * @param methodName      The name of the method to invoke.
+   * @param parameterTypes  An array of Class objects representing the parameter types of the method.
+   * @param args            The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T llama_model_params(String methodName, Class<?>[] parameterTypes, Object... args) {
+    return invoke("llama_model_params", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific llama_context_params class.
+   *
+   * @param methodName      The name of the method to invoke.
+   * @param parameterTypes  An array of Class objects representing the parameter types of the method.
+   * @param args            The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T llama_context_params(String methodName, Class<?>[] parameterTypes, Object... args) {
+    return invoke("llama_context_params", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific llama_chat_message class.
+   *
+   * @param methodName      The name of the method to invoke.
+   * @param parameterTypes  An array of Class objects representing the parameter types of the method.
+   * @param args            The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T llama_chat_message(String methodName, Class<?>[] parameterTypes, Object... args) {
+    return invoke("llama_chat_message", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific class.
+   *
+   * @param classNameSuffix The suffix of the class name (e.g., "llama_h", "llama_model_params").
+   * @param methodName      The name of the method to invoke.
+   * @param parameterTypes  An array of Class objects representing the parameter types of the method.
+   * @param args            The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T invoke(String classNameSuffix, String methodName, Class<?>[] parameterTypes, Object... args) {
+    try {
+      String fullClassName = basePackage + classNameSuffix;
+      Class<?> targetClass = Class.forName(fullClassName);
+      Method method = targetClass.getMethod(methodName, parameterTypes);
+      return (T) method.invoke(null, args); // Invoke static method, so obj is null
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException("Class not found for runtime " + runtime + ": " + e.getMessage(), e);
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException("Method not found for runtime " + runtime + ": " + e.getMessage(), e);
+    } catch (InvocationTargetException e) {
+      if (e.getTargetException() instanceof RuntimeException) {
+        throw (RuntimeException) e.getTargetException();
+      }
+      throw new IllegalStateException("Error invoking method for runtime " + runtime + ": " + e.getMessage(), e);
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException("Illegal access to method for runtime " + runtime + ": " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Instantiates a MemorySegment for a functional interface using reflection.
+   *
+   * @param callbackInterfaceName The simple name of the jextract-generated functional interface (e.g., "ggml_log_callback").
+   * @param callbackMethodName The simple name of the jextract-generated functional interface (e.g., "allocate").
+   * @param targetObject     The object on which the actual callback method will be invoked.
+   * @param targetMethodName   The name of the method on the targetObject to be invoked by the native callback.
+   * @param arena            The Arena to allocate the MemorySegment in.
+   * @return A MemorySegment representing the native function pointer for the callback.
+   * @throws Exception if any reflective operation fails.
+   */
+  public static MemorySegment instantiateCallbackSegment(
+    String callbackInterfaceName,
+    String callbackMethodName,
+    Object targetObject,
+    String targetMethodName,
+    Arena arena
+  ) throws Exception {
+    String fullInterfaceName = basePackage + callbackInterfaceName;
+
+    var callbackInterface = Class.forName(fullInterfaceName);
+    var proxyCallbackInstance = Proxy.newProxyInstance(
+      callbackInterface.getClassLoader(),
+      new Class<?>[] { callbackInterface },
+      (proxy, method, args) -> {
+        try {
+          Method targetMethod = targetObject.getClass().getMethod(targetMethodName, method.getParameterTypes());
+          return targetMethod.invoke(targetObject, args);
+        } catch (NoSuchMethodException e) {
+          throw new UnsupportedOperationException(
+            "Callback method '%s' not found on target object '%s' with matching signature.".formatted(
+                method.getName(),
+                targetObject.getClass().getName()
+              ),
+            e
+          );
+        } catch (InvocationTargetException e) {
+          throw e.getCause();
+        }
+      }
+    );
+
+    return (MemorySegment) callbackInterface
+      .getMethod(callbackMethodName, callbackInterface, Arena.class)
+      .invoke(null, proxyCallbackInstance, arena);
   }
 }

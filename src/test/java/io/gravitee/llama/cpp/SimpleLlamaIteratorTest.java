@@ -70,7 +70,7 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var it = new LlamaIterator(arena, model, contextParams, vocab, sampler).initialize(prompt);
+    var it = new SimpleLlamaIterator(arena, model, contextParams, vocab, sampler).initialize(prompt);
     while (it.hasNext()) {
       output += it.next().content();
     }
