@@ -19,7 +19,6 @@ import static io.gravitee.llama.cpp.LlamaRuntime.*;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
-import io.gravitee.llama.cpp.macosx.aarch64.llama_batch;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 

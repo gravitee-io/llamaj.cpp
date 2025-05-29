@@ -28,15 +28,13 @@ import java.util.stream.StreamSupport;
  */
 public abstract class LlamaIterator extends ArenaAware implements Iterator<LlamaOutput> {
 
-    protected LlamaIterator(Arena allocator) {
-        super(allocator);
-    }
+  protected LlamaIterator(Arena allocator) {
+    super(allocator);
+  }
 
-    public Stream<LlamaOutput> stream() {
-        return StreamSupport.stream(
-                Spliterators.spliteratorUnknownSize(this, Spliterator.ORDERED), false
-        );
-    }
+  public Stream<LlamaOutput> stream() {
+    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this, Spliterator.ORDERED), false);
+  }
 
-    public abstract void close();
+  public abstract void close();
 }

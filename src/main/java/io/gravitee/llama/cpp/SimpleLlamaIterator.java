@@ -49,7 +49,13 @@ public final class SimpleLlamaIterator extends LlamaIterator {
 
   private final LlamaTokenizer tokenizer;
 
-  public SimpleLlamaIterator(Arena arena, LlamaModel model, LlamaContextParams params, LlamaVocab vocab, LlamaSampler sampler) {
+  public SimpleLlamaIterator(
+    Arena arena,
+    LlamaModel model,
+    LlamaContextParams params,
+    LlamaVocab vocab,
+    LlamaSampler sampler
+  ) {
     super(arena);
     this.context = new LlamaContext(model, params);
     this.vocab = vocab;
