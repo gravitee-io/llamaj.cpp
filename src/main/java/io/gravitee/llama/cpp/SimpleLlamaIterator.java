@@ -19,7 +19,6 @@ import static java.util.function.Predicate.not;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
 import java.lang.foreign.Arena;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,7 +31,6 @@ public final class SimpleLlamaIterator extends LlamaIterator {
   private TokenizerResponse tokenized;
 
   private final LlamaContext context;
-  private final LlamaVocab vocab;
   private final LlamaSampler sampler;
 
   private final AtomicInteger inputTokens = new AtomicInteger(0);
@@ -49,18 +47,11 @@ public final class SimpleLlamaIterator extends LlamaIterator {
 
   private final LlamaTokenizer tokenizer;
 
-  public SimpleLlamaIterator(
-    Arena arena,
-    LlamaModel model,
-    LlamaContextParams params,
-    LlamaVocab vocab,
-    LlamaSampler sampler
-  ) {
+  public SimpleLlamaIterator(Arena arena, LlamaContext context, LlamaTokenizer tokenizer, LlamaSampler sampler) {
     super(arena);
-    this.context = new LlamaContext(model, params);
-    this.vocab = vocab;
+    this.context = context;
     this.sampler = sampler;
-    tokenizer = new LlamaTokenizer(this.vocab, this.context);
+    this.tokenizer = tokenizer;
   }
 
   public SimpleLlamaIterator initialize(String prompt) {
@@ -88,7 +79,7 @@ public final class SimpleLlamaIterator extends LlamaIterator {
     batch = null;
 
     outputTokens.incrementAndGet();
-    return hasNotReachedQuota() && !vocab.isEog(newTokenId);
+    return hasNotReachedQuota() && !tokenizer.isEog(newTokenId);
   }
 
   private boolean hasNotReachedQuota() {
@@ -101,7 +92,7 @@ public final class SimpleLlamaIterator extends LlamaIterator {
 
   @Override
   public LlamaOutput next() {
-    var piece = vocab.tokenToPiece(arena, newTokenId);
+    var piece = tokenizer.tokenToPiece(newTokenId);
 
     if (!stopStrings.isEmpty()) {
       promptMemory += piece;
@@ -136,13 +127,5 @@ public final class SimpleLlamaIterator extends LlamaIterator {
 
   public int getOutputTokens() {
     return outputTokens.get();
-  }
-
-  public LlamaTokenizer getTokenizer() {
-    return tokenizer;
-  }
-
-  public void close() {
-    context.free();
   }
 }

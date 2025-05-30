@@ -18,6 +18,7 @@ package io.gravitee.llama.cpp;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_tokenize;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 
@@ -63,6 +64,14 @@ public final class LlamaTokenizer {
     );
 
     return new PromptSegment(promptSegment, nbPromptTokens);
+  }
+
+  public boolean isEog(int tokenId) {
+    return vocab.isEog(tokenId);
+  }
+
+  public String tokenToPiece(int tokenId) {
+    return vocab.tokenToPiece(tokenId);
   }
 
   public record PromptSegment(MemorySegment data, int size) {}

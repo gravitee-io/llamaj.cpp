@@ -19,7 +19,7 @@ import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_get_vocab;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_token_to_piece;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_is_eog;
 
-import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 
 /**
@@ -36,14 +36,16 @@ public final class LlamaVocab extends MemorySegmentAware {
     return llama_vocab_is_eog(this.segment, tokenId);
   }
 
-  public String tokenToPiece(SegmentAllocator allocator, int tokenId) {
-    var buffer = allocator.allocateArray(ValueLayout.OfChar.JAVA_BYTE, 10);
-    int pieceNumber = llama_token_to_piece(this.segment, tokenId, buffer, (int) buffer.byteSize(), 0, true);
-    var bufferArray = buffer.toArray(ValueLayout.JAVA_BYTE);
-    StringBuilder answer = new StringBuilder();
-    for (int i = 0; i < pieceNumber; i++) {
-      answer.append((char) bufferArray[i]);
+  public String tokenToPiece(int tokenId) {
+    try (Arena arena = Arena.ofConfined()) {
+      var buffer = arena.allocateArray(ValueLayout.OfChar.JAVA_BYTE, 10);
+      int pieceNumber = llama_token_to_piece(this.segment, tokenId, buffer, (int) buffer.byteSize(), 0, true);
+      var bufferArray = buffer.toArray(ValueLayout.JAVA_BYTE);
+      StringBuilder answer = new StringBuilder();
+      for (int i = 0; i < pieceNumber; i++) {
+        answer.append((char) bufferArray[i]);
+      }
+      return answer.toString();
     }
-    return answer.toString();
   }
 }

@@ -23,13 +23,7 @@ import static java.lang.Integer.parseInt;
 import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.*;
 
 public class Main {
 
@@ -57,6 +51,7 @@ public class Main {
     int nBatch = parseInt(params.getOrDefault("n_batch", "512"));
     int nSeqMax = parseInt(params.getOrDefault("n_seq_max", "512"));
     int quota = parseInt(params.getOrDefault("quota", "512"));
+    int nKeep = parseInt(params.getOrDefault("nKeep", "256"));
 
     String logLevelStr = params.getOrDefault("log_level", "ERROR").toUpperCase();
     LlamaLogLevel logLevel;
@@ -85,7 +80,8 @@ public class Main {
       System.err.println("  --n_batch <int>          : Batch size (default: 512)");
       System.err.println("  --n_seq_max <int>        : Max sequence length (default: 512)");
       System.err.println("  --quota <int>            : Iterator quota (default: 512)");
-      System.err.println("  --log_level <level>      : Logging level (ERROR, WARN, INFO, DEBUG, default: ERROR)"); // New option in usage
+      System.err.println("  --n_keep <int>         : Tokens to keep when exceeding ctx size (default: 256)");
+      System.err.println("  --log_level <level>      : Logging level (ERROR, WARN, INFO, DEBUG, default: ERROR)");
       System.exit(1);
     }
 
@@ -98,8 +94,10 @@ public class Main {
     var modelParameters = new LlamaModelParams(ARENA);
     modelParameters.nGpuLayers(nGpuLayers).useMlock(useMlock).useMmap(useMmap);
 
-    LlamaModel model = new LlamaModel(ARENA, Path.of(modelGguf).toAbsolutePath(), modelParameters);
-    LlamaVocab vocab = new LlamaVocab(model);
+    var model = new LlamaModel(ARENA, Path.of(modelGguf).toAbsolutePath(), modelParameters);
+    var vocab = new LlamaVocab(model);
+
+    var contextParams = new LlamaContextParams(ARENA).nCtx(nCtx).nBatch(nBatch).nSeqMax(nSeqMax);
 
     LlamaSampler sampler = new LlamaSampler(ARENA)
       .temperature(temperature)
@@ -108,9 +106,16 @@ public class Main {
       .topP(topP, topPWindow)
       .seed(seed);
 
-    var contextParams = new LlamaContextParams(ARENA).nCtx(nCtx).nBatch(nBatch).nSeqMax(nSeqMax);
+    List<LlamaChatMessage> messages = new ArrayList<>();
+    messages.add(new LlamaChatMessage(ARENA, Role.SYSTEM, systemMessage));
 
     String input = "";
+
+    var context = new LlamaContext(model, contextParams);
+    var tokenizer = new LlamaTokenizer(vocab, context);
+
+    var messageTrimmer = new MessageTrimmer(tokenizer, context.nCtx(), nKeep, systemMessage);
+
     while (!input.trim().equals("bye")) {
       Scanner scanIn = new Scanner(System.in);
       System.out.print("Please enter your prompt: ");
@@ -120,29 +125,32 @@ public class Main {
         break;
       }
 
-      String prompt = buildPrompt(model, systemMessage, input, contextParams);
+      messages.add(new LlamaChatMessage(ARENA, Role.USER, input));
 
-      LlamaIterator iterator = new SimpleLlamaIterator(ARENA, model, contextParams, vocab, sampler)
+      String prompt = buildPrompt(model, messageTrimmer.trimMessages(messages), contextParams);
+
+      LlamaIterator iterator = new SimpleLlamaIterator(ARENA, context, tokenizer, sampler)
         .setQuota(quota)
         .initialize(prompt);
 
-      iterator.stream().map(LlamaOutput::content).forEach(System.out::print);
+      var answer = iterator.stream().map(LlamaOutput::content).peek(System.out::print).reduce((a, b) -> a + b).orElse("");
+
+      messages.add(new LlamaChatMessage(ARENA, Role.ASSISTANT, answer));
+      messages = messageTrimmer.trimMessages(messages);
+
+      context.kvCacheClear();
 
       System.out.println();
     }
 
+    context.free();
     sampler.free();
     model.free();
   }
 
-  private static String buildPrompt(LlamaModel model, String systemMessage, String input, LlamaContextParams contextParams) {
+  private static String buildPrompt(LlamaModel model, List<LlamaChatMessage> messages, LlamaContextParams contextParams) {
     try (Arena arena = Arena.ofConfined()) {
-      LlamaTemplate llamaTemplate = new LlamaTemplate(model);
-      var messages = new LlamaChatMessages(
-        arena,
-        List.of(new LlamaChatMessage(arena, Role.SYSTEM, systemMessage), new LlamaChatMessage(arena, Role.USER, input))
-      );
-      return llamaTemplate.applyTemplate(arena, messages, contextParams.nCtx());
+      return new LlamaTemplate(model).applyTemplate(arena, new LlamaChatMessages(arena, messages), contextParams.nCtx());
     }
   }
 
@@ -167,5 +175,48 @@ public class Main {
       }
     }
     return params;
+  }
+
+  private record MessageTrimmer(LlamaTokenizer tokenizer, int contextSize, int nKeep, String systemMessage) {
+    public List<LlamaChatMessage> trimMessages(List<LlamaChatMessage> fullHistory) {
+      try (Arena arena = Arena.ofConfined()) {
+        List<LlamaChatMessage> trimmed = new ArrayList<>();
+        int totalTokens = tokenizer.tokenize(arena, systemMessage).size();
+
+        LlamaChatMessage firstUserMessage = fullHistory
+          .stream()
+          .filter(m -> m.getRole() == Role.USER)
+          .findFirst()
+          .orElse(null);
+
+        int firstUserTokens = 0;
+        if (firstUserMessage != null) {
+          firstUserTokens = tokenizer.tokenize(arena, firstUserMessage.getContent().strip()).size();
+        }
+
+        ListIterator<LlamaChatMessage> it = fullHistory.listIterator(fullHistory.size());
+        int added = 0;
+
+        while (it.hasPrevious()) {
+          LlamaChatMessage msg = it.previous();
+
+          if (msg.getRole() == Role.SYSTEM) continue;
+          if (msg == firstUserMessage) continue;
+
+          int tokenCount = tokenizer.tokenize(arena, msg.getContent().strip()).size();
+
+          if ((totalTokens + tokenCount) > (contextSize - firstUserTokens)) break;
+
+          trimmed.addFirst(msg);
+          totalTokens += tokenCount;
+
+          if (++added >= nKeep) break;
+        }
+
+        trimmed.addFirst(firstUserMessage);
+        trimmed.addFirst(new LlamaChatMessage(Main.ARENA, Role.SYSTEM, systemMessage));
+        return trimmed;
+      }
+    }
   }
 }

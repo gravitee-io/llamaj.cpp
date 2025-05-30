@@ -65,7 +65,6 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
   @ParameterizedTest
   @MethodSource("params_that_allow_llama_generation")
   void llama_tuned_generation(String system, String input, String expected) {
-    String output = "";
     int inputToken = -1;
     int outputToken = -1;
     var logger = new LlamaLogger(arena);
@@ -99,14 +98,16 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
 
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var it = new SimpleLlamaIterator(arena, model, contextParams, vocab, sampler)
+    var context = new LlamaContext(model, contextParams);
+    var tokenizer = new LlamaTokenizer(vocab, context);
+
+    var it = new SimpleLlamaIterator(arena, context, tokenizer, sampler)
       .setStopStrings(List.of("."))
       .setQuota(10)
       .initialize(prompt);
-    for (; it.hasNext();) {
-      output += it.next().content();
-    }
-    it.close();
+
+    String output = it.stream().map(LlamaOutput::content).reduce((a, b) -> a + b).orElse("");
+
     inputToken = it.getInputTokens();
     outputToken = it.getOutputTokens();
 
@@ -115,6 +116,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
     assertThat(output).containsIgnoringCase(expected);
     System.out.println(output);
 
+    context.free();
     sampler.free();
     model.free();
   }

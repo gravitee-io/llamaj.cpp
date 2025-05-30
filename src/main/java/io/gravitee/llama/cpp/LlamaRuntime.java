@@ -337,6 +337,10 @@ public final class LlamaRuntime {
     return llama_h("llama_get_kv_cache_used_cells", new Class<?>[] { MEM_SEG_CLASS }, context);
   }
 
+  static void llama_kv_cache_clear(MemorySegment context) {
+    llama_h("llama_kv_cache_clear", new Class<?>[] { MEM_SEG_CLASS }, context);
+  }
+
   /* Chat Template */
   static MemorySegment llama_model_chat_template(MemorySegment model, MemorySegment name) {
     return llama_h("llama_model_chat_template", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, name);

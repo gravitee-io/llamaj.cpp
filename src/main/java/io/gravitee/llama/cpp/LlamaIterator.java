@@ -35,6 +35,4 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   public Stream<LlamaOutput> stream() {
     return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this, Spliterator.ORDERED), false);
   }
-
-  public abstract void close();
 }
