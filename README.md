@@ -92,7 +92,13 @@ $ mvn install
 
 ```bash
 $ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
-    -Dexec.args="/path/to/model/model.gguf 'You are a helpful assistant. Answer question to the best of your ability'"
+    -Dexec.args="--model /path/to/model/model.gguf --system 'You are a helpful assistant. Answer question to the best of your ability'"
+```
+
+or
+
+```bash
+$ java -jar llamaj.cpp-<version>.jar  /path/to/model/model.gguf --system 'You are a helpful assistant. Answer question to the best of your ability'
 ```
 
 On linux, don't forget to link your libraries with the environment variable below:
@@ -102,6 +108,29 @@ $ export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
 ```
 
 There are plenty of models on HuggingFace, we suggest the one [here](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF)
+
+### Usage
+```
+Usage: java -jar llamaj.cpp-<version>.jar --model <path_to_gguf_model> [options...]
+Options:
+--system <message>       : System message (default: "You are a helpful AI assistant.")
+--n_gpu_layers <int>     : Number of GPU layers (default: 999)
+--use_mlock <boolean>    : Use mlock (default: true)
+--use_mmap <boolean>     : Use mmap (default: true)
+--temperature <float>    : Sampler temperature (default: 0.4)
+--min_p <float>          : Sampler min_p (default: 0.1)
+--min_p_window <int>     : Sampler min_p_window (default: 40)
+--top_k <int>            : Sampler top_k (default: 10)
+--top_p <float>          : Sampler top_p (default: 0.2)
+--top_p_window <int>     : Sampler top_p_window (default: 10)
+--seed <long>            : Sampler seed (default: random)
+--n_ctx <int>            : Context size (default: 512)
+--n_batch <int>          : Batch size (default: 512)
+--n_seq_max <int>        : Max sequence length (default: 512)
+--quota <int>            : Iterator quota (default: 512)
+--n_keep <int>         : Tokens to keep when exceeding ctx size (default: 256)
+--log_level <level>      : Logging level (ERROR, WARN, INFO, DEBUG, default: ERROR)
+```
 
 ## Use your own llama.cpp build
 

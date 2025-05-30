@@ -63,7 +63,7 @@ public class Main {
     }
 
     if (modelGguf == null) {
-      System.err.println("Usage: java -jar your-app.jar --model <path_to_gguf_model> [options...]");
+      System.err.println("Usage: java -jar llamaj.cpp-<version>.jar  --model <path_to_gguf_model> [options...]");
       System.err.println("Options:");
       System.err.println("  --system <message>       : System message (default: \"You are a helpful AI assistant.\")");
       System.err.println("  --n_gpu_layers <int>     : Number of GPU layers (default: 999)");
