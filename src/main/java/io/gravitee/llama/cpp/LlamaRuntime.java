@@ -29,9 +29,6 @@ import java.lang.reflect.Proxy;
  */
 public final class LlamaRuntime {
 
-  public static final String MACOSX_AARCH_64 = "macosx_aarch64";
-  public static final String LINUX_X86_64 = "linux_x86_64";
-
   private static final Class<MemorySegment> MEM_SEG_CLASS = MemorySegment.class;
 
   private static final String pkg = PlatformResolver.platform().getPackage();
@@ -46,102 +43,102 @@ public final class LlamaRuntime {
   }
 
   /* logging */
-  static void llama_log_set(MemorySegment m1, MemorySegment m2) {
+  public static void llama_log_set(MemorySegment m1, MemorySegment m2) {
     llama_h("llama_log_set", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, m1, m2);
   }
 
   /* Model Parameters */
-  static MemorySegment llama_model_params_ofAddress(MemorySegment segment, Arena arena) {
+  public static MemorySegment llama_model_params_ofAddress(MemorySegment segment, Arena arena) {
     return invoke("llama_model_params", "ofAddress", new Class<?>[] { MEM_SEG_CLASS, Arena.class }, segment, arena);
   }
 
-  static MemorySegment llama_model_default_params(Arena arena) {
+  public static MemorySegment llama_model_default_params(Arena arena) {
     return llama_h("llama_model_default_params", new Class<?>[] { SegmentAllocator.class }, arena);
   }
 
-  static long llama_max_devices() {
+  public static long llama_max_devices() {
     return llama_h("llama_max_devices", new Class<?>[] {});
   }
 
-  static int n_gpu_layers(MemorySegment segment) {
+  public static int n_gpu_layers(MemorySegment segment) {
     return llama_model_params("n_gpu_layers$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void n_gpu_layers(MemorySegment segment, int layers) {
+  public static void n_gpu_layers(MemorySegment segment, int layers) {
     llama_model_params("n_gpu_layers$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, layers);
   }
 
-  static int split_mode(MemorySegment segment) {
+  public static int split_mode(MemorySegment segment) {
     return llama_model_params("split_mode$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void split_mode(MemorySegment segment, int ordinal) {
+  public static void split_mode(MemorySegment segment, int ordinal) {
     llama_model_params("split_mode$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, ordinal);
   }
 
-  static int main_gpu(MemorySegment segment) {
+  public static int main_gpu(MemorySegment segment) {
     return llama_model_params("main_gpu$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void main_gpu(MemorySegment segment, int mainGpu) {
+  public static void main_gpu(MemorySegment segment, int mainGpu) {
     llama_model_params("main_gpu$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, mainGpu);
   }
 
-  static MemorySegment tensor_split(MemorySegment segment) {
+  public static MemorySegment tensor_split(MemorySegment segment) {
     return llama_model_params("tensor_split$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void tensor_split(MemorySegment segment, MemorySegment tensorSplit) {
+  public static void tensor_split(MemorySegment segment, MemorySegment tensorSplit) {
     llama_model_params("tensor_split$set", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, segment, tensorSplit);
   }
 
-  static boolean vocab_only(MemorySegment segment) {
+  public static boolean vocab_only(MemorySegment segment) {
     return llama_model_params("vocab_only$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void vocab_only(MemorySegment segment, boolean vocabOnly) {
+  public static void vocab_only(MemorySegment segment, boolean vocabOnly) {
     llama_model_params("vocab_only$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, vocabOnly);
   }
 
-  static boolean use_mmap(MemorySegment segment) {
+  public static boolean use_mmap(MemorySegment segment) {
     return llama_model_params("use_mmap$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void use_mmap(MemorySegment segment, boolean useMmap) {
+  public static void use_mmap(MemorySegment segment, boolean useMmap) {
     llama_model_params("use_mmap$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, useMmap);
   }
 
-  static boolean use_mlock(MemorySegment segment) {
+  public static boolean use_mlock(MemorySegment segment) {
     return llama_model_params("use_mlock$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void use_mlock(MemorySegment segment, boolean useMlock) {
+  public static void use_mlock(MemorySegment segment, boolean useMlock) {
     llama_model_params("use_mlock$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, useMlock);
   }
 
-  static boolean check_tensors(MemorySegment segment) {
+  public static boolean check_tensors(MemorySegment segment) {
     return llama_model_params("check_tensors$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void check_tensors(MemorySegment segment, boolean checkTensors) {
+  public static void check_tensors(MemorySegment segment, boolean checkTensors) {
     llama_model_params("check_tensors$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, checkTensors);
   }
 
   /* Model */
-  static MemorySegment llama_model_load_from_file(MemorySegment modelPath, MemorySegment path) {
+  public static MemorySegment llama_model_load_from_file(MemorySegment modelPath, MemorySegment path) {
     return llama_h("llama_model_load_from_file", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, modelPath, path);
   }
 
   /* Vocab */
-  static MemorySegment llama_model_get_vocab(MemorySegment model) {
+  public static MemorySegment llama_model_get_vocab(MemorySegment model) {
     return llama_h("llama_model_get_vocab", new Class<?>[] { MEM_SEG_CLASS }, model);
   }
 
-  static boolean llama_vocab_is_eog(MemorySegment vocab, int tokenId) {
+  public static boolean llama_vocab_is_eog(MemorySegment vocab, int tokenId) {
     return llama_h("llama_vocab_is_eog", new Class<?>[] { MEM_SEG_CLASS, int.class }, vocab, tokenId);
   }
 
-  static int llama_token_to_piece(
+  public static int llama_token_to_piece(
     MemorySegment vocab,
     int token,
     MemorySegment buf,
@@ -155,15 +152,15 @@ public final class LlamaRuntime {
 
   /* Sampler */
 
-  static MemorySegment llama_sampler_chain_init(MemorySegment sampler) {
+  public static MemorySegment llama_sampler_chain_init(MemorySegment sampler) {
     return llama_h("llama_sampler_chain_init", new Class<?>[] { MEM_SEG_CLASS }, sampler);
   }
 
-  static MemorySegment llama_sampler_chain_default_params(SegmentAllocator allocator) {
+  public static MemorySegment llama_sampler_chain_default_params(SegmentAllocator allocator) {
     return llama_h("llama_sampler_chain_default_params", new Class<?>[] { SegmentAllocator.class }, allocator);
   }
 
-  static int llama_sampler_sample(MemorySegment sampler, MemorySegment context, int idx) {
+  public static int llama_sampler_sample(MemorySegment sampler, MemorySegment context, int idx) {
     return llama_h(
       "llama_sampler_sample",
       new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, int.class },
@@ -173,31 +170,31 @@ public final class LlamaRuntime {
     );
   }
 
-  static void llama_sampler_chain_add(MemorySegment sampler, MemorySegment config) {
+  public static void llama_sampler_chain_add(MemorySegment sampler, MemorySegment config) {
     llama_h("llama_sampler_chain_add", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, sampler, config);
   }
 
-  static MemorySegment llama_sampler_init_temp(float temperature) {
+  public static MemorySegment llama_sampler_init_temp(float temperature) {
     return llama_h("llama_sampler_init_temp", new Class<?>[] { float.class }, temperature);
   }
 
-  static MemorySegment llama_sampler_init_top_k(int topK) {
+  public static MemorySegment llama_sampler_init_top_k(int topK) {
     return llama_h("llama_sampler_init_top_k", new Class<?>[] { int.class }, topK);
   }
 
-  static MemorySegment llama_sampler_init_top_p(float topP, long minKeep) {
+  public static MemorySegment llama_sampler_init_top_p(float topP, long minKeep) {
     return llama_h("llama_sampler_init_top_p", new Class<?>[] { float.class, long.class }, topP, minKeep);
   }
 
-  static MemorySegment llama_sampler_init_min_p(float minP, long minKeep) {
+  public static MemorySegment llama_sampler_init_min_p(float minP, long minKeep) {
     return llama_h("llama_sampler_init_min_p", new Class<?>[] { float.class, long.class }, minP, minKeep);
   }
 
-  static MemorySegment llama_sampler_init_mirostat_v2(int seed, float tau, float eta) {
+  public static MemorySegment llama_sampler_init_mirostat_v2(int seed, float tau, float eta) {
     return llama_h("llama_sampler_init_mirostat_v2", new Class<?>[] { int.class, float.class, float.class }, seed, tau, eta);
   }
 
-  static MemorySegment llama_sampler_init_grammar(MemorySegment vocab, MemorySegment grammar, MemorySegment root) {
+  public static MemorySegment llama_sampler_init_grammar(MemorySegment vocab, MemorySegment grammar, MemorySegment root) {
     return llama_h(
       "llama_sampler_init_grammar",
       new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, MEM_SEG_CLASS },
@@ -207,7 +204,7 @@ public final class LlamaRuntime {
     );
   }
 
-  static MemorySegment llama_sampler_init_penalties(
+  public static MemorySegment llama_sampler_init_penalties(
     int penaltyLastN,
     float penaltyRepeat,
     float penaltyFreq,
@@ -223,130 +220,130 @@ public final class LlamaRuntime {
     );
   }
 
-  static MemorySegment llama_sampler_init_dist(int seed) {
+  public static MemorySegment llama_sampler_init_dist(int seed) {
     return llama_h("llama_sampler_init_dist", new Class<?>[] { int.class }, seed);
   }
 
   /* Context Params */
-  static MemorySegment llama_context_default_params(SegmentAllocator allocator) {
+  public static MemorySegment llama_context_default_params(SegmentAllocator allocator) {
     return llama_h("llama_context_default_params", new Class<?>[] { SegmentAllocator.class }, allocator);
   }
 
-  static int n_ctx(MemorySegment contextParams) {
+  public static int n_ctx(MemorySegment contextParams) {
     return llama_context_params("n_ctx$get", new Class<?>[] { MEM_SEG_CLASS }, contextParams);
   }
 
-  static void n_ctx(MemorySegment segment, int nCtx) {
+  public static void n_ctx(MemorySegment segment, int nCtx) {
     llama_context_params("n_ctx$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nCtx);
   }
 
-  static int n_batch(MemorySegment segment) {
+  public static int n_batch(MemorySegment segment) {
     return llama_context_params("n_batch$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void n_batch(MemorySegment segment, int nBatch) {
+  public static void n_batch(MemorySegment segment, int nBatch) {
     llama_context_params("n_batch$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nBatch);
   }
 
-  static int n_ubatch(MemorySegment segment) {
+  public static int n_ubatch(MemorySegment segment) {
     return llama_context_params("n_ubatch$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void n_ubatch(MemorySegment segment, int nUBatch) {
+  public static void n_ubatch(MemorySegment segment, int nUBatch) {
     llama_context_params("n_ubatch$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nUBatch);
   }
 
-  static int n_seq_max(MemorySegment segment) {
+  public static int n_seq_max(MemorySegment segment) {
     return llama_context_params("n_seq_max$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void n_seq_max(MemorySegment segment, int nSeqMax) {
+  public static void n_seq_max(MemorySegment segment, int nSeqMax) {
     llama_context_params("n_seq_max$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nSeqMax);
   }
 
-  static int n_threads(MemorySegment segment) {
+  public static int n_threads(MemorySegment segment) {
     return llama_context_params("n_threads$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void n_threads(MemorySegment segment, int nThreads) {
+  public static void n_threads(MemorySegment segment, int nThreads) {
     llama_context_params("n_threads$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nThreads);
   }
 
-  static int n_threads_batch(MemorySegment segment) {
+  public static int n_threads_batch(MemorySegment segment) {
     return llama_context_params("n_threads_batch$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void n_threads_batch(MemorySegment segment, int nThreadBatch) {
+  public static void n_threads_batch(MemorySegment segment, int nThreadBatch) {
     llama_context_params("n_threads_batch$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nThreadBatch);
   }
 
-  static int pooling_type(MemorySegment segment) {
+  public static int pooling_type(MemorySegment segment) {
     return llama_context_params("pooling_type$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void pooling_type(MemorySegment segment, int ordinal) {
+  public static void pooling_type(MemorySegment segment, int ordinal) {
     llama_context_params("pooling_type$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, ordinal);
   }
 
-  static int attention_type(MemorySegment segment) {
+  public static int attention_type(MemorySegment segment) {
     return llama_context_params("attention_type$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void attention_type(MemorySegment segment, int ordinal) {
+  public static void attention_type(MemorySegment segment, int ordinal) {
     llama_context_params("attention_type$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, ordinal);
   }
 
-  static boolean embeddings(MemorySegment segment) {
+  public static boolean embeddings(MemorySegment segment) {
     return llama_context_params("embeddings$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void embeddings(MemorySegment segment, boolean embeddings) {
+  public static void embeddings(MemorySegment segment, boolean embeddings) {
     llama_context_params("embeddings$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, embeddings);
   }
 
-  static boolean offload_kqv(MemorySegment segment) {
+  public static boolean offload_kqv(MemorySegment segment) {
     return llama_context_params("offload_kqv$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void offload_kqv(MemorySegment segment, boolean offloadKQV) {
+  public static void offload_kqv(MemorySegment segment, boolean offloadKQV) {
     llama_context_params("offload_kqv$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, offloadKQV);
   }
 
-  static boolean flash_attn(MemorySegment segment) {
+  public static boolean flash_attn(MemorySegment segment) {
     return llama_context_params("flash_attn$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void flash_attn(MemorySegment segment, boolean flashAttn) {
+  public static void flash_attn(MemorySegment segment, boolean flashAttn) {
     llama_context_params("flash_attn$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, flashAttn);
   }
 
-  static boolean no_perf(MemorySegment segment) {
+  public static boolean no_perf(MemorySegment segment) {
     return llama_context_params("no_perf$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void no_perf(MemorySegment segment, boolean flashAttn) {
+  public static void no_perf(MemorySegment segment, boolean flashAttn) {
     llama_context_params("no_perf$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, flashAttn);
   }
 
   /* Context */
-  static MemorySegment llama_init_from_model(MemorySegment model, MemorySegment params) {
+  public static MemorySegment llama_init_from_model(MemorySegment model, MemorySegment params) {
     return llama_h("llama_init_from_model", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, params);
   }
 
-  static int llama_get_kv_cache_used_cells(MemorySegment context) {
+  public static int llama_get_kv_cache_used_cells(MemorySegment context) {
     return llama_h("llama_get_kv_cache_used_cells", new Class<?>[] { MEM_SEG_CLASS }, context);
   }
 
-  static void llama_kv_cache_clear(MemorySegment context) {
+  public static void llama_kv_cache_clear(MemorySegment context) {
     llama_h("llama_kv_cache_clear", new Class<?>[] { MEM_SEG_CLASS }, context);
   }
 
   /* Chat Template */
-  static MemorySegment llama_model_chat_template(MemorySegment model, MemorySegment name) {
+  public static MemorySegment llama_model_chat_template(MemorySegment model, MemorySegment name) {
     return llama_h("llama_model_chat_template", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, name);
   }
 
-  static int llama_chat_apply_template(
+  public static int llama_chat_apply_template(
     MemorySegment tmpl,
     MemorySegment chat,
     long n_msg,
@@ -367,36 +364,36 @@ public final class LlamaRuntime {
   }
 
   /* Chat Message */
-  static MemorySegment llama_chat_message_allocate(SegmentAllocator allocator) {
+  public static MemorySegment llama_chat_message_allocate(SegmentAllocator allocator) {
     return llama_chat_message("allocate", new Class[] { SegmentAllocator.class }, allocator);
   }
 
-  static MemorySegment llama_chat_message_allocateArray(long size, SegmentAllocator allocator) {
+  public static MemorySegment llama_chat_message_allocateArray(long size, SegmentAllocator allocator) {
     return llama_chat_message("allocateArray", new Class[] { long.class, SegmentAllocator.class }, size, allocator);
   }
 
-  static MemorySegment llama_chat_message_role(MemorySegment segment) {
+  public static MemorySegment llama_chat_message_role(MemorySegment segment) {
     return llama_chat_message("role$get", new Class[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void llama_chat_message_role(MemorySegment message, MemorySegment role) {
+  public static void llama_chat_message_role(MemorySegment message, MemorySegment role) {
     llama_chat_message("role$set", new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, message, role);
   }
 
-  static MemorySegment llama_chat_message_content(MemorySegment segment) {
+  public static MemorySegment llama_chat_message_content(MemorySegment segment) {
     return llama_chat_message("content$get", new Class[] { MEM_SEG_CLASS }, segment);
   }
 
-  static void llama_chat_message_content(MemorySegment message, MemorySegment content) {
+  public static void llama_chat_message_content(MemorySegment message, MemorySegment content) {
     llama_chat_message("content$set", new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, message, content);
   }
 
-  static long llama_chat_message_sizeof() {
+  public static long llama_chat_message_sizeof() {
     return llama_chat_message("sizeof", new Class[] {});
   }
 
   /* Tokenizer */
-  static int llama_tokenize(
+  public static int llama_tokenize(
     MemorySegment vocab,
     MemorySegment text,
     int text_len,
@@ -419,7 +416,7 @@ public final class LlamaRuntime {
   }
 
   /* Batch */
-  static MemorySegment llama_batch_get_one(SegmentAllocator allocator, MemorySegment segment, int size) {
+  public static MemorySegment llama_batch_get_one(SegmentAllocator allocator, MemorySegment segment, int size) {
     return llama_h(
       "llama_batch_get_one",
       new Class[] { SegmentAllocator.class, MEM_SEG_CLASS, int.class },
@@ -429,28 +426,28 @@ public final class LlamaRuntime {
     );
   }
 
-  static int llama_batch_n_tokens(MemorySegment batch) {
+  public static int llama_batch_n_tokens(MemorySegment batch) {
     return invoke("llama_batch", "n_tokens$get", new Class[] { MEM_SEG_CLASS }, batch);
   }
 
-  static int llama_decode(MemorySegment context, MemorySegment batch) {
+  public static int llama_decode(MemorySegment context, MemorySegment batch) {
     return llama_h("llama_decode", new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, context, batch);
   }
 
   /* Free Memory */
-  static void llama_batch_free(LlamaBatch batch) {
+  public static void llama_batch_free(LlamaBatch batch) {
     llama_h("llama_batch_free", new Class[] { MEM_SEG_CLASS }, batch.segment);
   }
 
-  static void llama_free(LlamaContext context) {
+  public static void llama_free(LlamaContext context) {
     llama_h("llama_free", new Class[] { MEM_SEG_CLASS }, context.segment);
   }
 
-  static void llama_sampler_free(LlamaSampler sampler) {
+  public static void llama_sampler_free(LlamaSampler sampler) {
     llama_h("llama_sampler_free", new Class[] { MEM_SEG_CLASS }, sampler.segment);
   }
 
-  static void llama_model_free(LlamaModel model) {
+  public static void llama_model_free(LlamaModel model) {
     llama_h("llama_model_free", new Class[] { MEM_SEG_CLASS }, model.segment);
   }
 
