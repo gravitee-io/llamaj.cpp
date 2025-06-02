@@ -15,7 +15,6 @@
  */
 package io.gravitee.llama.cpp.nativelib;
 
-import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_load_all;
 import static java.util.function.Predicate.not;
 
 import io.gravitee.llama.cpp.platform.Platform;

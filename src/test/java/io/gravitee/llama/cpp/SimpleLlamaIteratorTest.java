@@ -53,7 +53,6 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
   @ParameterizedTest
   @MethodSource("params_that_allow_llama_generation")
   void llama_simple_generation(String system, String input, String expected) {
-    String output = "";
     int inputToken = -1;
     int outputToken = -1;
     var logger = new LlamaLogger(arena);
@@ -65,17 +64,16 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     var model = new LlamaModel(arena, absolutePath, modelParameters);
 
     var contextParams = new LlamaContextParams(arena);
-
+    var context = new LlamaContext(model, contextParams);
     var vocab = new LlamaVocab(model);
+    var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var it = new LlamaIterator(arena, model, contextParams, vocab, sampler).initialize(prompt);
-    while (it.hasNext()) {
-      output += it.next().content();
-    }
+    var it = new SimpleLlamaIterator(arena, context, tokenizer, sampler).initialize(prompt);
 
-    it.close();
+    String output = it.stream().map(LlamaOutput::content).reduce((output1, output2) -> output1 + output2).orElse("");
+
     inputToken = it.getInputTokens();
     outputToken = it.getInputTokens();
 
@@ -84,6 +82,7 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     assertThat(output).containsIgnoringCase(expected);
     System.out.println(output);
 
+    context.free();
     sampler.free();
     model.free();
   }
