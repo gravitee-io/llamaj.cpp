@@ -23,11 +23,13 @@ public enum Architecture {
   X86_64("x86_64"),
   AARCH64("aarch64");
 
-  private static final String AMD_64 = "amd64";
   private static final String OS_ARCH = "os.arch";
 
+  private static final String AMD_64 = "amd64";
   private static final String X86_64_VALUE = "x86_64";
+
   private static final String AARCH64_VALUE = "aarch64";
+  private static final String ARM_64 = "arm64";
 
   private final String arch;
 
@@ -41,11 +43,11 @@ public enum Architecture {
       return X86_64;
     }
 
-    if (osArch.contains(AARCH64_VALUE)) {
+    if (osArch.contains(AARCH64_VALUE) || osArch.contains(ARM_64)) {
       return AARCH64;
     }
 
-    throw new IllegalArgumentException("Unsupported operating system: " + osArch);
+    throw new IllegalArgumentException("Unsupported operating system architecture: " + osArch);
   }
 
   public String getArch() {

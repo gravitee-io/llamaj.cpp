@@ -130,7 +130,7 @@ commands:
           name: Locale dependencies
           command: apt -y install unzip build-essential
 
-  build_jextract:
+  build_jextract_macos:
     steps:
       - run:
           name: Install llvm
@@ -146,7 +146,7 @@ commands:
             sh ./gradlew -Pjdk21_home=$JAVA_HOME -Pllvm_home=$(brew --prefix llvm) clean verify
             ln -sf $HOME_DIR/jextract/build/jextract/bin $HOME_DIR/jextract/bin
             echo "PATH=$(pwd)/bin:$PATH" >> ~/.zprofile
-            source ~/.zprofile
+            source ~/.zprofile 
 
   download_jextract:
     steps:
@@ -194,12 +194,14 @@ commands:
               export LD_LIBRARY_PATH="$LLAMA_CPP_LIB_PATH:$LD_LIBRARY_PATH"
             fi
 
-            mvn -s /tmp/.gravitee.settings.xml clean generate-sources -Pmacosx-aarch64,linux-x86_64
+            mvn -s /tmp/.gravitee.settings.xml clean generate-sources -P<< parameters.os >>-<< parameters.platform >>
             mvn -s /tmp/.gravitee.settings.xml install
 
   get_jextract:
     parameters:
       os:
+        type: string
+      platform:
         type: string
       llama-cpp-version:
         type: string
@@ -219,6 +221,7 @@ commands:
           condition:
             and:
               - equal: ["linux", << parameters.os >>]
+              - equal: ["x86_64", << parameters.platform >>]
           steps:
             - download_jextract
       - when:
@@ -226,7 +229,7 @@ commands:
             and:
               - equal: ["macosx", << parameters.os >>]
           steps:
-            - build_jextract
+            - build_jextract_macos
 
   update_llama_cpp_version:
     steps:
@@ -370,17 +373,18 @@ jobs:
       - install-maven-macos
       - get_jextract:
           os: "macosx"
-          "llama-cpp-version": b5115
+          platform: "aarch64"
+          "llama-cpp-version": b5574
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
       - download_model:
           model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
-          model_path: "models/Llama-3.2-1B-Instruct-IQ3_M.gguf"
+          model_path: "models/model.gguf"
       - run-tests:
           os: "macosx"
           platform: "aarch64"
 
-  build_and_test_linux:
+  build_and_test_linux_x86_64:
     executor: ubuntu_linux_x86_64
     environment:
       HOME_DIR: "/home/circleci"
@@ -390,12 +394,13 @@ jobs:
       - install_dependencies_jextract
       - get_jextract:
           os: "linux"
-          "llama-cpp-version": b5115
+          platform: "x86_64"
+          "llama-cpp-version": b5574
       - checkout:
           path: "/home/circleci/llamaj.cpp"
       - download_model:
           model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
-          model_path: "models/Llama-3.2-1B-Instruct-IQ3_M.gguf"
+          model_path: "models/model.gguf"
       - run-tests:
           os: "linux"
           platform: "x86_64"
@@ -409,14 +414,14 @@ jobs:
       - install-maven-macos
       - get_jextract:
           os: "macosx"
-          "llama-cpp-version": b5115
+          "llama-cpp-version": b5574
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
       - generate_sources:
           os: "macosx"
           platform: "aarch64"
 
-  build_sources_linux:
+  build_sources_linux_x86_64:
     executor: ubuntu_linux_x86_64
     environment:
       HOME_DIR: "/home/circleci"
@@ -426,7 +431,7 @@ jobs:
       - install_dependencies_jextract
       - get_jextract:
           os: "linux"
-          "llama-cpp-version": b5115
+          "llama-cpp-version": b5574
       - checkout:
           path: "/home/circleci/llamaj.cpp"
       - generate_sources:
@@ -513,7 +518,7 @@ workflows:
             - Setup
           context:
             - cicd-orchestrator
-      - build_and_test_linux:
+      - build_and_test_linux_x86_64:
           name: Build and Test -- Linux x86_64
           requires:
             - Setup
@@ -540,7 +545,7 @@ workflows:
           name: Setup
           context:
             - cicd-orchestrator
-      - build_sources_linux:
+      - build_sources_linux_x86_64:
           name: Build sources - Linux
           requires:
             - Setup

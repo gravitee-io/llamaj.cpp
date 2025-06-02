@@ -40,9 +40,10 @@ public final class LlamaLibLoader {
 
   static final String DYLIB_EXT = ".dylib";
   static final String SO_EXT = ".so";
+  static final String DLL_EXT = ".dll";
 
   private static final String LLAMA_CPP_FOLDER = ".llama.cpp";
-  public static final String USER_HOME = System.getProperty("user.home");
+  private static final String USER_HOME = System.getProperty("user.home");
 
   private LlamaLibLoader() {}
 
@@ -83,6 +84,7 @@ public final class LlamaLibLoader {
         switch (platform.os()) {
           case MAC_OS_X -> file.endsWith(DYLIB_EXT);
           case LINUX -> file.endsWith(SO_EXT);
+          case WINDOWS -> file.endsWith(DLL_EXT);
         }
       )
       .forEach(System::load);

@@ -98,7 +98,7 @@ $ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
 or
 
 ```bash
-$ java -jar llamaj.cpp-<version>.jar  /path/to/model/model.gguf --system 'You are a helpful assistant. Answer question to the best of your ability'
+$ java -jar llamaj.cpp-<version>.jar --model models/model.gguf --system 'You are a helpful assistant. Answer question to the best of your ability'
 ```
 
 On linux, don't forget to link your libraries with the environment variable below:
@@ -173,3 +173,25 @@ You can use the environment variable `LLAMA_CPP_LIB_PATH=/path/to/llama.cpp/buil
 This will directly load the dynamically shared object library files (`.so` for linux, `.dylib` for macos) 
 You can also decide to copy these files into a temporary folder using the environment variable `LLAMA_CPP_USE_TMP_LIB_PATH=true`
 The path temporary file will be used to load the shared object libraries
+
+## Beyond Apple M-Series and Linux x86_64
+
+While we don't support other platforms/architecture pair out-of-the-box for many reasons, you can still manage to use 
+gravitee-io/llamaj.cpp:
+
+1. Build llama.cpp on your infrastructure
+2. Build the according java bindings using `jextract`
+3. Bundle them into a jar:
+   - Put the `jextract` source in `io.gravitee.llama.cpp.<os>.<arch>`:
+     - `io.gravitee.llama.cpp.macosx.x86_64`
+     - `io.gravitee.llama.cpp.linux.aarch64`
+     - `io.gravitee.llama.cpp.windows.x86_64`
+     - `io.gravitee.llama.cpp.windows.aarch64`
+   - Put your shared libraries into `<os>.<arch>`:
+     - `macosx.x86_64`
+     - `linux.aarch64`
+     - `windows.x86_64`
+     - `windows.aarch64`
+4. Add this jar to your classpath
+
+gravitee-io/llamaj.cpp will pick up at runtime the os and will call the according bindings using reflection.
