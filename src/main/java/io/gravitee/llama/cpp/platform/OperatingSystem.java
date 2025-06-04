@@ -21,7 +21,8 @@ package io.gravitee.llama.cpp.platform;
  */
 public enum OperatingSystem {
   MAC_OS_X("macosx"),
-  LINUX("linux");
+  LINUX("linux"),
+  WINDOWS("windows");
 
   private final String osName;
 
@@ -36,6 +37,9 @@ public enum OperatingSystem {
     }
     if (osName.contains("linux")) {
       return LINUX;
+    }
+    if (osName.contains("win")) {
+      return WINDOWS;
     }
     throw new IllegalArgumentException("Unsupported operating system: " + osName);
   }

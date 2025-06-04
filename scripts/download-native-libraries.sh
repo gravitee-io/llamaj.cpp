@@ -102,7 +102,7 @@ echo "📥 Downloading llama.cpp version $VERSION for $OS/$PLATFORM..."
 echo "🔗 $DOWNLOAD_URL"
 
 # Download the file
-curl -L -o "$TMP_DIR/$ZIP_NAME" "$DOWNLOAD_URL"
+curl -k -L -o "$TMP_DIR/$ZIP_NAME" "$DOWNLOAD_URL"
 
 # Extract only the necessary files
 echo "📦 Extracting libraries to $OUTPUT_DIR..."

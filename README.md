@@ -6,7 +6,7 @@ llamaj.cpp (contraction of llama.cpp and java/jextract) is a port of llama.cpp i
 
 - Java 21
 - mvn
-- MacOS M-series / Linux x86_64 (CPU)
+- MacOS M-series / Linux x86_64 (CPU) (you can check the last section if you do not see your platform here)
 
 ## How to use
 
@@ -98,7 +98,7 @@ $ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
 or
 
 ```bash
-$ java -jar llamaj.cpp-<version>.jar  /path/to/model/model.gguf --system 'You are a helpful assistant. Answer question to the best of your ability'
+$ java -jar llamaj.cpp-<version>.jar --model models/model.gguf --system 'You are a helpful assistant. Answer question to the best of your ability'
 ```
 
 On linux, don't forget to link your libraries with the environment variable below:
@@ -173,3 +173,26 @@ You can use the environment variable `LLAMA_CPP_LIB_PATH=/path/to/llama.cpp/buil
 This will directly load the dynamically shared object library files (`.so` for linux, `.dylib` for macos) 
 You can also decide to copy these files into a temporary folder using the environment variable `LLAMA_CPP_USE_TMP_LIB_PATH=true`
 The path temporary file will be used to load the shared object libraries
+
+## Beyond Apple M-Series and Linux x86_64
+
+While we don't support other platforms/architecture pair out-of-the-box for many reasons, you can still manage to use 
+gravitee-io/llamaj.cpp:
+
+1. Build llama.cpp on your infrastructure
+2. Add the *.so or *.dylib to ~/.llama.cpp/ or use the `LLAMA_CPP_LIB_PATH` and `LD_LIBRARY_PATH`
+3. Build the according java bindings using `jextract` (without `--source` option) and bundle them into a jar
+```bash
+$ jextract -t io.gravitee.llama.cpp.<os>.<platform>\
+    --include-dir ggml/include \
+    --output /path/to/your/output include/llama.h
+$ jar cf <name-of-your-file>.jar -C . .
+```
+- Put the `jextract` source in `io.gravitee.llama.cpp.<os>.<arch>`:
+    - `io.gravitee.llama.cpp.macosx.x86_64`
+    - `io.gravitee.llama.cpp.linux.aarch64`
+    - `io.gravitee.llama.cpp.windows.x86_64`
+    - `io.gravitee.llama.cpp.windows.aarch64`
+4.Add it to your classpath:`
+
+gravitee-io/llamaj.cpp will pick up at runtime the os and architecture and will call the according bindings using reflection.

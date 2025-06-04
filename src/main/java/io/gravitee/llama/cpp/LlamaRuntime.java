@@ -330,12 +330,12 @@ public final class LlamaRuntime {
     return llama_h("llama_init_from_model", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, params);
   }
 
-  public static int llama_get_kv_cache_used_cells(MemorySegment context) {
-    return llama_h("llama_get_kv_cache_used_cells", new Class<?>[] { MEM_SEG_CLASS }, context);
+  public static int llama_kv_self_used_cells(MemorySegment context) {
+    return llama_h("llama_kv_self_used_cells", new Class<?>[] { MEM_SEG_CLASS }, context);
   }
 
-  public static void llama_kv_cache_clear(MemorySegment context) {
-    llama_h("llama_kv_cache_clear", new Class<?>[] { MEM_SEG_CLASS }, context);
+  public static void llama_kv_self_clear(MemorySegment context) {
+    llama_h("llama_kv_self_clear", new Class<?>[] { MEM_SEG_CLASS }, context);
   }
 
   /* Chat Template */

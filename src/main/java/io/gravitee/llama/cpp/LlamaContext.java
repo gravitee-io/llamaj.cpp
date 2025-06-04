@@ -35,11 +35,11 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   }
 
   public int nCtxUsedCells() {
-    return llama_get_kv_cache_used_cells(this.segment);
+    return llama_kv_self_used_cells(this.segment);
   }
 
   public void kvCacheClear() {
-    llama_kv_cache_clear(this.segment);
+    llama_kv_self_clear(this.segment);
   }
 
   @Override

@@ -49,7 +49,7 @@ public class Main {
 
     int nCtx = parseInt(params.getOrDefault("n_ctx", "512"));
     int nBatch = parseInt(params.getOrDefault("n_batch", "512"));
-    int nSeqMax = parseInt(params.getOrDefault("n_seq_max", "512"));
+    int nSeqMax = parseInt(params.getOrDefault("n_seq_max", "64"));
     int quota = parseInt(params.getOrDefault("quota", "512"));
     int nKeep = parseInt(params.getOrDefault("nKeep", "256"));
 

@@ -43,3 +43,4 @@ models/*
 .java-version
 
 models/
+dependency-reduced-pom.xml
