@@ -414,6 +414,7 @@ jobs:
       - install-maven-macos
       - get_jextract:
           os: "macosx"
+          platform: "aarch64"
           "llama-cpp-version": b5574
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
@@ -431,6 +432,7 @@ jobs:
       - install_dependencies_jextract
       - get_jextract:
           os: "linux"
+          platform: "x86_64"
           "llama-cpp-version": b5574
       - checkout:
           path: "/home/circleci/llamaj.cpp"
