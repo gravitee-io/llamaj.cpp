@@ -334,8 +334,8 @@ public final class LlamaRuntime {
     return llama_h("llama_kv_self_used_cells", new Class<?>[] { MEM_SEG_CLASS }, context);
   }
 
-  public static void llama_kv_cache_clear(MemorySegment context) {
-    llama_h("llama_kv_cache_clear", new Class<?>[] { MEM_SEG_CLASS }, context);
+  public static void llama_kv_self_clear(MemorySegment context) {
+    llama_h("llama_kv_self_clear", new Class<?>[] { MEM_SEG_CLASS }, context);
   }
 
   /* Chat Template */

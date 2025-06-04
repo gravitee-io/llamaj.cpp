@@ -180,18 +180,13 @@ While we don't support other platforms/architecture pair out-of-the-box for many
 gravitee-io/llamaj.cpp:
 
 1. Build llama.cpp on your infrastructure
-2. Build the according java bindings using `jextract`
-3. Bundle them into a jar:
+2. Add the *.so or *.dylib to ~/.llama.cpp/ or use the `LLAMA_CPP_LIB_PATH` and `LD_LIBRARY_PATH`
+3. Build the according java bindings using `jextract`
+4. Bundle them into a jar and add it to your classpath:
    - Put the `jextract` source in `io.gravitee.llama.cpp.<os>.<arch>`:
      - `io.gravitee.llama.cpp.macosx.x86_64`
      - `io.gravitee.llama.cpp.linux.aarch64`
      - `io.gravitee.llama.cpp.windows.x86_64`
      - `io.gravitee.llama.cpp.windows.aarch64`
-   - Put your shared libraries into `<os>.<arch>`:
-     - `macosx.x86_64`
-     - `linux.aarch64`
-     - `windows.x86_64`
-     - `windows.aarch64`
-4. Add this jar to your classpath
 
 gravitee-io/llamaj.cpp will pick up at runtime the os and will call the according bindings using reflection.
