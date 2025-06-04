@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-cd "$HOME_DIR/gravitee-llama-cpp/"
+cd "$HOME_DIR/llamaj.cpp/"
 OLD_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
 RECOMMENDED_BUMP=$(conventional-recommended-bump -p conventionalcommits --quiet)

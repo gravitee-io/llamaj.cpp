@@ -20,7 +20,7 @@ set -euo pipefail
 # --- Configuration ---
 REPO_URL="https://github.com/ggml-org/llama.cpp"
 CLONE_DIR="$HOME_DIR/llama.cpp"
-PROJECT_DIR="$HOME_DIR/gravitee-llama-cpp"
+PROJECT_DIR="$HOME_DIR/llamaj.cpp"
 POM_FILE="$PROJECT_DIR/pom.xml"
 CIRCLECI_CONFIG="$PROJECT_DIR/.circleci/config.yml"
 

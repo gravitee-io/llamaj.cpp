@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-cd $HOME_DIR/gravitee-llama-cpp/
+cd $HOME_DIR/llamaj.cpp/
 
 # Built release note
 RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
