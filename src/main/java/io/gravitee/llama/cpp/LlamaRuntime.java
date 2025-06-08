@@ -38,8 +38,16 @@ public final class LlamaRuntime {
   private LlamaRuntime() {}
 
   /* load backends */
-  public static void ggml_backend_load_all() {
-    llama_h("ggml_backend_load_all", new Class<?>[] {});
+  public static void llama_backend_init() {
+    llama_h("llama_backend_init", new Class<?>[] {});
+  }
+
+  public static void llama_backend_free() {
+    llama_h("llama_backend_free", new Class<?>[] {});
+  }
+
+  public static long ggml_backend_reg_count() {
+    return llama_h("ggml_backend_reg_count", new Class<?>[] {});
   }
 
   /* logging */
