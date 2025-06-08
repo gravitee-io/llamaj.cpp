@@ -143,8 +143,8 @@ public final class LlamaContextParams extends MemorySegmentAware {
     return no_perf(this.segment);
   }
 
-  public LlamaContextParams noPerf(boolean embeddings) {
-    no_perf(this.segment, embeddings);
+  public LlamaContextParams noPerf(boolean noPerf) {
+    no_perf(this.segment, noPerf);
     return this;
   }
 }

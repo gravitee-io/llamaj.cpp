@@ -15,7 +15,7 @@
  */
 package io.gravitee.llama.cpp;
 
-import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_load_all;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_backend_init;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
@@ -86,7 +86,11 @@ public class Main {
     }
 
     LlamaLibLoader.load();
-    ggml_backend_load_all();
+    llama_backend_init();
+
+    System.out.println("****************************");
+    System.out.println("Number of devices registered: " + LlamaRuntime.ggml_backend_reg_count());
+    System.out.println("****************************");
 
     var logger = new LlamaLogger(ARENA);
     logger.setLogging(logLevel); // Applying the parsed log level
@@ -146,6 +150,8 @@ public class Main {
     context.free();
     sampler.free();
     model.free();
+
+    llama_backend_init();
   }
 
   private static String buildPrompt(LlamaModel model, List<LlamaChatMessage> messages, LlamaContextParams contextParams) {

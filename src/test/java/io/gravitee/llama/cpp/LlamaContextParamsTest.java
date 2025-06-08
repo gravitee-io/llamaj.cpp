@@ -18,6 +18,7 @@ package io.gravitee.llama.cpp;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.lang.foreign.Arena;
+import java.lang.runtime.TemplateRuntime;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -60,7 +61,7 @@ class LlamaContextParamsTest extends LlamaCppTest {
         .embeddings(true)
         .offloadKQV(false)
         .flashAttn(true)
-        .noPerf(false);
+        .noPerf(true);
 
       assertThat(contextParams.nCtx()).isEqualTo(99);
       assertThat(contextParams.nBatch()).isEqualTo(42);
@@ -73,7 +74,7 @@ class LlamaContextParamsTest extends LlamaCppTest {
       assertThat(contextParams.embeddings()).isTrue();
       assertThat(contextParams.offloadKQV()).isFalse();
       assertThat(contextParams.flashAttn()).isTrue();
-      assertThat(contextParams.noPerf()).isFalse();
+      assertThat(contextParams.noPerf()).isTrue();
     }
   }
 }
