@@ -75,7 +75,7 @@
                                         <argument>-v</argument>
                                         <argument>${llama.cpp.version}</argument>
                                         <argument>-d</argument>
-                                        <argument>${project.build.directory}/generated-sources</argument>
+                                        <argument>${project.basedir}/src/main/resources</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -127,9 +127,9 @@
                                         <argument>-p</argument>
                                         <argument>aarch64</argument>
                                         <argument>-v</argument>
-                                        <argument>${llama.cpp.version}</argument>
+                                        <argument>${llama.cpp.version}</argument>mv
                                         <argument>-d</argument>
-                                        <argument>${project.build.directory}/generated-sources</argument>
+                                        <argument>${project.basedir}/src/main/resources</argument>
                                     </arguments>
                                 </configuration>
                             </execution>

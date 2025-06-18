@@ -15,6 +15,7 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_backend_free;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_backend_init;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Float.parseFloat;
@@ -151,7 +152,7 @@ public class Main {
     sampler.free();
     model.free();
 
-    llama_backend_init();
+    llama_backend_free();
   }
 
   private static String buildPrompt(LlamaModel model, List<LlamaChatMessage> messages, LlamaContextParams contextParams) {
@@ -195,11 +196,6 @@ public class Main {
           .findFirst()
           .orElse(null);
 
-        int firstUserTokens = 0;
-        if (firstUserMessage != null) {
-          firstUserTokens = tokenizer.tokenize(arena, firstUserMessage.getContent().strip()).size();
-        }
-
         ListIterator<LlamaChatMessage> it = fullHistory.listIterator(fullHistory.size());
         int added = 0;
 
@@ -207,11 +203,10 @@ public class Main {
           LlamaChatMessage msg = it.previous();
 
           if (msg.getRole() == Role.SYSTEM) continue;
-          if (msg == firstUserMessage) continue;
 
           int tokenCount = tokenizer.tokenize(arena, msg.getContent().strip()).size();
 
-          if ((totalTokens + tokenCount) > (contextSize - firstUserTokens)) break;
+          if ((totalTokens + tokenCount) > contextSize) break;
 
           trimmed.addFirst(msg);
           totalTokens += tokenCount;
@@ -219,7 +214,6 @@ public class Main {
           if (++added >= nKeep) break;
         }
 
-        trimmed.addFirst(firstUserMessage);
         trimmed.addFirst(new LlamaChatMessage(Main.ARENA, Role.SYSTEM, systemMessage));
         return trimmed;
       }

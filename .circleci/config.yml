@@ -185,13 +185,14 @@ commands:
           name: Run Tests
           command: |
             cd $HOME_DIR/llamaj.cpp
-            export LLAMA_CPP_LIB_PATH="$HOME_DIR/llamaj.cpp/target/generated-sources/<< parameters.os >>/<< parameters.platform >>/"
 
             if [[ << parameters.os >> == "macosx" ]]; then
+              mkdir $HOME_DIR/.llama.cpp
               source ~/.zprofile
             elif [[ << parameters.os >> == "linux" ]]; then
+              mkdir /root/.llama.cpp
               source ~/.bashrc
-              export LD_LIBRARY_PATH="$LLAMA_CPP_LIB_PATH:$LD_LIBRARY_PATH"
+              export LD_LIBRARY_PATH="/root/.llama.cpp:$LD_LIBRARY_PATH"
             fi
 
             mvn -s /tmp/.gravitee.settings.xml clean generate-sources -P<< parameters.os >>-<< parameters.platform >>
@@ -325,7 +326,7 @@ commands:
           name: Github Release
           command: bash $HOME_DIR/llamaj.cpp/scripts/github_release.sh
 
-  maven_deploy:
+  maven_deploy_artifactory:
     steps:
       - attach_workspace:
           at: .
@@ -335,6 +336,17 @@ commands:
           command: |
             cd $HOME_DIR/llamaj.cpp/
             mvn -s .gravitee.settings.xml -B -P gio-artifactory-release,gio-release deploy -DskipTests=true
+
+  #maven_deploy_nexus:
+  #  steps:
+  #    - attach_workspace:
+  #        at: .
+  #    - prepare-gpg
+  #    - run:
+  #        name: Maven Deploy
+  #        command: |
+  #          cd $HOME_DIR/llamaj.cpp/
+  #          mvn deploy -DskipTests -Dskip.validation --no-transfer-progress -s .gravitee.settings.xml -P gravitee-release
 
   prepare-gpg:
     description: Prepare GPG command
@@ -481,7 +493,7 @@ jobs:
       - install_java_dependencies
       - github_release
 
-  maven_deploy:
+  maven_deploy_artifactory:
     executor: ubuntu_linux_x86_64
     environment:
       HOME_DIR: "/home/circleci/"
@@ -491,7 +503,19 @@ jobs:
       - install_dependencies
       - install_java_dependencies
       - install_dependencies_jextract
-      - maven_deploy
+      - maven_deploy_artifactory
+
+  #maven_deploy_nexus:
+  #  executor: ubuntu_linux_x86_64
+  #  environment:
+  #    HOME_DIR: "/home/circleci/"
+  #    LC_ALL: C.UTF-8
+  #    LANG: C.UTF-8
+  #  steps:
+  #    - install_dependencies
+  #    - install_java_dependencies
+  #    - install_dependencies_jextract
+  #    - maven_deploy_nexus
 
 parameters:
   gio_action:
@@ -572,12 +596,18 @@ workflows:
             - Release Tag
           context:
             - cicd-orchestrator
-      - maven_deploy:
+      - maven_deploy_artifactory:
           name: Maven Deploy
           requires:
             - Release Tag
           context:
             - cicd-orchestrator
+      #- maven_deploy_nexus:
+      #    name: Maven Deploy
+      #    requires:
+      #      - Release Tag
+      #    context:
+      #      - cicd-orchestrator
 
   weekly-library-update:
     triggers:

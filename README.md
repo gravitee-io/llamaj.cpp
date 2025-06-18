@@ -82,6 +82,7 @@ $ git clone https://github.com/ggml-org/llama.cpp
 5. Download binaries and generate the sources
 
 ```bash
+$ mkdir $HOME/.llama.cpp
 $ cd llamaj.cpp/
 $ mvn clean generate-sources -Pmacosx-aarch64,linux-x86_64
 $ export LLAMA_CPP_LIB_PATH="$HOME_DIR/llamaj.cpp/target/generated-sources/<<macosx|linux>>/<<x86_64|aarch64>>"
@@ -98,12 +99,13 @@ $ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
 or
 
 ```bash
-$ java -jar llamaj.cpp-<version>.jar --model models/model.gguf --system 'You are a helpful assistant. Answer question to the best of your ability'
+$ java --enable-preview -jar llamaj.cpp-<version>.jar \
+  --model models/model.gguf \
+  --system 'You are a helpful assistant. Answer question to the best of your ability'
 ```
 
 On linux, don't forget to link your libraries with the environment variable below:
 ```bash
-$ mkdir $HOME/.llama.cpp
 $ export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
 ```
 
