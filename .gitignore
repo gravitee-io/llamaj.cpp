@@ -44,3 +44,6 @@ models/*
 
 models/
 dependency-reduced-pom.xml
+
+src/main/resources/macosx/**/*
+src/main/resources/linux/**/*

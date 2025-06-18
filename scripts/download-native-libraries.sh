@@ -107,21 +107,22 @@ curl -k -L -o "$TMP_DIR/$ZIP_NAME" "$DOWNLOAD_URL"
 # Extract only the necessary files
 echo "📦 Extracting libraries to $OUTPUT_DIR..."
 
+unzip -q "$TMP_DIR/$ZIP_NAME" -d "$OUTPUT_DIR"
+
 if [[ "$OS" == "macosx" ]]; then
-  # Extract only .dylib files on macOS and place them directly in the root
-  unzip -q "$TMP_DIR/$ZIP_NAME" "*.dylib" -d "$OUTPUT_DIR"
+  find "$OUTPUT_DIR" -type f \( -name "*.dylib" -o -name "LICENSE" -o -name "LICENSE-*" \) | while read -r file; do
+    mv "$file" "$OUTPUT_DIR/"
+  done
+  # Remove subdirectories if any remain
+  find "$OUTPUT_DIR" -mindepth 1 -type d -exec rm -rf {} +
 elif [[ "$OS" == "linux" ]]; then
-  # Extract only .so files on Linux and place them directly in the root
-  unzip -q "$TMP_DIR/$ZIP_NAME" "*.so" -d "$OUTPUT_DIR"
+  find "$OUTPUT_DIR" -type f \( -name "*.so" -o -name "LICENSE" -o -name "LICENSE-*" \) | while read -r file; do
+    mv "$file" "$OUTPUT_DIR/"
+  done
+  find "$OUTPUT_DIR" -mindepth 1 -type d -exec rm -rf {} +
 else
   echo "❌ Unsupported OS: $OS"
   exit 1
 fi
-
-mv "$OUTPUT_DIR"/build/bin/* "$OUTPUT_DIR"
-
-# Remove the zip file after extraction
-rm -r "$OUTPUT_DIR"/build
-rm "$TMP_DIR/$ZIP_NAME"
 
 echo "✅ Downloaded and extracted libraries to $OUTPUT_DIR"

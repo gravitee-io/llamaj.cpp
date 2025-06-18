@@ -92,7 +92,7 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
 
   @AfterAll
   public static void afterAll() {
-    LlamaRuntime.llama_backend_free();
     arena = null;
+    LlamaRuntime.llama_backend_free();
   }
 }
