@@ -21,13 +21,16 @@ import io.gravitee.llama.cpp.platform.Platform;
 import io.gravitee.llama.cpp.platform.PlatformResolver;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.stream.Stream;
-import org.reflections.Reflections;
-import org.reflections.scanners.Scanners;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -93,19 +96,63 @@ public final class LlamaLibLoader {
   private static void loadFromClasspath(Platform platform) {
     try {
       boolean useTmpPath = Boolean.parseBoolean(System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS));
-      var libDirectory = useTmpPath ? Files.createTempDirectory(LLAMA_CPP_FOLDER) : getHomeLlamaCpp();
+      Path libDirectory = useTmpPath ? Files.createTempDirectory(LLAMA_CPP_FOLDER) : getHomeLlamaCpp();
 
       if (!useTmpPath && Files.isDirectory(libDirectory) && !Files.list(libDirectory).toList().isEmpty()) {
         load(libDirectory.toString());
       } else {
-        var reflections = new Reflections(platform.getPackage(), Scanners.Resources);
-        reflections.getResources(".+").forEach(name -> copyFromClasspath(name, libDirectory));
+        List<String> resources;
+
+        File jarFile = getRunningJarFile();
+        if (jarFile != null) {
+          System.out.println("Copying llama.cpp native libraries from jar");
+          resources = listJarResources(platform.getPackage(), jarFile);
+        } else {
+          System.out.println("Copying llama.cpp native libraries from classes folder");
+          resources = listResourcesFromClassesFolder(platform.getPackage());
+        }
+
+        for (String resourceName : resources) {
+          copyFromClasspath(resourceName, libDirectory);
+        }
 
         load(libDirectory.toString());
       }
-    } catch (IOException e) {
+    } catch (IOException | URISyntaxException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static List<String> listJarResources(String packageName, File jarFile) throws IOException {
+    String prefix = packageName.replace('.', '/') + "/";
+    try (JarFile jar = new JarFile(jarFile)) {
+      return jar.stream().map(JarEntry::getName).filter(name -> name.startsWith(prefix) && !name.endsWith("/")).toList();
+    }
+  }
+
+  private static List<String> listResourcesFromClassesFolder(String packageName) throws IOException, URISyntaxException {
+    String path = packageName.replace('.', '/');
+    Path classesFolder = Path.of(Thread.currentThread().getContextClassLoader().getResource(path).toURI());
+    List<String> resources = new ArrayList<>();
+
+    try (var walk = Files.walk(classesFolder)) {
+      walk
+        .filter(Files::isRegularFile)
+        .forEach(file -> {
+          Path relative = classesFolder.relativize(file);
+          resources.add(path + "/" + relative.toString().replace(File.separatorChar, '/'));
+        });
+    }
+    return resources;
+  }
+
+  private static File getRunningJarFile() throws URISyntaxException {
+    String path = LlamaLibLoader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+    File file = new File(path);
+    if (file.isFile() && file.getName().endsWith(".jar")) {
+      return file;
+    }
+    return null;
   }
 
   private static Path getHomeLlamaCpp() throws IOException {
