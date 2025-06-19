@@ -1,5 +1,10 @@
 #  Llamaj.cpp
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/gravitee-io/llamaj.cpp/LICENSE.txt)
+[![Releases](https://img.shields.io/badge/semantic--release-conventional%20commits-e10079?logo=semantic-release)](https://github.com/gravitee-io/llamaj.cpp/releases)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/gravitee-io/llamaj.cpp/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/gravitee-io/llamaj.cpp/tree/main)
+[![Community Forum](https://img.shields.io/badge/Gravitee-Community%20Forum-white?logo=githubdiscussion&logoColor=white)](https://community.gravitee.io?utm_source=readme)
+
 llamaj.cpp (contraction of llama.cpp and java/jextract) is a port of llama.cpp in the JVM using jextract.
 
 ## Requirements
