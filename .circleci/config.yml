@@ -337,16 +337,16 @@ commands:
             cd $HOME_DIR/llamaj.cpp/
             mvn -s .gravitee.settings.xml -B -P gio-artifactory-release,gio-release deploy -DskipTests=true
 
-  #maven_deploy_nexus:
-  #  steps:
-  #    - attach_workspace:
-  #        at: .
-  #    - prepare-gpg
-  #    - run:
-  #        name: Maven Deploy
-  #        command: |
-  #          cd $HOME_DIR/llamaj.cpp/
-  #          mvn deploy -DskipTests -Dskip.validation --no-transfer-progress -s .gravitee.settings.xml -P gravitee-release
+  maven_deploy_nexus:
+    steps:
+      - attach_workspace:
+          at: .
+      - prepare-gpg
+      - run:
+          name: Maven Deploy
+          command: |
+            cd $HOME_DIR/llamaj.cpp/
+            mvn deploy -DskipTests -Dskip.validation --no-transfer-progress -s .gravitee.settings.xml -P gravitee-release
 
   prepare-gpg:
     description: Prepare GPG command
@@ -505,17 +505,17 @@ jobs:
       - install_dependencies_jextract
       - maven_deploy_artifactory
 
-  #maven_deploy_nexus:
-  #  executor: ubuntu_linux_x86_64
-  #  environment:
-  #    HOME_DIR: "/home/circleci/"
-  #    LC_ALL: C.UTF-8
-  #    LANG: C.UTF-8
-  #  steps:
-  #    - install_dependencies
-  #    - install_java_dependencies
-  #    - install_dependencies_jextract
-  #    - maven_deploy_nexus
+  maven_deploy_nexus:
+    executor: ubuntu_linux_x86_64
+    environment:
+      HOME_DIR: "/home/circleci/"
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+    steps:
+      - install_dependencies
+      - install_java_dependencies
+      - install_dependencies_jextract
+      - maven_deploy_nexus
 
 parameters:
   gio_action:
@@ -602,12 +602,12 @@ workflows:
             - Release Tag
           context:
             - cicd-orchestrator
-      #- maven_deploy_nexus:
-      #    name: Maven Deploy
-      #    requires:
-      #      - Release Tag
-      #    context:
-      #      - cicd-orchestrator
+      - maven_deploy_nexus:
+          name: Maven Deploy
+          requires:
+            - Release Tag
+          context:
+            - cicd-orchestrator
 
   weekly-library-update:
     triggers:
