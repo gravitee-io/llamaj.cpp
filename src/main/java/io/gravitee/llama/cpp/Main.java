@@ -15,8 +15,7 @@
  */
 package io.gravitee.llama.cpp;
 
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_backend_free;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_backend_init;
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
@@ -88,6 +87,7 @@ public class Main {
 
     LlamaLibLoader.load();
     llama_backend_init();
+    ggml_backend_load_all();
 
     System.out.println("****************************");
     System.out.println("Number of devices registered: " + LlamaRuntime.ggml_backend_reg_count());
