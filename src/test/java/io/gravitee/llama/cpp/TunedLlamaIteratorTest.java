@@ -15,8 +15,10 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_reg_count;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
 import java.util.List;
@@ -57,12 +59,16 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
 
   @BeforeAll
   public static void beforeAll() {
-    LlamaCppTest.beforeAll();
+    arena = Arena.ofConfined();
+
     LlamaRuntime.llama_backend_init();
+    String libPath = LlamaLibLoader.load();
+    LlamaRuntime.ggml_backend_load_all_from_path(arena, libPath);
+
     System.out.println("****************************");
-    System.out.println("Number of devices registered: " + LlamaRuntime.ggml_backend_reg_count());
+    System.out.println("Libraries loaded at: " + libPath);
+    System.out.println("Number of devices registered: " + ggml_backend_reg_count());
     System.out.println("****************************");
-    arena = Arena.ofAuto();
   }
 
   @ParameterizedTest

@@ -20,8 +20,10 @@ import static io.gravitee.llama.cpp.SplitMode.LAYER;
 import static io.gravitee.llama.cpp.SplitMode.NONE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
 import java.util.Arrays;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -29,6 +31,11 @@ import org.junit.jupiter.api.Test;
  * @author GraviteeSource Team
  */
 class LlamaModelParamsTest extends LlamaCppTest {
+
+  @BeforeAll
+  public static void init() {
+    LlamaLibLoader.load();
+  }
 
   @Test
   void should_create_LlamaModelParams_with_custom() {

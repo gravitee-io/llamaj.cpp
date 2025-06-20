@@ -17,8 +17,10 @@ package io.gravitee.llama.cpp;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -35,6 +37,11 @@ public class LlamaChatMessageTest extends LlamaCppTest {
       Arguments.of(Role.USER, "What's the capital of France?"),
       Arguments.of(Role.ASSISTANT, "Paris")
     );
+  }
+
+  @BeforeAll
+  public static void init() {
+    LlamaLibLoader.load();
   }
 
   @ParameterizedTest

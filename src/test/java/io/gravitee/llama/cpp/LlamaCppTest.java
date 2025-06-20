@@ -32,11 +32,6 @@ import org.junit.jupiter.api.BeforeAll;
  */
 abstract class LlamaCppTest {
 
-  @BeforeAll
-  public static void beforeAll() {
-    LlamaLibLoader.load();
-  }
-
   static final String MODEL_TO_DOWNLOAD =
     "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf";
   static final String MODEL_PATH = "models/model.gguf";

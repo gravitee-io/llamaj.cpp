@@ -50,16 +50,16 @@ public final class LlamaLibLoader {
 
   private LlamaLibLoader() {}
 
-  public static void load() {
+  public static String load() {
     String envLibPath = System.getenv(LLAMA_CPP_LIB_PATH);
     if (envLibPath != null && !envLibPath.isBlank()) {
-      loadFromExternalPath(envLibPath);
+      return loadFromExternalPath(envLibPath);
     } else {
-      loadFromClasspath(PlatformResolver.platform());
+      return loadFromClasspath(PlatformResolver.platform());
     }
   }
 
-  private static void loadFromExternalPath(String envLibPath) {
+  private static String loadFromExternalPath(String envLibPath) {
     try {
       boolean useTmpPath = Boolean.parseBoolean(System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS));
       if (useTmpPath) {
@@ -72,10 +72,12 @@ public final class LlamaLibLoader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+    return envLibPath;
   }
 
-  public static void load(String path) {
+  public static String load(String path) {
     load(path, PlatformResolver.platform());
+    return path;
   }
 
   public static void load(String path, Platform platform) {
@@ -93,13 +95,14 @@ public final class LlamaLibLoader {
       .forEach(System::load);
   }
 
-  private static void loadFromClasspath(Platform platform) {
+  private static String loadFromClasspath(Platform platform) {
     try {
       boolean useTmpPath = Boolean.parseBoolean(System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS));
       Path libDirectory = useTmpPath ? Files.createTempDirectory(LLAMA_CPP_FOLDER) : getHomeLlamaCpp();
 
+      String libDirStr = libDirectory.toString();
       if (!useTmpPath && Files.isDirectory(libDirectory) && !Files.list(libDirectory).toList().isEmpty()) {
-        load(libDirectory.toString());
+        load(libDirStr);
       } else {
         List<String> resources;
 
@@ -116,8 +119,9 @@ public final class LlamaLibLoader {
           copyFromClasspath(resourceName, libDirectory);
         }
 
-        load(libDirectory.toString());
+        load(libDirStr);
       }
+      return libDirStr;
     } catch (IOException | URISyntaxException e) {
       throw new RuntimeException(e);
     }

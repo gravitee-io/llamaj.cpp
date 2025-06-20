@@ -17,8 +17,10 @@ package io.gravitee.llama.cpp;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
 import java.lang.runtime.TemplateRuntime;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -26,6 +28,11 @@ import org.junit.jupiter.api.Test;
  * @author GraviteeSource Team
  */
 class LlamaContextParamsTest extends LlamaCppTest {
+
+  @BeforeAll
+  public static void init() {
+    LlamaLibLoader.load();
+  }
 
   @Test
   void should_create_LlamaContextParams_with_default() {
