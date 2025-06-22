@@ -42,6 +42,10 @@ public final class LlamaRuntime {
     llama_h("llama_backend_init", new Class<?>[] {});
   }
 
+  public static void ggml_backend_load_all_from_path(Arena arena, String path) {
+    llama_h("ggml_backend_load_all_from_path", new Class<?>[] { MemorySegment.class }, arena.allocateUtf8String(path));
+  }
+
   public static void llama_backend_free() {
     llama_h("llama_backend_free", new Class<?>[] {});
   }

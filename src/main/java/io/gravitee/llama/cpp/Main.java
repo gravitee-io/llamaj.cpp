@@ -15,8 +15,7 @@
  */
 package io.gravitee.llama.cpp;
 
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_backend_free;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_backend_init;
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
@@ -25,6 +24,8 @@ import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 public class Main {
 
@@ -86,11 +87,13 @@ public class Main {
       System.exit(1);
     }
 
-    LlamaLibLoader.load();
+    var libPath = LlamaLibLoader.load();
     llama_backend_init();
+    ggml_backend_load_all_from_path(ARENA, libPath);
 
     System.out.println("****************************");
-    System.out.println("Number of devices registered: " + LlamaRuntime.ggml_backend_reg_count());
+    System.out.println("Libraries loaded at: " + libPath);
+    System.out.println("Number of devices registered: " + ggml_backend_reg_count());
     System.out.println("****************************");
 
     var logger = new LlamaLogger(ARENA);
