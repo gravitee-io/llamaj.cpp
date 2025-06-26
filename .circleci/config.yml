@@ -392,6 +392,9 @@ jobs:
       - download_model:
           model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
           model_path: "models/model.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf"
+          model_path: "models/lora-adapter.gguf"
       - run-tests:
           os: "macosx"
           platform: "aarch64"
@@ -413,6 +416,9 @@ jobs:
       - download_model:
           model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
           model_path: "models/model.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf"
+          model_path: "models/lora-adapter.gguf"
       - run-tests:
           os: "linux"
           platform: "x86_64"

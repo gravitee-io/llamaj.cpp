@@ -19,6 +19,7 @@ import static io.gravitee.llama.cpp.LlamaRuntime.*;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
+import static java.util.Optional.ofNullable;
 
 import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
@@ -35,6 +36,7 @@ public class Main {
     Map<String, String> params = parseArgs(args);
 
     String modelGguf = params.get("model");
+    String lora = params.get("lora");
     String systemMessage = params.getOrDefault("system", "You are a helpful AI assistant.");
 
     int nGpuLayers = parseInt(params.getOrDefault("n_gpu_layers", "999"));
@@ -68,6 +70,7 @@ public class Main {
       System.err.println("Usage: java -jar llamaj.cpp-<version>.jar  --model <path_to_gguf_model> [options...]");
       System.err.println("Options:");
       System.err.println("  --system <message>       : System message (default: \"You are a helpful AI assistant.\")");
+      System.err.println("  --lora <string>          : Path to your lora adapter file");
       System.err.println("  --n_gpu_layers <int>     : Number of GPU layers (default: 999)");
       System.err.println("  --use_mlock <boolean>    : Use mlock (default: true)");
       System.err.println("  --use_mmap <boolean>     : Use mmap (default: true)");
@@ -103,8 +106,10 @@ public class Main {
     modelParameters.nGpuLayers(nGpuLayers).useMlock(useMlock).useMmap(useMmap);
 
     var model = new LlamaModel(ARENA, Path.of(modelGguf).toAbsolutePath(), modelParameters);
-    var vocab = new LlamaVocab(model);
 
+    ofNullable(lora).ifPresent(path -> model.initLoraAdapter(ARENA, Path.of(path).toAbsolutePath()));
+
+    var vocab = new LlamaVocab(model);
     var contextParams = new LlamaContextParams(ARENA).nCtx(nCtx).nBatch(nBatch).nSeqMax(nSeqMax);
 
     LlamaSampler sampler = new LlamaSampler(ARENA)

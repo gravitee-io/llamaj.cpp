@@ -141,6 +141,10 @@ public final class LlamaRuntime {
     return llama_h("llama_model_load_from_file", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, modelPath, path);
   }
 
+  public static MemorySegment llama_adapter_lora_init(MemorySegment model, MemorySegment path) {
+    return llama_h("llama_adapter_lora_init", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, path);
+  }
+
   /* Vocab */
   public static MemorySegment llama_model_get_vocab(MemorySegment model) {
     return llama_h("llama_model_get_vocab", new Class<?>[] { MEM_SEG_CLASS }, model);
@@ -461,6 +465,10 @@ public final class LlamaRuntime {
 
   public static void llama_model_free(LlamaModel model) {
     llama_h("llama_model_free", new Class[] { MEM_SEG_CLASS }, model.segment);
+  }
+
+  public static void llama_adapter_lora_free(LlamaLoraAdapter adapter) {
+    llama_h("llama_adapter_lora_free", new Class[] { MEM_SEG_CLASS }, adapter.segment);
   }
 
   /* Utils */
