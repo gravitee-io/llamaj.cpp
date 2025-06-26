@@ -37,9 +37,10 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
 
   static Stream<Arguments> params_that_allow_llama_generation() {
     return Stream.of(
-      Arguments.of(SYSTEM, "What is the capital of France?"),
-      Arguments.of(SYSTEM, "What is the capital of England?"),
-      Arguments.of(SYSTEM, "What is the capital of Poland?")
+      Arguments.of(SYSTEM, "What is the capital of France?", false),
+      Arguments.of(SYSTEM, "What is the capital of England?", false),
+      Arguments.of(SYSTEM, "What is the capital of Poland?", false),
+      Arguments.of(SYSTEM, "What is the capital of France?", true)
     );
   }
 
@@ -49,8 +50,8 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
   public static void beforeAll() {
     arena = Arena.ofConfined();
 
-    LlamaRuntime.llama_backend_init();
     String libPath = LlamaLibLoader.load();
+    LlamaRuntime.llama_backend_init();
     LlamaRuntime.ggml_backend_load_all_from_path(arena, libPath);
 
     System.out.println("****************************");
@@ -61,7 +62,7 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
 
   @ParameterizedTest
   @MethodSource("params_that_allow_llama_generation")
-  void llama_simple_generation(String system, String input) {
+  void llama_simple_generation(String system, String input, boolean allowLoraAdapter) {
     int inputToken = -1;
     int outputToken = -1;
     var logger = new LlamaLogger(arena);
@@ -71,6 +72,9 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     Path absolutePath = getModelPath();
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    if (allowLoraAdapter) {
+      model.initLoraAdapter(arena, getLoraAdapterPath());
+    }
 
     var contextParams = new LlamaContextParams(arena);
     var context = new LlamaContext(model, contextParams);

@@ -15,41 +15,32 @@
  */
 package io.gravitee.llama.cpp;
 
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_load_from_file;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_adapter_lora_init;
 
-import java.lang.foreign.*;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.nio.file.Path;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaModel extends MemorySegmentAware implements Freeable {
+public final class LlamaLoraAdapter extends MemorySegmentAware implements Freeable {
 
-  private LlamaLoraAdapter loraAdapter;
-
-  public LlamaModel(SegmentAllocator arena, Path modelPath, LlamaModelParams params) {
-    this(llama_model_load_from_file(getModelAsString(arena, modelPath), params.segment));
+  public LlamaLoraAdapter(Arena arena, LlamaModel model, Path loraPath) {
+    this(llama_adapter_lora_init(model.segment, getPathAsString(arena, loraPath)));
   }
 
-  public LlamaModel(MemorySegment segment) {
+  public LlamaLoraAdapter(MemorySegment segment) {
     super(segment);
   }
 
-  private static MemorySegment getModelAsString(SegmentAllocator arena, Path modelPath) {
+  private static MemorySegment getPathAsString(Arena arena, Path modelPath) {
     return arena.allocateUtf8String(modelPath.toAbsolutePath().toString());
-  }
-
-  public LlamaModel initLoraAdapter(Arena arena, Path loraPath) {
-    this.loraAdapter = new LlamaLoraAdapter(arena, this, loraPath);
-    return this;
   }
 
   @Override
   public void free() {
-    if (loraAdapter != null) {
-      loraAdapter.free();
-    }
-    LlamaRuntime.llama_model_free(this);
+    LlamaRuntime.llama_adapter_lora_free(this);
   }
 }

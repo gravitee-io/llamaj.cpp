@@ -32,6 +32,7 @@
 
     <name>Gravitee.io - llamaj.cpp</name>
     <url>https://github.com/gravitee-io/llamaj.cpp</url>
+    <description>Llamaj.cpp (contraction of llama.cpp and java/jextract) is a port of llama.cpp in the JVM using jextract.</description>
 
     <scm>
         <url>https://github.com/gravitee-io/llamaj.cpp</url>

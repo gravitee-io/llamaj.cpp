@@ -43,11 +43,23 @@ abstract class LlamaCppTest {
            What is the capital of Poland? Warsaw.
             """;
 
+  static final String LORA_ADAPTER_TO_DOWNLOAD =
+    "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf";
+  static final String LORA_ADATAPTER_PATH = "models/lora-adapter.gguf";
+
   static Path getModelPath() {
+    return getPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
+  }
+
+  static Path getLoraAdapterPath() {
+    return getPath(LORA_ADATAPTER_PATH, LORA_ADAPTER_TO_DOWNLOAD);
+  }
+
+  private static Path getPath(String loraAdatapterPath, String loraAdapterToDownload) {
     try {
-      Path absolutePath = Path.of(MODEL_PATH).toAbsolutePath();
+      Path absolutePath = Path.of(loraAdatapterPath).toAbsolutePath();
       if (!Files.exists(absolutePath)) {
-        Files.copy(URI.create(MODEL_TO_DOWNLOAD).toURL().openStream(), absolutePath, REPLACE_EXISTING);
+        Files.copy(URI.create(loraAdapterToDownload).toURL().openStream(), absolutePath, REPLACE_EXISTING);
       }
       return absolutePath;
     } catch (IOException e) {
