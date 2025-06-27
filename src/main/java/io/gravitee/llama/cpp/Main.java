@@ -57,6 +57,19 @@ public class Main {
     int quota = parseInt(params.getOrDefault("quota", "512"));
     int nKeep = parseInt(params.getOrDefault("nKeep", "256"));
 
+    boolean enableMirostat = parseBoolean(params.getOrDefault("mirostat", "false"));
+    float mirostatTau = parseFloat(params.getOrDefault("mirostat_tau", "5.0f"));
+    float mirostatEta = parseFloat(params.getOrDefault("mirostat_eta", "0.1f"));
+
+    String grammar = params.get("grammar");
+    String grammarRoot = params.getOrDefault("grammar_root", "root");
+
+    boolean enablePenalties = parseBoolean(params.getOrDefault("penalties", "false"));
+    int penaltyLastN = parseInt(params.getOrDefault("penalty_last_n", "64"));
+    float penaltyRepeat = parseFloat(params.getOrDefault("penalty_repeat", "1.2f"));
+    float penaltyFreq = parseFloat(params.getOrDefault("penalty_freq", "0.1f"));
+    float penaltyPresent = parseFloat(params.getOrDefault("penalty_present", "0.1f"));
+
     String logLevelStr = params.getOrDefault("log_level", "ERROR").toUpperCase();
     LlamaLogLevel logLevel;
     try {
@@ -87,6 +100,16 @@ public class Main {
       System.err.println("  --quota <int>            : Iterator quota (default: 512)");
       System.err.println("  --n_keep <int>         : Tokens to keep when exceeding ctx size (default: 256)");
       System.err.println("  --log_level <level>      : Logging level (ERROR, WARN, INFO, DEBUG, default: ERROR)");
+      System.err.println("  --mirostat <boolean>       : Enable Mirostat v2 sampling (default: false)");
+      System.err.println("  --mirostat_tau <float>     : Mirostat tau parameter (default: 5.0)");
+      System.err.println("  --mirostat_eta <float>     : Mirostat eta parameter (default: 0.1)");
+      System.err.println("  --grammar <string>         : Grammar rule in BNF format");
+      System.err.println("  --grammar_root <string>    : Grammar root rule (default: \"root\")");
+      System.err.println("  --penalties <boolean>      : Enable repetition penalties (default: false)");
+      System.err.println("  --penalty_last_n <int>     : Last-N tokens to consider (default: 64)");
+      System.err.println("  --penalty_repeat <float>   : Repetition penalty (default: 1.2)");
+      System.err.println("  --penalty_freq <float>     : Frequency penalty (default: 0.1)");
+      System.err.println("  --penalty_present <float>  : Presence penalty (default: 0.1)");
       System.exit(1);
     }
 
@@ -118,6 +141,18 @@ public class Main {
       .topK(topK)
       .topP(topP, topPWindow)
       .seed(seed);
+
+    if (enableMirostat) {
+      sampler.mirostat(seed, mirostatTau, mirostatEta);
+    }
+
+    if (grammar != null) {
+      sampler.grammar(vocab, grammar, grammarRoot);
+    }
+
+    if (enablePenalties) {
+      sampler.penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent);
+    }
 
     List<LlamaChatMessage> messages = new ArrayList<>();
     messages.add(new LlamaChatMessage(ARENA, Role.SYSTEM, systemMessage));
