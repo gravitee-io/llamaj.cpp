@@ -44,7 +44,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit-jupiter-api.version>5.13.3</junit-jupiter-api.version>
         <assertj-core.version>3.27.3</assertj-core.version>
-        <llama.cpp.version>b5827</llama.cpp.version>
+        <llama.cpp.version>b5869</llama.cpp.version>
         <llama.cpp.dir>${project.basedir}/../llama.cpp</llama.cpp.dir>
         <jextract.dir>${project.basedir}/../jextract/bin</jextract.dir>
     </properties>
