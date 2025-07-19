@@ -603,13 +603,13 @@ workflows:
           context:
             - cicd-orchestrator
       - maven_deploy_artifactory:
-          name: Maven Deploy
+          name: Maven Deploy on Artifactory
           requires:
             - Release Tag
           context:
             - cicd-orchestrator
       - maven_deploy_nexus:
-          name: Maven Deploy
+          name: Maven Deploy on Nexus
           requires:
             - Release Tag
           context:
