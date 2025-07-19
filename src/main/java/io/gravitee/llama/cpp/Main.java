@@ -233,12 +233,6 @@ public class Main {
         List<LlamaChatMessage> trimmed = new ArrayList<>();
         int totalTokens = tokenizer.tokenize(arena, systemMessage).size();
 
-        LlamaChatMessage firstUserMessage = fullHistory
-          .stream()
-          .filter(m -> m.getRole() == Role.USER)
-          .findFirst()
-          .orElse(null);
-
         ListIterator<LlamaChatMessage> it = fullHistory.listIterator(fullHistory.size());
         int added = 0;
 
