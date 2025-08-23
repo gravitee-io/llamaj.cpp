@@ -25,8 +25,6 @@ import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 
 public class Main {
 
@@ -186,7 +184,7 @@ public class Main {
       messages.add(new LlamaChatMessage(ARENA, Role.ASSISTANT, answer));
       messages = messageTrimmer.trimMessages(messages);
 
-      context.kvCacheClear();
+      context.clearCache();
 
       System.out.println();
     }
