@@ -346,12 +346,22 @@ public final class LlamaRuntime {
     return llama_h("llama_init_from_model", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, params);
   }
 
-  public static int llama_kv_self_used_cells(MemorySegment context) {
-    return llama_h("llama_kv_self_used_cells", new Class<?>[] { MEM_SEG_CLASS }, context);
+  /* Memory */
+
+  public static MemorySegment llama_get_memory(MemorySegment ctx) {
+    return llama_h("llama_get_memory", new Class<?>[] { MEM_SEG_CLASS }, ctx);
   }
 
-  public static void llama_kv_self_clear(MemorySegment context) {
-    llama_h("llama_kv_self_clear", new Class<?>[] { MEM_SEG_CLASS }, context);
+  public static int llama_memory_seq_pos_max(MemorySegment memory, int seq_id) {
+    return llama_h("llama_memory_seq_pos_max", new Class<?>[] { MEM_SEG_CLASS, int.class }, memory, seq_id);
+  }
+
+  public static int llama_memory_seq_pos_min(MemorySegment memory, int seq_id) {
+    return llama_h("llama_memory_seq_pos_min", new Class<?>[] { MEM_SEG_CLASS, int.class }, memory, seq_id);
+  }
+
+  public static void llama_memory_clear(MemorySegment memory, boolean data) {
+    llama_h("llama_memory_clear", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, memory, data);
   }
 
   /* Chat Template */

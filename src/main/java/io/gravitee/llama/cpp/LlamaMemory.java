@@ -17,37 +17,25 @@ package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
-import java.lang.foreign.MemorySegment;
-
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaContext extends MemorySegmentAware implements Freeable {
+public class LlamaMemory extends MemorySegmentAware {
 
-  private final int nCtx;
-  private final LlamaMemory memory;
-
-  public LlamaContext(LlamaModel model, LlamaContextParams params) {
-    super(llama_init_from_model(model.segment, params.segment));
-    this.nCtx = params.nCtx();
-    this.memory = new LlamaMemory(this);
+  public LlamaMemory(LlamaContext context) {
+    super(llama_get_memory(context.segment));
   }
 
-  public int nCtx() {
-    return nCtx;
+  public int posMin() {
+    return llama_memory_seq_pos_min(this.segment, 0);
   }
 
-  public int nCtxUsedCells() {
-    return memory.posMax() - memory.posMin() + 1;
+  public int posMax() {
+    return llama_memory_seq_pos_max(this.segment, 0);
   }
 
-  public void clearCache() {
-    memory.clear();
-  }
-
-  @Override
-  public void free() {
-    llama_free(this);
+  public void clear() {
+    llama_memory_clear(this.segment, true);
   }
 }
