@@ -27,7 +27,7 @@
 
     <groupId>io.gravitee.llama.cpp</groupId>
     <artifactId>llamaj.cpp</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
     <packaging>jar</packaging>
 
     <name>Gravitee.io - llamaj.cpp</name>
