@@ -22,6 +22,7 @@ import static java.util.Optional.ofNullable;
 
 import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -122,12 +123,17 @@ public class Main {
 
       String prompt = buildPrompt(model, messageTrimmer.trimMessages(messages), contextParams);
 
-      LlamaIterator iterator = new SimpleLlamaIterator(ARENA, context, tokenizer, sampler)
-        .setQuota(quota)
+      LlamaIterator iterator = new DefaultLlamaIterator(ARENA, context, tokenizer, sampler)
+        .setMaxTokens(quota)
         .initialize(prompt);
 
       var answer = iterator.stream().map(LlamaOutput::content).peek(System.out::print).reduce((a, b) -> a + b).orElse("");
-
+      System.out.println(answer);
+      if (LlamaLogLevel.DEBUG.equals(logLevel)) {
+        System.out.println("Input tokens: " + iterator.getInputTokens());
+        System.out.println("Output tokens: " + iterator.getOutputTokens());
+        System.out.println("Finish Reason: " + iterator.getFinishReason());
+      }
       messages.add(new LlamaChatMessage(ARENA, Role.ASSISTANT, answer));
       messages = messageTrimmer.trimMessages(messages);
 
@@ -189,9 +195,17 @@ public class Main {
         .seed(seed);
       case CONSTRAINED -> new LlamaSampler(ARENA)
         .topP(topP, topPWindow)
-        .grammar(vocab, params.get("grammar"), params.getOrDefault("grammar_root", "root"))
+        .grammar(vocab, safeRead(params.get("grammar")), params.getOrDefault("grammar_root", "root"))
         .seed(seed);
     };
+  }
+
+  private static String safeRead(String grammar) {
+    try {
+      return String.join("\n", Files.readAllLines(Path.of(grammar)));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static String buildPrompt(LlamaModel model, List<LlamaChatMessage> messages, LlamaContextParams contextParams) {
