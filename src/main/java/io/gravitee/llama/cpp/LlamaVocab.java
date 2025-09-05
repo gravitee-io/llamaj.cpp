@@ -21,6 +21,7 @@ import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_is_eog;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -38,14 +39,16 @@ public final class LlamaVocab extends MemorySegmentAware {
 
   public String tokenToPiece(int tokenId) {
     try (Arena arena = Arena.ofConfined()) {
-      var buffer = arena.allocateArray(ValueLayout.OfChar.JAVA_BYTE, 10);
-      int pieceNumber = llama_token_to_piece(this.segment, tokenId, buffer, (int) buffer.byteSize(), 0, true);
-      var bufferArray = buffer.toArray(ValueLayout.JAVA_BYTE);
-      StringBuilder answer = new StringBuilder();
-      for (int i = 0; i < pieceNumber; i++) {
-        answer.append((char) bufferArray[i]);
+      var buffer = arena.allocateArray(ValueLayout.JAVA_BYTE, 256);
+
+      int pieceLength = llama_token_to_piece(this.segment, tokenId, buffer, (int) buffer.byteSize(), 0, true);
+
+      if (pieceLength <= 0) {
+        return "";
       }
-      return answer.toString();
+
+      byte[] bytes = buffer.toArray(ValueLayout.JAVA_BYTE);
+      return new String(bytes, 0, pieceLength, StandardCharsets.UTF_8);
     }
   }
 }
