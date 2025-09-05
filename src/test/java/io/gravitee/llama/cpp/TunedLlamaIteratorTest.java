@@ -15,6 +15,8 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.FlashAttentionType.DISABLED;
+import static io.gravitee.llama.cpp.FlashAttentionType.ENABLED;
 import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_reg_count;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -94,7 +96,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
       .attentionType(AttentionType.CAUSAL)
       .embeddings(false)
       .offloadKQV(false)
-      .flashAttn(false)
+      .flashAttnType(ENABLED)
       .noPerf(false);
 
     var vocab = new LlamaVocab(model);
