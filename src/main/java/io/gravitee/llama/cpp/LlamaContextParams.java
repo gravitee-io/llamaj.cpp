@@ -15,18 +15,7 @@
  */
 package io.gravitee.llama.cpp;
 
-import static io.gravitee.llama.cpp.LlamaRuntime.attention_type;
-import static io.gravitee.llama.cpp.LlamaRuntime.flash_attn;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_context_default_params;
-import static io.gravitee.llama.cpp.LlamaRuntime.n_batch;
-import static io.gravitee.llama.cpp.LlamaRuntime.n_ctx;
-import static io.gravitee.llama.cpp.LlamaRuntime.n_seq_max;
-import static io.gravitee.llama.cpp.LlamaRuntime.n_threads;
-import static io.gravitee.llama.cpp.LlamaRuntime.n_threads_batch;
-import static io.gravitee.llama.cpp.LlamaRuntime.n_ubatch;
-import static io.gravitee.llama.cpp.LlamaRuntime.no_perf;
-import static io.gravitee.llama.cpp.LlamaRuntime.offload_kqv;
-import static io.gravitee.llama.cpp.LlamaRuntime.pooling_type;
+import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
 import java.lang.foreign.Arena;
 
@@ -112,6 +101,15 @@ public final class LlamaContextParams extends MemorySegmentAware {
     return this;
   }
 
+  public FlashAttentionType flashAttnType() {
+    return FlashAttentionType.fromOrdinal(flash_attn_type(this.segment) + 1);
+  }
+
+  public LlamaContextParams flashAttnType(FlashAttentionType flashAttnType) {
+    flash_attn_type(this.segment, flashAttnType.ordinal() - 1);
+    return this;
+  }
+
   public boolean embeddings() {
     return LlamaRuntime.embeddings(this.segment);
   }
@@ -127,15 +125,6 @@ public final class LlamaContextParams extends MemorySegmentAware {
 
   public LlamaContextParams offloadKQV(boolean offloadKQV) {
     offload_kqv(this.segment, offloadKQV);
-    return this;
-  }
-
-  public boolean flashAttn() {
-    return flash_attn(this.segment);
-  }
-
-  public LlamaContextParams flashAttn(boolean flashAttn) {
-    flash_attn(this.segment, flashAttn);
     return this;
   }
 

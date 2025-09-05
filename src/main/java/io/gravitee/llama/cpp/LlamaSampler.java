@@ -36,6 +36,11 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
     return llama_sampler_sample(this.segment, context.segment, -1);
   }
 
+  public LlamaSampler greedy() {
+    llama_sampler_chain_add(this.segment, llama_sampler_init_greedy());
+    return this;
+  }
+
   public LlamaSampler temperature(float temperature) {
     llama_sampler_chain_add(this.segment, llama_sampler_init_temp(temperature));
     return this;

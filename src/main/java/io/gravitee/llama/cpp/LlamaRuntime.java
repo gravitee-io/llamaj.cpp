@@ -50,6 +50,10 @@ public final class LlamaRuntime {
     llama_h("llama_backend_free", new Class<?>[] {});
   }
 
+  public static void ggml_backend_free() {
+    llama_h("ggml_backend_free", new Class<?>[] {});
+  }
+
   public static long ggml_backend_reg_count() {
     return llama_h("ggml_backend_reg_count", new Class<?>[] {});
   }
@@ -194,6 +198,10 @@ public final class LlamaRuntime {
     return llama_h("llama_sampler_init_temp", new Class<?>[] { float.class }, temperature);
   }
 
+  public static MemorySegment llama_sampler_init_greedy() {
+    return llama_h("llama_sampler_init_greedy", new Class<?>[] {});
+  }
+
   public static MemorySegment llama_sampler_init_top_k(int topK) {
     return llama_h("llama_sampler_init_top_k", new Class<?>[] { int.class }, topK);
   }
@@ -325,12 +333,12 @@ public final class LlamaRuntime {
     llama_context_params("offload_kqv$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, offloadKQV);
   }
 
-  public static boolean flash_attn(MemorySegment segment) {
-    return llama_context_params("flash_attn$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+  public static int flash_attn_type(MemorySegment segment) {
+    return llama_context_params("flash_attn_type$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  public static void flash_attn(MemorySegment segment, boolean flashAttn) {
-    llama_context_params("flash_attn$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, flashAttn);
+  public static void flash_attn_type(MemorySegment segment, int flashAttnType) {
+    llama_context_params("flash_attn_type$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, flashAttnType);
   }
 
   public static boolean no_perf(MemorySegment segment) {

@@ -83,16 +83,16 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var it = new SimpleLlamaIterator(arena, context, tokenizer, sampler).initialize(prompt);
+    var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler).initialize(prompt);
 
-    String output = it.stream().map(LlamaOutput::content).reduce((output1, output2) -> output1 + output2).orElse("");
+    String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
 
     inputToken = it.getInputTokens();
     outputToken = it.getInputTokens();
 
     assertThat(inputToken).isGreaterThan(0);
     assertThat(outputToken).isGreaterThan(0);
-    assertThat(output).isNotNull();
+    assertThat(it.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
     System.out.println(output);
 
     context.free();

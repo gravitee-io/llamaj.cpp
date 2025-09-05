@@ -15,6 +15,8 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.FlashAttentionType.DISABLED;
+import static io.gravitee.llama.cpp.FlashAttentionType.ENABLED;
 import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_reg_count;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -94,7 +96,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
       .attentionType(AttentionType.CAUSAL)
       .embeddings(false)
       .offloadKQV(false)
-      .flashAttn(false)
+      .flashAttnType(ENABLED)
       .noPerf(false);
 
     var vocab = new LlamaVocab(model);
@@ -113,19 +115,19 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
     var context = new LlamaContext(model, contextParams);
     var tokenizer = new LlamaTokenizer(vocab, context);
 
-    var it = new SimpleLlamaIterator(arena, context, tokenizer, sampler)
+    var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler)
       .setStopStrings(List.of("."))
-      .setQuota(10)
+      .setMaxTokens(10)
       .initialize(prompt);
 
-    String output = it.stream().map(LlamaOutput::content).reduce((a, b) -> a + b).orElse("");
+    String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
 
     inputToken = it.getInputTokens();
-    outputToken = it.getOutputTokens();
+    outputToken = it.getInputTokens();
 
     assertThat(inputToken).isGreaterThan(0);
     assertThat(outputToken).isGreaterThan(0);
-    assertThat(output).isNotNull();
+    assertThat(it.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
 
     System.out.println(output);
 
