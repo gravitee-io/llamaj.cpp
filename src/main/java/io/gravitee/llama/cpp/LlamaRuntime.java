@@ -333,12 +333,12 @@ public final class LlamaRuntime {
     llama_context_params("offload_kqv$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, offloadKQV);
   }
 
-  public static boolean flash_attn(MemorySegment segment) {
-    return llama_context_params("flash_attn$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+  public static int flash_attn_type(MemorySegment segment) {
+    return llama_context_params("flash_attn_type$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
   }
 
-  public static void flash_attn(MemorySegment segment, boolean flashAttn) {
-    llama_context_params("flash_attn$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, flashAttn);
+  public static void flash_attn_type(MemorySegment segment, int flashAttnType) {
+    llama_context_params("flash_attn_type$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, flashAttnType);
   }
 
   public static boolean no_perf(MemorySegment segment) {

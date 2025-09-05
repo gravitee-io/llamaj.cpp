@@ -74,6 +74,10 @@ echo "Platform: $PLATFORM"
 echo "Version: $VERSION"
 echo "Destination: $DESTINATION"
 
+if [ -d $DESTINATION/$OS/$PLATFORM ]; then
+  rm -r $DESTINATION/$OS/$PLATFORM
+fi
+
 # Map OS and PLATFORM to the appropriate format for downloading
 case "$OS" in
   macosx) OS_DOWNLOAD="macos" ;;

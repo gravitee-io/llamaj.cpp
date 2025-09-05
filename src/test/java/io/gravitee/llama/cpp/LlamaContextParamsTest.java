@@ -15,11 +15,12 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.FlashAttentionType.ENABLED;
+import static io.gravitee.llama.cpp.FlashAttentionType.UNSPECIFIED;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
-import java.lang.runtime.TemplateRuntime;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +49,7 @@ class LlamaContextParamsTest extends LlamaCppTest {
       assertThat(contextParams.attentionType()).isEqualTo(AttentionType.UNSPECIFIED);
       assertThat(contextParams.embeddings()).isFalse();
       assertThat(contextParams.offloadKQV()).isTrue();
-      assertThat(contextParams.flashAttn()).isFalse();
+      assertThat(contextParams.flashAttnType()).isEqualTo(UNSPECIFIED);
       assertThat(contextParams.noPerf()).isTrue();
     }
   }
@@ -67,7 +68,7 @@ class LlamaContextParamsTest extends LlamaCppTest {
         .attentionType(AttentionType.CAUSAL)
         .embeddings(true)
         .offloadKQV(false)
-        .flashAttn(true)
+        .flashAttnType(FlashAttentionType.ENABLED)
         .noPerf(true);
 
       assertThat(contextParams.nCtx()).isEqualTo(99);
@@ -80,7 +81,7 @@ class LlamaContextParamsTest extends LlamaCppTest {
       assertThat(contextParams.attentionType()).isEqualTo(AttentionType.CAUSAL);
       assertThat(contextParams.embeddings()).isTrue();
       assertThat(contextParams.offloadKQV()).isFalse();
-      assertThat(contextParams.flashAttn()).isTrue();
+      assertThat(contextParams.flashAttnType()).isEqualTo(ENABLED);
       assertThat(contextParams.noPerf()).isTrue();
     }
   }
