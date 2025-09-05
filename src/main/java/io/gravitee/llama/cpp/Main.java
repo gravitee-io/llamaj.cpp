@@ -17,7 +17,6 @@ package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.*;
 import static java.lang.Boolean.parseBoolean;
-import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
 import static java.util.Optional.ofNullable;
 
@@ -30,6 +29,22 @@ public class Main {
 
   public static final Arena ARENA = Arena.ofAuto();
 
+  public enum SamplingStrategy {
+    DETERMINISTIC,
+    CLASSIC_CHAT,
+    FOCUSED,
+    BALANCED,
+    ADAPTIVE,
+    CONSTRAINED;
+
+    public static SamplingStrategy fromString(String strategy) {
+      if (strategy == null || strategy.isBlank()) {
+        return CLASSIC_CHAT;
+      }
+      return valueOf(strategy.toUpperCase());
+    }
+  }
+
   public static void main(String[] args) {
     Map<String, String> params = parseArgs(args);
 
@@ -41,32 +56,11 @@ public class Main {
     boolean useMlock = parseBoolean(params.getOrDefault("use_mlock", "true"));
     boolean useMmap = parseBoolean(params.getOrDefault("use_mmap", "true"));
 
-    float temperature = parseFloat(params.getOrDefault("temperature", "0.4f"));
-    float minP = parseFloat(params.getOrDefault("min_p", "0.1f"));
-    int minPWindow = parseInt(params.getOrDefault("min_p_window", "40"));
-    int topK = parseInt(params.getOrDefault("top_k", "10"));
-    float topP = parseFloat(params.getOrDefault("top_p", "0.2f"));
-    int topPWindow = parseInt(params.getOrDefault("top_p_window", "10"));
-    int seed = parseInt(params.getOrDefault("seed", String.valueOf(new Random().nextInt())));
+    int nCtx = parseInt(params.getOrDefault("n_ctx", "4096"));
+    int nBatch = parseInt(params.getOrDefault("n_batch", "4096"));
 
-    int nCtx = parseInt(params.getOrDefault("n_ctx", "512"));
-    int nBatch = parseInt(params.getOrDefault("n_batch", "512"));
-    int nSeqMax = parseInt(params.getOrDefault("n_seq_max", "64"));
-    int quota = parseInt(params.getOrDefault("quota", "512"));
-    int nKeep = parseInt(params.getOrDefault("nKeep", "256"));
-
-    boolean enableMirostat = parseBoolean(params.getOrDefault("mirostat", "false"));
-    float mirostatTau = parseFloat(params.getOrDefault("mirostat_tau", "5.0f"));
-    float mirostatEta = parseFloat(params.getOrDefault("mirostat_eta", "0.1f"));
-
-    String grammar = params.get("grammar");
-    String grammarRoot = params.getOrDefault("grammar_root", "root");
-
-    boolean enablePenalties = parseBoolean(params.getOrDefault("penalties", "false"));
-    int penaltyLastN = parseInt(params.getOrDefault("penalty_last_n", "64"));
-    float penaltyRepeat = parseFloat(params.getOrDefault("penalty_repeat", "1.2f"));
-    float penaltyFreq = parseFloat(params.getOrDefault("penalty_freq", "0.1f"));
-    float penaltyPresent = parseFloat(params.getOrDefault("penalty_present", "0.1f"));
+    int quota = parseInt(params.getOrDefault("quota", String.valueOf(nCtx)));
+    int nKeep = parseInt(params.getOrDefault("nKeep", String.valueOf(nCtx)));
 
     String logLevelStr = params.getOrDefault("log_level", "ERROR").toUpperCase();
     LlamaLogLevel logLevel;
@@ -79,35 +73,6 @@ public class Main {
 
     if (modelGguf == null) {
       System.err.println("Usage: java -jar llamaj.cpp-<version>.jar  --model <path_to_gguf_model> [options...]");
-      System.err.println("Options:");
-      System.err.println("  --system <message>       : System message (default: \"You are a helpful AI assistant.\")");
-      System.err.println("  --lora <string>          : Path to your lora adapter file");
-      System.err.println("  --n_gpu_layers <int>     : Number of GPU layers (default: 999)");
-      System.err.println("  --use_mlock <boolean>    : Use mlock (default: true)");
-      System.err.println("  --use_mmap <boolean>     : Use mmap (default: true)");
-      System.err.println("  --temperature <float>    : Sampler temperature (default: 0.4)");
-      System.err.println("  --min_p <float>          : Sampler min_p (default: 0.1)");
-      System.err.println("  --min_p_window <int>     : Sampler min_p_window (default: 40)");
-      System.err.println("  --top_k <int>            : Sampler top_k (default: 10)");
-      System.err.println("  --top_p <float>          : Sampler top_p (default: 0.2)");
-      System.err.println("  --top_p_window <int>     : Sampler top_p_window (default: 10)");
-      System.err.println("  --seed <long>            : Sampler seed (default: random)");
-      System.err.println("  --n_ctx <int>            : Context size (default: 512)");
-      System.err.println("  --n_batch <int>          : Batch size (default: 512)");
-      System.err.println("  --n_seq_max <int>        : Max sequence length (default: 512)");
-      System.err.println("  --quota <int>            : Iterator quota (default: 512)");
-      System.err.println("  --n_keep <int>         : Tokens to keep when exceeding ctx size (default: 256)");
-      System.err.println("  --log_level <level>      : Logging level (ERROR, WARN, INFO, DEBUG, default: ERROR)");
-      System.err.println("  --mirostat <boolean>       : Enable Mirostat v2 sampling (default: false)");
-      System.err.println("  --mirostat_tau <float>     : Mirostat tau parameter (default: 5.0)");
-      System.err.println("  --mirostat_eta <float>     : Mirostat eta parameter (default: 0.1)");
-      System.err.println("  --grammar <string>         : Grammar rule in BNF format");
-      System.err.println("  --grammar_root <string>    : Grammar root rule (default: \"root\")");
-      System.err.println("  --penalties <boolean>      : Enable repetition penalties (default: false)");
-      System.err.println("  --penalty_last_n <int>     : Last-N tokens to consider (default: 64)");
-      System.err.println("  --penalty_repeat <float>   : Repetition penalty (default: 1.2)");
-      System.err.println("  --penalty_freq <float>     : Frequency penalty (default: 0.1)");
-      System.err.println("  --penalty_present <float>  : Presence penalty (default: 0.1)");
       System.exit(1);
     }
 
@@ -121,7 +86,7 @@ public class Main {
     System.out.println("****************************");
 
     var logger = new LlamaLogger(ARENA);
-    logger.setLogging(logLevel); // Applying the parsed log level
+    logger.setLogging(logLevel);
 
     var modelParameters = new LlamaModelParams(ARENA);
     modelParameters.nGpuLayers(nGpuLayers).useMlock(useMlock).useMmap(useMmap);
@@ -131,35 +96,17 @@ public class Main {
     ofNullable(lora).ifPresent(path -> model.initLoraAdapter(ARENA, Path.of(path).toAbsolutePath()));
 
     var vocab = new LlamaVocab(model);
-    var contextParams = new LlamaContextParams(ARENA).nCtx(nCtx).nBatch(nBatch).nSeqMax(nSeqMax);
+    var contextParams = new LlamaContextParams(ARENA).nCtx(nCtx).nBatch(nBatch);
 
-    LlamaSampler sampler = new LlamaSampler(ARENA)
-      .temperature(temperature)
-      .minP(minP, minPWindow)
-      .topK(topK)
-      .topP(topP, topPWindow)
-      .seed(seed);
-
-    if (enableMirostat) {
-      sampler.mirostat(seed, mirostatTau, mirostatEta);
-    }
-
-    if (grammar != null) {
-      sampler.grammar(vocab, grammar, grammarRoot);
-    }
-
-    if (enablePenalties) {
-      sampler.penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent);
-    }
+    SamplingStrategy strategy = SamplingStrategy.fromString(params.get("strategy"));
+    LlamaContext context = new LlamaContext(model, contextParams);
+    LlamaSampler sampler = llamaSampler(strategy, context, vocab, params);
 
     List<LlamaChatMessage> messages = new ArrayList<>();
     messages.add(new LlamaChatMessage(ARENA, Role.SYSTEM, systemMessage));
 
     String input = "";
-
-    var context = new LlamaContext(model, contextParams);
     var tokenizer = new LlamaTokenizer(vocab, context);
-
     var messageTrimmer = new MessageTrimmer(tokenizer, context.nCtx(), nKeep, systemMessage);
 
     while (!input.trim().equals("bye")) {
@@ -194,6 +141,57 @@ public class Main {
     model.free();
 
     llama_backend_free();
+    ggml_backend_free();
+  }
+
+  public static LlamaSampler llamaSampler(
+    SamplingStrategy strategy,
+    LlamaContext context,
+    LlamaVocab vocab,
+    Map<String, String> params
+  ) {
+    float temperature = Float.parseFloat(params.getOrDefault("temperature", "0.7"));
+    int topK = Integer.parseInt(params.getOrDefault("top_k", "40"));
+    float topP = Float.parseFloat(params.getOrDefault("top_p", "0.9"));
+    int topPWindow = Integer.parseInt(params.getOrDefault("top_p_window", "1"));
+    float minP = Float.parseFloat(params.getOrDefault("min_p", "0.1"));
+    int minPWindow = Integer.parseInt(params.getOrDefault("min_p_window", "1"));
+    int seed = Integer.parseInt(params.getOrDefault("seed", "42"));
+
+    int penaltyLastN = Integer.parseInt(params.getOrDefault("penalty_last_n", String.valueOf(context.nCtx())));
+    float penaltyRepeat = Float.parseFloat(params.getOrDefault("penalty_repeat", "1.5"));
+    float penaltyFreq = Float.parseFloat(params.getOrDefault("penalty_freq", "0.1"));
+    float penaltyPresent = Float.parseFloat(params.getOrDefault("penalty_present", "0.1"));
+
+    float mirostatTau = Float.parseFloat(params.getOrDefault("mirostat_tau", "5.0"));
+    float mirostatEta = Float.parseFloat(params.getOrDefault("mirostat_eta", "0.1"));
+
+    return switch (strategy) {
+      case DETERMINISTIC -> new LlamaSampler(ARENA).greedy().seed(seed);
+      case CLASSIC_CHAT -> new LlamaSampler(ARENA)
+        .temperature(temperature)
+        .topP(topP, topPWindow)
+        .penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent)
+        .seed(seed);
+      case FOCUSED -> new LlamaSampler(ARENA)
+        .temperature(temperature)
+        .topK(topK)
+        .penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent)
+        .seed(seed);
+      case BALANCED -> new LlamaSampler(ARENA)
+        .temperature(temperature)
+        .minP(minP, minPWindow)
+        .penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent)
+        .seed(seed);
+      case ADAPTIVE -> new LlamaSampler(ARENA)
+        .mirostat(seed, mirostatTau, mirostatEta)
+        .penalties(context.nCtx(), penaltyRepeat, penaltyFreq, penaltyPresent)
+        .seed(seed);
+      case CONSTRAINED -> new LlamaSampler(ARENA)
+        .topP(topP, topPWindow)
+        .grammar(vocab, params.get("grammar"), params.getOrDefault("grammar_root", "root"))
+        .seed(seed);
+    };
   }
 
   private static String buildPrompt(LlamaModel model, List<LlamaChatMessage> messages, LlamaContextParams contextParams) {

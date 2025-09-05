@@ -50,6 +50,10 @@ public final class LlamaRuntime {
     llama_h("llama_backend_free", new Class<?>[] {});
   }
 
+  public static void ggml_backend_free() {
+    llama_h("ggml_backend_free", new Class<?>[] {});
+  }
+
   public static long ggml_backend_reg_count() {
     return llama_h("ggml_backend_reg_count", new Class<?>[] {});
   }
@@ -192,6 +196,10 @@ public final class LlamaRuntime {
 
   public static MemorySegment llama_sampler_init_temp(float temperature) {
     return llama_h("llama_sampler_init_temp", new Class<?>[] { float.class }, temperature);
+  }
+
+  public static MemorySegment llama_sampler_init_greedy() {
+    return llama_h("llama_sampler_init_greedy", new Class<?>[] {});
   }
 
   public static MemorySegment llama_sampler_init_top_k(int topK) {
