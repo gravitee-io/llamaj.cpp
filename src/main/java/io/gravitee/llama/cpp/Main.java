@@ -128,7 +128,7 @@ public class Main {
         .initialize(prompt);
 
       var answer = iterator.stream().map(LlamaOutput::content).peek(System.out::print).reduce((a, b) -> a + b).orElse("");
-      System.out.println(answer);
+
       if (LlamaLogLevel.DEBUG.equals(logLevel)) {
         System.out.println("Input tokens: " + iterator.getInputTokens());
         System.out.println("Output tokens: " + iterator.getOutputTokens());

@@ -16,15 +16,16 @@
 package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.FinishReason.EOS;
-import static java.util.function.Predicate.not;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
+import io.gravitee.llama.cpp.modules.PromptMemory;
+import io.gravitee.llama.cpp.modules.StopString;
+import io.gravitee.llama.cpp.modules.TokenTracking;
 import java.lang.foreign.Arena;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -42,14 +43,12 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   protected TokenizerResponse tokenized;
   protected boolean hasNext;
 
-  protected final AtomicInteger inputTokens = new AtomicInteger(0);
-  protected final AtomicInteger outputTokens = new AtomicInteger(0);
-
-  private List<String> stopStrings = List.of();
-  private String promptMemory = "";
-  protected int maxStopStringSize = 0;
+  protected final TokenTracking tokenTracking = new TokenTracking();
+  protected final PromptMemory promptMemory = new PromptMemory();
+  protected final StopString stopString = new StopString();
 
   private FinishReason finishReason;
+  private GenerationState state;
 
   public LlamaIterator(Arena allocator, LlamaContext context, LlamaTokenizer tokenizer, LlamaSampler sampler) {
     super(allocator);
@@ -64,12 +63,17 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
 
   public LlamaIterator initialize(String prompt) {
     tokenized = tokenizer.tokenize(arena, prompt);
-    inputTokens.set(tokenized.size());
+    tokenTracking.initialize(tokenized.size());
+    state = GenerationState.OUTPUT;
     hasNext = batch();
     return this;
   }
 
   public abstract boolean batch();
+
+  public void incrementTokenCount(int tokenCount) {
+    tokenTracking.consume(new TokenTracking.Context(state, tokenCount));
+  }
 
   protected boolean isEog(int tokenId) {
     boolean isEog = tokenizer.isEog(tokenId);
@@ -80,7 +84,7 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   }
 
   protected boolean hasNotReachedQuota() {
-    boolean hasNotReachedQuota = maxTokens == -1 || maxTokens > outputTokens.get();
+    boolean hasNotReachedQuota = maxTokens == -1 || maxTokens > getOutputTokens();
     if (!hasNotReachedQuota) {
       finishReason = FinishReason.LENGTH;
     }
@@ -93,11 +97,11 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   }
 
   public int getInputTokens() {
-    return inputTokens.get();
+    return tokenTracking.getInputTokenCount();
   }
 
   public int getOutputTokens() {
-    return outputTokens.get();
+    return tokenTracking.getOutputTokenCount();
   }
 
   public FinishReason getFinishReason() {
@@ -105,26 +109,27 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   }
 
   public LlamaIterator setStopStrings(List<String> stopStrings) {
-    this.stopStrings = stopStrings.stream().filter(not(String::isBlank)).toList();
-    maxStopStringSize = this.stopStrings.stream().mapToInt(String::length).max().orElse(0);
+    stopString.initialize(stopStrings);
+    int maxStringSize = stopStrings.stream().mapToInt(String::length).max().orElse(0);
+    promptMemory.initialize(maxStringSize);
     return this;
   }
 
   protected boolean endWithStopString() {
-    boolean endsWithStopString = !(stopStrings.isEmpty() || stopStrings.stream().noneMatch(promptMemory::endsWith));
+    if (!promptMemory.isInitialized()) {
+      return false;
+    }
+
+    boolean endsWithStopString = stopString.evaluate(promptMemory.getMemory());
     if (endsWithStopString) {
       finishReason = FinishReason.STOP;
     }
     return endsWithStopString;
   }
 
-  protected void feedPromptMemory(String piece) {
-    if (!stopStrings.isEmpty()) {
-      promptMemory += piece;
-
-      if (promptMemory.length() > maxStopStringSize) {
-        promptMemory = promptMemory.substring(promptMemory.length() - maxStopStringSize);
-      }
+  protected void feedPromptMemory(String tokenPiece) {
+    if (promptMemory.isInitialized()) {
+      promptMemory.consume(tokenPiece);
     }
   }
 }
