@@ -123,7 +123,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
     String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
 
     inputToken = it.getInputTokens();
-    outputToken = it.getInputTokens();
+    outputToken = it.getOutputTokens();
 
     assertThat(inputToken).isGreaterThan(0);
     assertThat(outputToken).isGreaterThan(0);
