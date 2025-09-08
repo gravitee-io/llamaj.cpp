@@ -47,7 +47,7 @@ public final class DefaultLlamaIterator extends LlamaIterator {
     batch.free();
     batch = null;
 
-    outputTokens.incrementAndGet();
+    incrementTokenCount(1);
     return hasNotReachedQuota() && !isEog(newTokenId);
   }
 
