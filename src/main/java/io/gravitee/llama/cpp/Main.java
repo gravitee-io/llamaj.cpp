@@ -73,7 +73,7 @@ public class Main {
     }
 
     if (modelGguf == null) {
-      System.err.println("Usage: java -jar llamaj.cpp-<version>.jar  --model <path_to_gguf_model> [options...]");
+      printUsage();
       System.exit(1);
     }
 
@@ -265,5 +265,67 @@ public class Main {
         return trimmed;
       }
     }
+  }
+
+  private static void printUsage() {
+    System.err.println(
+      """
+            Usage: java -jar llamaj.cpp-<version>.jar --model <path_to_gguf_model> [options...]
+            
+            Required:
+              --model <path>              Path to GGUF model file
+            
+            Optional:
+              --lora <path>               Path to LoRA adapter
+              --system <msg>              System prompt (default: "You are a helpful AI assistant.")
+              --strategy <name>           Sampling strategy (default: CLASSIC_CHAT)
+                                          Available: DETERMINISTIC, CLASSIC_CHAT, FOCUSED, BALANCED,
+                                                     ADAPTIVE, CONSTRAINED (default: CLASSIC_CHAT)
+            
+            Model parameters:
+              --n_gpu_layers <int>        Number of GPU layers (default: 999)
+              --use_mlock <true|false>    Lock model in memory (default: true)
+              --use_mmap <true|false>     Use mmap for model (default: true)
+            
+            Context parameters:
+              --n_ctx <int>               Context window size (default: 4096)
+              --n_batch <int>             Batch size (default: 4096)
+              --quota <int>               Max output tokens (default: n_ctx)
+              --nKeep <int>               Number of messages to keep (default: n_ctx)
+            
+            Logging:
+              --log_level <LEVEL>         Log level: TRACE, DEBUG, INFO, WARN, ERROR (default: ERROR)
+            
+            Sampling parameters:
+              --temperature <float>       Sampling temperature (default: 0.7)
+              --top_k <int>               Top-K sampling (default: 40)
+              --top_p <float>             Top-P nucleus sampling (default: 0.9)
+              --top_p_window <int>        Top-P window size (default: 1)
+              --min_p <float>             Minimum probability (default: 0.1)
+              --min_p_window <int>        Min-P window size (default: 1)
+              --seed <int>                Random seed (default: 42)
+            
+            Repetition penalties:
+              --penalty_last_n <int>      Number of tokens for penalty (default: n_ctx)
+              --penalty_repeat <float>    Repeat penalty (default: 1.5)
+              --penalty_freq <float>      Frequency penalty (default: 0.1)
+              --penalty_present <float>   Presence penalty (default: 0.1)
+            
+            Mirostat (adaptive sampling):
+              --mirostat_tau <float>      Mirostat tau (default: 5.0)
+              --mirostat_eta <float>      Mirostat eta (default: 0.1)
+            
+            Constrained generation:
+              --grammar <path>            Path to grammar file
+              --grammar_root <rule>       Grammar root rule (default: "root")
+            
+            Commands:
+              Type 'bye' to exit the REPL.
+            
+            Examples:
+              java -jar llamaj.cpp.jar --model ./models/llama-7b.gguf
+              java -jar llamaj.cpp.jar --model ./mistral.gguf --strategy FOCUSED --temperature 0.8
+            """
+    );
   }
 }
