@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.llama.cpp;
+package io.gravitee.llama.cpp.modules;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public enum GenerationState {
-  OUTPUT,
-  REASONING,
+public interface Consumer<CONFIG, CONTEXT> extends Initializable<CONFIG> {
+  void consume(CONTEXT context);
 }

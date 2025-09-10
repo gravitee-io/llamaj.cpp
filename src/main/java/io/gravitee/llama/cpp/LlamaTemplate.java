@@ -18,6 +18,7 @@ package io.gravitee.llama.cpp;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_chat_apply_template;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_chat_template;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.lang.foreign.ValueLayout;

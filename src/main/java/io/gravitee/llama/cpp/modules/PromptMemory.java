@@ -19,31 +19,72 @@ package io.gravitee.llama.cpp.modules;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class PromptMemory implements Module<Integer, String> {
+public class PromptMemory implements Consumer<Integer, String> {
 
   private int maxMemorySize;
-  private StringBuilder memory;
+  private char[] buffer;
+
+  private int head;
+  private int tail;
+  private int length;
 
   @Override
   public boolean isInitialized() {
-    return maxMemorySize > 0 && memory != null;
+    return buffer != null && maxMemorySize > 0;
   }
 
   @Override
   public void initialize(Integer maxMemorySize) {
-    this.maxMemorySize = Math.max(maxMemorySize, this.maxMemorySize);
-    this.memory = new StringBuilder();
+    if (maxMemorySize > this.maxMemorySize) {
+      this.maxMemorySize = maxMemorySize;
+      this.buffer = new char[maxMemorySize];
+      this.head = 0;
+      this.tail = 0;
+      this.length = 0;
+    }
   }
 
   @Override
   public void consume(String piece) {
-    memory.append(piece);
-    if (memory.length() > maxMemorySize) {
-      memory.delete(0, memory.length() - maxMemorySize);
+    if (piece == null || piece.isEmpty()) {
+      return;
+    }
+
+    char[] pieceChars = piece.toCharArray();
+    int pieceLength = pieceChars.length;
+
+    if (pieceLength >= maxMemorySize) {
+      System.arraycopy(pieceChars, pieceLength - maxMemorySize, buffer, 0, maxMemorySize);
+      head = 0;
+      tail = 0;
+      length = maxMemorySize;
+      return;
+    }
+
+    for (char pieceChar : pieceChars) {
+      buffer[tail] = pieceChar;
+      tail = (tail + 1) % maxMemorySize;
+      if (length < maxMemorySize) {
+        length++;
+      } else {
+        head = (head + 1) % maxMemorySize;
+      }
     }
   }
 
   public String getMemory() {
-    return memory.toString();
+    if (length == 0) {
+      return "";
+    }
+
+    if (head <= tail) {
+      return new String(buffer, head, length);
+    } else {
+      char[] result = new char[length];
+      int firstPartLength = maxMemorySize - head;
+      System.arraycopy(buffer, head, result, 0, firstPartLength);
+      System.arraycopy(buffer, 0, result, firstPartLength, tail);
+      return new String(result);
+    }
   }
 }

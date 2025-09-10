@@ -22,20 +22,23 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class TokenTracking implements Module<Integer, TokenTracking.Context> {
+public class TokenTracking implements Consumer<Integer, TokenTracking.Context> {
 
   private AtomicInteger inputTokenCount;
+  private AtomicInteger reasoningTokenCount;
   private AtomicInteger outputTokenCount;
 
   public void initialize(Integer initialTokenCount) {
     inputTokenCount = new AtomicInteger(initialTokenCount);
     outputTokenCount = new AtomicInteger(0);
+    reasoningTokenCount = new AtomicInteger(0);
   }
 
   @Override
   public void consume(Context context) {
     switch (context.state) {
       case OUTPUT -> outputTokenCount.addAndGet(context.count);
+      case REASONING -> reasoningTokenCount.addAndGet(context.count);
     }
   }
 
@@ -51,5 +54,13 @@ public class TokenTracking implements Module<Integer, TokenTracking.Context> {
 
   public int getOutputTokenCount() {
     return outputTokenCount.get();
+  }
+
+  public int getReasoningTokenCount() {
+    return reasoningTokenCount.get();
+  }
+
+  public int getTokenCount() {
+    return inputTokenCount.get() + outputTokenCount.get() + reasoningTokenCount.get();
   }
 }

@@ -17,14 +17,12 @@ package io.gravitee.llama.cpp;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import org.junit.jupiter.api.BeforeAll;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -34,7 +32,12 @@ abstract class LlamaCppTest {
 
   static final String MODEL_TO_DOWNLOAD =
     "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf";
+  static final String REASONNING_MODEL_TO_DOWNLOAD =
+    "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf";
+
   static final String MODEL_PATH = "models/model.gguf";
+  static final String REASONING_MODEL_PATH = "models/reasoning.gguf";
+
   static final String SYSTEM =
     """
             You are the best at guessing capitals. Respond to the best of your ability. Just answer with the capital.
@@ -47,12 +50,8 @@ abstract class LlamaCppTest {
     "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf";
   static final String LORA_ADATAPTER_PATH = "models/lora-adapter.gguf";
 
-  static Path getModelPath() {
-    return getPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
-  }
-
-  static Path getLoraAdapterPath() {
-    return getPath(LORA_ADATAPTER_PATH, LORA_ADAPTER_TO_DOWNLOAD);
+  static Path getModelPath(String modelPath, String modelToDownload) {
+    return getPath(modelPath, modelToDownload);
   }
 
   private static Path getPath(String loraAdatapterPath, String loraAdapterToDownload) {

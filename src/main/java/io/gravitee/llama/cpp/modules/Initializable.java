@@ -19,12 +19,10 @@ package io.gravitee.llama.cpp.modules;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public interface Module<CONFIG, CONTEXT> {
+public interface Initializable<CONFIG> {
   default boolean isInitialized() {
     throw new RuntimeException("isInitialized() is not implemented");
   }
 
   void initialize(CONFIG context);
-
-  void consume(CONTEXT context);
 }
