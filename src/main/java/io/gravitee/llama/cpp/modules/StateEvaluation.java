@@ -81,8 +81,8 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
   }
 
   @Override
-  public void initialize(Config context) {
-    this.states = context.states.stream().collect(toMap(StateBounds::state, identity()));
+  public void initialize(Config config) {
+    this.states = config.states.stream().collect(toMap(StateBounds::state, identity()));
     this.occurredState = this.states.keySet().stream().collect(toMap(identity(), __ -> false));
   }
 

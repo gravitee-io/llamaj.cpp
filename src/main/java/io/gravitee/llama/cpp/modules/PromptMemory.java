@@ -15,6 +15,10 @@
  */
 package io.gravitee.llama.cpp.modules;
 
+import static java.util.Objects.nonNull;
+
+import java.util.Objects;
+
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
@@ -35,7 +39,7 @@ public class PromptMemory implements Consumer<Integer, String> {
 
   @Override
   public void initialize(Integer maxMemorySize) {
-    if (maxMemorySize > this.maxMemorySize) {
+    if (nonNull(maxMemorySize) && maxMemorySize > this.maxMemorySize) {
       this.maxMemorySize = maxMemorySize;
       this.buffer = new char[maxMemorySize];
       this.head = 0;
