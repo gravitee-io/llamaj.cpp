@@ -16,16 +16,16 @@
 package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.FinishReason.EOS;
+import static io.gravitee.llama.cpp.GenerationState.OUTPUT;
+import static io.gravitee.llama.cpp.GenerationState.REASONING;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
 import io.gravitee.llama.cpp.modules.PromptMemory;
+import io.gravitee.llama.cpp.modules.StateEvaluation;
 import io.gravitee.llama.cpp.modules.StopString;
 import io.gravitee.llama.cpp.modules.TokenTracking;
 import java.lang.foreign.Arena;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -41,14 +41,16 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
 
   protected int maxTokens = -1;
   protected TokenizerResponse tokenized;
-  protected boolean hasNext;
 
   protected final TokenTracking tokenTracking = new TokenTracking();
   protected final PromptMemory promptMemory = new PromptMemory();
   protected final StopString stopString = new StopString();
+  protected final StateEvaluation stateEvaluation = new StateEvaluation();
 
-  private FinishReason finishReason;
-  private GenerationState state;
+  private final List<StateBounds> states = new ArrayList<>();
+
+  protected FinishReason finishReason;
+  protected GenerationState state;
 
   public LlamaIterator(Arena allocator, LlamaContext context, LlamaTokenizer tokenizer, LlamaSampler sampler) {
     super(allocator);
@@ -64,8 +66,8 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   public LlamaIterator initialize(String prompt) {
     tokenized = tokenizer.tokenize(arena, prompt);
     tokenTracking.initialize(tokenized.size());
-    state = GenerationState.OUTPUT;
-    hasNext = batch();
+    stateEvaluation.initialize(new StateEvaluation.Config(states));
+    state = OUTPUT;
     return this;
   }
 
@@ -100,18 +102,35 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
     return tokenTracking.getInputTokenCount();
   }
 
+  public int getReasoningTokens() {
+    return tokenTracking.getReasoningTokenCount();
+  }
+
   public int getOutputTokens() {
     return tokenTracking.getOutputTokenCount();
+  }
+
+  public int getTokenCount() {
+    return tokenTracking.getTokenCount();
   }
 
   public FinishReason getFinishReason() {
     return finishReason;
   }
 
+  public GenerationState getState() {
+    return state;
+  }
+
   public LlamaIterator setStopStrings(List<String> stopStrings) {
     stopString.initialize(stopStrings);
     int maxStringSize = stopStrings.stream().mapToInt(String::length).max().orElse(0);
     promptMemory.initialize(maxStringSize);
+    return this;
+  }
+
+  public LlamaIterator setReasoning(String tokenStart, String tokenEnd) {
+    this.states.add(new StateBounds(REASONING, tokenStart, tokenEnd));
     return this;
   }
 

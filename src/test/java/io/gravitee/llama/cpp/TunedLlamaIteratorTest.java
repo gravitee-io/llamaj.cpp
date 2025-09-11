@@ -83,11 +83,11 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
     logger.setLogging(LlamaLogLevel.DEBUG);
 
     var modelParameters = new LlamaModelParams(arena);
-    Path absolutePath = getModelPath();
+    Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
     if (allowLoraAdapter) {
-      model.initLoraAdapter(arena, getLoraAdapterPath());
+      model.initLoraAdapter(arena, getModelPath(LORA_ADATAPTER_PATH, LORA_ADAPTER_TO_DOWNLOAD));
     }
 
     var contextParams = new LlamaContextParams(arena)

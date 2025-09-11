@@ -15,6 +15,7 @@
  */
 package io.gravitee.llama.cpp;
 
+import io.gravitee.llama.cpp.modules.StateEvaluation;
 import java.lang.foreign.Arena;
 
 /**
@@ -25,6 +26,7 @@ public final class DefaultLlamaIterator extends LlamaIterator {
 
   private LlamaBatch batch;
   private Integer newTokenId;
+  private String piece;
 
   public DefaultLlamaIterator(Arena arena, LlamaContext context, LlamaTokenizer tokenizer, LlamaSampler sampler) {
     super(arena, context, tokenizer, sampler);
@@ -32,7 +34,7 @@ public final class DefaultLlamaIterator extends LlamaIterator {
 
   @Override
   public boolean hasNext() {
-    return hasNext;
+    return batch();
   }
 
   public boolean batch() {
@@ -43,12 +45,21 @@ public final class DefaultLlamaIterator extends LlamaIterator {
     }
 
     newTokenId = sampler.sample(context);
+    piece = tokenizer.tokenToPiece(newTokenId);
+    state = stateEvaluation.evaluate(new StateEvaluation.Context(state, piece));
+
+    incrementTokenCount(1);
+
+    if (isEog(newTokenId)) {
+      incrementTokenCount(-1);
+      return false;
+    }
 
     batch.free();
     batch = null;
 
-    incrementTokenCount(1);
-    return hasNotReachedQuota() && !isEog(newTokenId);
+    feedPromptMemory(piece);
+    return !endWithStopString() && hasNotReachedQuota();
   }
 
   private boolean checkContextSize() {
@@ -57,11 +68,6 @@ public final class DefaultLlamaIterator extends LlamaIterator {
 
   @Override
   public LlamaOutput next() {
-    var piece = tokenizer.tokenToPiece(newTokenId);
-
-    feedPromptMemory(piece);
-
-    hasNext = !endWithStopString() && batch();
     return new LlamaOutput(piece, 1);
   }
 }

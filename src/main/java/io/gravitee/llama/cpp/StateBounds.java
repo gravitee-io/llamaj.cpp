@@ -15,11 +15,4 @@
  */
 package io.gravitee.llama.cpp;
 
-/**
- * @author Rémi SULTAN (remi.sultan at graviteesource.com)
- * @author GraviteeSource Team
- */
-public enum GenerationState {
-  OUTPUT,
-  REASONING,
-}
+public record StateBounds(GenerationState state, String start, String end) {}

@@ -23,7 +23,7 @@ import java.util.List;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class StopString implements Module<List<String>, Void>, Evaluable<String, Boolean> {
+public class StopString implements Initializable<List<String>>, Evaluable<String, Boolean> {
 
   private List<String> stopStrings;
 
@@ -37,11 +37,6 @@ public class StopString implements Module<List<String>, Void>, Evaluable<String,
     if (stopStrings != null) {
       this.stopStrings = stopStrings.stream().filter(not(String::isBlank)).toList();
     }
-  }
-
-  @Override
-  public void consume(Void __) {
-    throw new UnsupportedOperationException("Not supported yet.");
   }
 
   @Override

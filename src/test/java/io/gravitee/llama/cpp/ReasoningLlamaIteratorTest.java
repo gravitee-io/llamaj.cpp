@@ -33,14 +33,14 @@ import org.junit.jupiter.params.provider.MethodSource;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-class SimpleLlamaIteratorTest extends LlamaCppTest {
+class ReasoningLlamaIteratorTest extends LlamaCppTest {
 
   static Stream<Arguments> params_that_allow_llama_generation() {
     return Stream.of(
-      Arguments.of(SYSTEM, "What is the capital of France?", false),
-      Arguments.of(SYSTEM, "What is the capital of England?", false),
-      Arguments.of(SYSTEM, "What is the capital of Poland?", false),
-      Arguments.of(SYSTEM, "What is the capital of France?", true)
+      Arguments.of(SYSTEM, "What is the capital of France?"),
+      Arguments.of(SYSTEM, "What is the capital of England?"),
+      Arguments.of(SYSTEM, "What is the capital of Poland?"),
+      Arguments.of(SYSTEM, "What is the capital of France?")
     );
   }
 
@@ -62,19 +62,14 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
 
   @ParameterizedTest
   @MethodSource("params_that_allow_llama_generation")
-  void llama_simple_generation(String system, String input, boolean allowLoraAdapter) {
-    int inputToken = -1;
-    int outputToken = -1;
+  void llama_simple_generation(String system, String input) {
     var logger = new LlamaLogger(arena);
     logger.setLogging(LlamaLogLevel.DEBUG);
 
     var modelParameters = new LlamaModelParams(arena);
-    Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
+    Path absolutePath = getModelPath(REASONING_MODEL_PATH, REASONNING_MODEL_TO_DOWNLOAD);
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-    if (allowLoraAdapter) {
-      model.initLoraAdapter(arena, getModelPath(LORA_ADATAPTER_PATH, LORA_ADAPTER_TO_DOWNLOAD));
-    }
 
     var contextParams = new LlamaContextParams(arena);
     var context = new LlamaContext(model, contextParams);
@@ -83,15 +78,23 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler).initialize(prompt);
+    var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler)
+      .setReasoning("<think>", "</think>")
+      .initialize(prompt);
 
-    String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
+    LlamaOutput output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0));
 
-    inputToken = it.getInputTokens();
-    outputToken = it.getOutputTokens();
+    int inputTokens = it.getInputTokens();
+    int outputTokens = it.getOutputTokens();
+    int reasoningTokens = it.getReasoningTokens();
 
-    assertThat(inputToken).isGreaterThan(0);
-    assertThat(outputToken).isGreaterThan(0);
+    assertThat(inputTokens).isGreaterThan(0);
+    assertThat(outputTokens).isGreaterThan(0);
+    assertThat(reasoningTokens).isGreaterThan(0);
+
+    assertThat(output.numberOfTokens()).isEqualTo(outputTokens + reasoningTokens);
+    assertThat(it.getTokenCount()).isEqualTo(inputTokens + outputTokens + reasoningTokens);
+
     assertThat(it.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
     System.out.println(output);
 
