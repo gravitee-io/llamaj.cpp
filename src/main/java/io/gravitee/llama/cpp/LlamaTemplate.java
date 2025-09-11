@@ -32,8 +32,8 @@ public final class LlamaTemplate extends MemorySegmentAware {
     super(llama_model_chat_template(llamaModel.segment, MemorySegment.NULL));
   }
 
-  public String applyTemplate(Arena allocator, LlamaChatMessages messages, int nCtx) {
-    var templateBuffer = allocator.allocateArray(ValueLayout.JAVA_CHAR, nCtx);
+  public String applyTemplate(Arena arena, LlamaChatMessages messages, int nCtx) {
+    var templateBuffer = arena.allocateArray(ValueLayout.JAVA_CHAR, nCtx);
 
     int newLength = llama_chat_apply_template(
       segment,
@@ -45,7 +45,7 @@ public final class LlamaTemplate extends MemorySegmentAware {
     );
 
     if (newLength > nCtx) {
-      templateBuffer = allocator.allocateArray(ValueLayout.JAVA_CHAR, newLength);
+      templateBuffer = arena.allocateArray(ValueLayout.JAVA_CHAR, newLength);
       newLength =
         llama_chat_apply_template(segment, messages.segment, messages.getMessages().size(), true, templateBuffer, newLength);
     }
