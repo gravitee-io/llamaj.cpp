@@ -42,11 +42,13 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
 
   @Override
   public GenerationState evaluate(Context context) {
-    return switch (context.currentState) {
-      case OUTPUT -> detectNewState(context.piece);
-      case REASONING -> detectEndState(context.currentState, context.piece);
-      case null -> GenerationState.OUTPUT;
-    };
+    return isInitialized()
+      ? switch (context.currentState) {
+        case OUTPUT -> detectNewState(context.piece);
+        case REASONING -> detectEndState(context.currentState, context.piece);
+        case null -> GenerationState.OUTPUT;
+      }
+      : GenerationState.OUTPUT;
   }
 
   private GenerationState detectEndState(GenerationState currentState, String piece) {
@@ -77,7 +79,7 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
   }
 
   private Boolean stateAlreadyOccurred(StateBounds stateBounds) {
-    return occurredState.get(stateBounds.state());
+    return stateBounds != null && occurredState.get(stateBounds.state());
   }
 
   @Override
