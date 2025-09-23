@@ -15,8 +15,8 @@
  */
 package io.gravitee.llama.cpp;
 
-import static io.gravitee.llama.cpp.FinishReason.EOS;
-import static io.gravitee.llama.cpp.GenerationState.OUTPUT;
+import static io.gravitee.llama.cpp.FinishReason.*;
+import static io.gravitee.llama.cpp.GenerationState.ANSWER;
 import static io.gravitee.llama.cpp.GenerationState.REASONING;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
@@ -67,7 +67,7 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
     tokenized = tokenizer.tokenize(arena, prompt);
     tokenTracking.initialize(tokenized.size());
     stateEvaluation.initialize(new StateEvaluation.Config(states));
-    state = OUTPUT;
+    state = ANSWER;
     return this;
   }
 
@@ -80,15 +80,15 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   protected boolean isEog(int tokenId) {
     boolean isEog = tokenizer.isEog(tokenId);
     if (isEog) {
-      finishReason = EOS;
+      setFinishReason(STOP);
     }
     return isEog;
   }
 
   protected boolean hasNotReachedQuota() {
-    boolean hasNotReachedQuota = maxTokens == -1 || maxTokens > getOutputTokens();
+    boolean hasNotReachedQuota = maxTokens == -1 || maxTokens > getAnswerTokens();
     if (!hasNotReachedQuota) {
-      finishReason = FinishReason.LENGTH;
+      setFinishReason(FinishReason.LENGTH);
     }
     return hasNotReachedQuota;
   }
@@ -102,16 +102,20 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
     return tokenTracking.getInputTokenCount();
   }
 
+  public int getAnswerTokens() {
+    return tokenTracking.getOutputTokenCount(ANSWER);
+  }
+
   public int getReasoningTokens() {
-    return tokenTracking.getReasoningTokenCount();
+    return tokenTracking.getOutputTokenCount(REASONING);
   }
 
-  public int getOutputTokens() {
-    return tokenTracking.getOutputTokenCount();
+  public int getToolCallTokens() {
+    return tokenTracking.getOutputTokenCount(GenerationState.TOOL_CALL);
   }
 
-  public int getTokenCount() {
-    return tokenTracking.getTokenCount();
+  public int getTotalTokenCount() {
+    return tokenTracking.getTotalTokenCount();
   }
 
   public FinishReason getFinishReason() {
@@ -130,7 +134,12 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   }
 
   public LlamaIterator setReasoning(String tokenStart, String tokenEnd) {
-    this.states.add(new StateBounds(REASONING, tokenStart, tokenEnd));
+    this.states.add(new StateBounds(GenerationState.REASONING, tokenStart, tokenEnd));
+    return this;
+  }
+
+  public LlamaIterator setToolCall(String tokenStart, String tokenEnd) {
+    this.states.add(new StateBounds(GenerationState.TOOL_CALL, tokenStart, tokenEnd));
     return this;
   }
 
@@ -141,9 +150,20 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
 
     boolean endsWithStopString = stopString.evaluate(promptMemory.getMemory());
     if (endsWithStopString) {
-      finishReason = FinishReason.STOP;
+      setFinishReason(STOP);
     }
     return endsWithStopString;
+  }
+
+  protected void setFinishReason(FinishReason finishReason) {
+    if (this.finishReason != null) {
+      // We do not want to set the finish reason to TOOL_CALL unless the answer is complete
+      if (!TOOL_CALL.equals(this.finishReason) || LENGTH.equals(finishReason)) {
+        this.finishReason = finishReason;
+      }
+    } else {
+      this.finishReason = finishReason;
+    }
   }
 
   protected void feedPromptMemory(String tokenPiece) {

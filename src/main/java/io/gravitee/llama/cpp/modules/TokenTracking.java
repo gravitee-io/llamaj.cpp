@@ -24,21 +24,24 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class TokenTracking implements Consumer<Integer, TokenTracking.Context> {
 
-  private AtomicInteger inputTokenCount;
-  private AtomicInteger reasoningTokenCount;
-  private AtomicInteger outputTokenCount;
+  private AtomicInteger input;
+  private AtomicInteger reasoning;
+  private AtomicInteger answer;
+  private AtomicInteger toolCall;
 
   public void initialize(Integer initialTokenCount) {
-    inputTokenCount = new AtomicInteger(initialTokenCount);
-    outputTokenCount = new AtomicInteger(0);
-    reasoningTokenCount = new AtomicInteger(0);
+    input = new AtomicInteger(initialTokenCount);
+    answer = new AtomicInteger(0);
+    reasoning = new AtomicInteger(0);
+    toolCall = new AtomicInteger(0);
   }
 
   @Override
   public void consume(Context context) {
     switch (context.state) {
-      case OUTPUT -> outputTokenCount.addAndGet(context.count);
-      case REASONING -> reasoningTokenCount.addAndGet(context.count);
+      case ANSWER -> answer.addAndGet(context.count);
+      case REASONING -> reasoning.addAndGet(context.count);
+      case TOOL_CALL -> toolCall.addAndGet(context.count);
     }
   }
 
@@ -49,18 +52,19 @@ public class TokenTracking implements Consumer<Integer, TokenTracking.Context> {
   }
 
   public int getInputTokenCount() {
-    return inputTokenCount.get();
+    return input.get();
   }
 
-  public int getOutputTokenCount() {
-    return outputTokenCount.get();
+  public int getOutputTokenCount(GenerationState state) {
+    return switch (state) {
+      case ANSWER -> answer.get();
+      case REASONING -> reasoning.get();
+      case TOOL_CALL -> toolCall.get();
+      case null -> answer.get() + reasoning.get() + toolCall.get();
+    };
   }
 
-  public int getReasoningTokenCount() {
-    return reasoningTokenCount.get();
-  }
-
-  public int getTokenCount() {
-    return inputTokenCount.get() + outputTokenCount.get() + reasoningTokenCount.get();
+  public int getTotalTokenCount() {
+    return getInputTokenCount() + getOutputTokenCount(null);
   }
 }

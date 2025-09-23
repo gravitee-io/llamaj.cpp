@@ -15,14 +15,12 @@
  */
 package io.gravitee.llama.cpp;
 
-import static io.gravitee.llama.cpp.FlashAttentionType.ENABLED;
 import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_reg_count;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -35,25 +33,32 @@ import org.junit.jupiter.params.provider.MethodSource;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-class TunedLlamaIteratorTest extends LlamaCppTest {
+class ToolCallLlamaIteratorTest extends LlamaCppTest {
 
-  static final int SEED = new Random().nextInt();
-
-  static final String ENGLISH_GRAMMAR =
+  private static final String TOOL_CALL_SYSTEM =
     """
-            root        ::= en-char+ ([ \\t\\n] en-char+)*
-            en-char     ::= letter | digit | punctuation
-            letter      ::= [a-zA-Z]
-            digit       ::= [0-9]
-            punctuation ::= [!"#$%&'()*+,-./:;<=>?@[\\\\\\]^_`{|}~]
-            """;
+          You are a helpful assistant that uses tools to answer user questions.
+          
+          # Tools
+          
+          You may call one or more functions to assist with the user query.
+          
+          You are provided with function signatures within <tools></tools> XML tags:
+          <tools>
+          {"name": "get_capital", "description": "Get the capital city of a given country.", "parameters": {"type": "object", "properties": {"country": {"type": "string", "description": "The name of the country"}}, "required": ["country"]}}
+          </tools>
+          
+          For each function call, return a JSON object with function name and arguments within <tool_call></tool_call> XML tags:
+          <tool_call>
+          {"name": "get_capital", "arguments": {"country": "<country-name>"}}
+          </tool_call>
+          """;
 
   static Stream<Arguments> params_that_allow_llama_generation() {
     return Stream.of(
-      Arguments.of(SYSTEM, "What is the capital of France?", false),
-      Arguments.of(SYSTEM, "What is the capital of the UK?", false),
-      Arguments.of(SYSTEM, "What is the capital of Poland?", false),
-      Arguments.of(SYSTEM, "What is the capital of France?", true)
+      Arguments.of(TOOL_CALL_SYSTEM, "What is the capital of England?"),
+      Arguments.of(TOOL_CALL_SYSTEM, "What is the capital of Poland?"),
+      Arguments.of(TOOL_CALL_SYSTEM, "What is the capital of France?")
     );
   }
 
@@ -75,65 +80,50 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
 
   @ParameterizedTest
   @MethodSource("params_that_allow_llama_generation")
-  void llama_tuned_generation(String system, String input, boolean allowLoraAdapter) {
-    int inputToken = -1;
-    int outputToken = -1;
+  void llama_simple_generation(String system, String input) {
     var logger = new LlamaLogger(arena);
     logger.setLogging(LlamaLogLevel.DEBUG);
 
     var modelParameters = new LlamaModelParams(arena);
-    Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
+    Path absolutePath = getModelPath(REASONING_MODEL_PATH, REASONNING_MODEL_TO_DOWNLOAD);
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-    if (allowLoraAdapter) {
-      model.initLoraAdapter(arena, getModelPath(LORA_ADATAPTER_PATH, LORA_ADAPTER_TO_DOWNLOAD));
-    }
 
-    var contextParams = new LlamaContextParams(arena)
-      .nCtx(512)
-      .nBatch(512)
-      .attentionType(AttentionType.CAUSAL)
-      .embeddings(false)
-      .offloadKQV(false)
-      .flashAttnType(ENABLED)
-      .noPerf(false);
-
+    var contextParams = new LlamaContextParams(arena);
+    var context = new LlamaContext(model, contextParams);
     var vocab = new LlamaVocab(model);
-    var sampler = new LlamaSampler(arena)
-      .seed(SEED)
-      .temperature(0.75f)
-      .topK(40)
-      .topP(0.2f, 40)
-      .minP(0.05f, 40)
-      .mirostat(SEED, 3, 0.1f)
-      .grammar(vocab, ENGLISH_GRAMMAR, "root")
-      .penalties(10, 1.2f, 0.3f, 0.0f);
-
+    var tokenizer = new LlamaTokenizer(vocab, context);
+    var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var context = new LlamaContext(model, contextParams);
-    var tokenizer = new LlamaTokenizer(vocab, context);
-
     var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler)
-      .setStopStrings(List.of("."))
-      .setMaxTokens(10)
+      .setReasoning("<think>", "</think>")
+      .setToolCall("<tool_call>", "</tool_call>")
       .initialize(prompt);
 
-    String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
+    LlamaOutput output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0));
     System.out.println(output);
 
-    inputToken = it.getInputTokens();
-    outputToken = it.getAnswerTokens();
+    int inputTokens = it.getInputTokens();
+    int answerTokens = it.getAnswerTokens();
+    int reasoningTokens = it.getReasoningTokens();
+    int toolCallTokens = it.getToolCallTokens();
 
-    assertThat(inputToken).isGreaterThan(0);
-    assertThat(outputToken).isGreaterThan(0);
-    assertThat(it.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
+    assertThat(inputTokens).isGreaterThan(0);
+    assertThat(answerTokens).isGreaterThan(0);
+    assertThat(reasoningTokens).isGreaterThan(0);
+    assertThat(toolCallTokens).isGreaterThan(0);
+
+    int outputTokens = answerTokens + reasoningTokens + toolCallTokens;
+
+    assertThat(output.numberOfTokens()).isEqualTo(outputTokens);
+    assertThat(it.getTotalTokenCount()).isEqualTo(inputTokens + outputTokens);
+
+    assertThat(it.getFinishReason()).isIn(FinishReason.TOOL_CALL);
 
     context.free();
     sampler.free();
     model.free();
-
-    LlamaRuntime.llama_backend_free();
   }
 
   @AfterAll
