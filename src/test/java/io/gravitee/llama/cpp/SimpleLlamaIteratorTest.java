@@ -86,14 +86,14 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler).initialize(prompt);
 
     String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
+    System.out.println(output);
 
     inputToken = it.getInputTokens();
-    outputToken = it.getOutputTokens();
+    outputToken = it.getAnswerTokens();
 
     assertThat(inputToken).isGreaterThan(0);
     assertThat(outputToken).isGreaterThan(0);
     assertThat(it.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
-    System.out.println(output);
 
     context.free();
     sampler.free();

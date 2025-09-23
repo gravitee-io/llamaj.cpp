@@ -20,6 +20,7 @@ package io.gravitee.llama.cpp;
  * @author GraviteeSource Team
  */
 public enum GenerationState {
-  OUTPUT,
+  ANSWER,
   REASONING,
+  TOOLS,
 }

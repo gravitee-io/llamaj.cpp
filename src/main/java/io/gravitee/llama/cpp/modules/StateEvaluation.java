@@ -15,6 +15,7 @@
  */
 package io.gravitee.llama.cpp.modules;
 
+import static io.gravitee.llama.cpp.GenerationState.TOOLS;
 import static io.gravitee.llama.cpp.modules.StateEvaluation.*;
 import static java.util.function.Function.identity;
 import static java.util.function.Predicate.not;
@@ -44,26 +45,31 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
   public GenerationState evaluate(Context context) {
     return isInitialized()
       ? switch (context.currentState) {
-        case OUTPUT -> detectNewState(context.piece);
-        case REASONING -> detectEndState(context.currentState, context.piece);
-        case null -> GenerationState.OUTPUT;
+        case ANSWER -> detectNewState(context.piece);
+        case REASONING, TOOLS -> detectEndState(context.currentState, context.piece);
+        case null -> GenerationState.ANSWER;
       }
-      : GenerationState.OUTPUT;
+      : GenerationState.ANSWER;
   }
 
   private GenerationState detectEndState(GenerationState currentState, String piece) {
     var state = states.get(currentState);
 
     if (stateAlreadyOccurred(state)) {
-      return GenerationState.OUTPUT;
+      return GenerationState.ANSWER;
     }
 
     if (state.end().equals(piece)) {
-      this.occurredState.put(currentState, true);
-      return GenerationState.OUTPUT;
+      setAlreadyOccurredIfNecessary(currentState);
+      return GenerationState.ANSWER;
     }
 
     return currentState;
+  }
+
+  private void setAlreadyOccurredIfNecessary(GenerationState currentState) {
+    boolean isTools = !TOOLS.equals(currentState);
+    this.occurredState.put(currentState, isTools);
   }
 
   private GenerationState detectNewState(String piece) {
@@ -75,11 +81,19 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
       .filter(stateBounds -> stateBounds.start().equals(piece))
       .map(StateBounds::state)
       .findFirst()
-      .orElse(GenerationState.OUTPUT);
+      .orElse(GenerationState.ANSWER);
   }
 
   private Boolean stateAlreadyOccurred(StateBounds stateBounds) {
-    return stateBounds != null && occurredState.get(stateBounds.state());
+    if (stateBounds == null) {
+      return true;
+    }
+
+    if (TOOLS.equals(stateBounds.state())) {
+      return false;
+    }
+
+    return occurredState.get(stateBounds.state());
   }
 
   @Override

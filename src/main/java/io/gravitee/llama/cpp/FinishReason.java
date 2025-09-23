@@ -23,4 +23,5 @@ public enum FinishReason {
   EOS,
   STOP,
   LENGTH,
+  TOOL_CALL,
 }

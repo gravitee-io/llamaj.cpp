@@ -37,7 +37,6 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
 
   static Stream<Arguments> params_that_allow_llama_generation() {
     return Stream.of(
-      Arguments.of(SYSTEM, "What is the capital of France?"),
       Arguments.of(SYSTEM, "What is the capital of England?"),
       Arguments.of(SYSTEM, "What is the capital of Poland?"),
       Arguments.of(SYSTEM, "What is the capital of France?")
@@ -83,9 +82,10 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
       .initialize(prompt);
 
     LlamaOutput output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0));
+    System.out.println(output);
 
     int inputTokens = it.getInputTokens();
-    int outputTokens = it.getOutputTokens();
+    int outputTokens = it.getAnswerTokens();
     int reasoningTokens = it.getReasoningTokens();
 
     assertThat(inputTokens).isGreaterThan(0);
@@ -93,10 +93,9 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
     assertThat(reasoningTokens).isGreaterThan(0);
 
     assertThat(output.numberOfTokens()).isEqualTo(outputTokens + reasoningTokens);
-    assertThat(it.getTokenCount()).isEqualTo(inputTokens + outputTokens + reasoningTokens);
+    assertThat(it.getTotalTokenCount()).isEqualTo(inputTokens + outputTokens + reasoningTokens);
 
     assertThat(it.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
-    System.out.println(output);
 
     context.free();
     sampler.free();

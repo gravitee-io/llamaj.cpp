@@ -51,7 +51,7 @@ public class Main {
 
     String modelGguf = params.get("model");
     String lora = params.get("lora");
-    String systemMessage = params.getOrDefault("system", "You are a helpful AI assistant.");
+    String systemMessage = params.getOrDefault("system", "You are a helpful assistant.");
 
     int nGpuLayers = parseInt(params.getOrDefault("n_gpu_layers", "999"));
     boolean useMlock = parseBoolean(params.getOrDefault("use_mlock", "true"));
@@ -131,7 +131,7 @@ public class Main {
 
       if (LlamaLogLevel.DEBUG.equals(logLevel)) {
         System.out.println("Input tokens: " + iterator.getInputTokens());
-        System.out.println("Output tokens: " + iterator.getOutputTokens());
+        System.out.println("Output tokens: " + iterator.getAnswerTokens());
         System.out.println("Finish Reason: " + iterator.getFinishReason());
       }
       messages.add(new LlamaChatMessage(ARENA, Role.ASSISTANT, answer));
