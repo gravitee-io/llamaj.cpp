@@ -18,6 +18,7 @@ package io.gravitee.llama.cpp;
 import static io.gravitee.llama.cpp.FinishReason.*;
 import static io.gravitee.llama.cpp.GenerationState.ANSWER;
 import static io.gravitee.llama.cpp.GenerationState.REASONING;
+import static io.gravitee.llama.cpp.GenerationState.TOOLS;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
 import io.gravitee.llama.cpp.modules.PromptMemory;
@@ -88,7 +89,7 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   protected boolean hasNotReachedQuota() {
     boolean hasNotReachedQuota = maxTokens == -1 || maxTokens > getAnswerTokens();
     if (!hasNotReachedQuota) {
-      setFinishReason(FinishReason.LENGTH);
+      setFinishReason(LENGTH);
     }
     return hasNotReachedQuota;
   }
@@ -110,8 +111,8 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
     return tokenTracking.getOutputTokenCount(REASONING);
   }
 
-  public int getToolCallTokens() {
-    return tokenTracking.getOutputTokenCount(GenerationState.TOOL_CALL);
+  public int getToolsTokens() {
+    return tokenTracking.getOutputTokenCount(TOOLS);
   }
 
   public int getTotalTokenCount() {
@@ -134,12 +135,12 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   }
 
   public LlamaIterator setReasoning(String tokenStart, String tokenEnd) {
-    this.states.add(new StateBounds(GenerationState.REASONING, tokenStart, tokenEnd));
+    this.states.add(new StateBounds(REASONING, tokenStart, tokenEnd));
     return this;
   }
 
   public LlamaIterator setToolCall(String tokenStart, String tokenEnd) {
-    this.states.add(new StateBounds(GenerationState.TOOL_CALL, tokenStart, tokenEnd));
+    this.states.add(new StateBounds(TOOLS, tokenStart, tokenEnd));
     return this;
   }
 
@@ -157,7 +158,8 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
 
   protected void setFinishReason(FinishReason finishReason) {
     if (this.finishReason != null) {
-      // We do not want to set the finish reason to TOOL_CALL unless the answer is complete
+      // We set this.finishReason here only if it has not been set to TOOL_CALL
+      // We make an exception only if the current finishReason to set is LENGTH
       if (!TOOL_CALL.equals(this.finishReason) || LENGTH.equals(finishReason)) {
         this.finishReason = finishReason;
       }

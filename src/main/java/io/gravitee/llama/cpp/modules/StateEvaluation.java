@@ -15,7 +15,7 @@
  */
 package io.gravitee.llama.cpp.modules;
 
-import static io.gravitee.llama.cpp.GenerationState.TOOL_CALL;
+import static io.gravitee.llama.cpp.GenerationState.TOOLS;
 import static io.gravitee.llama.cpp.modules.StateEvaluation.*;
 import static java.util.function.Function.identity;
 import static java.util.function.Predicate.not;
@@ -46,7 +46,7 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
     return isInitialized()
       ? switch (context.currentState) {
         case ANSWER -> detectNewState(context.piece);
-        case REASONING, TOOL_CALL -> detectEndState(context.currentState, context.piece);
+        case REASONING, TOOLS -> detectEndState(context.currentState, context.piece);
         case null -> GenerationState.ANSWER;
       }
       : GenerationState.ANSWER;
@@ -68,8 +68,8 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
   }
 
   private void setAlreadyOccurredIfNecessary(GenerationState currentState) {
-    boolean isToolCall = !TOOL_CALL.equals(currentState);
-    this.occurredState.put(currentState, isToolCall);
+    boolean isTools = !TOOLS.equals(currentState);
+    this.occurredState.put(currentState, isTools);
   }
 
   private GenerationState detectNewState(String piece) {
@@ -89,7 +89,7 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
       return true;
     }
 
-    if (TOOL_CALL.equals(stateBounds.state())) {
+    if (TOOLS.equals(stateBounds.state())) {
       return false;
     }
 

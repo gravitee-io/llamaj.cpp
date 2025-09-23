@@ -47,7 +47,7 @@ public final class DefaultLlamaIterator extends LlamaIterator {
     newTokenId = sampler.sample(context);
     piece = tokenizer.tokenToPiece(newTokenId);
     state = stateEvaluation.evaluate(new StateEvaluation.Context(getState(), piece));
-    if (state == GenerationState.TOOL_CALL) {
+    if (state == GenerationState.TOOLS) {
       setFinishReason(FinishReason.TOOL_CALL);
     }
     incrementTokenCount(1);

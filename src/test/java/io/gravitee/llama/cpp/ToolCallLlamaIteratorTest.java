@@ -107,7 +107,7 @@ class ToolCallLlamaIteratorTest extends LlamaCppTest {
     int inputTokens = it.getInputTokens();
     int answerTokens = it.getAnswerTokens();
     int reasoningTokens = it.getReasoningTokens();
-    int toolCallTokens = it.getToolCallTokens();
+    int toolCallTokens = it.getToolsTokens();
 
     assertThat(inputTokens).isGreaterThan(0);
     assertThat(answerTokens).isGreaterThan(0);

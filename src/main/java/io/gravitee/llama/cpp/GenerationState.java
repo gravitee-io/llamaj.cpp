@@ -22,5 +22,5 @@ package io.gravitee.llama.cpp;
 public enum GenerationState {
   ANSWER,
   REASONING,
-  TOOL_CALL,
+  TOOLS,
 }

@@ -27,13 +27,13 @@ public class TokenTracking implements Consumer<Integer, TokenTracking.Context> {
   private AtomicInteger input;
   private AtomicInteger reasoning;
   private AtomicInteger answer;
-  private AtomicInteger toolCall;
+  private AtomicInteger tools;
 
   public void initialize(Integer initialTokenCount) {
     input = new AtomicInteger(initialTokenCount);
     answer = new AtomicInteger(0);
     reasoning = new AtomicInteger(0);
-    toolCall = new AtomicInteger(0);
+    tools = new AtomicInteger(0);
   }
 
   @Override
@@ -41,7 +41,7 @@ public class TokenTracking implements Consumer<Integer, TokenTracking.Context> {
     switch (context.state) {
       case ANSWER -> answer.addAndGet(context.count);
       case REASONING -> reasoning.addAndGet(context.count);
-      case TOOL_CALL -> toolCall.addAndGet(context.count);
+      case TOOLS -> tools.addAndGet(context.count);
     }
   }
 
@@ -59,8 +59,8 @@ public class TokenTracking implements Consumer<Integer, TokenTracking.Context> {
     return switch (state) {
       case ANSWER -> answer.get();
       case REASONING -> reasoning.get();
-      case TOOL_CALL -> toolCall.get();
-      case null -> answer.get() + reasoning.get() + toolCall.get();
+      case TOOLS -> tools.get();
+      case null -> answer.get() + reasoning.get() + tools.get();
     };
   }
 
