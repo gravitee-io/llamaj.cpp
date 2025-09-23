@@ -15,7 +15,10 @@
  */
 package io.gravitee.llama.cpp.modules;
 
+import static java.util.Objects.requireNonNull;
+
 import io.gravitee.llama.cpp.GenerationState;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -56,15 +59,18 @@ public class TokenTracking implements Consumer<Integer, TokenTracking.Context> {
   }
 
   public int getOutputTokenCount(GenerationState state) {
-    return switch (state) {
+    return switch (requireNonNull(state, "GenerationState cannot be null")) {
       case ANSWER -> answer.get();
       case REASONING -> reasoning.get();
       case TOOLS -> tools.get();
-      case null -> answer.get() + reasoning.get() + tools.get();
     };
   }
 
+  public int getOutputTokenCount() {
+    return answer.get() + reasoning.get() + tools.get();
+  }
+
   public int getTotalTokenCount() {
-    return getInputTokenCount() + getOutputTokenCount(null);
+    return getInputTokenCount() + getOutputTokenCount();
   }
 }
