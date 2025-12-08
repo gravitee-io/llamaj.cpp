@@ -25,6 +25,7 @@ import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class Main {
 
@@ -43,6 +44,33 @@ public class Main {
         return CLASSIC_CHAT;
       }
       return valueOf(strategy.toUpperCase());
+    }
+  }
+
+  public enum ConversationMode {
+    FULL,
+    INSTRUCTION;
+
+    public static ConversationMode fromString(String mode) {
+      if (mode == null || mode.isBlank()) {
+        return FULL;
+      }
+      return valueOf(mode.toUpperCase());
+    }
+  }
+
+  private record TagConfig(String openTag, String closeTag) {
+    public boolean isConfigured() {
+      return openTag != null && closeTag != null;
+    }
+
+    public String stripTagsFromMessages(String content) {
+      if (!isConfigured()) return content;
+      return content.replaceAll(escapeRegex(openTag) + "|" + escapeRegex(closeTag), "");
+    }
+
+    private static String escapeRegex(String input) {
+      return Pattern.quote(input);
     }
   }
 
@@ -71,6 +99,11 @@ public class Main {
       System.err.println("Invalid log level: %s. Using default: ERROR.".formatted(logLevelStr));
       logLevel = LlamaLogLevel.ERROR;
     }
+
+    var reasoningTags = parseTagConfig(params.get("reasoning_tags"), null, null);
+    var toolTags = parseTagConfig(params.get("tool_tags"), null, null);
+
+    var conversationMode = ConversationMode.fromString(params.get("conversation_mode"));
 
     if (modelGguf == null) {
       printUsage();
@@ -108,7 +141,15 @@ public class Main {
 
     String input = "";
     var tokenizer = new LlamaTokenizer(vocab, context);
-    var messageTrimmer = new MessageTrimmer(tokenizer, context.nCtx(), nKeep, systemMessage);
+    var messageTrimmer = new MessageTrimmer(
+      tokenizer,
+      context.nCtx(),
+      nKeep,
+      systemMessage,
+      reasoningTags,
+      toolTags,
+      conversationMode
+    );
 
     while (!input.trim().equals("bye")) {
       Scanner scanIn = new Scanner(System.in);
@@ -123,14 +164,28 @@ public class Main {
 
       String prompt = buildPrompt(model, messageTrimmer.trimMessages(messages), contextParams);
 
-      LlamaIterator iterator = new DefaultLlamaIterator(ARENA, context, tokenizer, sampler)
-        .setMaxTokens(quota)
-        .initialize(prompt);
+      var iterator = new DefaultLlamaIterator(ARENA, context, tokenizer, sampler).setMaxTokens(quota);
 
+      if (reasoningTags.isConfigured()) {
+        iterator.setReasoning(reasoningTags.openTag, reasoningTags.closeTag);
+      }
+
+      if (toolTags.isConfigured()) {
+        iterator.setToolCall(toolTags.openTag, toolTags.closeTag);
+      }
+
+      iterator.initialize(prompt);
+
+      // Filter reasoning tags from display, but keep tool tags visible
       var answer = iterator.stream().map(LlamaOutput::content).peek(System.out::print).reduce((a, b) -> a + b).orElse("");
 
       if (LlamaLogLevel.DEBUG.equals(logLevel)) {
-        System.out.println("Input tokens: " + iterator.getInputTokens());
+        if (reasoningTags.isConfigured()) {
+          System.out.println("Reasoning tokens: " + iterator.getReasoningTokens());
+        }
+        if (toolTags.isConfigured()) {
+          System.out.println("Tools tokens: " + iterator.getToolsTokens());
+        }
         System.out.println("Output tokens: " + iterator.getAnswerTokens());
         System.out.println("Finish Reason: " + iterator.getFinishReason());
       }
@@ -214,6 +269,18 @@ public class Main {
     }
   }
 
+  private static TagConfig parseTagConfig(String tagParam, String defaultOpen, String defaultClose) {
+    if (tagParam != null && !tagParam.isBlank()) {
+      String[] parts = tagParam.split("\\|");
+      if (parts.length == 2) {
+        return new TagConfig(parts[0], parts[1]);
+      } else {
+        System.err.println("Warning: Invalid tag format '" + tagParam + "'. Expected 'open|close'. Using defaults.");
+      }
+    }
+    return new TagConfig(defaultOpen, defaultClose);
+  }
+
   private static Map<String, String> parseArgs(String[] args) {
     Map<String, String> params = new HashMap<>();
     for (int i = 0; i < args.length; i++) {
@@ -237,10 +304,34 @@ public class Main {
     return params;
   }
 
-  private record MessageTrimmer(LlamaTokenizer tokenizer, int contextSize, int nKeep, String systemMessage) {
+  private record MessageTrimmer(
+    LlamaTokenizer tokenizer,
+    int contextSize,
+    int nKeep,
+    String systemMessage,
+    TagConfig reasoningTags,
+    TagConfig toolTags,
+    ConversationMode conversationMode
+  ) {
     public List<LlamaChatMessage> trimMessages(List<LlamaChatMessage> fullHistory) {
       try (Arena arena = Arena.ofConfined()) {
         List<LlamaChatMessage> trimmed = new ArrayList<>();
+
+        // Instruction mode: only keep system message + last user message
+        if (conversationMode == ConversationMode.INSTRUCTION) {
+          // Find the last user message
+          for (int i = fullHistory.size() - 1; i >= 0; i--) {
+            LlamaChatMessage msg = fullHistory.get(i);
+            if (msg.getRole() == Role.USER) {
+              trimmed.add(new LlamaChatMessage(ARENA, msg.getRole(), msg.getContent()));
+              break;
+            }
+          }
+          trimmed.addFirst(new LlamaChatMessage(Main.ARENA, Role.SYSTEM, systemMessage));
+          return trimmed;
+        }
+
+        // Full conversation mode: keep history with trimming
         int totalTokens = tokenizer.tokenize(arena, systemMessage).size();
 
         ListIterator<LlamaChatMessage> it = fullHistory.listIterator(fullHistory.size());
@@ -255,7 +346,11 @@ public class Main {
 
           if ((totalTokens + tokenCount) > contextSize) break;
 
-          trimmed.addFirst(msg);
+          // Strip both reasoning and tool tags from message history
+          String cleanedContent = reasoningTags.stripTagsFromMessages(msg.getContent());
+          cleanedContent = toolTags.stripTagsFromMessages(cleanedContent);
+
+          trimmed.addFirst(new LlamaChatMessage(ARENA, msg.getRole(), cleanedContent));
           totalTokens += tokenCount;
 
           if (++added >= nKeep) break;
@@ -292,10 +387,21 @@ public class Main {
               --n_batch <int>             Batch size (default: 4096)
               --quota <int>               Max output tokens (default: n_ctx)
               --nKeep <int>               Number of messages to keep (default: n_ctx)
-            
+
+            Conversation mode:
+              --conversation_mode <mode>  Conversation history mode (default: full)
+                                          full: Keep full conversation history with trimming
+                                          instruction: Only keep system message + current user input
+
             Logging:
               --log_level <LEVEL>         Log level: TRACE, DEBUG, INFO, WARN, ERROR (default: ERROR)
-            
+
+            Tag handling:
+              --reasoning_tags <open|close>  Reasoning tags to filter from output (default: disabled)
+                                             Content between these tags will not be displayed
+              --tool_tags <open|close>       Tool/function call tags to handle (default: disabled)
+                                             Tags will be stripped from message history
+
             Sampling parameters:
               --temperature <float>       Sampling temperature (default: 0.7)
               --top_k <int>               Top-K sampling (default: 40)
@@ -321,10 +427,13 @@ public class Main {
             
             Commands:
               Type 'bye' to exit the REPL.
-            
+
             Examples:
               java -jar llamaj.cpp.jar --model ./models/llama-7b.gguf
               java -jar llamaj.cpp.jar --model ./mistral.gguf --strategy FOCUSED --temperature 0.8
+              java -jar llamaj.cpp.jar --model ./qwen.gguf --reasoning_tags "<think>|</think>"
+              java -jar llamaj.cpp.jar --model ./llama.gguf --tool_tags "<tool_call>|</tool_call>" --reasoning_tags "<reasoning>|</reasoning>"
+              java -jar llamaj.cpp.jar --model ./model.gguf --conversation_mode instruction
             """
     );
   }
