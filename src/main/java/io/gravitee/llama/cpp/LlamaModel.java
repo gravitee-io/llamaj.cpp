@@ -30,6 +30,9 @@ public final class LlamaModel extends MemorySegmentAware implements Freeable {
 
   public LlamaModel(SegmentAllocator arena, Path modelPath, LlamaModelParams params) {
     this(llama_model_load_from_file(getModelAsString(arena, modelPath), params.segment));
+    if (segment == null || segment.address() == 0) {
+      throw new LlamaException("Failed to load model: " + modelPath);
+    }
   }
 
   public LlamaModel(MemorySegment segment) {
@@ -47,9 +50,11 @@ public final class LlamaModel extends MemorySegmentAware implements Freeable {
 
   @Override
   public void free() {
+    checkNotFreed();
     if (loraAdapter != null) {
       loraAdapter.free();
     }
+    markFreed();
     LlamaRuntime.llama_model_free(this);
   }
 }

@@ -15,32 +15,17 @@
  */
 package io.gravitee.llama.cpp;
 
-import java.lang.foreign.MemorySegment;
-
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-abstract class MemorySegmentAware {
+public class LlamaException extends RuntimeException {
 
-  final MemorySegment segment;
-  private volatile boolean freed = false;
-
-  MemorySegmentAware(MemorySegment segment) {
-    this.segment = segment;
+  public LlamaException(String message) {
+    super(message);
   }
 
-  protected void checkNotFreed() {
-    if (freed) {
-      throw new IllegalStateException(getClass().getSimpleName() + " has been freed");
-    }
-  }
-
-  protected void markFreed() {
-    this.freed = true;
-  }
-
-  public boolean isFreed() {
-    return freed;
+  public LlamaException(String message, Throwable cause) {
+    super(message, cause);
   }
 }

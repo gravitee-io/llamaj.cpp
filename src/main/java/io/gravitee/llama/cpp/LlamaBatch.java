@@ -56,6 +56,8 @@ public final class LlamaBatch extends MemorySegmentAware implements Freeable {
 
   @Override
   public void free() {
+    checkNotFreed();
+    markFreed();
     llama_batch_free(this);
   }
 }

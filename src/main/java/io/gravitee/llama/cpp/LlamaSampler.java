@@ -88,6 +88,8 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
 
   @Override
   public void free() {
+    checkNotFreed();
+    markFreed();
     llama_sampler_free(this);
   }
 }

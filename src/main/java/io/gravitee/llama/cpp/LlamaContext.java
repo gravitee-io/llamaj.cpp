@@ -30,6 +30,9 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
 
   public LlamaContext(LlamaModel model, LlamaContextParams params) {
     super(llama_init_from_model(model.segment, params.segment));
+    if (segment == null || segment.address() == 0) {
+      throw new LlamaException("Failed to create context from model");
+    }
     this.nCtx = params.nCtx();
     this.memory = new LlamaMemory(this);
   }
@@ -43,11 +46,14 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   }
 
   public void clearCache() {
+    checkNotFreed();
     memory.clear();
   }
 
   @Override
   public void free() {
+    checkNotFreed();
+    markFreed();
     llama_free(this);
   }
 }
