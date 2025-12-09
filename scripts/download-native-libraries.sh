@@ -120,7 +120,7 @@ if [[ "$OS" == "macosx" ]]; then
   # Remove subdirectories if any remain
   find "$OUTPUT_DIR" -mindepth 1 -type d -exec rm -rf {} +
 elif [[ "$OS" == "linux" ]]; then
-  find "$OUTPUT_DIR" \( -type f -o -type l \) \( -name "*.so" -o -name "LICENSE" -o -name "LICENSE-*" \) | while read -r file; do
+  find "$OUTPUT_DIR" \( -type f -o -type l \) \( -name "*.so*" -o -name "LICENSE" -o -name "LICENSE-*" \) | while read -r file; do
     mv "$file" "$OUTPUT_DIR/"
   done
   find "$OUTPUT_DIR" -mindepth 1 -type d -exec rm -rf {} +

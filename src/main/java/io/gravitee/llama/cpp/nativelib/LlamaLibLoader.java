@@ -42,7 +42,7 @@ public final class LlamaLibLoader {
   static final String LLAMA_CPP_USE_TMP_PATH_LIBS = "LLAMA_CPP_USE_TMP_LIB_PATH";
 
   static final String DYLIB_EXT = ".dylib";
-  static final String SO_EXT = ".so";
+  static final String SO_EXT = ".*\\.so(\\..+)?";
   static final String DLL_EXT = ".dll";
 
   private static final String LLAMA_CPP_FOLDER = ".llama.cpp";
@@ -88,7 +88,7 @@ public final class LlamaLibLoader {
       .filter(file ->
         switch (platform.os()) {
           case MAC_OS_X -> file.endsWith(DYLIB_EXT);
-          case LINUX -> file.endsWith(SO_EXT);
+          case LINUX -> file.matches(SO_EXT);
           case WINDOWS -> file.endsWith(DLL_EXT);
         }
       )
