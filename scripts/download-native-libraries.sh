@@ -114,13 +114,13 @@ echo "📦 Extracting libraries to $OUTPUT_DIR..."
 unzip -q "$TMP_DIR/$ZIP_NAME" -d "$OUTPUT_DIR"
 
 if [[ "$OS" == "macosx" ]]; then
-  find "$OUTPUT_DIR" -type f \( -name "*.dylib" -o -name "LICENSE" -o -name "LICENSE-*" \) | while read -r file; do
+  find "$OUTPUT_DIR" \( -type f -o -type l \) \( -name "*.dylib" -o -name "LICENSE" -o -name "LICENSE-*" \) | while read -r file; do
     mv "$file" "$OUTPUT_DIR/"
   done
   # Remove subdirectories if any remain
   find "$OUTPUT_DIR" -mindepth 1 -type d -exec rm -rf {} +
 elif [[ "$OS" == "linux" ]]; then
-  find "$OUTPUT_DIR" -type f \( -name "*.so" -o -name "LICENSE" -o -name "LICENSE-*" \) | while read -r file; do
+  find "$OUTPUT_DIR" \( -type f -o -type l \) \( -name "*.so" -o -name "LICENSE" -o -name "LICENSE-*" \) | while read -r file; do
     mv "$file" "$OUTPUT_DIR/"
   done
   find "$OUTPUT_DIR" -mindepth 1 -type d -exec rm -rf {} +
