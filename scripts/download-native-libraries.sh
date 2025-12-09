@@ -92,8 +92,26 @@ case "$PLATFORM" in
 esac
 
 # Construct the download URL using the mapped OS and PLATFORM
-ZIP_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.zip"
-DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ZIP_NAME}"
+# Try tar.gz first for Linux (new format), fallback to zip
+if [[ "$OS" == "linux" ]]; then
+  ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.tar.gz"
+  DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
+
+  # Check if tar.gz exists, otherwise fallback to zip
+  if ! curl -k -L --head --fail "$DOWNLOAD_URL" 2>/dev/null; then
+    echo "⚠️  tar.gz not found, falling back to zip format"
+    ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.zip"
+    DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
+    USE_ZIP=true
+  else
+    USE_ZIP=false
+  fi
+else
+  ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.zip"
+  DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
+  USE_ZIP=true
+fi
+
 TMP_DIR="$(mktemp -d)"
 
 # Define the output directory based on the original OS and PLATFORM
@@ -106,12 +124,16 @@ echo "📥 Downloading llama.cpp version $VERSION for $OS/$PLATFORM..."
 echo "🔗 $DOWNLOAD_URL"
 
 # Download the file
-curl -k -L -o "$TMP_DIR/$ZIP_NAME" "$DOWNLOAD_URL"
+curl -k -L -o "$TMP_DIR/$ARCHIVE_NAME" "$DOWNLOAD_URL"
 
 # Extract only the necessary files
 echo "📦 Extracting libraries to $OUTPUT_DIR..."
 
-unzip -q "$TMP_DIR/$ZIP_NAME" -d "$OUTPUT_DIR"
+if [[ "$USE_ZIP" == "true" ]]; then
+  unzip -q "$TMP_DIR/$ARCHIVE_NAME" -d "$OUTPUT_DIR"
+else
+  tar -xzf "$TMP_DIR/$ARCHIVE_NAME" -C "$OUTPUT_DIR"
+fi
 
 if [[ "$OS" == "macosx" ]]; then
   find "$OUTPUT_DIR" \( -type f -o -type l \) \( -name "*.dylib" -o -name "LICENSE" -o -name "LICENSE-*" \) | while read -r file; do
