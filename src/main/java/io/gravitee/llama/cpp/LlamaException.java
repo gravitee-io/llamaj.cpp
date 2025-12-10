@@ -22,7 +22,7 @@ package io.gravitee.llama.cpp;
 public class LlamaException extends RuntimeException {
 
   public LlamaException(String message) {
-    super(message);
+    this(message, new Exception());
   }
 
   public LlamaException(String message, Throwable cause) {

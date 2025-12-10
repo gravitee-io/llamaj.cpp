@@ -17,6 +17,8 @@ package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 
 /**
@@ -84,6 +86,15 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
   public LlamaSampler seed(int seed) {
     llama_sampler_chain_add(this.segment, llama_sampler_init_dist(seed));
     return this;
+  }
+
+  public LlamaPerformance.SamplerPerformance getPerformance(Arena arena) {
+    checkNotFreed();
+    MemorySegment perfData = llama_perf_sampler(arena, segment);
+    return new LlamaPerformance.SamplerPerformance(
+      llama_perf_sampler_t_sample_ms(perfData),
+      llama_perf_sampler_n_sample(perfData)
+    );
   }
 
   @Override
