@@ -17,6 +17,7 @@ package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 
 /**
@@ -48,6 +49,20 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   public void clearCache() {
     checkNotFreed();
     memory.clear();
+  }
+
+  public LlamaPerformance.ContextPerformance getPerformance(Arena arena) {
+    checkNotFreed();
+    MemorySegment perfData = llama_perf_context(arena, segment);
+    return new LlamaPerformance.ContextPerformance(
+      llama_perf_context_t_start_ms(perfData),
+      llama_perf_context_t_load_ms(perfData),
+      llama_perf_context_t_p_eval_ms(perfData),
+      llama_perf_context_t_eval_ms(perfData),
+      llama_perf_context_n_p_eval(perfData),
+      llama_perf_context_n_eval(perfData),
+      llama_perf_context_n_reused(perfData)
+    );
   }
 
   @Override

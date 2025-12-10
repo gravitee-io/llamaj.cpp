@@ -495,6 +495,52 @@ public final class LlamaRuntime {
     return llama_h("llama_supports_gpu_offload", new Class[] {});
   }
 
+  /* Performance */
+
+  public static MemorySegment llama_perf_context(SegmentAllocator allocator, MemorySegment ctx) {
+    return llama_h("llama_perf_context", new Class[] { SegmentAllocator.class, MEM_SEG_CLASS }, allocator, ctx);
+  }
+
+  public static MemorySegment llama_perf_sampler(SegmentAllocator allocator, MemorySegment sampler) {
+    return llama_h("llama_perf_sampler", new Class[] { SegmentAllocator.class, MEM_SEG_CLASS }, allocator, sampler);
+  }
+
+  public static double llama_perf_context_t_start_ms(MemorySegment perfData) {
+    return invoke("llama_perf_context_data", "t_start_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+  }
+
+  public static double llama_perf_context_t_load_ms(MemorySegment perfData) {
+    return invoke("llama_perf_context_data", "t_load_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+  }
+
+  public static double llama_perf_context_t_p_eval_ms(MemorySegment perfData) {
+    return invoke("llama_perf_context_data", "t_p_eval_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+  }
+
+  public static double llama_perf_context_t_eval_ms(MemorySegment perfData) {
+    return invoke("llama_perf_context_data", "t_eval_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+  }
+
+  public static int llama_perf_context_n_p_eval(MemorySegment perfData) {
+    return invoke("llama_perf_context_data", "n_p_eval$get", new Class[] { MEM_SEG_CLASS }, perfData);
+  }
+
+  public static int llama_perf_context_n_eval(MemorySegment perfData) {
+    return invoke("llama_perf_context_data", "n_eval$get", new Class[] { MEM_SEG_CLASS }, perfData);
+  }
+
+  public static int llama_perf_context_n_reused(MemorySegment perfData) {
+    return invoke("llama_perf_context_data", "n_reused$get", new Class[] { MEM_SEG_CLASS }, perfData);
+  }
+
+  public static double llama_perf_sampler_t_sample_ms(MemorySegment perfData) {
+    return invoke("llama_perf_sampler_data", "t_sample_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+  }
+
+  public static int llama_perf_sampler_n_sample(MemorySegment perfData) {
+    return invoke("llama_perf_sampler_data", "n_sample$get", new Class[] { MEM_SEG_CLASS }, perfData);
+  }
+
   /**
    * Dynamically invokes a static method on the correct platform-specific llama_h class.
    *

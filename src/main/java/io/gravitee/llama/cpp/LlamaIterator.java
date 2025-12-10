@@ -173,4 +173,10 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
       promptMemory.consume(tokenPiece);
     }
   }
+
+  public LlamaPerformance getPerformance() {
+    var contextPerf = context.getPerformance(arena);
+    var samplerPerf = sampler.getPerformance(arena);
+    return new LlamaPerformance(contextPerf, samplerPerf);
+  }
 }
