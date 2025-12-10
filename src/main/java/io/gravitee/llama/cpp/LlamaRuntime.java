@@ -50,10 +50,6 @@ public final class LlamaRuntime {
     llama_h("llama_backend_free", new Class<?>[] {});
   }
 
-  public static void ggml_backend_free() {
-    llama_h("ggml_backend_free", new Class<?>[] {});
-  }
-
   public static long ggml_backend_reg_count() {
     return llama_h("ggml_backend_reg_count", new Class<?>[] {});
   }
