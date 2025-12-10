@@ -90,6 +90,7 @@ public class Main {
 
     int quota = parseInt(params.getOrDefault("quota", String.valueOf(nCtx)));
     int nKeep = parseInt(params.getOrDefault("nKeep", String.valueOf(nCtx)));
+    boolean showPerf = parseBoolean(params.getOrDefault("perf", "false"));
 
     String logLevelStr = params.getOrDefault("log_level", "ERROR").toUpperCase();
     LlamaLogLevel logLevel;
@@ -130,7 +131,7 @@ public class Main {
     ofNullable(lora).ifPresent(path -> model.initLoraAdapter(ARENA, Path.of(path).toAbsolutePath()));
 
     var vocab = new LlamaVocab(model);
-    var contextParams = new LlamaContextParams(ARENA).nCtx(nCtx).nBatch(nBatch);
+    var contextParams = new LlamaContextParams(ARENA).nCtx(nCtx).nBatch(nBatch).noPerf(!showPerf);
 
     SamplingStrategy strategy = SamplingStrategy.fromString(params.get("strategy"));
     LlamaContext context = new LlamaContext(model, contextParams);
@@ -189,6 +190,22 @@ public class Main {
         System.out.println("Output tokens: " + iterator.getAnswerTokens());
         System.out.println("Finish Reason: " + iterator.getFinishReason());
       }
+
+      if (showPerf) {
+        LlamaPerformance perf = iterator.getPerformance();
+        System.out.println();
+        System.out.println();
+        System.out.println("=== Performance ===");
+        System.out.printf("Generation speed: %.2f tokens/sec%n", perf.generationTokensPerSecond());
+        System.out.printf("Prompt speed: %.2f tokens/sec%n", perf.promptTokensPerSecond());
+        System.out.printf("Total time: %.2f ms%n", perf.totalProcessingTimeMs());
+        System.out.printf("Tokens generated: %d%n", perf.context().tokensGenerated());
+        System.out.printf("Prompt tokens: %d%n", perf.context().promptTokensEvaluated());
+        System.out.printf("Tokens reused: %d%n", perf.context().tokensReused());
+        System.out.printf("Samples: %d (avg: %.2f ms)%n", perf.sampler().sampleCount(), perf.averageSamplingTimeMs());
+        System.out.println("===================");
+      }
+
       messages.add(new LlamaChatMessage(ARENA, Role.ASSISTANT, answer));
       messages = messageTrimmer.trimMessages(messages);
 
@@ -202,7 +219,6 @@ public class Main {
     model.free();
 
     llama_backend_free();
-    ggml_backend_free();
   }
 
   public static LlamaSampler llamaSampler(
@@ -346,7 +362,6 @@ public class Main {
 
           if ((totalTokens + tokenCount) > contextSize) break;
 
-          // Strip both reasoning and tool tags from message history
           String cleanedContent = reasoningTags.stripTagsFromMessages(msg.getContent());
           cleanedContent = toolTags.stripTagsFromMessages(cleanedContent);
 
@@ -395,6 +410,9 @@ public class Main {
 
             Logging:
               --log_level <LEVEL>         Log level: TRACE, DEBUG, INFO, WARN, ERROR (default: ERROR)
+
+            Performance:
+              --perf <true|false>         Show performance metrics (default: false)
 
             Tag handling:
               --reasoning_tags <open|close>  Reasoning tags to filter from output (default: disabled)

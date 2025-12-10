@@ -52,14 +52,11 @@ public final class LlamaLibLoader {
 
   public static String load() {
     String envLibPath = System.getenv(LLAMA_CPP_LIB_PATH);
-    String path;
     if (envLibPath != null && !envLibPath.isBlank()) {
-      path = loadFromExternalPath(envLibPath);
+      return loadFromExternalPath(envLibPath);
     } else {
-      path = loadFromClasspath(PlatformResolver.platform());
+      return loadFromClasspath(PlatformResolver.platform());
     }
-
-    return path;
   }
 
   private static String loadFromExternalPath(String envLibPath) {
