@@ -51,6 +51,11 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     memory.clear();
   }
 
+  public LlamaMemory getMemory() {
+    checkNotFreed();
+    return memory;
+  }
+
   public LlamaPerformance.ContextPerformance getPerformance(Arena arena) {
     checkNotFreed();
     MemorySegment perfData = llama_perf_context(arena, segment);

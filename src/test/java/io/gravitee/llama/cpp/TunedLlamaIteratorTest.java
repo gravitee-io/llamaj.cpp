@@ -114,20 +114,23 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
     var context = new LlamaContext(model, contextParams);
     var tokenizer = new LlamaTokenizer(vocab, context);
 
-    var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler)
+    var state = ConversationState
+      .create(arena, context, tokenizer, sampler)
       .setStopStrings(List.of("."))
       .setMaxTokens(10)
       .initialize(prompt);
 
+    var it = new DefaultLlamaIterator(state);
+
     String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
     System.out.println(output);
 
-    inputToken = it.getInputTokens();
-    outputToken = it.getAnswerTokens();
+    inputToken = state.getInputTokens();
+    outputToken = state.getAnswerTokens();
 
     assertThat(inputToken).isGreaterThan(0);
     assertThat(outputToken).isGreaterThan(0);
-    assertThat(it.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
+    assertThat(state.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
 
     context.free();
     sampler.free();

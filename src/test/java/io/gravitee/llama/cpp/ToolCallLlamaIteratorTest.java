@@ -38,6 +38,7 @@ class ToolCallLlamaIteratorTest extends LlamaCppTest {
   private static final String TOOL_CALL_SYSTEM =
     """
           You are a helpful assistant that uses tools to answer user questions.
+          Only use tools to answer user questions and respect thoroughly the tool instructions.
           
           # Tools
           
@@ -96,18 +97,21 @@ class ToolCallLlamaIteratorTest extends LlamaCppTest {
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler)
+    var state = ConversationState
+      .create(arena, context, tokenizer, sampler)
       .setReasoning("<think>", "</think>")
       .setToolCall("<tool_call>", "</tool_call>")
       .initialize(prompt);
 
+    var it = new DefaultLlamaIterator(state);
+
     LlamaOutput output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0));
     System.out.println(output);
 
-    int inputTokens = it.getInputTokens();
-    int answerTokens = it.getAnswerTokens();
-    int reasoningTokens = it.getReasoningTokens();
-    int toolCallTokens = it.getToolsTokens();
+    int inputTokens = state.getInputTokens();
+    int answerTokens = state.getAnswerTokens();
+    int reasoningTokens = state.getReasoningTokens();
+    int toolCallTokens = state.getToolsTokens();
 
     assertThat(inputTokens).isGreaterThan(0);
     assertThat(answerTokens).isGreaterThan(0);
@@ -117,9 +121,9 @@ class ToolCallLlamaIteratorTest extends LlamaCppTest {
     int outputTokens = answerTokens + reasoningTokens + toolCallTokens;
 
     assertThat(output.numberOfTokens()).isEqualTo(outputTokens);
-    assertThat(it.getTotalTokenCount()).isEqualTo(inputTokens + outputTokens);
+    assertThat(state.getTotalTokenCount()).isEqualTo(inputTokens + outputTokens);
 
-    assertThat(it.getFinishReason()).isIn(FinishReason.TOOL_CALL);
+    assertThat(state.getFinishReason()).isIn(FinishReason.TOOL_CALL);
 
     context.free();
     sampler.free();
