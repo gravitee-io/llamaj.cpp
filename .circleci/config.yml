@@ -79,7 +79,7 @@ commands:
       - run:
           name: Install Maven
           command: |
-            MAVEN_URL="https://dlcdn.apache.org/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz"
+            MAVEN_URL="https://dlcdn.apache.org/maven/maven-3/3.9.12/binaries/apache-maven-3.9.12-bin.tar.gz"
             INSTALL_DIR="/opt/maven"
             MAVEN_DIR="apache-maven-3.9.10"
 
