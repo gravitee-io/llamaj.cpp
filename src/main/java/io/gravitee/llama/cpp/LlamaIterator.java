@@ -24,48 +24,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * A stateless iterator that processes tokens for a conversation.
- * The iterator is just a cursor that can be switched between different conversation states.
- *
- * <p>Key features:
- * <ul>
- *   <li>Owns no resources - just processes the current state</li>
- *   <li>Can be switched between conversations via {@link #setState(ConversationState)}</li>
- *   <li>Supports continuous generation for one state</li>
- *   <li>Supports round-robin processing across multiple states</li>
- * </ul>
- *
- * <p>Example - Continuous generation:
- * <pre>{@code
- * var state = ConversationState.create(context, tokenizer, sampler, 0)
- *     .setMaxTokens(100)
- *     .initialize("Hello!");
- *
- * var iterator = new LlamaIterator(state);
- * iterator.stream().forEach(output -> System.out.print(output.text()));
- * }</pre>
- *
- * <p>Example - Switching between conversations:
- * <pre>{@code
- * var conv1 = ConversationState.create(context, tokenizer, sampler, 1)
- *     .initialize("First conversation");
- * var conv2 = ConversationState.create(context, tokenizer, sampler, 2)
- *     .initialize("Second conversation");
- *
- * var iterator = new LlamaIterator(conv1);
- *
- * // Generate 5 tokens from conv1
- * for (int i = 0; i < 5 && iterator.hasNext(); i++) {
- *     System.out.print(iterator.next().text());
- * }
- *
- * // Switch to conv2
- * iterator.setState(conv2);
- * while (iterator.hasNext()) {
- *     System.out.print(iterator.next().text());
- * }
- * }</pre>
- *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
