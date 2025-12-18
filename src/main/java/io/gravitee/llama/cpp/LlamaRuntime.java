@@ -19,6 +19,7 @@ import io.gravitee.llama.cpp.platform.PlatformResolver;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -368,6 +369,57 @@ public final class LlamaRuntime {
     llama_h("llama_memory_clear", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, memory, data);
   }
 
+  public static boolean llama_memory_seq_rm(MemorySegment memory, int seqId, int p0, int p1) {
+    return llama_h(
+      "llama_memory_seq_rm",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class, int.class },
+      memory,
+      seqId,
+      p0,
+      p1
+    );
+  }
+
+  public static void llama_memory_seq_cp(MemorySegment memory, int seqIdSrc, int seqIdDst, int p0, int p1) {
+    llama_h(
+      "llama_memory_seq_cp",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class, int.class, int.class },
+      memory,
+      seqIdSrc,
+      seqIdDst,
+      p0,
+      p1
+    );
+  }
+
+  public static void llama_memory_seq_keep(MemorySegment memory, int seqId) {
+    llama_h("llama_memory_seq_keep", new Class<?>[] { MEM_SEG_CLASS, int.class }, memory, seqId);
+  }
+
+  public static void llama_memory_seq_add(MemorySegment memory, int seqId, int p0, int p1, int delta) {
+    llama_h(
+      "llama_memory_seq_add",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class, int.class, int.class },
+      memory,
+      seqId,
+      p0,
+      p1,
+      delta
+    );
+  }
+
+  public static void llama_memory_seq_div(MemorySegment memory, int seqId, int p0, int p1, int d) {
+    llama_h(
+      "llama_memory_seq_div",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class, int.class, int.class },
+      memory,
+      seqId,
+      p0,
+      p1,
+      d
+    );
+  }
+
   /* Chat Template */
   public static MemorySegment llama_model_chat_template(MemorySegment model, MemorySegment name) {
     return llama_h("llama_model_chat_template", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, name);
@@ -454,6 +506,58 @@ public final class LlamaRuntime {
       segment,
       size
     );
+  }
+
+  public static MemorySegment llama_batch_init(SegmentAllocator allocator, int nTokens, int embd, int nSeqMax) {
+    return llama_h(
+      "llama_batch_init",
+      new Class[] { SegmentAllocator.class, int.class, int.class, int.class },
+      allocator,
+      nTokens,
+      embd,
+      nSeqMax
+    );
+  }
+
+  public static void llama_batch_add(
+    MemorySegment batch,
+    int token,
+    int pos,
+    java.util.List<Integer> seqIds,
+    boolean logits
+  ) {
+    // Get batch struct fields
+    MemorySegment tokens = invoke("llama_batch", "token$get", new Class[] { MEM_SEG_CLASS }, batch);
+    MemorySegment positions = invoke("llama_batch", "pos$get", new Class[] { MEM_SEG_CLASS }, batch);
+    MemorySegment nSeqId = invoke("llama_batch", "n_seq_id$get", new Class[] { MEM_SEG_CLASS }, batch);
+    MemorySegment seqIdPtr = invoke("llama_batch", "seq_id$get", new Class[] { MEM_SEG_CLASS }, batch);
+    MemorySegment logitsPtr = invoke("llama_batch", "logits$get", new Class[] { MEM_SEG_CLASS }, batch);
+    int nTokens = llama_batch_n_tokens(batch);
+
+    // Set token
+    tokens.setAtIndex(ValueLayout.JAVA_INT, nTokens, token);
+    // Set position
+    positions.setAtIndex(ValueLayout.JAVA_INT, nTokens, pos);
+    // Set number of sequence IDs
+    nSeqId.setAtIndex(ValueLayout.JAVA_INT, nTokens, seqIds.size());
+
+    // Set sequence IDs
+    // Get the pointer to the array of seq_ids for this token position
+    // The pointer needs to be reinterpreted with the correct size (seqIds.size() * sizeof(int))
+    MemorySegment seqIdArray = seqIdPtr.getAtIndex(ValueLayout.ADDRESS, nTokens).reinterpret(seqIds.size() * Integer.BYTES);
+    for (int i = 0; i < seqIds.size(); i++) {
+      seqIdArray.setAtIndex(ValueLayout.JAVA_INT, i, seqIds.get(i));
+    }
+
+    // Set logits flag
+    logitsPtr.setAtIndex(ValueLayout.JAVA_BYTE, nTokens, logits ? (byte) 1 : (byte) 0);
+
+    // Increment n_tokens
+    invoke("llama_batch", "n_tokens$set", new Class[] { MEM_SEG_CLASS, int.class }, batch, nTokens + 1);
+  }
+
+  public static void llama_batch_clear(MemorySegment batch) {
+    invoke("llama_batch", "n_tokens$set", new Class[] { MEM_SEG_CLASS, int.class }, batch, 0);
   }
 
   public static int llama_batch_n_tokens(MemorySegment batch) {

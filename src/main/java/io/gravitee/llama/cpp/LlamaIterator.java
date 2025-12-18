@@ -16,17 +16,10 @@
 package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.FinishReason.*;
-import static io.gravitee.llama.cpp.GenerationState.ANSWER;
-import static io.gravitee.llama.cpp.GenerationState.REASONING;
-import static io.gravitee.llama.cpp.GenerationState.TOOLS;
 
-import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
-import io.gravitee.llama.cpp.modules.PromptMemory;
-import io.gravitee.llama.cpp.modules.StateEvaluation;
-import io.gravitee.llama.cpp.modules.StopString;
-import io.gravitee.llama.cpp.modules.TokenTracking;
-import java.lang.foreign.Arena;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -34,52 +27,157 @@ import java.util.stream.StreamSupport;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public abstract class LlamaIterator extends ArenaAware implements Iterator<LlamaOutput> {
+public abstract class LlamaIterator<T> implements Iterator<T> {
 
-  protected final LlamaContext context;
-  protected final LlamaSampler sampler;
-  protected final LlamaTokenizer tokenizer;
+  protected ConversationState currentState;
 
-  protected int maxTokens = -1;
-  protected TokenizerResponse tokenized;
-
-  protected final TokenTracking tokenTracking = new TokenTracking();
-  protected final PromptMemory promptMemory = new PromptMemory();
-  protected final StopString stopString = new StopString();
-  protected final StateEvaluation stateEvaluation = new StateEvaluation();
-
-  private final List<StateBounds> states = new ArrayList<>();
-
-  protected FinishReason finishReason;
-  protected GenerationState state;
-
-  public LlamaIterator(Arena allocator, LlamaContext context, LlamaTokenizer tokenizer, LlamaSampler sampler) {
-    super(allocator);
-    this.context = context;
-    this.sampler = sampler;
-    this.tokenizer = tokenizer;
+  /**
+   * Creates a new iterator with the given initial state.
+   */
+  public LlamaIterator(ConversationState initialState) {
+    this.currentState = initialState;
   }
 
-  public Stream<LlamaOutput> stream() {
+  /**
+   * Creates a stream that generates tokens until a finish condition is met.
+   */
+  public Stream<T> stream() {
     return StreamSupport.stream(Spliterators.spliteratorUnknownSize(this, Spliterator.ORDERED), false);
   }
 
-  public LlamaIterator initialize(String prompt) {
-    tokenized = tokenizer.tokenize(arena, prompt);
-    tokenTracking.initialize(tokenized.size());
-    stateEvaluation.initialize(new StateEvaluation.Config(states));
-    state = ANSWER;
-    return this;
+  /**
+   * Checks if there are more tokens to generate.
+   * This is the standard implementation used by all iterators.
+   *
+   * @return true if there are more tokens to generate
+   */
+  @Override
+  public boolean hasNext() {
+    boolean hasNext = batch();
+    if (!hasNext) {
+      onFinished();
+    }
+    return hasNext;
   }
 
-  public abstract boolean batch();
+  /**
+   * Processes one batch step using the current state.
+   * Subclasses implement the actual decoding logic.
+   *
+   * @return true if there are more tokens to generate, false if finished
+   */
+  protected abstract boolean batch();
 
-  public void incrementTokenCount(int tokenCount) {
-    tokenTracking.consume(new TokenTracking.Context(state, tokenCount));
+  /**
+   * Processes the initial prompt for a conversation state.
+   * This method decodes the prompt tokens and samples the first token.
+   * Used by both DefaultLlamaIterator and ParallelBatchIterator.
+   *
+   * @param state The conversation state to process
+   */
+  protected void processPrompt(ConversationState state) {
+    var arena = state.getArena();
+    var context = state.getContext();
+    var sampler = state.getSampler();
+    var tokenizer = state.getTokenizer();
+
+    // Create batch for the prompt (using the sequence-aware constructor)
+    LlamaBatch promptBatch = new LlamaBatch(arena, state.getTokenized(), state.getSequenceId());
+
+    // Decode the batch
+    if (promptBatch.decode(context) != 0) {
+      promptBatch.free();
+      throw new LlamaException("Failed to decode prompt for sequence " + state.getSequenceId());
+    }
+
+    // Update nPast after processing prompt
+    state.setNPast(state.getTokenized().size());
+
+    // Sample first token
+    Integer newToken = sampler.sample(context);
+    String tokenPiece = tokenizer.tokenToPiece(newToken);
+
+    // Update state evaluation
+    GenerationState newState = state
+      .getStateEvaluation()
+      .evaluate(new io.gravitee.llama.cpp.modules.StateEvaluation.Context(state.getGenerationState(), tokenPiece));
+    state.setGenerationState(newState);
+
+    if (newState == GenerationState.TOOLS) {
+      state.setFinishReason(FinishReason.TOOL_CALL);
+    }
+
+    // Track tokens
+    state.getTokenTracking().consume(new io.gravitee.llama.cpp.modules.TokenTracking.Context(state.getGenerationState(), 1));
+
+    // Check if finished immediately
+    if (!tokenizer.isEog(newToken)) {
+      // Not finished - set up for next iteration
+      state.setNewTokenId(newToken);
+      state.setPiece(tokenPiece);
+    } else {
+      // Finished immediately
+      state.setFinishReason(FinishReason.STOP);
+    }
+
+    promptBatch.free();
   }
 
+  /**
+   * Processes a sampled token for a given state.
+   * Updates state evaluation, checks for tool calls, and tracks tokens.
+   *
+   * @param state The conversation state to update
+   * @param tokenPiece The token piece that was sampled
+   */
+  protected void processSampledToken(ConversationState state, String tokenPiece) {
+    // Update state evaluation
+    GenerationState newState = state
+      .getStateEvaluation()
+      .evaluate(new io.gravitee.llama.cpp.modules.StateEvaluation.Context(state.getGenerationState(), tokenPiece));
+    state.setGenerationState(newState);
+
+    // Check for tool call
+    if (newState == GenerationState.TOOLS) {
+      state.setFinishReason(FinishReason.TOOL_CALL);
+    }
+
+    // Track tokens
+    state.getTokenTracking().consume(new io.gravitee.llama.cpp.modules.TokenTracking.Context(state.getGenerationState(), 1));
+  }
+
+  /**
+   * Checks if a state should finish based on token and length limits.
+   * Sets appropriate finish reason if needed.
+   *
+   * @param state The conversation state to check
+   * @param tokenId The token ID that was sampled
+   * @return true if the state should continue, false if it should finish
+   */
+  protected boolean shouldContinue(ConversationState state, int tokenId) {
+    var tokenizer = state.getTokenizer();
+
+    // Check for end-of-generation token
+    if (tokenizer.isEog(tokenId)) {
+      state.setFinishReason(FinishReason.STOP);
+      return false;
+    }
+
+    // Check token limit
+    int maxTokens = state.getMaxTokens();
+    if (maxTokens != -1 && maxTokens <= state.getAnswerTokens()) {
+      state.setFinishReason(FinishReason.LENGTH);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Helper methods for finish reason detection.
+   */
   protected boolean isEog(int tokenId) {
-    boolean isEog = tokenizer.isEog(tokenId);
+    boolean isEog = currentState.getTokenizer().isEog(tokenId);
     if (isEog) {
       setFinishReason(STOP);
     }
@@ -87,69 +185,20 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   }
 
   protected boolean hasNotReachedQuota() {
-    boolean hasNotReachedQuota = maxTokens == -1 || maxTokens > getAnswerTokens();
+    int maxTokens = currentState.getMaxTokens();
+    boolean hasNotReachedQuota = maxTokens == -1 || maxTokens > currentState.getAnswerTokens();
     if (!hasNotReachedQuota) {
       setFinishReason(LENGTH);
     }
     return hasNotReachedQuota;
   }
 
-  public LlamaIterator setMaxTokens(int maxTokens) {
-    this.maxTokens = Math.min(maxTokens, context.nCtx());
-    return this;
-  }
-
-  public int getInputTokens() {
-    return tokenTracking.getInputTokenCount();
-  }
-
-  public int getAnswerTokens() {
-    return tokenTracking.getOutputTokenCount(ANSWER);
-  }
-
-  public int getReasoningTokens() {
-    return tokenTracking.getOutputTokenCount(REASONING);
-  }
-
-  public int getToolsTokens() {
-    return tokenTracking.getOutputTokenCount(TOOLS);
-  }
-
-  public int getTotalTokenCount() {
-    return tokenTracking.getTotalTokenCount();
-  }
-
-  public FinishReason getFinishReason() {
-    return finishReason;
-  }
-
-  public GenerationState getState() {
-    return state;
-  }
-
-  public LlamaIterator setStopStrings(List<String> stopStrings) {
-    stopString.initialize(stopStrings);
-    int maxStringSize = stopStrings.stream().mapToInt(String::length).max().orElse(0);
-    promptMemory.initialize(maxStringSize);
-    return this;
-  }
-
-  public LlamaIterator setReasoning(String tokenStart, String tokenEnd) {
-    this.states.add(new StateBounds(REASONING, tokenStart, tokenEnd));
-    return this;
-  }
-
-  public LlamaIterator setToolCall(String tokenStart, String tokenEnd) {
-    this.states.add(new StateBounds(TOOLS, tokenStart, tokenEnd));
-    return this;
-  }
-
   protected boolean endWithStopString() {
-    if (!promptMemory.isInitialized()) {
+    if (!currentState.getPromptMemory().isInitialized()) {
       return false;
     }
 
-    boolean endsWithStopString = stopString.evaluate(promptMemory.getMemory());
+    boolean endsWithStopString = currentState.getStopString().evaluate(currentState.getPromptMemory().getMemory());
     if (endsWithStopString) {
       setFinishReason(STOP);
     }
@@ -157,24 +206,44 @@ public abstract class LlamaIterator extends ArenaAware implements Iterator<Llama
   }
 
   protected void setFinishReason(FinishReason finishReason) {
-    if (this.finishReason != null) {
-      // We set this.finishReason here only if it has not been set to TOOL_CALL
-      // We make an exception only if the current finishReason to set is LENGTH
-      if (!TOOL_CALL.equals(this.finishReason) || LENGTH.equals(finishReason)) {
-        this.finishReason = finishReason;
+    if (currentState.getFinishReason() != null) {
+      if (!TOOL_CALL.equals(currentState.getFinishReason()) || LENGTH.equals(finishReason)) {
+        currentState.setFinishReason(finishReason);
       }
     } else {
-      this.finishReason = finishReason;
+      currentState.setFinishReason(finishReason);
     }
   }
 
   protected void feedPromptMemory(String tokenPiece) {
-    if (promptMemory.isInitialized()) {
-      promptMemory.consume(tokenPiece);
+    if (currentState.getPromptMemory().isInitialized()) {
+      currentState.getPromptMemory().consume(tokenPiece);
     }
   }
 
+  protected void incrementTokenCount(int tokenCount) {
+    currentState
+      .getTokenTracking()
+      .consume(new io.gravitee.llama.cpp.modules.TokenTracking.Context(currentState.getGenerationState(), tokenCount));
+  }
+
+  /**
+   * Called when iteration completes.
+   * Automatically cleans up the sequence from KV cache.
+   */
+  protected void onFinished() {
+    if (currentState.getFinishReason() != null) {
+      currentState.getContext().getMemory().seqRm(currentState.getSequenceId(), -1, -1);
+    }
+  }
+
+  /**
+   * Gets performance metrics from the current state's context and sampler.
+   */
   public LlamaPerformance getPerformance() {
+    var context = currentState.getContext();
+    var sampler = currentState.getSampler();
+    var arena = currentState.getArena();
     var contextPerf = context.getPerformance(arena);
     var samplerPerf = sampler.getPerformance(arena);
     return new LlamaPerformance(contextPerf, samplerPerf);

@@ -16,60 +16,76 @@
 package io.gravitee.llama.cpp;
 
 import io.gravitee.llama.cpp.modules.StateEvaluation;
-import java.lang.foreign.Arena;
 
 /**
+ * Default implementation of LlamaIterator that processes conversations token by token.
+ *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class DefaultLlamaIterator extends LlamaIterator {
+public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
 
-  private LlamaBatch batch;
-  private Integer newTokenId;
-  private String piece;
-
-  public DefaultLlamaIterator(Arena arena, LlamaContext context, LlamaTokenizer tokenizer, LlamaSampler sampler) {
-    super(arena, context, tokenizer, sampler);
+  public DefaultLlamaIterator(ConversationState initialState) {
+    super(initialState);
   }
 
   @Override
-  public boolean hasNext() {
-    return batch();
-  }
+  protected boolean batch() {
+    var arena = currentState.getArena();
+    var context = currentState.getContext();
+    var sampler = currentState.getSampler();
+    var tokenizer = currentState.getTokenizer();
 
-  public boolean batch() {
-    batch = newTokenId == null ? new LlamaBatch(arena, tokenized) : new LlamaBatch(arena, newTokenId);
+    LlamaBatch batch;
+    if (currentState.getNewTokenId() == null) {
+      // Initial prompt processing - use shared method
+      processPrompt(currentState);
+      feedPromptMemory(currentState.getPiece());
+      return currentState.getFinishReason() == null && !endWithStopString() && hasNotReachedQuota();
+    } else {
+      // Single token generation - need to specify position and sequence ID
+      batch = new LlamaBatch(arena, 1, 0, 1);
+      batch.add(
+        currentState.getNewTokenId(),
+        currentState.getNPast(),
+        java.util.List.of(currentState.getSequenceId()),
+        true
+      );
+    }
 
-    if (checkContextSize() && batch.decode(context) != 0) {
+    if (checkContextSize(batch) && batch.decode(context) != 0) {
       return false;
     }
 
-    newTokenId = sampler.sample(context);
-    piece = tokenizer.tokenToPiece(newTokenId);
-    state = stateEvaluation.evaluate(new StateEvaluation.Context(getState(), piece));
-    if (state == GenerationState.TOOLS) {
-      setFinishReason(FinishReason.TOOL_CALL);
-    }
-    incrementTokenCount(1);
+    // After single token: increment nPast
+    currentState.incrementNPast();
 
-    if (isEog(newTokenId)) {
+    Integer newToken = sampler.sample(context);
+    String tokenPiece = tokenizer.tokenToPiece(newToken);
+
+    // Process the sampled token using shared helper method
+    processSampledToken(currentState, tokenPiece);
+
+    if (isEog(newToken)) {
       incrementTokenCount(-1);
       return false;
     }
 
     batch.free();
-    batch = null;
 
-    feedPromptMemory(piece);
+    currentState.setNewTokenId(newToken);
+    currentState.setPiece(tokenPiece);
+
+    feedPromptMemory(tokenPiece);
     return !endWithStopString() && hasNotReachedQuota();
   }
 
-  private boolean checkContextSize() {
-    return context.nCtxUsedCells() + batch.nTokens() <= context.nCtx();
+  private boolean checkContextSize(LlamaBatch batch) {
+    return currentState.getContext().nCtxUsedCells() + batch.nTokens() <= currentState.getContext().nCtx();
   }
 
   @Override
   public LlamaOutput next() {
-    return new LlamaOutput(piece, 1);
+    return new LlamaOutput(currentState.getPiece(), 1);
   }
 }

@@ -83,17 +83,18 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler).initialize(prompt);
+    var state = ConversationState.create(arena, context, tokenizer, sampler).initialize(prompt);
+    var it = new DefaultLlamaIterator(state);
 
     String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
     System.out.println(output);
 
-    inputToken = it.getInputTokens();
-    outputToken = it.getAnswerTokens();
+    inputToken = state.getInputTokens();
+    outputToken = state.getAnswerTokens();
 
     assertThat(inputToken).isGreaterThan(0);
     assertThat(outputToken).isGreaterThan(0);
-    assertThat(it.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
+    assertThat(state.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
 
     // Verify performance metrics are extracted correctly
     LlamaPerformance perf = it.getPerformance();

@@ -77,25 +77,28 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
     var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
 
-    var it = new DefaultLlamaIterator(arena, context, tokenizer, sampler)
+    var state = ConversationState
+      .create(arena, context, tokenizer, sampler)
       .setReasoning("<think>", "</think>")
       .initialize(prompt);
+
+    var it = new DefaultLlamaIterator(state);
 
     LlamaOutput output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0));
     System.out.println(output);
 
-    int inputTokens = it.getInputTokens();
-    int outputTokens = it.getAnswerTokens();
-    int reasoningTokens = it.getReasoningTokens();
+    int inputTokens = state.getInputTokens();
+    int outputTokens = state.getAnswerTokens();
+    int reasoningTokens = state.getReasoningTokens();
 
     assertThat(inputTokens).isGreaterThan(0);
     assertThat(outputTokens).isGreaterThan(0);
     assertThat(reasoningTokens).isGreaterThan(0);
 
     assertThat(output.numberOfTokens()).isEqualTo(outputTokens + reasoningTokens);
-    assertThat(it.getTotalTokenCount()).isEqualTo(inputTokens + outputTokens + reasoningTokens);
+    assertThat(state.getTotalTokenCount()).isEqualTo(inputTokens + outputTokens + reasoningTokens);
 
-    assertThat(it.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
+    assertThat(state.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
 
     context.free();
     sampler.free();

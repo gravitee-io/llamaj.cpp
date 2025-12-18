@@ -38,6 +38,18 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
     return llama_sampler_sample(this.segment, context.segment, -1);
   }
 
+  /**
+   * Samples a token from the specified output index in the batch.
+   * Used for parallel processing of multiple sequences.
+   *
+   * @param context The context containing the logits
+   * @param idx The index of the output to sample from (0-based)
+   * @return The sampled token ID
+   */
+  public int sample(LlamaContext context, int idx) {
+    return llama_sampler_sample(this.segment, context.segment, idx);
+  }
+
   public LlamaSampler greedy() {
     llama_sampler_chain_add(this.segment, llama_sampler_init_greedy());
     return this;

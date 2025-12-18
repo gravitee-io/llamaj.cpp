@@ -165,30 +165,34 @@ public class Main {
 
       String prompt = buildPrompt(model, messageTrimmer.trimMessages(messages), contextParams);
 
-      var iterator = new DefaultLlamaIterator(ARENA, context, tokenizer, sampler).setMaxTokens(quota);
+      // Create conversation state with resources
+      var state = ConversationState.create(ARENA, context, tokenizer, sampler).setMaxTokens(quota);
 
       if (reasoningTags.isConfigured()) {
-        iterator.setReasoning(reasoningTags.openTag, reasoningTags.closeTag);
+        state.setReasoning(reasoningTags.openTag, reasoningTags.closeTag);
       }
 
       if (toolTags.isConfigured()) {
-        iterator.setToolCall(toolTags.openTag, toolTags.closeTag);
+        state.setToolCall(toolTags.openTag, toolTags.closeTag);
       }
 
-      iterator.initialize(prompt);
+      state.initialize(prompt);
+
+      // Create iterator with state
+      var iterator = new DefaultLlamaIterator(state);
 
       // Filter reasoning tags from display, but keep tool tags visible
       var answer = iterator.stream().map(LlamaOutput::content).peek(System.out::print).reduce((a, b) -> a + b).orElse("");
 
       if (LlamaLogLevel.DEBUG.equals(logLevel)) {
         if (reasoningTags.isConfigured()) {
-          System.out.println("Reasoning tokens: " + iterator.getReasoningTokens());
+          System.out.println("Reasoning tokens: " + state.getReasoningTokens());
         }
         if (toolTags.isConfigured()) {
-          System.out.println("Tools tokens: " + iterator.getToolsTokens());
+          System.out.println("Tools tokens: " + state.getToolsTokens());
         }
-        System.out.println("Output tokens: " + iterator.getAnswerTokens());
-        System.out.println("Finish Reason: " + iterator.getFinishReason());
+        System.out.println("Output tokens: " + state.getAnswerTokens());
+        System.out.println("Finish Reason: " + state.getFinishReason());
       }
 
       if (showPerf) {

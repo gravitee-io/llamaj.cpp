@@ -27,6 +27,133 @@ Include the dependency in your pom.xml
     </dependencies>
 ```
 
+### Example 1: Basic Conversation
+
+```java
+import io.gravitee.llama.cpp.*;
+import java.lang.foreign.Arena;
+
+public class BasicExample {
+    public static void main(String[] args) {
+        var arena = Arena.ofConfined();
+
+        // Initialize runtime
+        LlamaRuntime.llama_backend_init();
+
+        // Load model
+        var modelParams = new LlamaModelParams(arena);
+        var model = new LlamaModel(arena, Path.of("models/model.gguf"), modelParams);
+
+        // Create context
+        var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512);
+        var context = new LlamaContext(model, contextParams);
+
+        // Set up tokenizer and sampler
+        var vocab = new LlamaVocab(model);
+        var tokenizer = new LlamaTokenizer(vocab, context);
+        var sampler = new LlamaSampler(arena)
+            .temperature(0.7f)
+            .topK(40)
+            .topP(0.9f, 1)
+            .seed(42);
+
+        // Create conversation state
+        var state = ConversationState.create(arena, context, tokenizer, sampler, 0)
+            .setMaxTokens(100)
+            .initialize("What is the capital of France?");
+
+        // Generate response
+        var iterator = new DefaultLlamaIterator(state);
+        while (iterator.hasNext()) {
+            var output = iterator.next();
+            System.out.print(output.text());
+        }
+
+        // Cleanup
+        context.free();
+        sampler.free();
+        model.free();
+        LlamaRuntime.llama_backend_free();
+    }
+}
+```
+
+### Example 2: Parallel Conversations
+
+Process multiple conversations simultaneously in a single batch:
+
+```java
+import io.gravitee.llama.cpp.*;
+
+import java.lang.foreign.Arena;
+
+public class ParallelExample {
+    public static void main(String[] args) {
+        var arena = Arena.ofConfined();
+
+        // Initialize runtime
+        LlamaRuntime.llama_backend_init();
+
+        // Load model
+        var modelParams = new LlamaModelParams(arena);
+        var model = new LlamaModel(arena, Path.of("models/model.gguf"), modelParams);
+
+        // Create context with multi-sequence support
+        var contextParams = new LlamaContextParams(arena)
+                .nCtx(2048)
+                .nBatch(512)
+                .nSeqMax(4);  // Support up to 4 parallel conversations
+        var context = new LlamaContext(model, contextParams);
+
+        // Set up shared tokenizer and sampler
+        var vocab = new LlamaVocab(model);
+        var tokenizer = new LlamaTokenizer(vocab, context);
+        var sampler = new LlamaSampler(arena).temperature(0.7f).seed(42);
+
+        // Create multiple conversation states with unique sequence IDs
+        var state1 = ConversationState.create(arena, context, tokenizer, sampler, 0)
+                .setMaxTokens(100).initialize("What is the capital of France?");
+        var state2 = ConversationState.create(arena, context, tokenizer, sampler, 1)
+                .setMaxTokens(100).initialize("What is the capital of England?");
+        var state3 = ConversationState.create(arena, context, tokenizer, sampler, 2)
+                .setMaxTokens(100).initialize("What is the capital of Poland?");
+
+        // Create parallel iterator - prompts are auto-processed when states are added
+        var parallel = new BatchIterator(arena, context, 512, 4)
+                .addState(state1)
+                .addState(state2)
+                .addState(state3);
+
+        // Generate tokens in parallel
+        System.out.println("=== Parallel Generation ===");
+        while (parallel.hasNext()) {
+            // Each hasNext() generates tokens for all active conversations
+            // Get all outputs from this batch (one per active conversation)
+            var outputs = parallel.getOutputs();
+            for (var output : outputs) {
+                System.out.println("Seq " + output.sequenceId() + ": " + output.text());
+            }
+        }
+        System.out.println();
+
+        // Print results
+        System.out.println("Conversation 1: " + state1.getAnswer());
+        System.out.println("  Tokens: " + state1.getAnswerTokens());
+        System.out.println("Conversation 2: " + state2.getAnswer());
+        System.out.println("  Tokens: " + state2.getAnswerTokens());
+        System.out.println("Conversation 3: " + state3.getAnswer());
+        System.out.println("  Tokens: " + state3.getAnswerTokens());
+
+        // Cleanup
+        parallel.free();
+        context.free();
+        sampler.free();
+        model.free();
+        LlamaRuntime.llama_backend_free();
+    }
+}
+```
+
 ## Build
 
 1. Get `jextract`

@@ -7,8 +7,8 @@ orbs:
 executors:
   macos-executor:
     macos:
-      xcode: 16.1.0
-    resource_class: macos.m1.medium.gen1
+      xcode: 16.4.0
+    resource_class: m2pro.large
 
   ubuntu_linux_x86_64:
     docker:
@@ -79,7 +79,7 @@ commands:
       - run:
           name: Install Maven
           command: |
-            MAVEN_URL="https://dlcdn.apache.org/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz"
+            MAVEN_URL="https://dlcdn.apache.org/maven/maven-3/3.9.12/binaries/apache-maven-3.9.12-bin.tar.gz"
             INSTALL_DIR="/opt/maven"
             MAVEN_DIR="apache-maven-3.9.10"
 
@@ -182,6 +182,8 @@ commands:
       - attach_workspace:
           at: /tmp/
       - run:
+          environment:
+            MAVEN_OPTS: "-Xmx8g -Xms2g"
           name: Run Tests
           command: |
             cd $HOME_DIR/llamaj.cpp
