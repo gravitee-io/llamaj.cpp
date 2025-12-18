@@ -16,10 +16,7 @@
 package io.gravitee.llama.cpp;
 
 import java.lang.foreign.Arena;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Parallel batch iterator that processes multiple conversation states simultaneously.
@@ -140,24 +137,21 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     // Build batch with tokens from all active states
     batch.clear();
 
-    // Collect active states
-    List<ConversationState> activeStates = seqIdToState
-      .values()
-      .stream()
-      .filter(state -> state.getFinishReason() == null)
-      .toList();
+    // Collect active states and clean up finished sequences and remove from tracking
+    List<ConversationState> activeStates = new ArrayList<>();
 
-    // Clean up finished sequences and remove from tracking
-    seqIdToState
-      .entrySet()
-      .removeIf(entry -> {
-        var state = entry.getValue();
-        if (state.getFinishReason() != null) {
-          context.getMemory().seqRm(state.getSequenceId(), -1, -1);
-          return true;
-        }
-        return false;
-      });
+    var it = seqIdToState.entrySet().iterator();
+    while (it.hasNext()) {
+      var entry = it.next();
+      var state = entry.getValue();
+
+      if (state.getFinishReason() == null) {
+        activeStates.add(state);
+      } else {
+        context.getMemory().seqRm(state.getSequenceId(), -1, -1);
+        it.remove();
+      }
+    }
 
     if (activeStates.isEmpty()) {
       return false;
