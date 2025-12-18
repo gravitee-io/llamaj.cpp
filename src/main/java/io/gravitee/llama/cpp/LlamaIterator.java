@@ -39,23 +39,6 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
   }
 
   /**
-   * Switches this iterator to process a different conversation state.
-   * This allows reusing the same iterator instance for multiple conversations.
-   *
-   * @param state The new conversation state to process
-   */
-  public void setState(ConversationState state) {
-    this.currentState = state;
-  }
-
-  /**
-   * Gets the current conversation state being processed.
-   */
-  public ConversationState getState() {
-    return currentState;
-  }
-
-  /**
    * Creates a stream that generates tokens until a finish condition is met.
    */
   public Stream<T> stream() {
