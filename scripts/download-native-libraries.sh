@@ -92,24 +92,18 @@ case "$PLATFORM" in
 esac
 
 # Construct the download URL using the mapped OS and PLATFORM
-# Try tar.gz first for Linux (new format), fallback to zip
-if [[ "$OS" == "linux" ]]; then
-  ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.tar.gz"
-  DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
+# Try tar.gz first (new format), fallback to zip for older releases
+ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.tar.gz"
+DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
 
-  # Check if tar.gz exists, otherwise fallback to zip
-  if ! curl -k -L --head --fail "$DOWNLOAD_URL" 2>/dev/null; then
-    echo "⚠️  tar.gz not found, falling back to zip format"
-    ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.zip"
-    DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
-    USE_ZIP=true
-  else
-    USE_ZIP=false
-  fi
-else
+# Check if tar.gz exists, otherwise fallback to zip
+if ! curl -k -L --head --fail "$DOWNLOAD_URL" 2>/dev/null; then
+  echo "⚠️  tar.gz not found, falling back to zip format"
   ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.zip"
   DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
   USE_ZIP=true
+else
+  USE_ZIP=false
 fi
 
 TMP_DIR="$(mktemp -d)"
