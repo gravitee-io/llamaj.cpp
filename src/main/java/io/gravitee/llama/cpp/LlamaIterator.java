@@ -16,6 +16,7 @@
 package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.FinishReason.*;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 import java.util.Iterator;
 import java.util.Spliterator;
@@ -81,46 +82,58 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     var sampler = state.getSampler();
     var tokenizer = state.getTokenizer();
 
-    // Create batch for the prompt (using the sequence-aware constructor)
-    LlamaBatch promptBatch = new LlamaBatch(arena, state.getTokenized(), state.getSequenceId());
+    // The prompt may be long, so we need to process it in chunks to avoid
+    // exceeding the context's batch size (n_batch).
+    int totalTokens = state.getTokenized().size();
+    int batchSize = Math.max(1, context.nBatch());
+    int offset = 0;
+    while (offset < totalTokens) {
+      int chunkSize = Math.min(batchSize, totalTokens - offset);
+      LlamaBatch promptBatch = new LlamaBatch(arena, chunkSize, 0, 1);
 
-    // Decode the batch
-    if (promptBatch.decode(context) != 0) {
+      // Add tokens to the batch for the current chunk.
+      for (int i = 0; i < chunkSize; i++) {
+        int tokenId = state.getTokenized().data().getAtIndex(JAVA_INT, offset + i);
+        // We only need the logits for the very last token of the prompt to sample the next one.
+        boolean logits = (offset + i) == totalTokens - 1;
+        promptBatch.add(tokenId, offset + i, java.util.List.of(state.getSequenceId()), logits);
+      }
+
+      // Decode the batch of prompt tokens.
+      if (promptBatch.decode(context) != 0) {
+        promptBatch.free();
+        throw new LlamaException("Failed to decode prompt for sequence " + state.getSequenceId());
+      }
+
       promptBatch.free();
-      throw new LlamaException("Failed to decode prompt for sequence " + state.getSequenceId());
+      offset += chunkSize;
     }
 
-    // Update nPast after processing prompt
+    // After processing the entire prompt, update the past token count (n_past).
     state.setNPast(state.getTokenized().size());
 
-    // Sample first token
-    Integer newToken = sampler.sample(context);
-    String tokenPiece = tokenizer.tokenToPiece(newToken);
+    // Sample the very first token after the prompt.
+    int newToken = sampler.sample(context);
+    String tokenPiece = decodeTokenPiece(state, newToken);
 
-    // Update state evaluation
+    // Update state evaluation based on the first token.
     GenerationState newState = state
       .getStateEvaluation()
       .evaluate(new io.gravitee.llama.cpp.modules.StateEvaluation.Context(state.getGenerationState(), tokenPiece));
     state.setGenerationState(newState);
 
-    if (newState == GenerationState.TOOLS) {
-      state.setFinishReason(FinishReason.TOOL_CALL);
-    }
-
-    // Track tokens
+    // Track the consumption of the first token.
     state.getTokenTracking().consume(new io.gravitee.llama.cpp.modules.TokenTracking.Context(state.getGenerationState(), 1));
 
-    // Check if finished immediately
+    // Check if the generation finished immediately (e.g., if the prompt was just an EOG token).
     if (!tokenizer.isEog(newToken)) {
-      // Not finished - set up for next iteration
+      // If not finished, set the new token and piece for the next iteration.
       state.setNewTokenId(newToken);
       state.setPiece(tokenPiece);
     } else {
-      // Finished immediately
+      // If finished, set the stop reason.
       state.setFinishReason(FinishReason.STOP);
     }
-
-    promptBatch.free();
   }
 
   /**
@@ -132,13 +145,14 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
    */
   protected void processSampledToken(ConversationState state, String tokenPiece) {
     // Update state evaluation
+    GenerationState previousState = state.getGenerationState();
     GenerationState newState = state
       .getStateEvaluation()
-      .evaluate(new io.gravitee.llama.cpp.modules.StateEvaluation.Context(state.getGenerationState(), tokenPiece));
+      .evaluate(new io.gravitee.llama.cpp.modules.StateEvaluation.Context(previousState, tokenPiece));
     state.setGenerationState(newState);
 
-    // Check for tool call
-    if (newState == GenerationState.TOOLS) {
+    // Mark tool call as finished once we leave the tools section
+    if (previousState == GenerationState.TOOLS && newState == GenerationState.ANSWER) {
       state.setFinishReason(FinishReason.TOOL_CALL);
     }
 
@@ -219,6 +233,11 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     if (currentState.getPromptMemory().isInitialized()) {
       currentState.getPromptMemory().consume(tokenPiece);
     }
+  }
+
+  protected String decodeTokenPiece(ConversationState state, int tokenId) {
+    byte[] bytes = state.getTokenizer().tokenToPiece(tokenId);
+    return state.getDecoder().decode(bytes, bytes.length);
   }
 
   protected void incrementTokenCount(int tokenCount) {

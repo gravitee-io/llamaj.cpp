@@ -27,6 +27,8 @@ import java.lang.foreign.MemorySegment;
 public final class LlamaContext extends MemorySegmentAware implements Freeable {
 
   private final int nCtx;
+  private final int nBatch;
+  private final int nSeqMax;
   private final LlamaMemory memory;
 
   public LlamaContext(LlamaModel model, LlamaContextParams params) {
@@ -35,11 +37,21 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
       throw new LlamaException("Failed to create context from model");
     }
     this.nCtx = params.nCtx();
+    this.nBatch = params.nBatch();
+    this.nSeqMax = params.nSeqMax();
     this.memory = new LlamaMemory(this);
   }
 
   public int nCtx() {
     return nCtx;
+  }
+
+  public int nBatch() {
+    return nBatch;
+  }
+
+  public int nSeqMax() {
+    return nSeqMax;
   }
 
   public int nCtxUsedCells() {

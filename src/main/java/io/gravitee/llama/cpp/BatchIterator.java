@@ -19,9 +19,6 @@ import java.lang.foreign.Arena;
 import java.util.*;
 
 /**
- * Parallel batch iterator that processes multiple conversation states simultaneously.
- * Generates tokens for multiple conversations in a single forward pass.
- *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
@@ -42,13 +39,11 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
    *
    * @param arena The memory arena for allocations
    * @param context The shared context for all conversations (all states must use this same context)
-   * @param maxTokens Maximum number of tokens per batch
-   * @param maxSeqIds Maximum number of sequence IDs per token
    */
-  public BatchIterator(Arena arena, LlamaContext context, int maxTokens, int maxSeqIds) {
+  public BatchIterator(Arena arena, LlamaContext context) {
     super(null); // No initial state - states are added via addState()
     this.context = context;
-    this.batch = new LlamaBatch(arena, maxTokens, 0, maxSeqIds);
+    this.batch = new LlamaBatch(arena, context.nBatch(), 0, context.nSeqMax());
     this.seqIdToState = new HashMap<>();
     this.firstTokenEmitted = new HashMap<>();
     this.seqIdToBatchPos = new HashMap<>();
@@ -56,7 +51,8 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
 
   /**
    * Adds a conversation state to be processed in parallel.
-   * If the prompt hasn't been processed yet, it will be processed automatically.
+   * If the prompt hasn't been processed yet, it will be processed automatically
+   * on the next batch iteration.
    * This method is thread-safe and can be called while the iterator is running.
    *
    * @param state The conversation state to add
@@ -80,10 +76,6 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
         " is already in use. " +
         "Each conversation state must have a unique sequence ID."
       );
-    }
-
-    if (state.getNewTokenId() == null) {
-      processPromptForState(state);
     }
 
     this.seqIdToState.put(state.getSequenceId(), state);
@@ -126,102 +118,167 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
 
   @Override
   protected boolean batch() {
-    // Check if iterator was stopped
     if (stopped) {
       return false;
     }
 
-    // Clear previous outputs
     currentOutputs.clear();
 
-    // Build batch with tokens from all active states
-    batch.clear();
+    // Prepare states: clean up finished ones, process prompts for new ones, and collect active states.
+    List<ConversationState> activeStates = prepareActiveStates();
 
-    // Collect active states and clean up finished sequences and remove from tracking
-    List<ConversationState> activeStates = new ArrayList<>();
-
-    var it = seqIdToState.entrySet().iterator();
-    while (it.hasNext()) {
-      var entry = it.next();
-      var state = entry.getValue();
-
-      if (state.getFinishReason() == null) {
-        activeStates.add(state);
-      } else {
-        context.getMemory().seqRm(state.getSequenceId(), -1, -1);
-        it.remove();
-      }
-    }
-
-    if (activeStates.isEmpty()) {
-      return false;
-    }
-
-    // First, emit any first tokens that haven't been emitted yet (from prompt processing)
-    activeStates
-      .stream()
-      .filter(state -> !firstTokenEmitted.get(state.getSequenceId()))
-      .forEach(state -> {
-        // This is the first token sampled after the prompt - output it
-        currentOutputs.add(new LlamaOutput(state.getPiece(), 1, state.getSequenceId()));
-        firstTokenEmitted.put(state.getSequenceId(), true);
-      });
-
-    // If we just emitted first tokens, return them without doing a batch decode
+    // If we just emitted the first tokens from prompt processing, return them immediately.
+    // This ensures a responsive start for each conversation.
     if (!currentOutputs.isEmpty()) {
       return true;
     }
 
-    // Add one token from each active state to the batch and track positions
-    for (var state : activeStates) {
-      // Track the batch position before adding (this is where the logits will be)
+    // If there are no more active conversations, we are done.
+    if (activeStates.isEmpty()) {
+      return false;
+    }
+
+    // Process the active states in smaller batches that fit the context's batch size (n_batch).
+    processInBatches(activeStates);
+
+    return !currentOutputs.isEmpty();
+  }
+
+  /**
+   * Prepares the list of active states for the next batch processing cycle.
+   * This method performs several key preparatory steps:
+   * 1. Iterates through all registered conversation states.
+   * 2. Cleans up finished states: Any state that has a finish reason is removed from tracking, and its resources are cleaned up.
+   * 3. Processes prompts: For any new state that hasn't been processed yet, this method calls the prompt processing logic.
+   * 4. Emits the first token: After a prompt is processed, the very first generated token is immediately added to the output queue.
+   * 5. Collects active states: All states that are still running are collected for batch decoding.
+   *
+   * @return A list of {@link ConversationState}s that are ready for the next decoding batch.
+   */
+  private List<ConversationState> prepareActiveStates() {
+    List<ConversationState> activeStates = new ArrayList<>();
+    for (var it = seqIdToState.entrySet().iterator(); it.hasNext();) {
+      var entry = it.next();
+      var state = entry.getValue();
+
+      // Clean up and remove states that have finished their generation.
+      if (state.getFinishReason() != null) {
+        cleanupState(state.getSequenceId());
+        it.remove();
+        continue;
+      }
+
+      // If the state is new, process its prompt to get the first token.
+      if (state.getNewTokenId() == null) {
+        processPromptForState(state);
+        // If prompt processing immediately results in a finish condition, clean up.
+        if (state.getFinishReason() != null) {
+          cleanupState(state.getSequenceId());
+          it.remove();
+          continue;
+        }
+      }
+
+      activeStates.add(state);
+
+      // If the first token for this state hasn't been emitted yet, add it to the output queue.
+      if (!firstTokenEmitted.get(state.getSequenceId())) {
+        currentOutputs.add(new LlamaOutput(state.getPiece(), 1, state.getSequenceId()));
+        firstTokenEmitted.put(state.getSequenceId(), true);
+      }
+    }
+    return activeStates;
+  }
+
+  /**
+   * Processes the list of active states by breaking them into smaller batches and decoding them.
+   *
+   * @param activeStates The list of currently active conversation states.
+   */
+  private void processInBatches(List<ConversationState> activeStates) {
+    int batchSize = Math.max(1, context.nBatch());
+    for (int start = 0; start < activeStates.size(); start += batchSize) {
+      int end = Math.min(start + batchSize, activeStates.size());
+      List<ConversationState> batchStates = activeStates.subList(start, end);
+
+      // Decode one batch of states.
+      if (!decodeBatch(batchStates)) {
+        // If decoding fails, stop further processing.
+        break;
+      }
+    }
+  }
+
+  /**
+   * Decodes a single batch of conversation states.
+   *
+   * @param batchStates The list of states to decode in this batch.
+   * @return {@code true} if decoding was successful, {@code false} otherwise.
+   */
+  private boolean decodeBatch(List<ConversationState> batchStates) {
+    batch.clear();
+    seqIdToBatchPos.clear();
+
+    // Add a token from each state in the sub-batch to the main batch.
+    for (ConversationState state : batchStates) {
       seqIdToBatchPos.put(state.getSequenceId(), batch.nTokens());
       batch.add(state.getNewTokenId(), state.getNPast(), List.of(state.getSequenceId()), true);
     }
 
-    // Decode batch once for all conversations
+    // Perform the main decoding step.
     if (batch.decode(context) != 0) {
-      // Mark all states as finished on error and clean up
-      for (ConversationState state : activeStates) {
-        state.setFinishReason(FinishReason.STOP);
-        context.getMemory().seqRm(state.getSequenceId(), -1, -1);
-      }
-      seqIdToState.clear();
+      handleDecodeError(batchStates);
       return false;
     }
 
-    // Sample from each sequence using its tracked batch position
-    for (var state : activeStates) {
-      var sampler = state.getSampler();
-      var tokenizer = state.getTokenizer();
-      // Use the actual batch position for this sequence (like i_batch[i] in batched.cpp)
-      int batchPos = seqIdToBatchPos.get(state.getSequenceId());
-      int newToken = sampler.sample(context, batchPos);
-      String tokenPiece = tokenizer.tokenToPiece(newToken);
+    // Sample a new token for each state in the batch.
+    for (ConversationState state : batchStates) {
+      sampleAndProcessNextToken(state);
+    }
+    return true;
+  }
 
-      // Process the sampled token (update state, check tool calls, track tokens)
-      processSampledToken(state, tokenPiece);
+  /**
+   * Samples the next token for a given state and processes it.
+   *
+   * @param state The conversation state to process.
+   */
+  private void sampleAndProcessNextToken(ConversationState state) {
+    int batchPos = seqIdToBatchPos.get(state.getSequenceId());
+    int newToken = state.getSampler().sample(context, batchPos);
+    String tokenPiece = decodeTokenPiece(state, newToken);
 
-      // Check finish conditions (EOG, length limit)
-      if (!shouldContinue(state, newToken)) {
-        // Don't count EOG tokens - decrement the count that was added by processSampledToken
-        if (tokenizer.isEog(newToken)) {
-          state
-            .getTokenTracking()
-            .consume(new io.gravitee.llama.cpp.modules.TokenTracking.Context(state.getGenerationState(), -1));
-        }
-        continue;
+    processSampledToken(state, tokenPiece);
+
+    // Check if the generation should continue for this state.
+    if (!shouldContinue(state, newToken)) {
+      if (state.getTokenizer().isEog(newToken)) {
+        // Decrement token count for EOG token, as it's not part of the generated content.
+        state
+          .getTokenTracking()
+          .consume(new io.gravitee.llama.cpp.modules.TokenTracking.Context(state.getGenerationState(), -1));
       }
-
-      // Update state for next iteration
-      state.setNewTokenId(newToken);
-      state.setPiece(tokenPiece);
-      state.incrementNPast();
-      // Add to outputs with sequence ID so we know which conversation this token belongs to
-      currentOutputs.add(new LlamaOutput(state.getPiece(), 1, state.getSequenceId()));
+      return;
     }
 
-    return !currentOutputs.isEmpty();
+    // Update the state with the new token and add it to the output queue.
+    state.setNewTokenId(newToken);
+    state.setPiece(tokenPiece);
+    state.incrementNPast();
+    currentOutputs.add(new LlamaOutput(state.getPiece(), 1, state.getSequenceId()));
+  }
+
+  /**
+   * Handles a decoding error by marking all states in the batch as finished.
+   *
+   * @param batchStates The list of states that were part of the failed batch.
+   */
+  private void handleDecodeError(List<ConversationState> batchStates) {
+    for (ConversationState state : batchStates) {
+      state.setFinishReason(FinishReason.STOP);
+      cleanupState(state.getSequenceId());
+    }
+    seqIdToState.clear();
   }
 
   /**
@@ -234,13 +291,7 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
   public boolean removeState(int sequenceId) {
     ConversationState state = seqIdToState.remove(sequenceId);
     if (state != null) {
-      // Clean up KV cache for this sequence
-      context.getMemory().seqRm(sequenceId, -1, -1);
-
-      // Clean up tracking maps
-      firstTokenEmitted.remove(sequenceId);
-      seqIdToBatchPos.remove(sequenceId);
-
+      cleanupState(sequenceId);
       return true;
     }
     return false;
@@ -267,7 +318,7 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     stopped = true;
 
     // Clean up all remaining sequences from KV cache
-    seqIdToState.values().forEach(state -> context.getMemory().seqRm(state.getSequenceId(), -1, -1));
+    seqIdToState.values().forEach(state -> cleanupState(state.getSequenceId()));
 
     seqIdToState.clear();
     firstTokenEmitted.clear();
@@ -286,7 +337,7 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
       .values()
       .stream()
       .filter(state -> state.getFinishReason() != null)
-      .forEach(state -> context.getMemory().seqRm(state.getSequenceId(), -1, -1));
+      .forEach(state -> cleanupState(state.getSequenceId()));
 
     seqIdToState.clear();
     firstTokenEmitted.clear();
@@ -316,5 +367,11 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
   public void free() {
     stop();
     batch.free();
+  }
+
+  private void cleanupState(int sequenceId) {
+    context.getMemory().seqRm(sequenceId, -1, -1);
+    firstTokenEmitted.remove(sequenceId);
+    seqIdToBatchPos.remove(sequenceId);
   }
 }
