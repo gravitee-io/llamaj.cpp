@@ -25,5 +25,5 @@ public enum LlamaLogLevel {
   INFO,
   WARN,
   ERROR,
-  CONT, // continue previous log
+  CONT,
 }

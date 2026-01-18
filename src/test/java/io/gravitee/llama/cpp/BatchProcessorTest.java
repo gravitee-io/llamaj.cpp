@@ -87,7 +87,7 @@ class BatchProcessorTest extends LlamaCppTest {
     var state3 = ConversationState.create(arena, context, tokenizer, sampler, 2).setMaxTokens(50).initialize(prompts[2]);
 
     // Create parallel iterator - prompts are auto-processed when states are added
-    var parallel = new BatchIterator(arena, context, 512, 4).addState(state1).addState(state2).addState(state3);
+    var parallel = new BatchIterator(arena, context).addState(state1).addState(state2).addState(state3);
 
     // Map to accumulate outputs per sequence
     Map<Integer, StringBuilder> sequenceOutputs = new HashMap<>();
@@ -148,7 +148,7 @@ class BatchProcessorTest extends LlamaCppTest {
     var state1 = ConversationState.create(arena, context, tokenizer, sampler, 0).setMaxTokens(50).initialize(prompts[0]);
     var state2 = ConversationState.create(arena, context, tokenizer, sampler, 1).setMaxTokens(50).initialize(prompts[1]);
 
-    var parallel = new BatchIterator(arena, context, 512, 4).addState(state1).addState(state2);
+    var parallel = new BatchIterator(arena, context).addState(state1).addState(state2);
 
     // Test removeState immediately after adding - should succeed
     boolean removed = parallel.removeState(1);
@@ -193,7 +193,7 @@ class BatchProcessorTest extends LlamaCppTest {
     var prompt = getPrompt(model, arena, buildMessages(arena, SYSTEM, "Count to 100"), contextParams);
     var state = ConversationState.create(arena, context, tokenizer, sampler, 0).setMaxTokens(100).initialize(prompt);
 
-    var parallel = new BatchIterator(arena, context, 512, 2).addState(state);
+    var parallel = new BatchIterator(arena, context).addState(state);
 
     // Generate a few tokens then stop
     int tokenCount = 0;
@@ -230,7 +230,7 @@ class BatchProcessorTest extends LlamaCppTest {
     var state1 = ConversationState.create(arena, context, tokenizer, sampler, 0).initialize(prompt);
     var state2 = ConversationState.create(arena, context, tokenizer, sampler, 0).initialize(prompt); // Same seq ID!
 
-    var parallel = new BatchIterator(arena, context, 512, 2).addState(state1);
+    var parallel = new BatchIterator(arena, context).addState(state1);
 
     // Should throw when adding state with duplicate sequence ID
     assertThatThrownBy(() -> parallel.addState(state2))
@@ -260,7 +260,7 @@ class BatchProcessorTest extends LlamaCppTest {
     var state1 = ConversationState.create(arena, context1, tokenizer1, sampler, 0).initialize(prompt);
     var state2 = ConversationState.create(arena, context2, tokenizer2, sampler, 1).initialize(prompt);
 
-    var parallel = new BatchIterator(arena, context1, 512, 2).addState(state1);
+    var parallel = new BatchIterator(arena, context1).addState(state1);
 
     // Should throw when adding state with different context
     assertThatThrownBy(() -> parallel.addState(state2))
@@ -288,7 +288,7 @@ class BatchProcessorTest extends LlamaCppTest {
     var prompt = getPrompt(model, arena, buildMessages(arena, SYSTEM, "Hi"), contextParams);
     var state = ConversationState.create(arena, context, tokenizer, sampler, 0).setMaxTokens(1).initialize(prompt);
 
-    var parallel = new BatchIterator(arena, context, 512, 2).addState(state);
+    var parallel = new BatchIterator(arena, context).addState(state);
 
     // Consume all outputs
     while (parallel.hasNext()) {

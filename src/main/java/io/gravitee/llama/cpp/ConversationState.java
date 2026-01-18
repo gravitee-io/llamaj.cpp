@@ -22,31 +22,12 @@ import io.gravitee.llama.cpp.modules.PromptMemory;
 import io.gravitee.llama.cpp.modules.StateEvaluation;
 import io.gravitee.llama.cpp.modules.StopString;
 import io.gravitee.llama.cpp.modules.TokenTracking;
+import io.gravitee.llama.cpp.utils.Utf8Decoder;
 import java.lang.foreign.Arena;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Encapsulates all state and resources for a single conversation/generation session.
- * The state owns the context, tokenizer, and sampler resources.
- *
- * <p>Example usage:
- * <pre>{@code
- * // Create conversation state with resources
- * var state = ConversationState.create(arena, context, tokenizer, sampler, sequenceId)
- *     .setMaxTokens(100)
- *     .initialize("Hello, how are you?");
- *
- * // Create iterator with this state
- * var iterator = new DefaultLlamaIterator(state);
- * iterator.stream().forEach(output -> System.out.print(output.text()));
- *
- * // Switch iterator to different state
- * var otherState = ConversationState.create(arena, context, tokenizer, sampler, 2)
- *     .initialize("Another conversation");
- * iterator.setState(otherState);
- * }</pre>
- *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
@@ -70,6 +51,7 @@ public class ConversationState {
   private final PromptMemory promptMemory = new PromptMemory();
   private final StopString stopString = new StopString();
   private final StateEvaluation stateEvaluation = new StateEvaluation();
+  private final Utf8Decoder decoder = new Utf8Decoder();
 
   // Generation state
   private GenerationState generationState = ANSWER;
@@ -146,6 +128,7 @@ public class ConversationState {
     this.newTokenId = null;
     this.piece = null;
     this.nPast = 0;
+    this.decoder.reset();
     return this;
   }
 
@@ -194,6 +177,10 @@ public class ConversationState {
 
   public LlamaSampler getSampler() {
     return sampler;
+  }
+
+  public Utf8Decoder getDecoder() {
+    return decoder;
   }
 
   // State getters

@@ -20,8 +20,18 @@ package io.gravitee.llama.cpp;
  * @author GraviteeSource Team
  */
 public enum FinishReason {
-  EOS,
-  STOP,
-  LENGTH,
-  TOOL_CALL,
+  EOS("stop"),
+  STOP("stop"),
+  LENGTH("length"),
+  TOOL_CALL("tool_calls");
+
+  private final String label;
+
+  FinishReason(String label) {
+    this.label = label;
+  }
+
+  public String getLabel() {
+    return label;
+  }
 }

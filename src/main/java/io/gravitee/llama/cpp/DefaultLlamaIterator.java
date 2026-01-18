@@ -15,8 +15,6 @@
  */
 package io.gravitee.llama.cpp;
 
-import io.gravitee.llama.cpp.modules.StateEvaluation;
-
 /**
  * Default implementation of LlamaIterator that processes conversations token by token.
  *
@@ -34,7 +32,6 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
     var arena = currentState.getArena();
     var context = currentState.getContext();
     var sampler = currentState.getSampler();
-    var tokenizer = currentState.getTokenizer();
 
     LlamaBatch batch;
     if (currentState.getNewTokenId() == null) {
@@ -60,8 +57,8 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
     // After single token: increment nPast
     currentState.incrementNPast();
 
-    Integer newToken = sampler.sample(context);
-    String tokenPiece = tokenizer.tokenToPiece(newToken);
+    int newToken = sampler.sample(context);
+    String tokenPiece = decodeTokenPiece(currentState, newToken);
 
     // Process the sampled token using shared helper method
     processSampledToken(currentState, tokenPiece);
