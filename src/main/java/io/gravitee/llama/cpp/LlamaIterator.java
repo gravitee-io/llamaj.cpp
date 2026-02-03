@@ -31,12 +31,17 @@ import java.util.stream.StreamSupport;
 public abstract class LlamaIterator<T> implements Iterator<T> {
 
   protected ConversationState currentState;
+  private final MtmdContext mtmdContext;
 
   /**
    * Creates a new iterator with the given initial state.
    */
-  public LlamaIterator(ConversationState initialState) {
+  public LlamaIterator(
+    ConversationState initialState,
+    MtmdContext mtmdContext
+  ) {
     this.currentState = initialState;
+    this.mtmdContext = mtmdContext;
   }
 
   /**
@@ -87,43 +92,77 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
 
     // The prompt may be long, so we need to process it in chunks to avoid
     // exceeding the context's batch size (n_batch).
-    int totalTokens = state.getTokenized().size();
-    int batchSize = Math.max(1, context.nBatch());
-    int offset = 0;
-    while (offset < totalTokens) {
-      int chunkSize = Math.min(batchSize, totalTokens - offset);
-      LlamaBatch promptBatch = new LlamaBatch(arena, chunkSize, 0, 1);
+    if (mtmdContext != null && !state.getMedia().isEmpty()) {
+      // Multimodal input processing — delegate entirely to the native
+      // mtmd_helper_eval_chunks which handles text tokens, image/audio encoding,
+      // M-RoPE 2D/1D positions, non-causal attention, and batch splitting.
+      MtmdInputChunks chunks = new MtmdInputChunks(
+        mtmdContext.tokenize(
+          arena,
+          state.getPromptText(),
+          true, // addSpecial
+          true, // parseSpecial
+          state.getMedia()
+        )
+      );
 
-      // Add tokens to the batch for the current chunk.
-      for (int i = 0; i < chunkSize; i++) {
-        int tokenId = state
-          .getTokenized()
-          .data()
-          .getAtIndex(JAVA_INT, offset + i);
-        // We only need the logits for the very last token of the prompt to sample the next one.
-        boolean logits = (offset + i) == totalTokens - 1;
-        promptBatch.add(
-          tokenId,
-          offset + i,
-          java.util.List.of(state.getSequenceId()),
-          logits
-        );
-      }
+      int nPast = (int) Math.max(
+        0,
+        state.getContext().getMemory().posMax(state.getSequenceId()) + 1
+      );
 
-      // Decode the batch of prompt tokens.
-      if (promptBatch.decode(context) != 0) {
+      long newNPast = mtmdContext.evalChunks(
+        arena,
+        context,
+        chunks,
+        nPast,
+        state.getSequenceId(),
+        context.nBatch(),
+        true // logitsLast
+      );
+
+      chunks.free();
+
+      state.setNPast((int) newNPast);
+    } else {
+      int totalTokens = state.getTokenized().size();
+      int batchSize = Math.max(1, context.nBatch());
+      int offset = 0;
+      while (offset < totalTokens) {
+        int chunkSize = Math.min(batchSize, totalTokens - offset);
+        LlamaBatch promptBatch = new LlamaBatch(arena, chunkSize, 0, 1);
+
+        // Add tokens to the batch for the current chunk.
+        for (int i = 0; i < chunkSize; i++) {
+          int tokenId = state
+            .getTokenized()
+            .data()
+            .getAtIndex(JAVA_INT, offset + i);
+          // We only need the logits for the very last token of the prompt to sample the next one.
+          boolean logits = (offset + i) == totalTokens - 1;
+          promptBatch.add(
+            tokenId,
+            offset + i,
+            java.util.List.of(state.getSequenceId()),
+            logits
+          );
+        }
+
+        // Decode the batch of prompt tokens.
+        if (promptBatch.decode(context) != 0) {
+          promptBatch.free();
+          throw new LlamaException(
+            "Failed to decode prompt for sequence " + state.getSequenceId()
+          );
+        }
+
         promptBatch.free();
-        throw new LlamaException(
-          "Failed to decode prompt for sequence " + state.getSequenceId()
-        );
+        offset += chunkSize;
       }
 
-      promptBatch.free();
-      offset += chunkSize;
+      // After processing the entire prompt, update the past token count (n_past).
+      state.setNPast(state.getTokenized().size());
     }
-
-    // After processing the entire prompt, update the past token count (n_past).
-    state.setNPast(state.getTokenized().size());
 
     // Sample the very first token after the prompt.
     int newToken = sampler.sample(context);

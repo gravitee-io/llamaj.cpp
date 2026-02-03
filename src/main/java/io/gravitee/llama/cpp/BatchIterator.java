@@ -40,13 +40,21 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
    * @param arena The memory arena for allocations
    * @param context The shared context for all conversations (all states must use this same context)
    */
-  public BatchIterator(Arena arena, LlamaContext context) {
-    super(null); // No initial state - states are added via addState()
+  public BatchIterator(
+    Arena arena,
+    LlamaContext context,
+    MtmdContext mtmdContext
+  ) {
+    super(null, mtmdContext); // No initial state - states are added via addState()
     this.context = context;
     this.batch = new LlamaBatch(arena, context.nBatch(), 0, context.nSeqMax());
     this.seqIdToState = new HashMap<>();
     this.firstTokenEmitted = new HashMap<>();
     this.seqIdToBatchPos = new HashMap<>();
+  }
+
+  public BatchIterator(Arena arena, LlamaContext context) {
+    this(arena, context, null);
   }
 
   /**

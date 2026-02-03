@@ -15,6 +15,13 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.LlamaCppTest.LORA_ADAPTER_TO_DOWNLOAD;
+import static io.gravitee.llama.cpp.LlamaCppTest.LORA_ADATAPTER_PATH;
+import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_PATH;
+import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_TO_DOWNLOAD;
+import static io.gravitee.llama.cpp.LlamaCppTest.SYSTEM;
+import static io.gravitee.llama.cpp.LlamaCppTest.buildMessages;
+import static io.gravitee.llama.cpp.LlamaCppTest.getPrompt;
 import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_reg_count;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -86,7 +93,7 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     }
 
     var contextParams = new LlamaContextParams(arena).noPerf(false);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
@@ -145,6 +152,9 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
       "Tokens generated: %d%n",
       perf.context().tokensGenerated()
     );
+    assertThat(perf.context().tokensReused())
+      .as("Tokens reused should be >= 0")
+      .isGreaterThanOrEqualTo(0);
     System.out.printf("Tokens reused: %d%n", perf.context().tokensReused());
     System.out.printf(
       "Sampling time: %.4f ms%n",

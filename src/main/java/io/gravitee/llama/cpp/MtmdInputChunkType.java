@@ -19,12 +19,17 @@ package io.gravitee.llama.cpp;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public enum FlashAttentionType {
-  AUTO,
-  DISABLED,
-  ENABLED;
+public enum MtmdInputChunkType {
+  TEXT,
+  IMAGE,
+  AUDIO;
 
-  public static FlashAttentionType fromOrdinal(int ordinal) {
+  public static MtmdInputChunkType fromOrdinal(int ordinal) {
+    if (ordinal < 0 || ordinal >= values().length) {
+      throw new IllegalArgumentException(
+        "Invalid ordinal for MtmdInputChunkType: " + ordinal
+      );
+    }
     return values()[ordinal];
   }
 }

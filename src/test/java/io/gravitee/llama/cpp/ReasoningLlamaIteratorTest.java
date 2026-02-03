@@ -15,6 +15,11 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_PATH;
+import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_TO_DOWNLOAD;
+import static io.gravitee.llama.cpp.LlamaCppTest.SYSTEM;
+import static io.gravitee.llama.cpp.LlamaCppTest.buildMessages;
+import static io.gravitee.llama.cpp.LlamaCppTest.getPrompt;
 import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_reg_count;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -74,9 +79,8 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
     );
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-
     var contextParams = new LlamaContextParams(arena);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());

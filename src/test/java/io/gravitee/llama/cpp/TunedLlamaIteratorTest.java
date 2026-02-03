@@ -124,7 +124,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
       contextParams
     );
 
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var tokenizer = new LlamaTokenizer(vocab, context);
 
     var state = ConversationState.create(arena, context, tokenizer, sampler)
@@ -155,8 +155,6 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
     context.free();
     sampler.free();
     model.free();
-
-    LlamaRuntime.llama_backend_free();
   }
 
   @AfterAll

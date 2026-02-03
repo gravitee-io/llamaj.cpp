@@ -42,6 +42,7 @@ public class ConversationState {
   // Identity & position
   private final int sequenceId;
   private int nPast = 0;
+  private String promptText;
 
   // Tokenization
   private TokenizerResponse tokenized;
@@ -60,6 +61,7 @@ public class ConversationState {
   // Configuration
   private int maxTokens = -1;
   private final List<StateBounds> stateBounds = new ArrayList<>();
+  private List<MtmdMedia> media = new ArrayList<>();
 
   // Iteration state (used by iterator)
   Integer newTokenId;
@@ -126,12 +128,15 @@ public class ConversationState {
 
   /**
    * Initializes this conversation with a prompt.
+   * Note: This method resets all generation state including media.
+   * Call {@link #setMedia(List)} after this method if multimodal input is needed.
    *
    * @param prompt The prompt text
    * @return This state for chaining
    */
   public ConversationState initialize(String prompt) {
     this.tokenized = tokenizer.tokenize(arena, prompt);
+    this.promptText = prompt;
     this.tokenTracking.initialize(tokenized.size());
     this.stateEvaluation.initialize(new StateEvaluation.Config(stateBounds));
     this.generationState = ANSWER;
@@ -140,7 +145,12 @@ public class ConversationState {
     this.piece = null;
     this.nPast = 0;
     this.decoder.reset();
+    this.media.clear();
     return this;
+  }
+
+  public String getPromptText() {
+    return promptText;
   }
 
   /**
@@ -182,6 +192,36 @@ public class ConversationState {
     this.stateBounds.add(
       new StateBounds(GenerationState.TOOLS, tokenStart, tokenEnd)
     );
+    return this;
+  }
+
+  public List<MtmdMedia> getMedia() {
+    return media;
+  }
+
+  public ConversationState setMedia(List<MtmdMedia> media) {
+    this.media = media;
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #getMedia()} instead. Kept for backward compatibility.
+   */
+  @Deprecated
+  public List<MtmdImage> getImages() {
+    return media
+      .stream()
+      .filter(m -> m instanceof MtmdImage)
+      .map(m -> (MtmdImage) m)
+      .toList();
+  }
+
+  /**
+   * @deprecated Use {@link #setMedia(List)} instead. Kept for backward compatibility.
+   */
+  @Deprecated
+  public ConversationState setImages(List<MtmdImage> images) {
+    this.media = new ArrayList<>(images);
     return this;
   }
 

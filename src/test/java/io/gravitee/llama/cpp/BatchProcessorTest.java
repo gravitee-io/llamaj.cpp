@@ -64,14 +64,12 @@ class BatchProcessorTest extends LlamaCppTest {
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-
-    // Use a larger context to support multiple sequences
     var contextParams = new LlamaContextParams(arena)
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(4) // Support up to 4 parallel sequences
       .noPerf(false);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
@@ -174,7 +172,7 @@ class BatchProcessorTest extends LlamaCppTest {
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(4);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
@@ -243,7 +241,7 @@ class BatchProcessorTest extends LlamaCppTest {
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(2);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
@@ -289,7 +287,7 @@ class BatchProcessorTest extends LlamaCppTest {
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(2);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
@@ -337,8 +335,8 @@ class BatchProcessorTest extends LlamaCppTest {
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(2);
-    var context1 = new LlamaContext(model, contextParams);
-    var context2 = new LlamaContext(model, contextParams);
+    var context1 = new LlamaContext(arena, model, contextParams);
+    var context2 = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer1 = new LlamaTokenizer(vocab, context1);
     var tokenizer2 = new LlamaTokenizer(vocab, context2);
@@ -390,7 +388,7 @@ class BatchProcessorTest extends LlamaCppTest {
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(2);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());

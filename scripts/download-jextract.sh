@@ -100,19 +100,6 @@ case "$OS" in
     ;;
 esac
 
-# Create jextract directory if it doesn't exist
-mkdir -p "$JEXTRACT_DIR"
-
-# Create temporary directory for download
-TMP_DIR="$(mktemp -d)"
-ARCHIVE_NAME="jextract.tar.gz"
-
-# Download jextract
-echo "📥 Downloading jextract for $OS/$PLATFORM..."
-echo "🔗 $JEXTRACT_URL"
-
-curl -k -L -o "$TMP_DIR/$ARCHIVE_NAME" "$JEXTRACT_URL"
-
 # Check if jextract binary already exists and is executable
 JEXTRACT_BIN="${JEXTRACT_DIR}/bin/jextract"
 if [[ -f "$JEXTRACT_BIN" && -x "$JEXTRACT_BIN" ]]; then
@@ -143,6 +130,7 @@ tar -xzf "$TMP_DIR/$ARCHIVE_NAME" -C "$JEXTRACT_DIR" --strip-components=1
 # Verify extraction - we should now have bin/jextract directly in .jextract/
 if [[ ! -f "$JEXTRACT_BIN" ]]; then
   echo "❌ Failed to find jextract binary at $JEXTRACT_BIN after extraction." >&2
+  rm -rf "$TMP_DIR"
   exit 1
 fi
 
@@ -156,16 +144,7 @@ rm -f "$JEXTRACT_DIR"/bin/jextract.ps1
 # Clean up empty directories
 find "$JEXTRACT_DIR" -type d -empty -delete
 
-# Verify jextract works
-if "$JEXTRACT_BIN" --version >/dev/null 2>&1; then
-  echo "✅ jextract downloaded and ready at $JEXTRACT_BIN"
-  echo "   Version: $($JEXTRACT_BIN --version)"
-else
-  echo "❌ Failed to execute jextract." >&2
-  exit 1
-fi
-
-# Clean up
+# Clean up temp directory
 rm -rf "$TMP_DIR"
 
 # Verify jextract works

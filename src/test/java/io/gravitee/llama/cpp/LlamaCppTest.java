@@ -45,6 +45,24 @@ abstract class LlamaCppTest {
     What is the capital of Poland? Warsaw.
      """;
 
+  static final String VL_TEXT =
+    "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/Qwen3VL-2B-Instruct-Q8_0.gguf";
+  static final String MODEL_VL_PATH = "models/model_vl.gguf";
+
+  static final String VL_MMPROJ =
+    "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf";
+  static final String VL_MMPROJ_PATH = "models/mmproj.gguf";
+
+  // Audio model paths (Ultravox for audio understanding)
+  static final String AUDIO_MODEL_TO_DOWNLOAD =
+    "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q8_0.gguf";
+  static final String AUDIO_MODEL_PATH = "models/model_audio.gguf";
+
+  // Audio mmproj
+  static final String AUDIO_MMPROJ_TO_DOWNLOAD =
+    "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf";
+  static final String AUDIO_MMPROJ_PATH = "models/mmproj_audio.gguf";
+
   static final String LORA_ADAPTER_TO_DOWNLOAD =
     "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf";
   static final String LORA_ADATAPTER_PATH = "models/lora-adapter.gguf";

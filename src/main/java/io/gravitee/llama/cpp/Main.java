@@ -21,6 +21,7 @@ import static java.lang.Integer.parseInt;
 import static java.util.Optional.ofNullable;
 
 import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
+import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -82,6 +83,27 @@ public class Main {
 
     String modelGguf = params.get("model");
     String lora = params.get("lora");
+    String mmprojGguf = params.get("mmproj");
+
+    // Collect media files from both --image and --media parameters
+    List<Path> imagePaths = params
+      .getOrDefault("image", "")
+      .lines()
+      .filter(s -> !s.isBlank())
+      .map(Path::of)
+      .toList();
+
+    List<Path> mediaPaths = params
+      .getOrDefault("media", "")
+      .lines()
+      .filter(s -> !s.isBlank())
+      .map(Path::of)
+      .toList();
+
+    // Merge image and media paths
+    List<Path> allMediaPaths = new ArrayList<>(imagePaths);
+    allMediaPaths.addAll(mediaPaths);
+
     String systemMessage = params.getOrDefault(
       "system",
       "You are a helpful assistant."
@@ -99,16 +121,16 @@ public class Main {
     boolean showPerf = parseBoolean(params.getOrDefault("perf", "false"));
 
     String logLevelStr = params
-      .getOrDefault("log_level", "ERROR")
+      .getOrDefault("log_level", "INFO") // Changed default to INFO for better visibility during multimodal debugging
       .toUpperCase();
     LlamaLogLevel logLevel;
     try {
       logLevel = LlamaLogLevel.valueOf(logLevelStr);
     } catch (IllegalArgumentException e) {
       System.err.println(
-        "Invalid log level: %s. Using default: ERROR.".formatted(logLevelStr)
+        "Invalid log level: %s. Using default: INFO.".formatted(logLevelStr)
       );
-      logLevel = LlamaLogLevel.ERROR;
+      logLevel = LlamaLogLevel.INFO;
     }
 
     var reasoningTags = parseTagConfig(
@@ -123,6 +145,15 @@ public class Main {
     );
 
     if (modelGguf == null) {
+      printUsage();
+      System.exit(1);
+    }
+
+    // Check for multimodal model if media is provided
+    if (!allMediaPaths.isEmpty() && mmprojGguf == null) {
+      System.err.println(
+        "Error: --mmproj must be provided when --image or --media is used."
+      );
       printUsage();
       System.exit(1);
     }
@@ -160,10 +191,30 @@ public class Main {
       .nBatch(nBatch)
       .noPerf(!showPerf);
 
+    // Multimodal context initialization
+    MtmdContext mtmdContext = null;
+    if (mmprojGguf != null) {
+      var mtmdContextParams = new MtmdContextParams(ARENA)
+        .nThreads(modelParameters.getNThreads()) // Re-use model threads
+        .useGpu(nGpuLayers > 0); // Use GPU if model uses it
+      mtmdContext = new MtmdContext(
+        ARENA,
+        model,
+        Path.of(mmprojGguf),
+        mtmdContextParams
+      );
+      if (!mtmdContext.supportsVision() && !imagePaths.isEmpty()) {
+        System.err.println(
+          "Error: Multimodal model does not support vision inputs."
+        );
+        System.exit(1);
+      }
+    }
+
     SamplingStrategy strategy = SamplingStrategy.fromString(
       params.get("strategy")
     );
-    LlamaContext context = new LlamaContext(model, contextParams);
+    LlamaContext context = new LlamaContext(ARENA, model, contextParams);
     LlamaSampler sampler = llamaSampler(strategy, context, vocab, params);
 
     List<LlamaChatMessage> messages = new ArrayList<>();
@@ -180,6 +231,32 @@ public class Main {
       toolTags,
       conversationMode
     );
+
+    // Initial media loading (images and/or audio)
+    List<MtmdMedia> initialMedia = new ArrayList<>();
+    if (!allMediaPaths.isEmpty()) {
+      if (mtmdContext == null) {
+        // This case should be caught by the earlier check
+        throw new IllegalStateException(
+          "MtmdContext not initialized for media processing."
+        );
+      }
+      for (Path mediaPath : allMediaPaths) {
+        try {
+          List<MtmdMedia> media = MtmdMediaFactory.fromFile(
+            ARENA,
+            mediaPath,
+            mtmdContext
+          );
+          initialMedia.addAll(media);
+        } catch (Exception e) {
+          System.err.println(
+            "Error loading media: " + mediaPath + " - " + e.getMessage()
+          );
+          System.exit(1);
+        }
+      }
+    }
 
     while (!input.trim().equals("bye")) {
       Scanner scanIn = new Scanner(System.in);
@@ -199,12 +276,9 @@ public class Main {
       );
 
       // Create conversation state with resources
-      var state = ConversationState.create(
-        ARENA,
-        context,
-        tokenizer,
-        sampler
-      ).setMaxTokens(quota);
+      var state = ConversationState.create(ARENA, context, tokenizer, sampler)
+        .setMaxTokens(quota)
+        .setMedia(initialMedia); // Set initial media (images and/or audio)
 
       if (reasoningTags.isConfigured()) {
         state.setReasoning(reasoningTags.openTag, reasoningTags.closeTag);
@@ -217,7 +291,7 @@ public class Main {
       state.initialize(prompt);
 
       // Create iterator with state
-      var iterator = new DefaultLlamaIterator(state);
+      var iterator = new DefaultLlamaIterator(state, mtmdContext);
 
       // Filter reasoning tags from display, but keep tool tags visible
       var answer = iterator
@@ -276,6 +350,10 @@ public class Main {
       messages = messageTrimmer.trimMessages(messages);
 
       context.clearCache();
+      // Free initial media after processing the first turn.
+      // For subsequent turns, we'll handle dynamic media loading.
+      initialMedia.forEach(MtmdMedia::free);
+      initialMedia.clear();
 
       System.out.println();
     }
@@ -283,6 +361,9 @@ public class Main {
     context.free();
     sampler.free();
     model.free();
+    if (mtmdContext != null) {
+      mtmdContext.free();
+    }
 
     llama_backend_free();
   }
@@ -503,6 +584,9 @@ public class Main {
 
       Optional:
         --lora <path>               Path to LoRA adapter
+        --mmproj <path>             Path to multimodal projection model (required for images/audio)
+        --image <path>              Path to an image file (can be repeated for multiple images)
+        --media <path>              Path to media file: image or audio (auto-detected, can be repeated)
         --system <msg>              System prompt (default: "You are a helpful AI assistant.")
         --strategy <name>           Sampling strategy (default: CLASSIC_CHAT)
                                     Available: DETERMINISTIC, CLASSIC_CHAT, FOCUSED, BALANCED,
@@ -559,8 +643,10 @@ public class Main {
         --grammar <path>            Path to grammar file
         --grammar_root <rule>       Grammar root rule (default: "root")
 
-      Commands:
-        Type 'bye' to exit the REPL.
+       Commands:
+         Type 'bye' to exit the REPL.
+         Type '/image <path>' to add an image to the next prompt.
+         Type '/audio <path>' to add audio to the next prompt.
 
       Examples:
         java -jar llamaj.cpp.jar --model ./models/llama-7b.gguf
@@ -568,6 +654,8 @@ public class Main {
         java -jar llamaj.cpp.jar --model ./qwen.gguf --reasoning_tags "<think>|</think>"
         java -jar llamaj.cpp.jar --model ./llama.gguf --tool_tags "<tool_call>|</tool_call>" --reasoning_tags "<reasoning>|</reasoning>"
         java -jar llamaj.cpp.jar --model ./model.gguf --conversation_mode instruction
+        java -jar llamaj.cpp.jar --model ./llava.gguf --mmproj ./mmproj.gguf --image ./image.jpg --system "Describe this image."
+        java -jar llamaj.cpp.jar --model ./qwen.gguf --mmproj ./mmproj.gguf --media ./audio.wav --system "Transcribe this audio."
       """
     );
   }

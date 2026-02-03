@@ -23,8 +23,15 @@ package io.gravitee.llama.cpp;
  */
 public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
 
+  public DefaultLlamaIterator(
+    ConversationState initialState,
+    MtmdContext mtmdContext
+  ) {
+    super(initialState, mtmdContext);
+  }
+
   public DefaultLlamaIterator(ConversationState initialState) {
-    super(initialState);
+    this(initialState, null);
   }
 
   @Override
@@ -69,6 +76,7 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
 
     if (isEog(newToken)) {
       incrementTokenCount(-1);
+      batch.free();
       return false;
     }
 

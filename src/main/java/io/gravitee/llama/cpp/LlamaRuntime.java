@@ -23,6 +23,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.List;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -247,6 +248,398 @@ public final class LlamaRuntime {
       new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
       model,
       path
+    );
+  }
+
+  /* Multimodal (mtmd) functions */
+
+  public static MemorySegment mtmd_init_from_file(
+    MemorySegment mmprojPath,
+    MemorySegment llamaModel,
+    MemorySegment mtmdParams
+  ) {
+    return llama_h(
+      "mtmd_init_from_file",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, MEM_SEG_CLASS },
+      mmprojPath,
+      llamaModel,
+      mtmdParams
+    );
+  }
+
+  public static void mtmd_free(MemorySegment mtmdContext) {
+    llama_h("mtmd_free", new Class<?>[] { MEM_SEG_CLASS }, mtmdContext);
+  }
+
+  public static MemorySegment mtmd_context_params_default(
+    SegmentAllocator allocator
+  ) {
+    return llama_h(
+      "mtmd_context_params_default",
+      new Class<?>[] { SegmentAllocator.class },
+      allocator
+    );
+  }
+
+  public static boolean mtmd_support_vision(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_support_vision",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static boolean mtmd_support_audio(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_support_audio",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static int mtmd_get_audio_bitrate(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_get_audio_bitrate",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static int mtmd_encode_chunk(
+    MemorySegment mtmdContext,
+    MemorySegment mtmdInputChunkSegment
+  ) {
+    return llama_h(
+      "mtmd_encode_chunk",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      mtmdContext,
+      mtmdInputChunkSegment
+    );
+  }
+
+  public static MemorySegment mtmd_get_output_embd(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_get_output_embd",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunks_init() {
+    return llama_h("mtmd_input_chunks_init", new Class<?>[] {});
+  }
+
+  public static void mtmd_input_chunks_free(MemorySegment chunks) {
+    llama_h("mtmd_input_chunks_free", new Class<?>[] { MEM_SEG_CLASS }, chunks);
+  }
+
+  public static long mtmd_input_chunks_size(MemorySegment chunks) {
+    return llama_h(
+      "mtmd_input_chunks_size",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunks
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunks_get(
+    MemorySegment chunks,
+    long index
+  ) {
+    return llama_h(
+      "mtmd_input_chunks_get",
+      new Class<?>[] { MEM_SEG_CLASS, long.class },
+      chunks,
+      index
+    );
+  }
+
+  public static int mtmd_input_chunk_get_type(MemorySegment chunk) {
+    return llama_h(
+      "mtmd_input_chunk_get_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunk_get_tokens_text(
+    MemorySegment chunk,
+    MemorySegment nTokensOutput // This is an output parameter, needs special handling or can be null if not needed
+  ) {
+    return llama_h(
+      "mtmd_input_chunk_get_tokens_text",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      chunk,
+      nTokensOutput
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunk_get_tokens_image(
+    MemorySegment chunk
+  ) {
+    return llama_h(
+      "mtmd_input_chunk_get_tokens_image",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  public static long mtmd_input_chunk_get_n_tokens(MemorySegment chunk) {
+    return llama_h(
+      "mtmd_input_chunk_get_n_tokens",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunk_get_id(MemorySegment chunk) {
+    return llama_h(
+      "mtmd_input_chunk_get_id",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  public static int mtmd_input_chunk_get_n_pos(MemorySegment chunk) {
+    return llama_h(
+      "mtmd_input_chunk_get_n_pos",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  /* mtmd_input_text functions */
+
+  public static MemorySegment mtmd_input_text_allocate(
+    SegmentAllocator allocator
+  ) {
+    return mtmd_input_text(
+      "allocate",
+      new Class[] { SegmentAllocator.class },
+      allocator
+    );
+  }
+
+  public static void mtmd_input_text_set_text(
+    MemorySegment mtmdInputText,
+    MemorySegment text
+  ) {
+    mtmd_input_text(
+      "text",
+      new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      mtmdInputText,
+      text
+    );
+  }
+
+  public static void mtmd_input_text_set_add_special(
+    MemorySegment mtmdInputText,
+    boolean addSpecial
+  ) {
+    mtmd_input_text(
+      "add_special",
+      new Class[] { MEM_SEG_CLASS, boolean.class },
+      mtmdInputText,
+      addSpecial
+    );
+  }
+
+  public static void mtmd_input_text_set_parse_special(
+    MemorySegment mtmdInputText,
+    boolean parseSpecial
+  ) {
+    mtmd_input_text(
+      "parse_special",
+      new Class[] { MEM_SEG_CLASS, boolean.class },
+      mtmdInputText,
+      parseSpecial
+    );
+  }
+
+  public static MemorySegment mtmd_bitmap_init(
+    int width,
+    int height,
+    MemorySegment data
+  ) {
+    return llama_h(
+      "mtmd_bitmap_init",
+      new Class<?>[] { int.class, int.class, MEM_SEG_CLASS },
+      width,
+      height,
+      data
+    );
+  }
+
+  public static MemorySegment mtmd_bitmap_init_from_audio(
+    long nSamples,
+    MemorySegment data
+  ) {
+    return llama_h(
+      "mtmd_bitmap_init_from_audio",
+      new Class<?>[] { long.class, MEM_SEG_CLASS },
+      nSamples,
+      data
+    );
+  }
+
+  public static void mtmd_bitmap_free(MemorySegment bitmap) {
+    llama_h("mtmd_bitmap_free", new Class<?>[] { MEM_SEG_CLASS }, bitmap);
+  }
+
+  public static void mtmd_bitmap_set_id(
+    MemorySegment bitmap,
+    MemorySegment id
+  ) {
+    llama_h(
+      "mtmd_bitmap_set_id",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      bitmap,
+      id
+    );
+  }
+
+  /**
+   * Evaluates all multimodal input chunks (text, image, audio) in sequence.
+   * This is the top-level native helper that handles everything: text token decoding,
+   * image/audio encoding, M-RoPE 2D/1D position computation, non-causal attention,
+   * and batch splitting. Matches the exact behavior of the reference llama.cpp server.
+   *
+   * @param mtmdContext The multimodal context
+   * @param llamaContext The llama context
+   * @param chunks The tokenized input chunks
+   * @param nPast Starting position in the KV cache
+   * @param seqId Sequence ID
+   * @param nBatch Maximum batch size for decoding
+   * @param logitsLast Whether to compute logits for the last token
+   * @param newNPast Output parameter — updated position after processing
+   * @return 0 on success, non-zero on error
+   */
+  public static int mtmd_helper_eval_chunks(
+    MemorySegment mtmdContext,
+    MemorySegment llamaContext,
+    MemorySegment chunks,
+    int nPast,
+    int seqId,
+    int nBatch,
+    boolean logitsLast,
+    MemorySegment newNPast
+  ) {
+    return llama_h(
+      "mtmd_helper_eval_chunks",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        int.class,
+        int.class,
+        int.class,
+        boolean.class,
+        MEM_SEG_CLASS,
+      },
+      mtmdContext,
+      llamaContext,
+      chunks,
+      nPast,
+      seqId,
+      nBatch,
+      logitsLast,
+      newNPast
+    );
+  }
+
+  /**
+   * Creates a bitmap from raw encoded image/audio file bytes (PNG, JPEG, WAV, etc.).
+   * This delegates to the native stb_image / miniaudio decoders, matching the exact
+   * behavior of the reference llama.cpp server's image processing pipeline.
+   *
+   * @param mtmdContext The multimodal context (needed for audio bitrate detection)
+   * @param buf Buffer containing the encoded file bytes
+   * @param len Length of the buffer in bytes
+   * @return A new mtmd_bitmap pointer, or NULL (address 0) on failure
+   */
+  public static MemorySegment mtmd_helper_bitmap_init_from_buf(
+    MemorySegment mtmdContext,
+    MemorySegment buf,
+    long len
+  ) {
+    return llama_h(
+      "mtmd_helper_bitmap_init_from_buf",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, long.class },
+      mtmdContext,
+      buf,
+      len
+    );
+  }
+
+  public static int mtmd_tokenize(
+    MemorySegment mtmdContext,
+    MemorySegment outputChunks,
+    MemorySegment mtmdInputText,
+    MemorySegment bitmapArray,
+    long numBitmaps
+  ) {
+    return llama_h(
+      "mtmd_tokenize",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        long.class,
+      },
+      mtmdContext,
+      outputChunks,
+      mtmdInputText,
+      bitmapArray,
+      numBitmaps
+    );
+  }
+
+  public static boolean mtmd_decode_use_mrope(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_decode_use_mrope",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static boolean mtmd_decode_use_non_causal(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_decode_use_non_causal",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static void llama_set_causal_attn(
+    MemorySegment llamaContext,
+    boolean causal
+  ) {
+    llama_h(
+      "llama_set_causal_attn",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      llamaContext,
+      causal
+    );
+  }
+
+  public static int llama_model_n_embd(MemorySegment model) {
+    return llama_h(
+      "llama_model_n_embd",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  /**
+   * Returns the input embedding dimension for the model.
+   * For multimodal models, this may differ from {@link #llama_model_n_embd}
+   * as it reflects the mmproj output dimension used for image/audio embeddings.
+   */
+  public static int llama_model_n_embd_inp(MemorySegment model) {
+    return llama_h(
+      "llama_model_n_embd_inp",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
     );
   }
 
@@ -963,44 +1356,32 @@ public final class LlamaRuntime {
     );
   }
 
+  /**
+   * Adds a single token to a batch using cached field references.
+   * This optimized version eliminates 5 reflection calls per token by using a pre-computed cache.
+   *
+   * @param batch The llama_batch MemorySegment
+   * @param token The token ID to add
+   * @param pos The position in the sequence
+   * @param seqIds The sequence IDs
+   * @param logits Whether to request logits for this token
+   * @param cache The pre-computed batch field cache (created once, reused for all tokens)
+   */
   public static void llama_batch_add(
     MemorySegment batch,
     int token,
     int pos,
     java.util.List<Integer> seqIds,
-    boolean logits
+    boolean logits,
+    BatchFieldCache cache
   ) {
-    // Get batch struct fields
-    MemorySegment tokens = invoke(
-      "llama_batch",
-      "token",
-      new Class[] { MEM_SEG_CLASS },
-      batch
-    );
-    MemorySegment positions = invoke(
-      "llama_batch",
-      "pos",
-      new Class[] { MEM_SEG_CLASS },
-      batch
-    );
-    MemorySegment nSeqId = invoke(
-      "llama_batch",
-      "n_seq_id",
-      new Class[] { MEM_SEG_CLASS },
-      batch
-    );
-    MemorySegment seqIdPtr = invoke(
-      "llama_batch",
-      "seq_id",
-      new Class[] { MEM_SEG_CLASS },
-      batch
-    );
-    MemorySegment logitsPtr = invoke(
-      "llama_batch",
-      "logits",
-      new Class[] { MEM_SEG_CLASS },
-      batch
-    );
+    // Use cached field references (zero reflection!)
+    MemorySegment tokens = cache.getTokens();
+    MemorySegment positions = cache.getPositions();
+    MemorySegment nSeqId = cache.getNSeqId();
+    MemorySegment seqIdPtr = cache.getSeqIdPtr();
+    MemorySegment logitsPtr = cache.getLogitsPtr();
+
     int nTokens = llama_batch_n_tokens(batch);
 
     // Set token
@@ -1015,7 +1396,7 @@ public final class LlamaRuntime {
     // The pointer needs to be reinterpreted with the correct size (seqIds.size() * sizeof(int))
     MemorySegment seqIdArray = seqIdPtr
       .getAtIndex(ValueLayout.ADDRESS, nTokens)
-      .reinterpret(seqIds.size() * Integer.BYTES);
+      .reinterpret((long) seqIds.size() * Integer.BYTES);
     for (int i = 0; i < seqIds.size(); i++) {
       seqIdArray.setAtIndex(ValueLayout.JAVA_INT, i, seqIds.get(i));
     }
@@ -1035,6 +1416,135 @@ public final class LlamaRuntime {
       batch,
       nTokens + 1
     );
+  }
+
+  /**
+   * Legacy method for backward compatibility. Creates a cache internally.
+   * For better performance, prefer the version that accepts a BatchFieldCache.
+   *
+   * @deprecated Use {@link #llama_batch_add(MemorySegment, int, int, List, boolean, BatchFieldCache)}
+   *             which allows cache reuse across multiple token additions.
+   */
+  @Deprecated
+  public static void llama_batch_add(
+    MemorySegment batch,
+    int token,
+    int pos,
+    java.util.List<Integer> seqIds,
+    boolean logits
+  ) {
+    // Create a temporary cache for this single call (inefficient!)
+    // This exists only for backward compatibility
+    BatchFieldCache cache = new BatchFieldCache(batch);
+    llama_batch_add(batch, token, pos, seqIds, logits, cache);
+  }
+
+  /**
+   * Adds multiple embedding tokens to a batch using cached field references.
+   * Optimized for image/audio embeddings which often have many tokens.
+   *
+   * @param batch The llama_batch MemorySegment
+   * @param embd The embedding MemorySegment
+   * @param pos The starting position in the sequence
+   * @param seqIds The sequence IDs
+   * @param logits Whether to request logits for the last token
+   * @param nTokensToAdd Number of embedding tokens to add
+   * @param cache The pre-computed batch field cache
+   */
+  public static void llama_batch_add(
+    MemorySegment batch,
+    MemorySegment embd,
+    int pos,
+    List<Integer> seqIds,
+    boolean logits,
+    int nTokensToAdd,
+    BatchFieldCache cache
+  ) {
+    // Use cached field references (zero reflection!)
+    MemorySegment embds = cache.getLogitsPtr(); // reuse cache method (embd field)
+    // Actually, we need to get embds through invoke since it's not in the standard cache
+    // For now, we'll use invoke but cache it locally
+    MemorySegment embeddings = invoke(
+      "llama_batch",
+      "embd",
+      new Class[] { MEM_SEG_CLASS },
+      batch
+    );
+
+    MemorySegment positions = cache.getPositions();
+    MemorySegment nSeqId = cache.getNSeqId();
+    MemorySegment seqIdPtr = cache.getSeqIdPtr();
+    MemorySegment logitsPtr = cache.getLogitsPtr();
+    int nTokens = llama_batch_n_tokens(batch);
+
+    // Copy embedding data
+    MemorySegment.copy(
+      embd,
+      0,
+      embeddings,
+      (long) nTokens * embd.byteSize(),
+      embd.byteSize()
+    );
+
+    // Pre-convert seqIds to array for faster access
+    int[] seqIdsArray = seqIds.stream().mapToInt(Integer::intValue).toArray();
+    int seqIdsSize = seqIdsArray.length;
+
+    // Pre-compute last token index to avoid repeated calculation
+    int lastTokenIdx = nTokensToAdd - 1;
+
+    for (int i = 0; i < nTokensToAdd; i++) {
+      int tokenPos = nTokens + i;
+
+      // Set position
+      positions.setAtIndex(ValueLayout.JAVA_INT, tokenPos, pos + i);
+      // Set number of sequence IDs
+      nSeqId.setAtIndex(ValueLayout.JAVA_INT, tokenPos, seqIdsSize);
+
+      // Set sequence IDs (cached array access)
+      MemorySegment seqIdArray = seqIdPtr
+        .getAtIndex(ValueLayout.ADDRESS, tokenPos)
+        .reinterpret((long) seqIdsSize * Integer.BYTES);
+      for (int j = 0; j < seqIdsSize; j++) {
+        seqIdArray.setAtIndex(ValueLayout.JAVA_INT, j, seqIdsArray[j]);
+      }
+
+      // Set logits flag (only for last token if requested)
+      logitsPtr.setAtIndex(
+        ValueLayout.JAVA_BYTE,
+        tokenPos,
+        (logits && i == lastTokenIdx) ? (byte) 1 : (byte) 0
+      );
+    }
+
+    // Increment n_tokens
+    invoke(
+      "llama_batch",
+      "n_tokens",
+      new Class[] { MEM_SEG_CLASS, int.class },
+      batch,
+      nTokens + nTokensToAdd
+    );
+  }
+
+  /**
+   * Legacy method for backward compatibility. Creates a cache internally.
+   * For better performance, prefer the version that accepts a BatchFieldCache.
+   *
+   * @deprecated Use {@link #llama_batch_add(MemorySegment, MemorySegment, int, List, boolean, int, BatchFieldCache)}
+   */
+  @Deprecated
+  public static void llama_batch_add(
+    MemorySegment batch,
+    MemorySegment embd,
+    int pos,
+    List<Integer> seqIds,
+    boolean logits,
+    int n_tokens_to_add
+  ) {
+    // Create a temporary cache for this single call (inefficient!)
+    BatchFieldCache cache = new BatchFieldCache(batch);
+    llama_batch_add(batch, embd, pos, seqIds, logits, n_tokens_to_add, cache);
   }
 
   public static void llama_batch_clear(MemorySegment batch) {
@@ -1273,6 +1783,230 @@ public final class LlamaRuntime {
     Object... args
   ) {
     return invoke("llama_chat_message", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific mtmd_context_params class.
+   *
+   * @param methodName The name of the method to invoke.
+   * @param parameterTypes An array of Class objects representing the parameter types of the method.
+   * @param args The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T mtmd_context_params(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
+    return invoke("mtmd_context_params", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific mtmd_input_text class.
+   *
+   * @param methodName The name of the method to invoke.
+   * @param parameterTypes An array of Class objects representing the parameter types of the method.
+   * @param args The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T mtmd_input_text(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
+    return invoke("mtmd_input_text", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific mtmd_input_chunk class.
+   *
+   * @param methodName The name of the method to invoke.
+   * @param parameterTypes An array of Class objects representing the parameter types of the method.
+   * @param args The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T mtmd_input_chunk(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
+    return invoke("mtmd_input_chunk", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific mtmd_input_chunks class.
+   *
+   * @param methodName The name of the method to invoke.
+   * @param parameterTypes An array of Class objects representing the parameter types of the method.
+   * @param args The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T mtmd_input_chunks(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
+    return invoke("mtmd_input_chunks", methodName, parameterTypes, args);
+  }
+
+  public static boolean mtmd_context_params_use_gpu(MemorySegment segment) {
+    return (boolean) mtmd_context_params(
+      "use_gpu",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_use_gpu(
+    MemorySegment segment,
+    boolean useGpu
+  ) {
+    mtmd_context_params(
+      "use_gpu",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      useGpu
+    );
+  }
+
+  public static boolean mtmd_context_params_print_timings(
+    MemorySegment segment
+  ) {
+    return (boolean) mtmd_context_params(
+      "print_timings",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_print_timings(
+    MemorySegment segment,
+    boolean printTimings
+  ) {
+    mtmd_context_params(
+      "print_timings",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      printTimings
+    );
+  }
+
+  public static int mtmd_context_params_n_threads(MemorySegment segment) {
+    return (int) mtmd_context_params(
+      "n_threads",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_n_threads(
+    MemorySegment segment,
+    int nThreads
+  ) {
+    mtmd_context_params(
+      "n_threads",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      nThreads
+    );
+  }
+
+  public static int mtmd_context_params_verbosity(MemorySegment segment) {
+    return (int) mtmd_context_params(
+      "verbosity",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static MemorySegment mtmd_context_params_media_marker(
+    MemorySegment segment
+  ) {
+    return (MemorySegment) mtmd_context_params(
+      "media_marker",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_media_marker(
+    MemorySegment segment,
+    MemorySegment mediaMarker
+  ) {
+    mtmd_context_params(
+      "media_marker",
+      new Class<?>[] { MEM_SEG_CLASS, MemorySegment.class },
+      segment,
+      mediaMarker
+    );
+  }
+
+  public static int mtmd_context_params_flash_attn_type(MemorySegment segment) {
+    return (int) mtmd_context_params(
+      "flash_attn_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_flash_attn_type(
+    MemorySegment segment,
+    int flashAttnType
+  ) {
+    mtmd_context_params(
+      "flash_attn_type",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      flashAttnType
+    );
+  }
+
+  public static int mtmd_context_params_image_min_tokens(
+    MemorySegment segment
+  ) {
+    return (int) mtmd_context_params(
+      "image_min_tokens",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_image_min_tokens(
+    MemorySegment segment,
+    int imageMinTokens
+  ) {
+    mtmd_context_params(
+      "image_min_tokens",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      imageMinTokens
+    );
+  }
+
+  public static int mtmd_context_params_image_max_tokens(
+    MemorySegment segment
+  ) {
+    return (int) mtmd_context_params(
+      "image_max_tokens",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_image_max_tokens(
+    MemorySegment segment,
+    int imageMaxTokens
+  ) {
+    mtmd_context_params(
+      "image_max_tokens",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      imageMaxTokens
+    );
   }
 
   /**

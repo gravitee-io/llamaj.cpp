@@ -52,9 +52,9 @@ commands:
       - run:
           name: Install Java 25
           command: |
-            JDK_URL="https://download.java.net/java/GA/jdk25.0.1/59875691028a4296817555a943016123/16/GPL/openjdk-25.0.1_macos-aarch64_bin.tar.gz"
+            JDK_URL="https://download.java.net/java/GA/jdk25.0.2/b1e0dfa218384cb9959bdcb897162d4e/10/GPL/openjdk-25.0.2_macos-aarch64_bin.tar.gz"
             INSTALL_DIR="/Library/Java/JavaVirtualMachines"
-            JDK_DIR="jdk-25.0.1.jdk"
+            JDK_DIR="jdk-25.0.2.jdk"
 
             # Create installation directory if it doesn't exist
             sudo mkdir -p $INSTALL_DIR
@@ -122,7 +122,21 @@ commands:
       - run:
           name: Java dependencies
           command: |
-            apt -y install openjdk-25-jdk maven
+            apt -y install maven
+
+            JDK_URL="https://download.java.net/java/GA/jdk25.0.2/b1e0dfa218384cb9959bdcb897162d4e/10/GPL/openjdk-25.0.2_linux-x64_bin.tar.gz"
+            INSTALL_DIR="/usr/lib/jvm/jdk-25.0.2"
+
+            mkdir -p $INSTALL_DIR
+            curl -L -o /tmp/jdk.tar.gz $JDK_URL
+            tar -xzf /tmp/jdk.tar.gz -C $INSTALL_DIR --strip-components=1
+            rm /tmp/jdk.tar.gz
+
+            echo "export JAVA_HOME=$INSTALL_DIR" >> ~/.bashrc
+            echo "export PATH=$INSTALL_DIR/bin:\$PATH" >> ~/.bashrc
+            source ~/.bashrc
+
+            java -version
 
   install_dependencies_jextract:
     steps:
@@ -200,12 +214,8 @@ commands:
             mvn -s /tmp/.gravitee.settings.xml clean generate-sources -P<< parameters.os >>-<< parameters.platform >>
             mvn -s /tmp/.gravitee.settings.xml install
 
-  get_jextract:
+  get_llama_cpp:
     parameters:
-      os:
-        type: string
-      platform:
-        type: string
       llama-cpp-version:
         type: string
     steps:
@@ -213,26 +223,10 @@ commands:
           name: Clone llama.cpp
           command: |
             LLAMA_CPP_VERSION=<< parameters.llama-cpp-version >>
-            if [[ << parameters.os >> == 'linux' ]]; then
-              echo "export LLAMA_CPP_VERSION=$LLAMA_CPP_VERSION" >> ~/.bashrc
-            elif [[ << parameters.os >> == 'macosx' ]]; then
-              echo "export LLAMA_CPP_VERSION=$LLAMA_CPP_VERSION" >> ~/.zprofile
-            fi
+            echo "export LLAMA_CPP_VERSION=$LLAMA_CPP_VERSION" >> ~/.bashrc 2>/dev/null || true
+            echo "export LLAMA_CPP_VERSION=$LLAMA_CPP_VERSION" >> ~/.zprofile 2>/dev/null || true
 
             git clone -b $LLAMA_CPP_VERSION --single-branch https://github.com/ggml-org/llama.cpp "$HOME_DIR/llama.cpp"
-      - when:
-          condition:
-            and:
-              - equal: ["linux", << parameters.os >>]
-              - equal: ["x86_64", << parameters.platform >>]
-          steps:
-            - download_jextract
-      - when:
-          condition:
-            and:
-              - equal: ["macosx", << parameters.os >>]
-          steps:
-            - build_jextract_macos
 
   update_llama_cpp_version:
     steps:
@@ -387,10 +381,8 @@ jobs:
     steps:
       - install-java-macos
       - install-maven-macos
-      - get_jextract:
-          os: "macosx"
-          platform: "aarch64"
-          "llama-cpp-version": b7943
+      - get_llama_cpp:
+          "llama-cpp-version": b7631
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
       - download_model:
@@ -402,6 +394,18 @@ jobs:
       - download_model:
           model_url: "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf"
           model_path: "models/lora-adapter.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/Qwen3VL-2B-Instruct-Q8_0.gguf"
+          model_path: "models/model_vl.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
+          model_path: "models/mmproj.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q8_0.gguf"
+          model_path: "models/model_audio.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
+          model_path: "models/mmproj_audio.gguf"
       - run-tests:
           os: "macosx"
           platform: "aarch64"
@@ -414,10 +418,8 @@ jobs:
       - install_dependencies
       - install_java_dependencies
       - install_dependencies_jextract
-      - get_jextract:
-          os: "linux"
-          platform: "x86_64"
-          "llama-cpp-version": b7943
+      - get_llama_cpp:
+          "llama-cpp-version": b7631
       - checkout:
           path: "/home/circleci/llamaj.cpp"
       - download_model:
@@ -429,6 +431,18 @@ jobs:
       - download_model:
           model_url: "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf"
           model_path: "models/lora-adapter.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/Qwen3VL-2B-Instruct-Q8_0.gguf"
+          model_path: "models/model_vl.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
+          model_path: "models/mmproj.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q8_0.gguf"
+          model_path: "models/model_audio.gguf"
+      - download_model:
+          model_url: "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
+          model_path: "models/mmproj_audio.gguf"
       - run-tests:
           os: "linux"
           platform: "x86_64"
@@ -440,10 +454,8 @@ jobs:
     steps:
       - install-java-macos
       - install-maven-macos
-      - get_jextract:
-          os: "macosx"
-          platform: "aarch64"
-          "llama-cpp-version": b7943
+      - get_llama_cpp:
+          "llama-cpp-version": b7631
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
       - generate_sources:
@@ -458,10 +470,8 @@ jobs:
       - install_dependencies
       - install_java_dependencies
       - install_dependencies_jextract
-      - get_jextract:
-          os: "linux"
-          platform: "x86_64"
-          "llama-cpp-version": b7943
+      - get_llama_cpp:
+          "llama-cpp-version": b7631
       - checkout:
           path: "/home/circleci/llamaj.cpp"
       - generate_sources:

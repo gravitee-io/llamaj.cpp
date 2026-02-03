@@ -32,10 +32,21 @@ import java.util.Arrays;
 public final class LlamaModelParams extends MemorySegmentAware {
 
   private final int maxDevices;
+  private int nThreads;
 
   public LlamaModelParams(Arena arena) {
     super(llama_model_default_params(arena));
     this.maxDevices = (int) llama_max_devices();
+    this.nThreads = Runtime.getRuntime().availableProcessors(); // Default
+  }
+
+  public int getNThreads() {
+    return nThreads;
+  }
+
+  public LlamaModelParams setNThreads(int nThreads) {
+    this.nThreads = nThreads;
+    return this;
   }
 
   public float[] buildDefaultTensorSplit() {

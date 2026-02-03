@@ -15,16 +15,21 @@
  */
 package io.gravitee.llama.cpp;
 
-/**
- * @author Rémi SULTAN (remi.sultan at graviteesource.com)
- * @author GraviteeSource Team
- */
-public enum FlashAttentionType {
-  AUTO,
-  DISABLED,
-  ENABLED;
+import java.lang.foreign.MemorySegment;
 
-  public static FlashAttentionType fromOrdinal(int ordinal) {
-    return values()[ordinal];
-  }
+/**
+ * Represents a unified interface for multimodal media (images and audio).
+ * Both images and audio are internally represented as `mtmd_bitmap` in the native layer.
+ *
+ * Implementing classes:
+ * - {@link MtmdImage} for image media
+ * - {@link MtmdAudio} for audio media
+ */
+public interface MtmdMedia extends Freeable {
+  /**
+   * Gets the underlying native `mtmd_bitmap` memory segment.
+   *
+   * @return The native memory segment representing this media
+   */
+  MemorySegment getMemorySegment();
 }
