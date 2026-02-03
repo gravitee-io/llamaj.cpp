@@ -40,13 +40,21 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
    * @param arena The memory arena for allocations
    * @param context The shared context for all conversations (all states must use this same context)
    */
-  public BatchIterator(Arena arena, LlamaContext context) {
-    super(null); // No initial state - states are added via addState()
+  public BatchIterator(
+    Arena arena,
+    LlamaContext context,
+    MtmdContext mtmdContext
+  ) {
+    super(null, mtmdContext); // No initial state - states are added via addState()
     this.context = context;
     this.batch = new LlamaBatch(arena, context.nBatch(), 0, context.nSeqMax());
     this.seqIdToState = new HashMap<>();
     this.firstTokenEmitted = new HashMap<>();
     this.seqIdToBatchPos = new HashMap<>();
+  }
+
+  public BatchIterator(Arena arena, LlamaContext context) {
+    this(arena, context, null);
   }
 
   /**
@@ -64,7 +72,7 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     if (state.getContext() != this.context) {
       throw new LlamaException(
         "All conversation states must share the same LlamaContext. " +
-        "Cannot mix states from different contexts in parallel processing."
+          "Cannot mix states from different contexts in parallel processing."
       );
     }
 
@@ -72,9 +80,9 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     if (this.seqIdToState.containsKey(state.getSequenceId())) {
       throw new LlamaException(
         "Sequence ID " +
-        state.getSequenceId() +
-        " is already in use. " +
-        "Each conversation state must have a unique sequence ID."
+          state.getSequenceId() +
+          " is already in use. " +
+          "Each conversation state must have a unique sequence ID."
       );
     }
 
@@ -157,7 +165,7 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
    */
   private List<ConversationState> prepareActiveStates() {
     List<ConversationState> activeStates = new ArrayList<>();
-    for (var it = seqIdToState.entrySet().iterator(); it.hasNext();) {
+    for (var it = seqIdToState.entrySet().iterator(); it.hasNext(); ) {
       var entry = it.next();
       var state = entry.getValue();
 
@@ -183,7 +191,15 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
 
       // If the first token for this state hasn't been emitted yet, add it to the output queue.
       if (!firstTokenEmitted.get(state.getSequenceId())) {
-        currentOutputs.add(new LlamaOutput(state.getPiece(), 1, state.getSequenceId()));
+        currentOutputs.add(
+          new LlamaOutput(
+            state.getPiece(),
+            1,
+            state.getSequenceId(),
+            null,
+            state.getLogprobs()
+          )
+        );
         firstTokenEmitted.put(state.getSequenceId(), true);
       }
     }
@@ -222,7 +238,12 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     // Add a token from each state in the sub-batch to the main batch.
     for (ConversationState state : batchStates) {
       seqIdToBatchPos.put(state.getSequenceId(), batch.nTokens());
-      batch.add(state.getNewTokenId(), state.getNPast(), List.of(state.getSequenceId()), true);
+      batch.add(
+        state.getNewTokenId(),
+        state.getNPast(),
+        List.of(state.getSequenceId()),
+        true
+      );
     }
 
     // Perform the main decoding step.
@@ -248,6 +269,9 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     int newToken = state.getSampler().sample(context, batchPos);
     String tokenPiece = decodeTokenPiece(state, newToken);
 
+    // Collect logprobs before processing (logits are invalidated after next decode).
+    Logprobs logprobs = collectLogprobs(state, newToken, batchPos);
+
     processSampledToken(state, tokenPiece);
 
     // Check if the generation should continue for this state.
@@ -256,7 +280,12 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
         // Decrement token count for EOG token, as it's not part of the generated content.
         state
           .getTokenTracking()
-          .consume(new io.gravitee.llama.cpp.modules.TokenTracking.Context(state.getGenerationState(), -1));
+          .consume(
+            new io.gravitee.llama.cpp.modules.TokenTracking.Context(
+              state.getGenerationState(),
+              -1
+            )
+          );
       }
       return;
     }
@@ -264,8 +293,17 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     // Update the state with the new token and add it to the output queue.
     state.setNewTokenId(newToken);
     state.setPiece(tokenPiece);
+    state.setLogprobs(logprobs);
     state.incrementNPast();
-    currentOutputs.add(new LlamaOutput(state.getPiece(), 1, state.getSequenceId()));
+    currentOutputs.add(
+      new LlamaOutput(
+        state.getPiece(),
+        1,
+        state.getSequenceId(),
+        null,
+        logprobs
+      )
+    );
   }
 
   /**
@@ -303,7 +341,10 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
    * @return true if there are active conversations, false otherwise
    */
   public boolean hasActiveConversations() {
-    return seqIdToState.values().stream().anyMatch(state -> state.getFinishReason() == null);
+    return seqIdToState
+      .values()
+      .stream()
+      .anyMatch(state -> state.getFinishReason() == null);
   }
 
   /**
@@ -355,7 +396,9 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
   @Override
   public LlamaOutput next() {
     if (currentOutputIndex >= currentOutputs.size()) {
-      throw new java.util.NoSuchElementException("No more outputs available. Call hasNext() before next().");
+      throw new java.util.NoSuchElementException(
+        "No more outputs available. Call hasNext() before next()."
+      );
     }
     return currentOutputs.get(currentOutputIndex++);
   }

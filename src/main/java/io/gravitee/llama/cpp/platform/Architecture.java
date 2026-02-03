@@ -47,7 +47,9 @@ public enum Architecture {
       return AARCH64;
     }
 
-    throw new IllegalArgumentException("Unsupported operating system architecture: " + osArch);
+    throw new IllegalArgumentException(
+      "Unsupported operating system architecture: " + osArch
+    );
   }
 
   public String getArch() {

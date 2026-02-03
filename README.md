@@ -5,11 +5,15 @@
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/gravitee-io/llamaj.cpp/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/gravitee-io/llamaj.cpp/tree/main)
 [![Community Forum](https://img.shields.io/badge/Gravitee-Community%20Forum-white?logo=githubdiscussion&logoColor=white)](https://community.gravitee.io?utm_source=readme)
 
-llamaj.cpp (contraction of llama.cpp and java/jextract) is a port of llama.cpp in the JVM using jextract.
+**Llamaj.cpp** is a Java and JVM port of llama.cpp using jextract, enabling local large language model (LLM) inference through native foreign function & memory API interop. Natively supports macOS M-series and Linux x86_64 with GPU acceleration. Platform and hardware support (Windows, ARM, CUDA, etc.) can be extended through custom builds.
+
+## Keywords
+
+`llama.cpp` · `java` · `jvm` · `llm` · `large language models` · `inference` · `ai` · `native interop` · `foreign function & memory api` · `jextract`
 
 ## Requirements
 
-- Java 21
+- Java 25
 - mvn
 - MacOS M-series / Linux x86_64 (CPU) (you can check the last section if you do not see your platform here)
 
@@ -21,17 +25,20 @@ Include the dependency in your pom.xml
         ...
         <dependency>
             <groupId>io.gravitee.llama.cpp</groupId>
-            <artifactId>llamaj-cpp</artifactId>
+            <artifactId>llamaj.cpp</artifactId>
             <version>x.x.x</version>
-        <dependency>
+        </dependency>
     </dependencies>
 ```
+
+> **Note:** All examples below use `LlamaVocab` to handle tokenization. It's obtained from a loaded `LlamaModel` and is essential for converting between tokens and text representations.
 
 ### Example 1: Basic Conversation
 
 ```java
 import io.gravitee.llama.cpp.*;
 import java.lang.foreign.Arena;
+import java.nio.file.Path;
 
 public class BasicExample {
     public static void main(String[] args) {
@@ -78,7 +85,60 @@ public class BasicExample {
 }
 ```
 
-### Example 2: Parallel Conversations
+### Example 2: Log Probabilities
+
+Enable log-probability collection to inspect the model's confidence at each token position.
+Set `topLogprobs` to the number of top-alternative tokens you want alongside the sampled one (0 = disabled, no overhead):
+
+```java
+import io.gravitee.llama.cpp.*;
+import java.lang.foreign.Arena;
+import java.nio.file.Path;
+
+public class LogprobsExample {
+    public static void main(String[] args) {
+        var arena = Arena.ofConfined();
+        LlamaRuntime.llama_backend_init();
+
+        var model = new LlamaModel(arena, Path.of("models/model.gguf"), new LlamaModelParams(arena));
+        var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512);
+        var context = new LlamaContext(arena, model, contextParams);
+        var vocab = new LlamaVocab(model);
+        var tokenizer = new LlamaTokenizer(vocab, context);
+        var sampler = new LlamaSampler(arena).temperature(0.7f).seed(42);
+
+        var state = ConversationState.create(arena, context, tokenizer, sampler)
+            .setMaxTokens(50)
+            .setTopLogprobs(5)   // return top-5 alternatives at every token position
+            .initialize("What is the capital of France?");
+
+        var iterator = new DefaultLlamaIterator(state);
+        while (iterator.hasNext()) {
+            var output = iterator.next();
+            System.out.print(output.text());
+
+            Logprobs lp = output.logprobs();
+            System.out.printf("%n  chosen: \"%s\"  logprob=%.4f%n",
+                lp.chosenToken().token(), lp.chosenToken().logprob());
+            lp.topLogprobs().forEach(t ->
+                System.out.printf("    alt: \"%s\"  logprob=%.4f%n", t.token(), t.logprob()));
+        }
+
+        context.free();
+        sampler.free();
+        model.free();
+        LlamaRuntime.llama_backend_free();
+    }
+}
+```
+
+Each `LlamaOutput` carries a `Logprobs` object with:
+- `chosenToken()` — the token that was sampled, its text, vocabulary ID, log-probability, and raw UTF-8 bytes
+- `topLogprobs()` — up to N alternatives sorted by descending log-probability; the chosen token is always included
+
+When `topLogprobs` is `0` (the default), `output.logprobs()` is `null` and no logit processing is done.
+
+### Example 3: Parallel Conversations
 
 Process multiple conversations simultaneously in a single batch:
 
@@ -86,6 +146,7 @@ Process multiple conversations simultaneously in a single batch:
 import io.gravitee.llama.cpp.*;
 
 import java.lang.foreign.Arena;
+import java.nio.file.Path;
 
 public class ParallelExample {
     public static void main(String[] args) {
@@ -154,72 +215,110 @@ public class ParallelExample {
 }
 ```
 
+### Example 4: Distributed Inference with RPC
+
+Offload model weights and KV-cache to remote machines using the RPC backend.
+When using `--rpc`, weights are loaded **exclusively** on the remote servers -- the local GPU is not used.
+
+Start RPC server nodes first (see [containers/README.md](containers/README.md)):
+
+```bash
+# On the remote machine (or another terminal)
+./scripts/start-rpc-server.sh
+```
+
+Then connect from Java:
+
+```java
+import io.gravitee.llama.cpp.*;
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
+import java.lang.foreign.Arena;
+import java.nio.file.Path;
+
+public class RpcExample {
+    public static void main(String[] args) {
+        var arena = Arena.ofConfined();
+
+        // Initialize runtime
+        String libPath = LlamaLibLoader.load();
+        LlamaRuntime.llama_backend_init();
+
+        // Register remote RPC servers -- returns their device handles
+        var rpcDevices = BackendRegistry.addRpcServer(arena, "127.0.0.1:50052");
+
+        // Print all discovered backends and devices
+        BackendRegistry.printSummary();
+
+        // Load model, restricting offloading to only the RPC devices
+        var modelParams = new LlamaModelParams(arena)
+            .devices(arena, rpcDevices)
+            .nGpuLayers(999);
+        var model = new LlamaModel(arena, Path.of("models/model.gguf"), modelParams);
+
+        // Everything else works exactly the same as local inference
+        var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512);
+        var context = new LlamaContext(model, contextParams);
+        var vocab = new LlamaVocab(model);
+        var tokenizer = new LlamaTokenizer(vocab, context);
+        var sampler = new LlamaSampler(arena).temperature(0.7f).seed(42);
+
+        var state = ConversationState.create(arena, context, tokenizer, sampler, 0)
+            .setMaxTokens(100)
+            .initialize("What is the capital of France?");
+
+        var iterator = new DefaultLlamaIterator(state);
+        while (iterator.hasNext()) {
+            System.out.print(iterator.next().text());
+        }
+
+        context.free();
+        sampler.free();
+        model.free();
+        LlamaRuntime.llama_backend_free();
+    }
+}
+```
+
+Or from the CLI:
+
+```bash
+$ java --enable-preview --enable-native-access=ALL-UNNAMED \
+  -jar llamaj.cpp-<version>.jar \
+  --model models/model.gguf \
+  --rpc 127.0.0.1:50052
+```
+
+Multiple RPC servers:
+
+```bash
+$ java --enable-preview --enable-native-access=ALL-UNNAMED \
+  -jar llamaj.cpp-<version>.jar \
+  --model models/model.gguf \
+  --rpc 192.168.1.10:50052,192.168.1.11:50052
+```
+
 ## Build
 
-1. Get `jextract`
+The build uses a **platform-specific Maven profile** to download the correct jextract tool and pre-built llama.cpp native libraries, generate the Java FFM bindings, format the code, apply license headers, and install the artifact to your local Maven repository.
 
-> Make sure the `jextract` folder is in the same path level as your repository
-
-On Linux:
-
-Since we are using JDK 21 you can download a prebuilt version of `jextract`
+**macOS (Apple Silicon):**
 
 ```bash
-$ wget https://download.java.net/java/early_access/jextract/21/1/openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-$ tar -xzf openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-$ rm openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-$ echo 'export PATH="$(pwd)/jextract/bin:$PATH"' >> ~/.bashrc
+cd llamaj.cpp/
+mvn prettier:write license:format clean generate-sources -Pmacosx-aarch64 install
 ```
 
-On MacOS:
-For JDK21, there is not a version of jextract for MacOS aarch64, only for x86_64, so we have to build it ourselves
+**Linux (x86_64):**
 
 ```bash
-$ git clone https://github.com/openjdk/jextract
-$ cd jextract
-$ git checkout jdk21
+cd llamaj.cpp/
+mvn prettier:write license:format clean generate-sources -Plinux-x86_64 install
 ```
 
-Make sure your `$JAVA_HOME` points to your jdk21
-
-Since jextract for jdk21 uses gradle with a jdk17 version, we need to upgrade gradle version:
-```bash
-$ sed -i '' 's#gradle-7\.3\.3-bin\.zip#gradle-8.5-bin.zip#g' gradle/wrapper/gradle-wrapper.properties
-```
-
-Install llvm:
-```bash
-$ brew install llvm
-```
-
-Then execute the gradle command:
-```bash
-$ sh ./gradlew -Pjdk21_home=$JAVA_HOME -Pllvm_home=$(brew --prefix llvm) clean verify
-```
-
-Set `jextract` binaries to your path:
-```bash
-$ ln -sf $(pwd)/build/jextract/bin $(pwd)/bin
-$ echo "PATH=$PATH:$(pwd)/bin" >> ~/.zshrc
-$ source ~/.zshrc
-```
-3. Clone llama.cpp
-
-> Make sure `llama.cpp` folder is in the same path level as your repository
-
-```bash
-$ git clone https://github.com/ggml-org/llama.cpp
-```
-
-5. Download binaries and generate the sources
-
-```bash
-$ mkdir $HOME/.llama.cpp
-$ cd llamaj.cpp/
-$ mvn clean generate-sources -Pmacosx-aarch64,linux-x86_64
-$ export LLAMA_CPP_LIB_PATH="$HOME_DIR/llamaj.cpp/target/generated-sources/<<macosx|linux>>/<<x86_64|aarch64>>"
-$ mvn install
-```
+> On Linux, you also need to set the library path at runtime:
+> ```bash
+> export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
+> ```
 
 ## Run
 
@@ -251,6 +350,9 @@ Options:
 --n_gpu_layers <int>     : Number of GPU layers (default: 999)
 --use_mlock <boolean>    : Use mlock (default: true)
 --use_mmap <boolean>     : Use mmap (default: true)
+--rpc <endpoints>        : Comma-separated RPC server endpoints for distributed inference
+                           (e.g., "127.0.0.1:50052,192.168.1.11:50052")
+                           When set, weights are offloaded exclusively to the remote servers
 --temperature <float>    : Sampler temperature (default: 0.4)
 --min_p <float>          : Sampler min_p (default: 0.1)
 --min_p_window <int>     : Sampler min_p_window (default: 40)
@@ -310,23 +412,44 @@ The path temporary file will be used to load the shared object libraries
 
 ## Beyond Apple M-Series and Linux x86_64
 
-While we don't support other platforms/architecture pair out-of-the-box for many reasons, you can still manage to use 
-gravitee-io/llamaj.cpp:
+To add support for other platforms (Windows, ARM, CUDA, etc.), follow this approach:
 
-1. Build llama.cpp on your infrastructure
-2. Add the *.so or *.dylib to ~/.llama.cpp/ or use the `LLAMA_CPP_LIB_PATH` and `LD_LIBRARY_PATH`
-3. Build the according java bindings using `jextract` (without `--source` option) and bundle them into a jar
+### 1. Build llama.cpp
+
+Clone and build llama.cpp for your target platform:
+
 ```bash
-$ jextract -t io.gravitee.llama.cpp.<os>.<platform>\
-    --include-dir ggml/include \
-    --output /path/to/your/output include/llama.h
-$ jar cf <name-of-your-file>.jar -C . .
+git clone https://github.com/ggerganov/llama.cpp.git
+cd llama.cpp
+cmake -B build
+cmake --build build --config Release
 ```
-- Put the `jextract` source in `io.gravitee.llama.cpp.<os>.<arch>`:
-    - `io.gravitee.llama.cpp.macosx.x86_64`
-    - `io.gravitee.llama.cpp.linux.aarch64`
-    - `io.gravitee.llama.cpp.windows.x86_64`
-    - `io.gravitee.llama.cpp.windows.aarch64`
-4.Add it to your classpath:`
 
-gravitee-io/llamaj.cpp will pick up at runtime the os and architecture and will call the according bindings using reflection.
+### 2. Generate FFM API Bindings with jextract
+
+Download jextract for your platform from [OpenJDK early-access builds](https://download.java.net/java/early_access/jextract/25/2/), then generate the Java bindings:
+
+```bash
+# Example for Windows x86_64
+jextract -t io.gravitee.llama.cpp.windows.x86_64 \
+  --include-dir /path/to/llama.cpp/ggml/include \
+  --include-dir /path/to/llama.cpp/include \
+  --output src/main/java \
+  --header-class-name llama_h \
+  /path/to/llama.cpp/tools/mtmd/mtmd.h \
+  /path/to/llama.cpp/tools/mtmd/mtmd-helper.h \
+  /path/to/llama.cpp/include/llama.h \
+  /path/to/llama.cpp/ggml/include/ggml-rpc.h
+```
+
+### 3. Post-process Generated Sources
+
+Check the generated sources and apply any necessary fixes (e.g., visibility modifiers, fully-qualified method calls).
+
+### 4. Build the Bindings JAR
+
+Compile the generated sources and build a JAR using your own build system (Maven, Gradle, etc.).
+
+### 5. Integrate into Your Classpath
+
+Add the generated JAR to your project's classpath and ensure the native libraries from step 1 are available at runtime.

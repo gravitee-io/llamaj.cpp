@@ -21,4 +21,8 @@ package io.gravitee.llama.cpp;
  */
 public interface Freeable {
   void free();
+
+  default boolean isFree() {
+    return false;
+  }
 }

@@ -23,8 +23,15 @@ package io.gravitee.llama.cpp;
  */
 public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
 
+  public DefaultLlamaIterator(
+    ConversationState initialState,
+    MtmdContext mtmdContext
+  ) {
+    super(initialState, mtmdContext);
+  }
+
   public DefaultLlamaIterator(ConversationState initialState) {
-    super(initialState);
+    this(initialState, null);
   }
 
   @Override
@@ -38,7 +45,11 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
       // Initial prompt processing - use shared method
       processPrompt(currentState);
       feedPromptMemory(currentState.getPiece());
-      return currentState.getFinishReason() == null && !endWithStopString() && hasNotReachedQuota();
+      return (
+        currentState.getFinishReason() == null &&
+        !endWithStopString() &&
+        hasNotReachedQuota()
+      );
     } else {
       // Single token generation - need to specify position and sequence ID
       batch = new LlamaBatch(arena, 1, 0, 1);
@@ -51,6 +62,8 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
     }
 
     if (checkContextSize(batch) && batch.decode(context) != 0) {
+      setFinishReason(FinishReason.STOP);
+      batch.free();
       return false;
     }
 
@@ -60,11 +73,15 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
     int newToken = sampler.sample(context);
     String tokenPiece = decodeTokenPiece(currentState, newToken);
 
+    // Collect logprobs before processing (logits are invalidated after next decode).
+    Logprobs logprobs = collectLogprobs(currentState, newToken, -1);
+
     // Process the sampled token using shared helper method
     processSampledToken(currentState, tokenPiece);
 
     if (isEog(newToken)) {
       incrementTokenCount(-1);
+      batch.free();
       return false;
     }
 
@@ -72,17 +89,25 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
 
     currentState.setNewTokenId(newToken);
     currentState.setPiece(tokenPiece);
+    currentState.setLogprobs(logprobs);
 
     feedPromptMemory(tokenPiece);
     return !endWithStopString() && hasNotReachedQuota();
   }
 
   private boolean checkContextSize(LlamaBatch batch) {
-    return currentState.getContext().nCtxUsedCells() + batch.nTokens() <= currentState.getContext().nCtx();
+    return (
+      currentState.getContext().nCtxUsedCells() + batch.nTokens() <=
+      currentState.getContext().nCtx()
+    );
   }
 
   @Override
   public LlamaOutput next() {
-    return new LlamaOutput(currentState.getPiece(), 1);
+    return new LlamaOutput(
+      currentState.getPiece(),
+      1,
+      currentState.getLogprobs()
+    );
   }
 }

@@ -42,6 +42,7 @@ public class ConversationState {
   // Identity & position
   private final int sequenceId;
   private int nPast = 0;
+  private String promptText;
 
   // Tokenization
   private TokenizerResponse tokenized;
@@ -59,11 +60,14 @@ public class ConversationState {
 
   // Configuration
   private int maxTokens = -1;
+  private int topLogprobs = 0;
   private final List<StateBounds> stateBounds = new ArrayList<>();
+  private List<MtmdMedia> media = new ArrayList<>();
 
   // Iteration state (used by iterator)
   Integer newTokenId;
   String piece;
+  Logprobs logprobs;
 
   private ConversationState(
     Arena arena,
@@ -96,13 +100,24 @@ public class ConversationState {
     LlamaSampler sampler,
     int sequenceId
   ) {
-    return new ConversationState(arena, context, tokenizer, sampler, sequenceId);
+    return new ConversationState(
+      arena,
+      context,
+      tokenizer,
+      sampler,
+      sequenceId
+    );
   }
 
   /**
    * Creates a new conversation state with default sequence ID (0).
    */
-  public static ConversationState create(Arena arena, LlamaContext context, LlamaTokenizer tokenizer, LlamaSampler sampler) {
+  public static ConversationState create(
+    Arena arena,
+    LlamaContext context,
+    LlamaTokenizer tokenizer,
+    LlamaSampler sampler
+  ) {
     return new ConversationState(arena, context, tokenizer, sampler, 0);
   }
 
@@ -115,21 +130,30 @@ public class ConversationState {
 
   /**
    * Initializes this conversation with a prompt.
+   * Note: This method resets all generation state including media.
+   * Call {@link #setMedia(List)} after this method if multimodal input is needed.
    *
    * @param prompt The prompt text
    * @return This state for chaining
    */
   public ConversationState initialize(String prompt) {
     this.tokenized = tokenizer.tokenize(arena, prompt);
+    this.promptText = prompt;
     this.tokenTracking.initialize(tokenized.size());
     this.stateEvaluation.initialize(new StateEvaluation.Config(stateBounds));
     this.generationState = ANSWER;
     this.finishReason = null;
     this.newTokenId = null;
     this.piece = null;
+    this.logprobs = null;
     this.nPast = 0;
     this.decoder.reset();
+    this.media.clear();
     return this;
+  }
+
+  public String getPromptText() {
+    return promptText;
   }
 
   /**
@@ -141,11 +165,38 @@ public class ConversationState {
   }
 
   /**
+   * Enables log-probability collection for each generated token.
+   *
+   * <p>When set to a value greater than zero, each {@link LlamaOutput} returned by the
+   * iterator will contain a {@link Logprobs} object with the sampled token's log-probability
+   * and the {@code topLogprobs} most-likely alternatives at that position.
+   *
+   * <p>Setting this to {@code 0} (the default) disables logprobs collection entirely,
+   * which avoids the overhead of reading and sorting the full vocabulary logit vector.
+   *
+   * @param topLogprobs Number of top-alternative tokens to include (0 = disabled,
+   *                    max 20 as per OpenAI convention)
+   * @return This state for chaining
+   */
+  public ConversationState setTopLogprobs(int topLogprobs) {
+    this.topLogprobs = topLogprobs;
+    return this;
+  }
+
+  public int getTopLogprobs() {
+    return topLogprobs;
+  }
+
+  /**
    * Sets stop strings for this conversation.
    */
   public ConversationState setStopStrings(List<String> stopStrings) {
     this.stopString.initialize(stopStrings);
-    int maxStringSize = stopStrings.stream().mapToInt(String::length).max().orElse(0);
+    int maxStringSize = stopStrings
+      .stream()
+      .mapToInt(String::length)
+      .max()
+      .orElse(0);
     this.promptMemory.initialize(maxStringSize);
     return this;
   }
@@ -154,7 +205,9 @@ public class ConversationState {
    * Configures reasoning token detection.
    */
   public ConversationState setReasoning(String tokenStart, String tokenEnd) {
-    this.stateBounds.add(new StateBounds(GenerationState.REASONING, tokenStart, tokenEnd));
+    this.stateBounds.add(
+      new StateBounds(GenerationState.REASONING, tokenStart, tokenEnd)
+    );
     return this;
   }
 
@@ -162,7 +215,39 @@ public class ConversationState {
    * Configures tool call detection.
    */
   public ConversationState setToolCall(String tokenStart, String tokenEnd) {
-    this.stateBounds.add(new StateBounds(GenerationState.TOOLS, tokenStart, tokenEnd));
+    this.stateBounds.add(
+      new StateBounds(GenerationState.TOOLS, tokenStart, tokenEnd)
+    );
+    return this;
+  }
+
+  public List<MtmdMedia> getMedia() {
+    return media;
+  }
+
+  public ConversationState setMedia(List<MtmdMedia> media) {
+    this.media = media;
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #getMedia()} instead. Kept for backward compatibility.
+   */
+  @Deprecated
+  public List<MtmdImage> getImages() {
+    return media
+      .stream()
+      .filter(m -> m instanceof MtmdImage)
+      .map(m -> (MtmdImage) m)
+      .toList();
+  }
+
+  /**
+   * @deprecated Use {@link #setMedia(List)} instead. Kept for backward compatibility.
+   */
+  @Deprecated
+  public ConversationState setImages(List<MtmdImage> images) {
+    this.media = new ArrayList<>(images);
     return this;
   }
 
@@ -254,6 +339,14 @@ public class ConversationState {
 
   public void setPiece(String piece) {
     this.piece = piece;
+  }
+
+  public Logprobs getLogprobs() {
+    return logprobs;
+  }
+
+  public void setLogprobs(Logprobs logprobs) {
+    this.logprobs = logprobs;
   }
 
   // Token count accessors

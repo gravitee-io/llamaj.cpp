@@ -39,8 +39,9 @@ public final class Utf8Decoder {
   }
 
   public Utf8Decoder(int initialBufferSize) {
-    this.delegate =
-      UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
+    this.delegate = UTF_8.newDecoder()
+      .onMalformedInput(CodingErrorAction.REPLACE)
+      .onUnmappableCharacter(CodingErrorAction.REPLACE);
     this.byteBuffer = ByteBuffer.allocate(initialBufferSize);
     this.charBuffer = CharBuffer.allocate(initialBufferSize);
   }

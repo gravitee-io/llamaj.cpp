@@ -37,10 +37,11 @@ public enum Role {
   }
 
   public static Role fromLabel(String label) {
-    return Arrays
-      .stream(Role.values())
+    return Arrays.stream(Role.values())
       .filter(role -> role.label.equals(label))
       .findFirst()
-      .orElseThrow(() -> new IllegalArgumentException("Invalid role: " + label));
+      .orElseThrow(() ->
+        new IllegalArgumentException("Invalid role: " + label)
+      );
   }
 }

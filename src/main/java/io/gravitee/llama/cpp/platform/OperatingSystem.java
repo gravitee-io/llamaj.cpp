@@ -41,7 +41,9 @@ public enum OperatingSystem {
     if (osName.contains("win")) {
       return WINDOWS;
     }
-    throw new IllegalArgumentException("Unsupported operating system: " + osName);
+    throw new IllegalArgumentException(
+      "Unsupported operating system: " + osName
+    );
   }
 
   public String getOsName() {
