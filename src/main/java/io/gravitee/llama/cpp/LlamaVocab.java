@@ -44,8 +44,15 @@ public final class LlamaVocab extends MemorySegmentAware {
       // This loop handles the case where the initial buffer is too small for the token piece.
       // The native llama_token_to_piece function will tell us the required size.
       while (true) {
-        var buffer = arena.allocateArray(ValueLayout.JAVA_BYTE, bufferSize);
-        int pieceLength = llama_token_to_piece(this.segment, tokenId, buffer, (int) buffer.byteSize(), 0, true);
+        var buffer = arena.allocate(ValueLayout.JAVA_BYTE, bufferSize);
+        int pieceLength = llama_token_to_piece(
+          this.segment,
+          tokenId,
+          buffer,
+          (int) buffer.byteSize(),
+          0,
+          true
+        );
 
         // If pieceLength is negative, the buffer was too small. The absolute value
         // indicates the required buffer size. We resize and try again.

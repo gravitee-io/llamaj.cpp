@@ -17,13 +17,14 @@ package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_max_devices;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_default_params;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_params_ofAddress;
 import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.ValueLayout;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -32,10 +33,21 @@ import java.util.Arrays;
 public final class LlamaModelParams extends MemorySegmentAware {
 
   private final int maxDevices;
+  private int nThreads;
 
   public LlamaModelParams(Arena arena) {
-    super(llama_model_params_ofAddress(llama_model_default_params(arena), arena));
+    super(llama_model_default_params(arena));
     this.maxDevices = (int) llama_max_devices();
+    this.nThreads = Runtime.getRuntime().availableProcessors(); // Default
+  }
+
+  public int getNThreads() {
+    return nThreads;
+  }
+
+  public LlamaModelParams setNThreads(int nThreads) {
+    this.nThreads = nThreads;
+    return this;
   }
 
   public float[] buildDefaultTensorSplit() {
@@ -83,8 +95,11 @@ public final class LlamaModelParams extends MemorySegmentAware {
     return tensorSplit;
   }
 
-  public LlamaModelParams tensorSplit(SegmentAllocator allocator, float[] tensorSplit) {
-    var tensorSplitSegment = allocator.allocateArray(JAVA_FLOAT, maxDevices);
+  public LlamaModelParams tensorSplit(
+    SegmentAllocator allocator,
+    float[] tensorSplit
+  ) {
+    var tensorSplitSegment = allocator.allocate(JAVA_FLOAT, maxDevices);
     MemorySegment.copy(
       MemorySegment.ofArray(tensorSplit),
       0,
@@ -130,6 +145,105 @@ public final class LlamaModelParams extends MemorySegmentAware {
 
   public LlamaModelParams checkTensors(boolean checkTensors) {
     LlamaRuntime.check_tensors(segment, checkTensors);
+    return this;
+  }
+
+  /**
+   * When set to {@code true}, the model is loaded in metadata-only mode: GGUF headers
+   * and tensor shapes are read but no weight data is allocated or mapped.
+   *
+   * <p>This is used by {@code LlamaMemoryEstimator} to inspect layer counts and weight
+   * sizes from GGUF metadata in O(ms) with zero GPU/RAM footprint. Always call
+   * {@link io.gravitee.llama.cpp.LlamaModel#free()} immediately after reading the
+   * needed metadata.
+   *
+   * <p><strong>Important:</strong> when using {@code noAlloc=true}, you should also
+   * call {@link #useExtraBufferTypes(boolean)} with {@code false} to prevent the
+   * CPU_REPACK buffer type from triggering a tensor allocation assertion in the
+   * mmap code path. See {@link LlamaModelDims#loadFrom(java.nio.file.Path)} for
+   * the canonical usage pattern.
+   *
+   * @param noAlloc {@code true} to skip weight allocation (metadata read only).
+   * @return this instance for chaining.
+   */
+  public LlamaModelParams noAlloc(boolean noAlloc) {
+    LlamaRuntime.llama_model_params(
+      "no_alloc",
+      new Class<?>[] { MemorySegment.class, boolean.class },
+      segment,
+      noAlloc
+    );
+    return this;
+  }
+
+  /**
+   * Controls whether extra buffer types (e.g. CPU_REPACK for runtime weight
+   * repacking of Q4_0 → Q4_0_4_4) are used during model loading.
+   *
+   * <p>Defaults to {@code true} in llama.cpp, which enables SIMD-optimized
+   * weight layouts on supported CPUs. However, this <b>must</b> be set to
+   * {@code false} when {@link #noAlloc(boolean)} is {@code true}, because
+   * the CPU_REPACK buffer type causes some tensors to fall back to the
+   * default CPU buffer type, which enters the mmap allocation path and
+   * asserts {@code !no_alloc} — crashing with
+   * {@code GGML_ASSERT(!ml.no_alloc) failed}.
+   *
+   * @param useExtraBufferTypes {@code false} to disable extra buffer types.
+   * @return this instance for chaining.
+   */
+  public LlamaModelParams useExtraBufferTypes(boolean useExtraBufferTypes) {
+    LlamaRuntime.llama_model_params(
+      "use_extra_bufts",
+      new Class<?>[] { MemorySegment.class, boolean.class },
+      segment,
+      useExtraBufferTypes
+    );
+    return this;
+  }
+
+  /**
+   * Registers remote RPC servers as backend devices for distributed inference.
+   * <p>
+   * Once registered, llama.cpp will automatically distribute model weights and KV-cache
+   * across all available devices (local and remote) in proportion to available memory,
+   * unless overridden via {@link #tensorSplit(SegmentAllocator, float[])}.
+   * <p>
+   * Must be called after {@link LlamaRuntime#ggml_backend_load_all_from_path(Arena, String)}
+   * and before loading the model with {@link LlamaModel}.
+   *
+   * @param arena     The Arena for memory allocation.
+   * @param endpoints The RPC server endpoints in "host:port" format (e.g., "192.168.1.10:50052").
+   * @return this instance for chaining.
+   * @throws IllegalStateException if RPC is not supported by the loaded library.
+   */
+  public LlamaModelParams rpcServers(Arena arena, String... endpoints) {
+    BackendRegistry.addRpcServers(arena, endpoints);
+    return this;
+  }
+
+  /**
+   * Restricts model offloading to only the specified devices.
+   * <p>
+   * When set, only these devices will be used for GPU layer offloading.
+   * This is useful when using RPC to prevent weights from being loaded
+   * on local GPU devices (e.g., Metal).
+   *
+   * @param arena   The Arena for memory allocation.
+   * @param devices The device handles to use (from {@link BackendRegistry#listDevices()}).
+   * @return this instance for chaining.
+   */
+  public LlamaModelParams devices(Arena arena, List<MemorySegment> devices) {
+    // Allocate a NULL-terminated array of pointers
+    var devArray = arena.allocate(ValueLayout.ADDRESS, devices.size() + 1);
+    for (int i = 0; i < devices.size(); i++) {
+      devArray.setAtIndex(ValueLayout.ADDRESS, i, devices.get(i));
+    }
+    devArray.setAtIndex(
+      ValueLayout.ADDRESS,
+      devices.size(),
+      MemorySegment.NULL
+    );
+    LlamaRuntime.devices(segment, devArray);
     return this;
   }
 }

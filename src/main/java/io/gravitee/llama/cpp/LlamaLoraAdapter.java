@@ -25,10 +25,14 @@ import java.nio.file.Path;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class LlamaLoraAdapter extends MemorySegmentAware implements Freeable {
+public final class LlamaLoraAdapter
+  extends MemorySegmentAware
+  implements Freeable {
 
   public LlamaLoraAdapter(Arena arena, LlamaModel model, Path loraPath) {
-    this(llama_adapter_lora_init(model.segment, getPathAsString(arena, loraPath)));
+    this(
+      llama_adapter_lora_init(model.segment, getPathAsString(arena, loraPath))
+    );
   }
 
   public LlamaLoraAdapter(MemorySegment segment) {
@@ -36,7 +40,7 @@ public final class LlamaLoraAdapter extends MemorySegmentAware implements Freeab
   }
 
   private static MemorySegment getPathAsString(Arena arena, Path modelPath) {
-    return arena.allocateUtf8String(modelPath.toAbsolutePath().toString());
+    return arena.allocateFrom(modelPath.toAbsolutePath().toString());
   }
 
   @Override

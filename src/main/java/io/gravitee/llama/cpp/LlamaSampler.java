@@ -30,7 +30,9 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
   private final SegmentAllocator allocator;
 
   public LlamaSampler(SegmentAllocator allocator) {
-    super(llama_sampler_chain_init(llama_sampler_chain_default_params(allocator)));
+    super(
+      llama_sampler_chain_init(llama_sampler_chain_default_params(allocator))
+    );
     this.allocator = allocator;
   }
 
@@ -66,31 +68,53 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
   }
 
   public LlamaSampler topP(float topP, int minKeep) {
-    llama_sampler_chain_add(this.segment, llama_sampler_init_top_p(topP, minKeep));
+    llama_sampler_chain_add(
+      this.segment,
+      llama_sampler_init_top_p(topP, minKeep)
+    );
     return this;
   }
 
   public LlamaSampler minP(float minP, int minKeep) {
-    llama_sampler_chain_add(this.segment, llama_sampler_init_min_p(minP, minKeep));
+    llama_sampler_chain_add(
+      this.segment,
+      llama_sampler_init_min_p(minP, minKeep)
+    );
     return this;
   }
 
   public LlamaSampler mirostat(int seed, float tau, float eta) {
-    llama_sampler_chain_add(this.segment, llama_sampler_init_mirostat_v2(seed, tau, eta));
+    llama_sampler_chain_add(
+      this.segment,
+      llama_sampler_init_mirostat_v2(seed, tau, eta)
+    );
     return this;
   }
 
   public LlamaSampler grammar(LlamaVocab vocab, String grammar, String root) {
-    var grammarSegment = allocator.allocateUtf8String(grammar);
-    var rootSegment = allocator.allocateUtf8String(root);
-    llama_sampler_chain_add(this.segment, llama_sampler_init_grammar(vocab.segment, grammarSegment, rootSegment));
+    var grammarSegment = allocator.allocateFrom(grammar);
+    var rootSegment = allocator.allocateFrom(root);
+    llama_sampler_chain_add(
+      this.segment,
+      llama_sampler_init_grammar(vocab.segment, grammarSegment, rootSegment)
+    );
     return this;
   }
 
-  public LlamaSampler penalties(int penaltyLastN, float penaltyRepeat, float penaltyFreq, float penaltyPresent) {
+  public LlamaSampler penalties(
+    int penaltyLastN,
+    float penaltyRepeat,
+    float penaltyFreq,
+    float penaltyPresent
+  ) {
     llama_sampler_chain_add(
       this.segment,
-      llama_sampler_init_penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent)
+      llama_sampler_init_penalties(
+        penaltyLastN,
+        penaltyRepeat,
+        penaltyFreq,
+        penaltyPresent
+      )
     );
     return this;
   }
