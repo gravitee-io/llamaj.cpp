@@ -41,17 +41,32 @@ public final class LlamaTokenizer {
     var promptSegment = this.getPromptSegment(allocator, prompt, isFirst);
 
     int nbPromptTokens = promptSegment.size();
-    var tokenBuffer = allocator.allocateArray(JAVA_INT, nbPromptTokens);
+    var tokenBuffer = allocator.allocate(JAVA_INT, nbPromptTokens);
 
-    if (llama_tokenize(vocab.segment, promptSegment.data, prompt.length(), tokenBuffer, nbPromptTokens, isFirst, true) < 0) {
+    if (
+      llama_tokenize(
+        vocab.segment,
+        promptSegment.data,
+        prompt.length(),
+        tokenBuffer,
+        nbPromptTokens,
+        isFirst,
+        true
+      ) <
+      0
+    ) {
       throw new IllegalStateException("Failed to tokenize");
     }
 
     return new TokenizerResponse(tokenBuffer, nbPromptTokens);
   }
 
-  public PromptSegment getPromptSegment(SegmentAllocator allocator, String prompt, boolean isFirst) {
-    var promptSegment = allocator.allocateUtf8String(prompt);
+  public PromptSegment getPromptSegment(
+    SegmentAllocator allocator,
+    String prompt,
+    boolean isFirst
+  ) {
+    var promptSegment = allocator.allocateFrom(prompt);
     int nbPromptTokens = -llama_tokenize(
       vocab.segment,
       promptSegment,

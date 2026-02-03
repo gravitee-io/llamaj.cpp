@@ -21,7 +21,10 @@ package io.gravitee.llama.cpp.platform;
  */
 public final class PlatformResolver {
 
-  private static final Platform INSTANCE = new Platform(OperatingSystem.fromSystem(), Architecture.fromSystem());
+  private static final Platform INSTANCE = new Platform(
+    OperatingSystem.fromSystem(),
+    Architecture.fromSystem()
+  );
 
   private PlatformResolver() {}
 

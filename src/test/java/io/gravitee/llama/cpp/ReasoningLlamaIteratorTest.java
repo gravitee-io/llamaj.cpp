@@ -55,7 +55,9 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
 
     System.out.println("****************************");
     System.out.println("Libraries loaded at: " + libPath);
-    System.out.println("Number of devices registered: " + ggml_backend_reg_count());
+    System.out.println(
+      "Number of devices registered: " + ggml_backend_reg_count()
+    );
     System.out.println("****************************");
   }
 
@@ -66,7 +68,10 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
     logger.setLogging(LlamaLogLevel.DEBUG);
 
     var modelParameters = new LlamaModelParams(arena);
-    Path absolutePath = getModelPath(REASONING_MODEL_PATH, REASONNING_MODEL_TO_DOWNLOAD);
+    Path absolutePath = getModelPath(
+      REASONING_MODEL_PATH,
+      REASONNING_MODEL_TO_DOWNLOAD
+    );
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
 
@@ -75,16 +80,23 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
-    var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
+    var prompt = getPrompt(
+      model,
+      arena,
+      buildMessages(arena, system, input),
+      contextParams
+    );
 
-    var state = ConversationState
-      .create(arena, context, tokenizer, sampler)
+    var state = ConversationState.create(arena, context, tokenizer, sampler)
       .setReasoning("<think>", "</think>")
       .initialize(prompt);
 
     var it = new DefaultLlamaIterator(state);
 
-    LlamaOutput output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0));
+    LlamaOutput output = it
+      .stream()
+      .reduce(LlamaOutput::merge)
+      .orElse(new LlamaOutput("", 0));
     System.out.println(output);
 
     int inputTokens = state.getInputTokens();
@@ -95,10 +107,18 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
     assertThat(outputTokens).isGreaterThan(0);
     assertThat(reasoningTokens).isGreaterThan(0);
 
-    assertThat(output.numberOfTokens()).isEqualTo(outputTokens + reasoningTokens);
-    assertThat(state.getTotalTokenCount()).isEqualTo(inputTokens + outputTokens + reasoningTokens);
+    assertThat(output.numberOfTokens()).isEqualTo(
+      outputTokens + reasoningTokens
+    );
+    assertThat(state.getTotalTokenCount()).isEqualTo(
+      inputTokens + outputTokens + reasoningTokens
+    );
 
-    assertThat(state.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
+    assertThat(state.getFinishReason()).isIn(
+      FinishReason.EOS,
+      FinishReason.LENGTH,
+      FinishReason.STOP
+    );
 
     context.free();
     sampler.free();

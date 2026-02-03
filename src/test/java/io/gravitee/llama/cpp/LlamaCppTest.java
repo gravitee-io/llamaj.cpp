@@ -38,13 +38,12 @@ abstract class LlamaCppTest {
   static final String MODEL_PATH = "models/model.gguf";
   static final String REASONING_MODEL_PATH = "models/reasoning.gguf";
 
-  static final String SYSTEM =
-    """
-            You are the best at guessing capitals. Respond to the best of your ability. Just answer with the capital.
-            What's the capital of France ? Paris.
-            What is the capital of England? London.
-           What is the capital of Poland? Warsaw.
-            """;
+  static final String SYSTEM = """
+     You are the best at guessing capitals. Respond to the best of your ability. Just answer with the capital.
+     What's the capital of France ? Paris.
+     What is the capital of England? London.
+    What is the capital of Poland? Warsaw.
+     """;
 
   static final String LORA_ADAPTER_TO_DOWNLOAD =
     "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf";
@@ -54,11 +53,18 @@ abstract class LlamaCppTest {
     return getPath(modelPath, modelToDownload);
   }
 
-  private static Path getPath(String loraAdatapterPath, String loraAdapterToDownload) {
+  private static Path getPath(
+    String loraAdatapterPath,
+    String loraAdapterToDownload
+  ) {
     try {
       Path absolutePath = Path.of(loraAdatapterPath).toAbsolutePath();
       if (!Files.exists(absolutePath)) {
-        Files.copy(URI.create(loraAdapterToDownload).toURL().openStream(), absolutePath, REPLACE_EXISTING);
+        Files.copy(
+          URI.create(loraAdapterToDownload).toURL().openStream(),
+          absolutePath,
+          REPLACE_EXISTING
+        );
       }
       return absolutePath;
     } catch (IOException e) {
@@ -66,15 +72,27 @@ abstract class LlamaCppTest {
     }
   }
 
-  static String getPrompt(LlamaModel model, Arena arena, LlamaChatMessages messages, LlamaContextParams contextParams) {
+  static String getPrompt(
+    LlamaModel model,
+    Arena arena,
+    LlamaChatMessages messages,
+    LlamaContextParams contextParams
+  ) {
     var template = new LlamaTemplate(model);
     return template.applyTemplate(arena, messages, contextParams.nCtx());
   }
 
-  static LlamaChatMessages buildMessages(Arena arena, String system, String input) {
+  static LlamaChatMessages buildMessages(
+    Arena arena,
+    String system,
+    String input
+  ) {
     return new LlamaChatMessages(
       arena,
-      List.of(new LlamaChatMessage(arena, Role.SYSTEM, system), new LlamaChatMessage(arena, Role.USER, input))
+      List.of(
+        new LlamaChatMessage(arena, Role.SYSTEM, system),
+        new LlamaChatMessage(arena, Role.USER, input)
+      )
     );
   }
 }

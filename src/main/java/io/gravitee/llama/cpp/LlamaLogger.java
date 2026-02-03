@@ -34,9 +34,13 @@ public final class LlamaLogger extends ArenaAware {
   }
 
   @SuppressWarnings("unused")
-  public void logCallback(int level, MemorySegment text, MemorySegment user_data) {
+  public void logCallback(
+    int level,
+    MemorySegment text,
+    MemorySegment user_data
+  ) {
     if (this.level.ordinal() <= level) {
-      this.logger.accept(text.getUtf8String(0));
+      this.logger.accept(text.getString(0));
     }
   }
 

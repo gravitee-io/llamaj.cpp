@@ -66,7 +66,10 @@ public class Main {
 
     public String stripTagsFromMessages(String content) {
       if (!isConfigured()) return content;
-      return content.replaceAll(escapeRegex(openTag) + "|" + escapeRegex(closeTag), "");
+      return content.replaceAll(
+        escapeRegex(openTag) + "|" + escapeRegex(closeTag),
+        ""
+      );
     }
 
     private static String escapeRegex(String input) {
@@ -79,7 +82,10 @@ public class Main {
 
     String modelGguf = params.get("model");
     String lora = params.get("lora");
-    String systemMessage = params.getOrDefault("system", "You are a helpful assistant.");
+    String systemMessage = params.getOrDefault(
+      "system",
+      "You are a helpful assistant."
+    );
 
     int nGpuLayers = parseInt(params.getOrDefault("n_gpu_layers", "999"));
     boolean useMlock = parseBoolean(params.getOrDefault("use_mlock", "true"));
@@ -92,19 +98,29 @@ public class Main {
     int nKeep = parseInt(params.getOrDefault("nKeep", String.valueOf(nCtx)));
     boolean showPerf = parseBoolean(params.getOrDefault("perf", "false"));
 
-    String logLevelStr = params.getOrDefault("log_level", "ERROR").toUpperCase();
+    String logLevelStr = params
+      .getOrDefault("log_level", "ERROR")
+      .toUpperCase();
     LlamaLogLevel logLevel;
     try {
       logLevel = LlamaLogLevel.valueOf(logLevelStr);
     } catch (IllegalArgumentException e) {
-      System.err.println("Invalid log level: %s. Using default: ERROR.".formatted(logLevelStr));
+      System.err.println(
+        "Invalid log level: %s. Using default: ERROR.".formatted(logLevelStr)
+      );
       logLevel = LlamaLogLevel.ERROR;
     }
 
-    var reasoningTags = parseTagConfig(params.get("reasoning_tags"), null, null);
+    var reasoningTags = parseTagConfig(
+      params.get("reasoning_tags"),
+      null,
+      null
+    );
     var toolTags = parseTagConfig(params.get("tool_tags"), null, null);
 
-    var conversationMode = ConversationMode.fromString(params.get("conversation_mode"));
+    var conversationMode = ConversationMode.fromString(
+      params.get("conversation_mode")
+    );
 
     if (modelGguf == null) {
       printUsage();
@@ -117,7 +133,9 @@ public class Main {
 
     System.out.println("****************************");
     System.out.println("Libraries loaded at: " + libPath);
-    System.out.println("Number of devices registered: " + ggml_backend_reg_count());
+    System.out.println(
+      "Number of devices registered: " + ggml_backend_reg_count()
+    );
     System.out.println("****************************");
 
     var logger = new LlamaLogger(ARENA);
@@ -126,14 +144,25 @@ public class Main {
     var modelParameters = new LlamaModelParams(ARENA);
     modelParameters.nGpuLayers(nGpuLayers).useMlock(useMlock).useMmap(useMmap);
 
-    var model = new LlamaModel(ARENA, Path.of(modelGguf).toAbsolutePath(), modelParameters);
+    var model = new LlamaModel(
+      ARENA,
+      Path.of(modelGguf).toAbsolutePath(),
+      modelParameters
+    );
 
-    ofNullable(lora).ifPresent(path -> model.initLoraAdapter(ARENA, Path.of(path).toAbsolutePath()));
+    ofNullable(lora).ifPresent(path ->
+      model.initLoraAdapter(ARENA, Path.of(path).toAbsolutePath())
+    );
 
     var vocab = new LlamaVocab(model);
-    var contextParams = new LlamaContextParams(ARENA).nCtx(nCtx).nBatch(nBatch).noPerf(!showPerf);
+    var contextParams = new LlamaContextParams(ARENA)
+      .nCtx(nCtx)
+      .nBatch(nBatch)
+      .noPerf(!showPerf);
 
-    SamplingStrategy strategy = SamplingStrategy.fromString(params.get("strategy"));
+    SamplingStrategy strategy = SamplingStrategy.fromString(
+      params.get("strategy")
+    );
     LlamaContext context = new LlamaContext(model, contextParams);
     LlamaSampler sampler = llamaSampler(strategy, context, vocab, params);
 
@@ -163,10 +192,19 @@ public class Main {
 
       messages.add(new LlamaChatMessage(ARENA, Role.USER, input));
 
-      String prompt = buildPrompt(model, messageTrimmer.trimMessages(messages), contextParams);
+      String prompt = buildPrompt(
+        model,
+        messageTrimmer.trimMessages(messages),
+        contextParams
+      );
 
       // Create conversation state with resources
-      var state = ConversationState.create(ARENA, context, tokenizer, sampler).setMaxTokens(quota);
+      var state = ConversationState.create(
+        ARENA,
+        context,
+        tokenizer,
+        sampler
+      ).setMaxTokens(quota);
 
       if (reasoningTags.isConfigured()) {
         state.setReasoning(reasoningTags.openTag, reasoningTags.closeTag);
@@ -182,7 +220,12 @@ public class Main {
       var iterator = new DefaultLlamaIterator(state);
 
       // Filter reasoning tags from display, but keep tool tags visible
-      var answer = iterator.stream().map(LlamaOutput::content).peek(System.out::print).reduce((a, b) -> a + b).orElse("");
+      var answer = iterator
+        .stream()
+        .map(LlamaOutput::content)
+        .peek(System.out::print)
+        .reduce((a, b) -> a + b)
+        .orElse("");
 
       if (LlamaLogLevel.DEBUG.equals(logLevel)) {
         if (reasoningTags.isConfigured()) {
@@ -200,13 +243,32 @@ public class Main {
         System.out.println();
         System.out.println();
         System.out.println("=== Performance ===");
-        System.out.printf("Generation speed: %.2f tokens/sec%n", perf.generationTokensPerSecond());
-        System.out.printf("Prompt speed: %.2f tokens/sec%n", perf.promptTokensPerSecond());
-        System.out.printf("Total time: %.2f ms%n", perf.totalProcessingTimeMs());
-        System.out.printf("Tokens generated: %d%n", perf.context().tokensGenerated());
-        System.out.printf("Prompt tokens: %d%n", perf.context().promptTokensEvaluated());
+        System.out.printf(
+          "Generation speed: %.2f tokens/sec%n",
+          perf.generationTokensPerSecond()
+        );
+        System.out.printf(
+          "Prompt speed: %.2f tokens/sec%n",
+          perf.promptTokensPerSecond()
+        );
+        System.out.printf(
+          "Total time: %.2f ms%n",
+          perf.totalProcessingTimeMs()
+        );
+        System.out.printf(
+          "Tokens generated: %d%n",
+          perf.context().tokensGenerated()
+        );
+        System.out.printf(
+          "Prompt tokens: %d%n",
+          perf.context().promptTokensEvaluated()
+        );
         System.out.printf("Tokens reused: %d%n", perf.context().tokensReused());
-        System.out.printf("Samples: %d (avg: %.2f ms)%n", perf.sampler().sampleCount(), perf.averageSamplingTimeMs());
+        System.out.printf(
+          "Samples: %d (avg: %.2f ms)%n",
+          perf.sampler().sampleCount(),
+          perf.averageSamplingTimeMs()
+        );
         System.out.println("===================");
       }
 
@@ -231,7 +293,9 @@ public class Main {
     LlamaVocab vocab,
     Map<String, String> params
   ) {
-    float temperature = Float.parseFloat(params.getOrDefault("temperature", "0.7"));
+    float temperature = Float.parseFloat(
+      params.getOrDefault("temperature", "0.7")
+    );
     int topK = Integer.parseInt(params.getOrDefault("top_k", "40"));
     float topP = Float.parseFloat(params.getOrDefault("top_p", "0.9"));
     int topPWindow = Integer.parseInt(params.getOrDefault("top_p_window", "1"));
@@ -239,13 +303,25 @@ public class Main {
     int minPWindow = Integer.parseInt(params.getOrDefault("min_p_window", "1"));
     int seed = Integer.parseInt(params.getOrDefault("seed", "42"));
 
-    int penaltyLastN = Integer.parseInt(params.getOrDefault("penalty_last_n", String.valueOf(context.nCtx())));
-    float penaltyRepeat = Float.parseFloat(params.getOrDefault("penalty_repeat", "1.5"));
-    float penaltyFreq = Float.parseFloat(params.getOrDefault("penalty_freq", "0.1"));
-    float penaltyPresent = Float.parseFloat(params.getOrDefault("penalty_present", "0.1"));
+    int penaltyLastN = Integer.parseInt(
+      params.getOrDefault("penalty_last_n", String.valueOf(context.nCtx()))
+    );
+    float penaltyRepeat = Float.parseFloat(
+      params.getOrDefault("penalty_repeat", "1.5")
+    );
+    float penaltyFreq = Float.parseFloat(
+      params.getOrDefault("penalty_freq", "0.1")
+    );
+    float penaltyPresent = Float.parseFloat(
+      params.getOrDefault("penalty_present", "0.1")
+    );
 
-    float mirostatTau = Float.parseFloat(params.getOrDefault("mirostat_tau", "5.0"));
-    float mirostatEta = Float.parseFloat(params.getOrDefault("mirostat_eta", "0.1"));
+    float mirostatTau = Float.parseFloat(
+      params.getOrDefault("mirostat_tau", "5.0")
+    );
+    float mirostatEta = Float.parseFloat(
+      params.getOrDefault("mirostat_eta", "0.1")
+    );
 
     return switch (strategy) {
       case DETERMINISTIC -> new LlamaSampler(ARENA).greedy().seed(seed);
@@ -270,7 +346,11 @@ public class Main {
         .seed(seed);
       case CONSTRAINED -> new LlamaSampler(ARENA)
         .topP(topP, topPWindow)
-        .grammar(vocab, safeRead(params.get("grammar")), params.getOrDefault("grammar_root", "root"))
+        .grammar(
+          vocab,
+          safeRead(params.get("grammar")),
+          params.getOrDefault("grammar_root", "root")
+        )
         .seed(seed);
     };
   }
@@ -283,19 +363,35 @@ public class Main {
     }
   }
 
-  private static String buildPrompt(LlamaModel model, List<LlamaChatMessage> messages, LlamaContextParams contextParams) {
+  private static String buildPrompt(
+    LlamaModel model,
+    List<LlamaChatMessage> messages,
+    LlamaContextParams contextParams
+  ) {
     try (Arena arena = Arena.ofConfined()) {
-      return new LlamaTemplate(model).applyTemplate(arena, new LlamaChatMessages(arena, messages), contextParams.nCtx());
+      return new LlamaTemplate(model).applyTemplate(
+        arena,
+        new LlamaChatMessages(arena, messages),
+        contextParams.nCtx()
+      );
     }
   }
 
-  private static TagConfig parseTagConfig(String tagParam, String defaultOpen, String defaultClose) {
+  private static TagConfig parseTagConfig(
+    String tagParam,
+    String defaultOpen,
+    String defaultClose
+  ) {
     if (tagParam != null && !tagParam.isBlank()) {
       String[] parts = tagParam.split("\\|");
       if (parts.length == 2) {
         return new TagConfig(parts[0], parts[1]);
       } else {
-        System.err.println("Warning: Invalid tag format '" + tagParam + "'. Expected 'open|close'. Using defaults.");
+        System.err.println(
+          "Warning: Invalid tag format '" +
+            tagParam +
+            "'. Expected 'open|close'. Using defaults."
+        );
       }
     }
     return new TagConfig(defaultOpen, defaultClose);
@@ -333,7 +429,9 @@ public class Main {
     TagConfig toolTags,
     ConversationMode conversationMode
   ) {
-    public List<LlamaChatMessage> trimMessages(List<LlamaChatMessage> fullHistory) {
+    public List<LlamaChatMessage> trimMessages(
+      List<LlamaChatMessage> fullHistory
+    ) {
       try (Arena arena = Arena.ofConfined()) {
         List<LlamaChatMessage> trimmed = new ArrayList<>();
 
@@ -343,18 +441,24 @@ public class Main {
           for (int i = fullHistory.size() - 1; i >= 0; i--) {
             LlamaChatMessage msg = fullHistory.get(i);
             if (msg.getRole() == Role.USER) {
-              trimmed.add(new LlamaChatMessage(ARENA, msg.getRole(), msg.getContent()));
+              trimmed.add(
+                new LlamaChatMessage(ARENA, msg.getRole(), msg.getContent())
+              );
               break;
             }
           }
-          trimmed.addFirst(new LlamaChatMessage(Main.ARENA, Role.SYSTEM, systemMessage));
+          trimmed.addFirst(
+            new LlamaChatMessage(Main.ARENA, Role.SYSTEM, systemMessage)
+          );
           return trimmed;
         }
 
         // Full conversation mode: keep history with trimming
         int totalTokens = tokenizer.tokenize(arena, systemMessage).size();
 
-        ListIterator<LlamaChatMessage> it = fullHistory.listIterator(fullHistory.size());
+        ListIterator<LlamaChatMessage> it = fullHistory.listIterator(
+          fullHistory.size()
+        );
         int added = 0;
 
         while (it.hasPrevious()) {
@@ -362,20 +466,28 @@ public class Main {
 
           if (msg.getRole() == Role.SYSTEM) continue;
 
-          int tokenCount = tokenizer.tokenize(arena, msg.getContent().strip()).size();
+          int tokenCount = tokenizer
+            .tokenize(arena, msg.getContent().strip())
+            .size();
 
           if ((totalTokens + tokenCount) > contextSize) break;
 
-          String cleanedContent = reasoningTags.stripTagsFromMessages(msg.getContent());
+          String cleanedContent = reasoningTags.stripTagsFromMessages(
+            msg.getContent()
+          );
           cleanedContent = toolTags.stripTagsFromMessages(cleanedContent);
 
-          trimmed.addFirst(new LlamaChatMessage(ARENA, msg.getRole(), cleanedContent));
+          trimmed.addFirst(
+            new LlamaChatMessage(ARENA, msg.getRole(), cleanedContent)
+          );
           totalTokens += tokenCount;
 
           if (++added >= nKeep) break;
         }
 
-        trimmed.addFirst(new LlamaChatMessage(Main.ARENA, Role.SYSTEM, systemMessage));
+        trimmed.addFirst(
+          new LlamaChatMessage(Main.ARENA, Role.SYSTEM, systemMessage)
+        );
         return trimmed;
       }
     }
@@ -384,79 +496,79 @@ public class Main {
   private static void printUsage() {
     System.err.println(
       """
-            Usage: java -jar llamaj.cpp-<version>.jar --model <path_to_gguf_model> [options...]
-            
-            Required:
-              --model <path>              Path to GGUF model file
-            
-            Optional:
-              --lora <path>               Path to LoRA adapter
-              --system <msg>              System prompt (default: "You are a helpful AI assistant.")
-              --strategy <name>           Sampling strategy (default: CLASSIC_CHAT)
-                                          Available: DETERMINISTIC, CLASSIC_CHAT, FOCUSED, BALANCED,
-                                                     ADAPTIVE, CONSTRAINED (default: CLASSIC_CHAT)
-            
-            Model parameters:
-              --n_gpu_layers <int>        Number of GPU layers (default: 999)
-              --use_mlock <true|false>    Lock model in memory (default: true)
-              --use_mmap <true|false>     Use mmap for model (default: true)
-            
-            Context parameters:
-              --n_ctx <int>               Context window size (default: 4096)
-              --n_batch <int>             Batch size (default: 4096)
-              --quota <int>               Max output tokens (default: n_ctx)
-              --nKeep <int>               Number of messages to keep (default: n_ctx)
+      Usage: java -jar llamaj.cpp-<version>.jar --model <path_to_gguf_model> [options...]
 
-            Conversation mode:
-              --conversation_mode <mode>  Conversation history mode (default: full)
-                                          full: Keep full conversation history with trimming
-                                          instruction: Only keep system message + current user input
+      Required:
+        --model <path>              Path to GGUF model file
 
-            Logging:
-              --log_level <LEVEL>         Log level: TRACE, DEBUG, INFO, WARN, ERROR (default: ERROR)
+      Optional:
+        --lora <path>               Path to LoRA adapter
+        --system <msg>              System prompt (default: "You are a helpful AI assistant.")
+        --strategy <name>           Sampling strategy (default: CLASSIC_CHAT)
+                                    Available: DETERMINISTIC, CLASSIC_CHAT, FOCUSED, BALANCED,
+                                               ADAPTIVE, CONSTRAINED (default: CLASSIC_CHAT)
 
-            Performance:
-              --perf <true|false>         Show performance metrics (default: false)
+      Model parameters:
+        --n_gpu_layers <int>        Number of GPU layers (default: 999)
+        --use_mlock <true|false>    Lock model in memory (default: true)
+        --use_mmap <true|false>     Use mmap for model (default: true)
 
-            Tag handling:
-              --reasoning_tags <open|close>  Reasoning tags to filter from output (default: disabled)
-                                             Content between these tags will not be displayed
-              --tool_tags <open|close>       Tool/function call tags to handle (default: disabled)
-                                             Tags will be stripped from message history
+      Context parameters:
+        --n_ctx <int>               Context window size (default: 4096)
+        --n_batch <int>             Batch size (default: 4096)
+        --quota <int>               Max output tokens (default: n_ctx)
+        --nKeep <int>               Number of messages to keep (default: n_ctx)
 
-            Sampling parameters:
-              --temperature <float>       Sampling temperature (default: 0.7)
-              --top_k <int>               Top-K sampling (default: 40)
-              --top_p <float>             Top-P nucleus sampling (default: 0.9)
-              --top_p_window <int>        Top-P window size (default: 1)
-              --min_p <float>             Minimum probability (default: 0.1)
-              --min_p_window <int>        Min-P window size (default: 1)
-              --seed <int>                Random seed (default: 42)
-            
-            Repetition penalties:
-              --penalty_last_n <int>      Number of tokens for penalty (default: n_ctx)
-              --penalty_repeat <float>    Repeat penalty (default: 1.5)
-              --penalty_freq <float>      Frequency penalty (default: 0.1)
-              --penalty_present <float>   Presence penalty (default: 0.1)
-            
-            Mirostat (adaptive sampling):
-              --mirostat_tau <float>      Mirostat tau (default: 5.0)
-              --mirostat_eta <float>      Mirostat eta (default: 0.1)
-            
-            Constrained generation:
-              --grammar <path>            Path to grammar file
-              --grammar_root <rule>       Grammar root rule (default: "root")
-            
-            Commands:
-              Type 'bye' to exit the REPL.
+      Conversation mode:
+        --conversation_mode <mode>  Conversation history mode (default: full)
+                                    full: Keep full conversation history with trimming
+                                    instruction: Only keep system message + current user input
 
-            Examples:
-              java -jar llamaj.cpp.jar --model ./models/llama-7b.gguf
-              java -jar llamaj.cpp.jar --model ./mistral.gguf --strategy FOCUSED --temperature 0.8
-              java -jar llamaj.cpp.jar --model ./qwen.gguf --reasoning_tags "<think>|</think>"
-              java -jar llamaj.cpp.jar --model ./llama.gguf --tool_tags "<tool_call>|</tool_call>" --reasoning_tags "<reasoning>|</reasoning>"
-              java -jar llamaj.cpp.jar --model ./model.gguf --conversation_mode instruction
-            """
+      Logging:
+        --log_level <LEVEL>         Log level: TRACE, DEBUG, INFO, WARN, ERROR (default: ERROR)
+
+      Performance:
+        --perf <true|false>         Show performance metrics (default: false)
+
+      Tag handling:
+        --reasoning_tags <open|close>  Reasoning tags to filter from output (default: disabled)
+                                       Content between these tags will not be displayed
+        --tool_tags <open|close>       Tool/function call tags to handle (default: disabled)
+                                       Tags will be stripped from message history
+
+      Sampling parameters:
+        --temperature <float>       Sampling temperature (default: 0.7)
+        --top_k <int>               Top-K sampling (default: 40)
+        --top_p <float>             Top-P nucleus sampling (default: 0.9)
+        --top_p_window <int>        Top-P window size (default: 1)
+        --min_p <float>             Minimum probability (default: 0.1)
+        --min_p_window <int>        Min-P window size (default: 1)
+        --seed <int>                Random seed (default: 42)
+
+      Repetition penalties:
+        --penalty_last_n <int>      Number of tokens for penalty (default: n_ctx)
+        --penalty_repeat <float>    Repeat penalty (default: 1.5)
+        --penalty_freq <float>      Frequency penalty (default: 0.1)
+        --penalty_present <float>   Presence penalty (default: 0.1)
+
+      Mirostat (adaptive sampling):
+        --mirostat_tau <float>      Mirostat tau (default: 5.0)
+        --mirostat_eta <float>      Mirostat eta (default: 0.1)
+
+      Constrained generation:
+        --grammar <path>            Path to grammar file
+        --grammar_root <rule>       Grammar root rule (default: "root")
+
+      Commands:
+        Type 'bye' to exit the REPL.
+
+      Examples:
+        java -jar llamaj.cpp.jar --model ./models/llama-7b.gguf
+        java -jar llamaj.cpp.jar --model ./mistral.gguf --strategy FOCUSED --temperature 0.8
+        java -jar llamaj.cpp.jar --model ./qwen.gguf --reasoning_tags "<think>|</think>"
+        java -jar llamaj.cpp.jar --model ./llama.gguf --tool_tags "<tool_call>|</tool_call>" --reasoning_tags "<reasoning>|</reasoning>"
+        java -jar llamaj.cpp.jar --model ./model.gguf --conversation_mode instruction
+      """
     );
   }
 }

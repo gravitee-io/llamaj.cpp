@@ -53,7 +53,10 @@ public final class LlamaBatch extends MemorySegmentAware implements Freeable {
   /**
    * Creates a batch from a tokenizer response (single sequence with ID 0).
    */
-  public LlamaBatch(SegmentAllocator allocator, TokenizerResponse tokenizerResponse) {
+  public LlamaBatch(
+    SegmentAllocator allocator,
+    TokenizerResponse tokenizerResponse
+  ) {
     this(allocator, tokenizerResponse.data(), tokenizerResponse.size());
   }
 
@@ -65,7 +68,11 @@ public final class LlamaBatch extends MemorySegmentAware implements Freeable {
    * @param tokenizerResponse The tokenized prompt
    * @param sequenceId The sequence ID for this batch
    */
-  public LlamaBatch(SegmentAllocator allocator, TokenizerResponse tokenizerResponse, int sequenceId) {
+  public LlamaBatch(
+    SegmentAllocator allocator,
+    TokenizerResponse tokenizerResponse,
+    int sequenceId
+  ) {
     super(llama_batch_init(allocator, tokenizerResponse.size(), 0, 1));
     // Add all tokens from the tokenizer response with the specified sequence ID
     for (int i = 0; i < tokenizerResponse.size(); i++) {
@@ -85,7 +92,11 @@ public final class LlamaBatch extends MemorySegmentAware implements Freeable {
    * Creates a batch from a token array (single sequence with ID 0).
    * Uses the legacy llama_batch_get_one helper for simple single-sequence batches.
    */
-  public LlamaBatch(SegmentAllocator allocator, MemorySegment segment, int size) {
+  public LlamaBatch(
+    SegmentAllocator allocator,
+    MemorySegment segment,
+    int size
+  ) {
     super(llama_batch_get_one(allocator, segment, size));
   }
 
@@ -103,12 +114,20 @@ public final class LlamaBatch extends MemorySegmentAware implements Freeable {
    * var batch = new LlamaBatch(arena, 128, 0, 4);
    * }</pre>
    */
-  public LlamaBatch(SegmentAllocator allocator, int nTokens, int embd, int nSeqMax) {
+  public LlamaBatch(
+    SegmentAllocator allocator,
+    int nTokens,
+    int embd,
+    int nSeqMax
+  ) {
     super(llama_batch_init(allocator, nTokens, embd, nSeqMax));
   }
 
-  private static MemorySegment getTokenArray(SegmentAllocator allocator, int tokenId) {
-    var tokenArray = allocator.allocateArray(JAVA_INT, 1);
+  private static MemorySegment getTokenArray(
+    SegmentAllocator allocator,
+    int tokenId
+  ) {
+    var tokenArray = allocator.allocate(JAVA_INT, 1);
     tokenArray.set(JAVA_INT, 0, tokenId);
     return tokenArray;
   }

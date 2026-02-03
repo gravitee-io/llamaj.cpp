@@ -38,7 +38,11 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
       // Initial prompt processing - use shared method
       processPrompt(currentState);
       feedPromptMemory(currentState.getPiece());
-      return currentState.getFinishReason() == null && !endWithStopString() && hasNotReachedQuota();
+      return (
+        currentState.getFinishReason() == null &&
+        !endWithStopString() &&
+        hasNotReachedQuota()
+      );
     } else {
       // Single token generation - need to specify position and sequence ID
       batch = new LlamaBatch(arena, 1, 0, 1);
@@ -78,7 +82,10 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
   }
 
   private boolean checkContextSize(LlamaBatch batch) {
-    return currentState.getContext().nCtxUsedCells() + batch.nTokens() <= currentState.getContext().nCtx();
+    return (
+      currentState.getContext().nCtxUsedCells() + batch.nTokens() <=
+      currentState.getContext().nCtx()
+    );
   }
 
   @Override

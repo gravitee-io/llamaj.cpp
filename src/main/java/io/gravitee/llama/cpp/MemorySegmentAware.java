@@ -32,7 +32,9 @@ abstract class MemorySegmentAware {
 
   protected void checkNotFreed() {
     if (freed) {
-      throw new IllegalStateException(getClass().getSimpleName() + " has been freed");
+      throw new IllegalStateException(
+        getClass().getSimpleName() + " has been freed"
+      );
     }
   }
 

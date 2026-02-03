@@ -45,8 +45,12 @@ class LlamaContextParamsTest extends LlamaCppTest {
       assertThat(contextParams.nSeqMax()).isEqualTo(1);
       assertThat(contextParams.nThreads()).isEqualTo(4);
       assertThat(contextParams.nThreadsBatch()).isEqualTo(4);
-      assertThat(contextParams.poolingType()).isEqualTo(PoolingType.UNSPECIFIED);
-      assertThat(contextParams.attentionType()).isEqualTo(AttentionType.UNSPECIFIED);
+      assertThat(contextParams.poolingType()).isEqualTo(
+        PoolingType.UNSPECIFIED
+      );
+      assertThat(contextParams.attentionType()).isEqualTo(
+        AttentionType.UNSPECIFIED
+      );
       assertThat(contextParams.embeddings()).isFalse();
       assertThat(contextParams.offloadKQV()).isTrue();
       assertThat(contextParams.flashAttnType()).isEqualTo(UNSPECIFIED);

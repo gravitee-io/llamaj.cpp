@@ -9,7 +9,7 @@ llamaj.cpp (contraction of llama.cpp and java/jextract) is a port of llama.cpp i
 
 ## Requirements
 
-- Java 21
+- Java 25
 - mvn
 - MacOS M-series / Linux x86_64 (CPU) (you can check the last section if you do not see your platform here)
 
@@ -162,47 +162,31 @@ public class ParallelExample {
 
 On Linux:
 
-Since we are using JDK 21 you can download a prebuilt version of `jextract`
+Since we are using JDK 25 you can download a prebuilt version of `jextract`
 
 ```bash
-$ wget https://download.java.net/java/early_access/jextract/21/1/openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-$ tar -xzf openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
-$ rm openjdk-21-jextract+1-2_linux-x64_bin.tar.gz
+$ wget https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4_linux-x64_bin.tar.gz
+$ tar -xzf openjdk-25-jextract+2-4_linux-x64_bin.tar.gz
+$ rm openjdk-25-jextract+2-4_linux-x64_bin.tar.gz
 $ echo 'export PATH="$(pwd)/jextract/bin:$PATH"' >> ~/.bashrc
 ```
 
-On MacOS:
-For JDK21, there is not a version of jextract for MacOS aarch64, only for x86_64, so we have to build it ourselves
+On macOS:
+
+Since we are using JDK 25 you can download a prebuilt version of `jextract`
 
 ```bash
-$ git clone https://github.com/openjdk/jextract
-$ cd jextract
-$ git checkout jdk21
+$ wget https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4_macos-aarch64_bin.tar.gz
+$ tar -xzf openjdk-25-jextract+2-4_macos-aarch64_bin.tar.gz
+$ rm openjdk-25-jextract+2-4_macos-aarch64_bin.tar.gz
+$ echo 'export PATH="$(pwd)/jextract/bin:$PATH"' >> ~/.zshrc
 ```
 
-Make sure your `$JAVA_HOME` points to your jdk21
+> Note: On macOS Catalina or later, you may need to remove the quarantine attribute from the jextract binaries:
+> ```bash
+> sudo xattr -r -d com.apple.quarantine jextract
+> ```
 
-Since jextract for jdk21 uses gradle with a jdk17 version, we need to upgrade gradle version:
-```bash
-$ sed -i '' 's#gradle-7\.3\.3-bin\.zip#gradle-8.5-bin.zip#g' gradle/wrapper/gradle-wrapper.properties
-```
-
-Install llvm:
-```bash
-$ brew install llvm
-```
-
-Then execute the gradle command:
-```bash
-$ sh ./gradlew -Pjdk21_home=$JAVA_HOME -Pllvm_home=$(brew --prefix llvm) clean verify
-```
-
-Set `jextract` binaries to your path:
-```bash
-$ ln -sf $(pwd)/build/jextract/bin $(pwd)/bin
-$ echo "PATH=$PATH:$(pwd)/bin" >> ~/.zshrc
-$ source ~/.zshrc
-```
 3. Clone llama.cpp
 
 > Make sure `llama.cpp` folder is in the same path level as your repository
@@ -327,6 +311,7 @@ $ jar cf <name-of-your-file>.jar -C . .
     - `io.gravitee.llama.cpp.linux.aarch64`
     - `io.gravitee.llama.cpp.windows.x86_64`
     - `io.gravitee.llama.cpp.windows.aarch64`
-4.Add it to your classpath:`
+
+4. Add it to your classpath:
 
 gravitee-io/llamaj.cpp will pick up at runtime the os and architecture and will call the according bindings using reflection.

@@ -35,25 +35,24 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class ToolCallLlamaIteratorTest extends LlamaCppTest {
 
-  private static final String TOOL_CALL_SYSTEM =
-    """
-          You are a helpful assistant that uses tools to answer user questions.
-          Only use tools to answer user questions and respect thoroughly the tool instructions.
-          
-          # Tools
-          
-          You may call one or more functions to assist with the user query.
-          
-          You are provided with function signatures within <tools></tools> XML tags:
-          <tools>
-          {"name": "get_capital", "description": "Get the capital city of a given country.", "parameters": {"type": "object", "properties": {"country": {"type": "string", "description": "The name of the country"}}, "required": ["country"]}}
-          </tools>
-          
-          For each function call, return a JSON object with function name and arguments within <tool_call></tool_call> XML tags:
-          <tool_call>
-          {"name": "get_capital", "arguments": {"country": "<country-name>"}}
-          </tool_call>
-          """;
+  private static final String TOOL_CALL_SYSTEM = """
+    You are a helpful assistant that uses tools to answer user questions.
+    Only use tools to answer user questions and respect thoroughly the tool instructions.
+
+    # Tools
+
+    You may call one or more functions to assist with the user query.
+
+    You are provided with function signatures within <tools></tools> XML tags:
+    <tools>
+    {"name": "get_capital", "description": "Get the capital city of a given country.", "parameters": {"type": "object", "properties": {"country": {"type": "string", "description": "The name of the country"}}, "required": ["country"]}}
+    </tools>
+
+    For each function call, return a JSON object with function name and arguments within <tool_call></tool_call> XML tags:
+    <tool_call>
+    {"name": "get_capital", "arguments": {"country": "<country-name>"}}
+    </tool_call>
+    """;
 
   static Stream<Arguments> params_that_allow_llama_generation() {
     return Stream.of(
@@ -75,7 +74,9 @@ class ToolCallLlamaIteratorTest extends LlamaCppTest {
 
     System.out.println("****************************");
     System.out.println("Libraries loaded at: " + libPath);
-    System.out.println("Number of devices registered: " + ggml_backend_reg_count());
+    System.out.println(
+      "Number of devices registered: " + ggml_backend_reg_count()
+    );
     System.out.println("****************************");
   }
 
@@ -86,7 +87,10 @@ class ToolCallLlamaIteratorTest extends LlamaCppTest {
     logger.setLogging(LlamaLogLevel.DEBUG);
 
     var modelParameters = new LlamaModelParams(arena);
-    Path absolutePath = getModelPath(REASONING_MODEL_PATH, REASONNING_MODEL_TO_DOWNLOAD);
+    Path absolutePath = getModelPath(
+      REASONING_MODEL_PATH,
+      REASONNING_MODEL_TO_DOWNLOAD
+    );
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
 
@@ -95,17 +99,24 @@ class ToolCallLlamaIteratorTest extends LlamaCppTest {
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
-    var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
+    var prompt = getPrompt(
+      model,
+      arena,
+      buildMessages(arena, system, input),
+      contextParams
+    );
 
-    var state = ConversationState
-      .create(arena, context, tokenizer, sampler)
+    var state = ConversationState.create(arena, context, tokenizer, sampler)
       .setReasoning("<think>", "</think>")
       .setToolCall("<tool_call>", "</tool_call>")
       .initialize(prompt);
 
     var it = new DefaultLlamaIterator(state);
 
-    LlamaOutput output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0));
+    LlamaOutput output = it
+      .stream()
+      .reduce(LlamaOutput::merge)
+      .orElse(new LlamaOutput("", 0));
     System.out.println(output);
 
     int inputTokens = state.getInputTokens();
@@ -121,7 +132,9 @@ class ToolCallLlamaIteratorTest extends LlamaCppTest {
     int outputTokens = answerTokens + reasoningTokens + toolCallTokens;
 
     assertThat(output.numberOfTokens()).isEqualTo(outputTokens);
-    assertThat(state.getTotalTokenCount()).isEqualTo(inputTokens + outputTokens);
+    assertThat(state.getTotalTokenCount()).isEqualTo(
+      inputTokens + outputTokens
+    );
 
     assertThat(state.getFinishReason()).isIn(FinishReason.TOOL_CALL);
 

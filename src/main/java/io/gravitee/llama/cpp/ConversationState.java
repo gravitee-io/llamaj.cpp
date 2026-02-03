@@ -96,13 +96,24 @@ public class ConversationState {
     LlamaSampler sampler,
     int sequenceId
   ) {
-    return new ConversationState(arena, context, tokenizer, sampler, sequenceId);
+    return new ConversationState(
+      arena,
+      context,
+      tokenizer,
+      sampler,
+      sequenceId
+    );
   }
 
   /**
    * Creates a new conversation state with default sequence ID (0).
    */
-  public static ConversationState create(Arena arena, LlamaContext context, LlamaTokenizer tokenizer, LlamaSampler sampler) {
+  public static ConversationState create(
+    Arena arena,
+    LlamaContext context,
+    LlamaTokenizer tokenizer,
+    LlamaSampler sampler
+  ) {
     return new ConversationState(arena, context, tokenizer, sampler, 0);
   }
 
@@ -145,7 +156,11 @@ public class ConversationState {
    */
   public ConversationState setStopStrings(List<String> stopStrings) {
     this.stopString.initialize(stopStrings);
-    int maxStringSize = stopStrings.stream().mapToInt(String::length).max().orElse(0);
+    int maxStringSize = stopStrings
+      .stream()
+      .mapToInt(String::length)
+      .max()
+      .orElse(0);
     this.promptMemory.initialize(maxStringSize);
     return this;
   }
@@ -154,7 +169,9 @@ public class ConversationState {
    * Configures reasoning token detection.
    */
   public ConversationState setReasoning(String tokenStart, String tokenEnd) {
-    this.stateBounds.add(new StateBounds(GenerationState.REASONING, tokenStart, tokenEnd));
+    this.stateBounds.add(
+      new StateBounds(GenerationState.REASONING, tokenStart, tokenEnd)
+    );
     return this;
   }
 
@@ -162,7 +179,9 @@ public class ConversationState {
    * Configures tool call detection.
    */
   public ConversationState setToolCall(String tokenStart, String tokenEnd) {
-    this.stateBounds.add(new StateBounds(GenerationState.TOOLS, tokenStart, tokenEnd));
+    this.stateBounds.add(
+      new StateBounds(GenerationState.TOOLS, tokenStart, tokenEnd)
+    );
     return this;
   }
 

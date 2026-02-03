@@ -64,7 +64,7 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     if (state.getContext() != this.context) {
       throw new LlamaException(
         "All conversation states must share the same LlamaContext. " +
-        "Cannot mix states from different contexts in parallel processing."
+          "Cannot mix states from different contexts in parallel processing."
       );
     }
 
@@ -72,9 +72,9 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     if (this.seqIdToState.containsKey(state.getSequenceId())) {
       throw new LlamaException(
         "Sequence ID " +
-        state.getSequenceId() +
-        " is already in use. " +
-        "Each conversation state must have a unique sequence ID."
+          state.getSequenceId() +
+          " is already in use. " +
+          "Each conversation state must have a unique sequence ID."
       );
     }
 
@@ -157,7 +157,7 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
    */
   private List<ConversationState> prepareActiveStates() {
     List<ConversationState> activeStates = new ArrayList<>();
-    for (var it = seqIdToState.entrySet().iterator(); it.hasNext();) {
+    for (var it = seqIdToState.entrySet().iterator(); it.hasNext(); ) {
       var entry = it.next();
       var state = entry.getValue();
 
@@ -183,7 +183,9 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
 
       // If the first token for this state hasn't been emitted yet, add it to the output queue.
       if (!firstTokenEmitted.get(state.getSequenceId())) {
-        currentOutputs.add(new LlamaOutput(state.getPiece(), 1, state.getSequenceId()));
+        currentOutputs.add(
+          new LlamaOutput(state.getPiece(), 1, state.getSequenceId())
+        );
         firstTokenEmitted.put(state.getSequenceId(), true);
       }
     }
@@ -222,7 +224,12 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     // Add a token from each state in the sub-batch to the main batch.
     for (ConversationState state : batchStates) {
       seqIdToBatchPos.put(state.getSequenceId(), batch.nTokens());
-      batch.add(state.getNewTokenId(), state.getNPast(), List.of(state.getSequenceId()), true);
+      batch.add(
+        state.getNewTokenId(),
+        state.getNPast(),
+        List.of(state.getSequenceId()),
+        true
+      );
     }
 
     // Perform the main decoding step.
@@ -256,7 +263,12 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
         // Decrement token count for EOG token, as it's not part of the generated content.
         state
           .getTokenTracking()
-          .consume(new io.gravitee.llama.cpp.modules.TokenTracking.Context(state.getGenerationState(), -1));
+          .consume(
+            new io.gravitee.llama.cpp.modules.TokenTracking.Context(
+              state.getGenerationState(),
+              -1
+            )
+          );
       }
       return;
     }
@@ -265,7 +277,9 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
     state.setNewTokenId(newToken);
     state.setPiece(tokenPiece);
     state.incrementNPast();
-    currentOutputs.add(new LlamaOutput(state.getPiece(), 1, state.getSequenceId()));
+    currentOutputs.add(
+      new LlamaOutput(state.getPiece(), 1, state.getSequenceId())
+    );
   }
 
   /**
@@ -303,7 +317,10 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
    * @return true if there are active conversations, false otherwise
    */
   public boolean hasActiveConversations() {
-    return seqIdToState.values().stream().anyMatch(state -> state.getFinishReason() == null);
+    return seqIdToState
+      .values()
+      .stream()
+      .anyMatch(state -> state.getFinishReason() == null);
   }
 
   /**
@@ -355,7 +372,9 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
   @Override
   public LlamaOutput next() {
     if (currentOutputIndex >= currentOutputs.size()) {
-      throw new java.util.NoSuchElementException("No more outputs available. Call hasNext() before next().");
+      throw new java.util.NoSuchElementException(
+        "No more outputs available. Call hasNext() before next()."
+      );
     }
     return currentOutputs.get(currentOutputIndex++);
   }
