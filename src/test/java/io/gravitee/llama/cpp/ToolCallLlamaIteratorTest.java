@@ -102,7 +102,7 @@ class ToolCallLlamaIteratorTest extends LlamaCppTest {
     var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
-    var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    var sampler = new LlamaSampler(arena).seed(42);
     var prompt = getPrompt(
       model,
       arena,

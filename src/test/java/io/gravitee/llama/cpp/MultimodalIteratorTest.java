@@ -124,7 +124,7 @@ class MultimodalIteratorTest extends LlamaCppTest {
     // 5. Prepare ConversationState
     var vocab = new LlamaVocab(llamaModel);
     var tokenizer = new LlamaTokenizer(vocab, llamaContext);
-    var sampler = new LlamaSampler(arena).greedy().seed(new Random().nextInt());
+    var sampler = new LlamaSampler(arena).greedy().seed(42);
 
     String promptText = "USER: What is in this image?\n<IMG>\nASSISTANT:";
     var state = ConversationState.create(
@@ -309,7 +309,7 @@ class MultimodalIteratorTest extends LlamaCppTest {
     // 5. Prepare ConversationState with audio using Llama 3.2 chat template
     var vocab = new LlamaVocab(llamaModel);
     var tokenizer = new LlamaTokenizer(vocab, llamaContext);
-    var sampler = new LlamaSampler(arena).greedy().seed(new Random().nextInt());
+    var sampler = new LlamaSampler(arena).greedy().seed(42);
 
     // Use the model's chat template with the default media marker
     String mediaMarker = mtmdContextParams.mediaMarker();
