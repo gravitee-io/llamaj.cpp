@@ -114,11 +114,14 @@
                                         <argument>io.gravitee.llama.cpp.linux.x86_64</argument>
                                         <argument>--include-dir</argument>
                                         <argument>${llama.cpp.dir}/ggml/include</argument>
+                                        <argument>--include-dir</argument>
+                                        <argument>${llama.cpp.dir}/include</argument>
                                         <argument>--output</argument>
                                         <argument>${project.build.directory}/generated-sources</argument>
                                         <argument>--header-class-name</argument>
                                         <argument>llama_h</argument>
                                         <argument>${llama.cpp.dir}/tools/mtmd/mtmd.h</argument>
+                                        <argument>${llama.cpp.dir}/tools/mtmd/mtmd-helper.h</argument>
                                         <argument>${llama.cpp.dir}/include/llama.h</argument>
                                     </arguments>
                                 </configuration>
@@ -158,25 +161,6 @@
                                         <replacement>
                                             <token>^class llama_h_1 extends</token>
                                             <value>public class llama_h_1 extends</value>
-                                        </replacement>
-                                    </replacements>
-                                    <regex>true</regex>
-                                    <regexFlags>MULTILINE</regexFlags>
-                                    <quiet>true</quiet>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>fix-visibility-llama_h_2-linux</id>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>replace</goal>
-                                </goals>
-                                <configuration>
-                                    <file>${project.build.directory}/generated-sources/io/gravitee/llama/cpp/linux/x86_64/llama_h_2.java</file>
-                                    <replacements>
-                                        <replacement>
-                                            <token>^class llama_h_2 extends</token>
-                                            <value>public class llama_h_2 extends</value>
                                         </replacement>
                                     </replacements>
                                     <regex>true</regex>

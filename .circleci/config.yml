@@ -72,8 +72,6 @@ commands:
             echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> ~/.zprofile
             source ~/.zprofile
 
-            java -version
-
   install-maven-macos:
     steps:
       - run:
@@ -96,9 +94,6 @@ commands:
             echo 'export MAVEN_HOME="'$INSTALL_DIR'"' >> ~/.zprofile
             echo 'export PATH="$MAVEN_HOME/bin:$PATH"' >> ~/.zprofile
             source ~/.zprofile
-
-            # Verify installation
-            sudo mvn -version
 
   install_dependencies:
     steps:
@@ -132,11 +127,9 @@ commands:
             tar -xzf /tmp/jdk.tar.gz -C $INSTALL_DIR --strip-components=1
             rm /tmp/jdk.tar.gz
 
-            echo "export JAVA_HOME=$INSTALL_DIR" >> ~/.bashrc
-            echo "export PATH=$INSTALL_DIR/bin:\$PATH" >> ~/.bashrc
-            source ~/.bashrc
-
-            java -version
+            echo "export JAVA_HOME=$INSTALL_DIR" >> $BASH_ENV
+            echo "export PATH=$INSTALL_DIR/bin:\$PATH" >> $BASH_ENV
+            source $BASH_ENV
 
   install_dependencies_jextract:
     steps:
@@ -207,7 +200,7 @@ commands:
               source ~/.zprofile
             elif [[ << parameters.os >> == "linux" ]]; then
               mkdir /root/.llama.cpp
-              source ~/.bashrc
+              source $BASH_ENV
               export LD_LIBRARY_PATH="/root/.llama.cpp:$LD_LIBRARY_PATH"
             fi
 
@@ -257,7 +250,7 @@ commands:
               source ~/.zprofile
             elif [[ << parameters.os >> == "linux" ]]; then
               export JEXTRACT_PATH="$HOME_DIR/llamaj.cpp/.jextract/bin/jextract"
-              source ~/.bashrc
+              source $BASH_ENV
             fi
 
             mvn -s .gravitee.settings.xml clean generate-sources -P$OS-$PLATFORM
