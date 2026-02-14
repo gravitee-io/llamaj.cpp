@@ -26,20 +26,36 @@ import java.lang.foreign.MemorySegment;
  */
 public final class LlamaContext extends MemorySegmentAware implements Freeable {
 
+  private final Arena arena;
+  private final LlamaModel model;
   private final int nCtx;
   private final int nBatch;
   private final int nSeqMax;
   private final LlamaMemory memory;
 
-  public LlamaContext(LlamaModel model, LlamaContextParams params) {
+  public LlamaContext(
+    Arena arena,
+    LlamaModel model,
+    LlamaContextParams params
+  ) {
     super(llama_init_from_model(model.segment, params.segment));
     if (segment == null || segment.address() == 0) {
       throw new LlamaException("Failed to create context from model");
     }
+    this.arena = arena;
+    this.model = model;
     this.nCtx = params.nCtx();
     this.nBatch = params.nBatch();
     this.nSeqMax = params.nSeqMax();
     this.memory = new LlamaMemory(this);
+  }
+
+  public Arena getArena() {
+    return arena;
+  }
+
+  public LlamaModel getModel() {
+    return model;
   }
 
   public int nCtx() {
@@ -66,6 +82,15 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   public LlamaMemory getMemory() {
     checkNotFreed();
     return memory;
+  }
+
+  public int decode(LlamaBatch batch) {
+    checkNotFreed();
+    return llama_decode(segment, batch.segment);
+  }
+
+  public MemorySegment getMemorySegment() {
+    return segment;
   }
 
   public LlamaPerformance.ContextPerformance getPerformance(Arena arena) {

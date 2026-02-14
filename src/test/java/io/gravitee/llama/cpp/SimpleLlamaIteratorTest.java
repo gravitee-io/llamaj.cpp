@@ -15,6 +15,13 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.LlamaCppTest.LORA_ADAPTER_TO_DOWNLOAD;
+import static io.gravitee.llama.cpp.LlamaCppTest.LORA_ADATAPTER_PATH;
+import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_PATH;
+import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_TO_DOWNLOAD;
+import static io.gravitee.llama.cpp.LlamaCppTest.SYSTEM;
+import static io.gravitee.llama.cpp.LlamaCppTest.buildMessages;
+import static io.gravitee.llama.cpp.LlamaCppTest.getPrompt;
 import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_reg_count;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -56,13 +63,19 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
 
     System.out.println("****************************");
     System.out.println("Libraries loaded at: " + libPath);
-    System.out.println("Number of devices registered: " + ggml_backend_reg_count());
+    System.out.println(
+      "Number of devices registered: " + ggml_backend_reg_count()
+    );
     System.out.println("****************************");
   }
 
   @ParameterizedTest
   @MethodSource("params_that_allow_llama_generation")
-  void llama_simple_generation(String system, String input, boolean allowLoraAdapter) {
+  void llama_simple_generation(
+    String system,
+    String input,
+    boolean allowLoraAdapter
+  ) {
     int inputToken = -1;
     int outputToken = -1;
     var logger = new LlamaLogger(arena);
@@ -73,20 +86,37 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
     if (allowLoraAdapter) {
-      model.initLoraAdapter(arena, getModelPath(LORA_ADATAPTER_PATH, LORA_ADAPTER_TO_DOWNLOAD));
+      model.initLoraAdapter(
+        arena,
+        getModelPath(LORA_ADATAPTER_PATH, LORA_ADAPTER_TO_DOWNLOAD)
+      );
     }
 
     var contextParams = new LlamaContextParams(arena).noPerf(false);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
-    var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
+    var prompt = getPrompt(
+      model,
+      arena,
+      buildMessages(arena, system, input),
+      contextParams
+    );
 
-    var state = ConversationState.create(arena, context, tokenizer, sampler).initialize(prompt);
+    var state = ConversationState.create(
+      arena,
+      context,
+      tokenizer,
+      sampler
+    ).initialize(prompt);
     var it = new DefaultLlamaIterator(state);
 
-    String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
+    String output = it
+      .stream()
+      .reduce(LlamaOutput::merge)
+      .orElse(new LlamaOutput("", 0))
+      .content();
     System.out.println(output);
 
     inputToken = state.getInputTokens();
@@ -94,7 +124,11 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
 
     assertThat(inputToken).isGreaterThan(0);
     assertThat(outputToken).isGreaterThan(0);
-    assertThat(state.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
+    assertThat(state.getFinishReason()).isIn(
+      FinishReason.EOS,
+      FinishReason.LENGTH,
+      FinishReason.STOP
+    );
 
     // Verify performance metrics are extracted correctly
     LlamaPerformance perf = it.getPerformance();
@@ -105,27 +139,50 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     System.out.println("=== Performance Debug ===");
     System.out.printf("Start time: %.4f ms%n", perf.context().startTimeMs());
     System.out.printf("Load time: %.4f ms%n", perf.context().loadTimeMs());
-    System.out.printf("Prompt eval time: %.4f ms%n", perf.context().promptEvalTimeMs());
+    System.out.printf(
+      "Prompt eval time: %.4f ms%n",
+      perf.context().promptEvalTimeMs()
+    );
     System.out.printf("Eval time: %.4f ms%n", perf.context().evalTimeMs());
-    System.out.printf("Prompt tokens evaluated: %d%n", perf.context().promptTokensEvaluated());
-    System.out.printf("Tokens generated: %d%n", perf.context().tokensGenerated());
+    System.out.printf(
+      "Prompt tokens evaluated: %d%n",
+      perf.context().promptTokensEvaluated()
+    );
+    System.out.printf(
+      "Tokens generated: %d%n",
+      perf.context().tokensGenerated()
+    );
+    assertThat(perf.context().tokensReused())
+      .as("Tokens reused should be >= 0")
+      .isGreaterThanOrEqualTo(0);
     System.out.printf("Tokens reused: %d%n", perf.context().tokensReused());
-    System.out.printf("Sampling time: %.4f ms%n", perf.sampler().samplingTimeMs());
+    System.out.printf(
+      "Sampling time: %.4f ms%n",
+      perf.sampler().samplingTimeMs()
+    );
     System.out.printf("Sample count: %d%n", perf.sampler().sampleCount());
     System.out.println("========================");
 
     // Verify context metrics
-    assertThat(perf.context().promptTokensEvaluated()).as("Prompt tokens should be evaluated").isGreaterThan(0);
-    assertThat(perf.context().tokensGenerated()).as("Tokens should be generated").isGreaterThan(0);
+    assertThat(perf.context().promptTokensEvaluated())
+      .as("Prompt tokens should be evaluated")
+      .isGreaterThan(0);
+    assertThat(perf.context().tokensGenerated())
+      .as("Tokens should be generated")
+      .isGreaterThan(0);
     assertThat(perf.context().evalTimeMs())
       .as("Generation time must be positive if tokens were generated")
       .isGreaterThan(0.0);
 
     // Verify speed calculations
-    assertThat(perf.generationTokensPerSecond()).as("Generation speed should be positive").isGreaterThan(0.0);
+    assertThat(perf.generationTokensPerSecond())
+      .as("Generation speed should be positive")
+      .isGreaterThan(0.0);
 
     // Verify sampler metrics
-    assertThat(perf.sampler().sampleCount()).as("Samples should be taken").isGreaterThan(0);
+    assertThat(perf.sampler().sampleCount())
+      .as("Samples should be taken")
+      .isGreaterThan(0);
 
     System.out.printf(
       "Performance: %.2f tokens/sec (prompt: %.2f tokens/sec)%n",

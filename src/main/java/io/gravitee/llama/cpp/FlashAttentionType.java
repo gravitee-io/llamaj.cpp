@@ -20,7 +20,7 @@ package io.gravitee.llama.cpp;
  * @author GraviteeSource Team
  */
 public enum FlashAttentionType {
-  UNSPECIFIED,
+  AUTO,
   DISABLED,
   ENABLED;
 

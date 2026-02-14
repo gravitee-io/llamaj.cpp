@@ -30,18 +30,28 @@ public final class LlamaChatMessage extends MemorySegmentAware {
     super(initMessage(arena, role, content));
   }
 
-  private static MemorySegment initMessage(SegmentAllocator allocator, Role role, String content) {
+  private static MemorySegment initMessage(
+    SegmentAllocator allocator,
+    Role role,
+    String content
+  ) {
     var llamaChatMessage = llama_chat_message_allocate(allocator);
-    llama_chat_message_content(llamaChatMessage, allocator.allocateUtf8String(content));
-    llama_chat_message_role(llamaChatMessage, allocator.allocateUtf8String(role.getLabel()));
+    llama_chat_message_content(
+      llamaChatMessage,
+      allocator.allocateFrom(content)
+    );
+    llama_chat_message_role(
+      llamaChatMessage,
+      allocator.allocateFrom(role.getLabel())
+    );
     return llamaChatMessage;
   }
 
   public Role getRole() {
-    return Role.fromLabel(llama_chat_message_role(this.segment).getUtf8String(0));
+    return Role.fromLabel(llama_chat_message_role(this.segment).getString(0));
   }
 
   public String getContent() {
-    return llama_chat_message_content(this.segment).getUtf8String(0);
+    return llama_chat_message_content(this.segment).getString(0);
   }
 }

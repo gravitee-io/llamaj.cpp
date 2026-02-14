@@ -39,14 +39,13 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
 
   static final int SEED = new Random().nextInt();
 
-  static final String ENGLISH_GRAMMAR =
-    """
-            root        ::= en-char+ ([ \\t\\n] en-char+)*
-            en-char     ::= letter | digit | punctuation
-            letter      ::= [a-zA-Z]
-            digit       ::= [0-9]
-            punctuation ::= [!"#$%&'()*+,-./:;<=>?@[\\\\\\]^_`{|}~]
-            """;
+  static final String ENGLISH_GRAMMAR = """
+    root        ::= en-char+ ([ \\t\\n] en-char+)*
+    en-char     ::= letter | digit | punctuation
+    letter      ::= [a-zA-Z]
+    digit       ::= [0-9]
+    punctuation ::= [!"#$%&'()*+,-./:;<=>?@[\\\\\\]^_`{|}~]
+    """;
 
   static Stream<Arguments> params_that_allow_llama_generation() {
     return Stream.of(
@@ -69,13 +68,19 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
 
     System.out.println("****************************");
     System.out.println("Libraries loaded at: " + libPath);
-    System.out.println("Number of devices registered: " + ggml_backend_reg_count());
+    System.out.println(
+      "Number of devices registered: " + ggml_backend_reg_count()
+    );
     System.out.println("****************************");
   }
 
   @ParameterizedTest
   @MethodSource("params_that_allow_llama_generation")
-  void llama_tuned_generation(String system, String input, boolean allowLoraAdapter) {
+  void llama_tuned_generation(
+    String system,
+    String input,
+    boolean allowLoraAdapter
+  ) {
     int inputToken = -1;
     int outputToken = -1;
     var logger = new LlamaLogger(arena);
@@ -86,7 +91,10 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
     if (allowLoraAdapter) {
-      model.initLoraAdapter(arena, getModelPath(LORA_ADATAPTER_PATH, LORA_ADAPTER_TO_DOWNLOAD));
+      model.initLoraAdapter(
+        arena,
+        getModelPath(LORA_ADATAPTER_PATH, LORA_ADAPTER_TO_DOWNLOAD)
+      );
     }
 
     var contextParams = new LlamaContextParams(arena)
@@ -109,20 +117,28 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
       .grammar(vocab, ENGLISH_GRAMMAR, "root")
       .penalties(10, 1.2f, 0.3f, 0.0f);
 
-    var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
+    var prompt = getPrompt(
+      model,
+      arena,
+      buildMessages(arena, system, input),
+      contextParams
+    );
 
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var tokenizer = new LlamaTokenizer(vocab, context);
 
-    var state = ConversationState
-      .create(arena, context, tokenizer, sampler)
+    var state = ConversationState.create(arena, context, tokenizer, sampler)
       .setStopStrings(List.of("."))
       .setMaxTokens(10)
       .initialize(prompt);
 
     var it = new DefaultLlamaIterator(state);
 
-    String output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0)).content();
+    String output = it
+      .stream()
+      .reduce(LlamaOutput::merge)
+      .orElse(new LlamaOutput("", 0))
+      .content();
     System.out.println(output);
 
     inputToken = state.getInputTokens();
@@ -130,13 +146,15 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
 
     assertThat(inputToken).isGreaterThan(0);
     assertThat(outputToken).isGreaterThan(0);
-    assertThat(state.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
+    assertThat(state.getFinishReason()).isIn(
+      FinishReason.EOS,
+      FinishReason.LENGTH,
+      FinishReason.STOP
+    );
 
     context.free();
     sampler.free();
     model.free();
-
-    LlamaRuntime.llama_backend_free();
   }
 
   @AfterAll

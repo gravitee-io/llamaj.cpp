@@ -23,8 +23,15 @@ package io.gravitee.llama.cpp;
  */
 public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
 
+  public DefaultLlamaIterator(
+    ConversationState initialState,
+    MtmdContext mtmdContext
+  ) {
+    super(initialState, mtmdContext);
+  }
+
   public DefaultLlamaIterator(ConversationState initialState) {
-    super(initialState);
+    this(initialState, null);
   }
 
   @Override
@@ -38,7 +45,11 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
       // Initial prompt processing - use shared method
       processPrompt(currentState);
       feedPromptMemory(currentState.getPiece());
-      return currentState.getFinishReason() == null && !endWithStopString() && hasNotReachedQuota();
+      return (
+        currentState.getFinishReason() == null &&
+        !endWithStopString() &&
+        hasNotReachedQuota()
+      );
     } else {
       // Single token generation - need to specify position and sequence ID
       batch = new LlamaBatch(arena, 1, 0, 1);
@@ -51,6 +62,8 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
     }
 
     if (checkContextSize(batch) && batch.decode(context) != 0) {
+      setFinishReason(FinishReason.STOP);
+      batch.free();
       return false;
     }
 
@@ -65,6 +78,7 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
 
     if (isEog(newToken)) {
       incrementTokenCount(-1);
+      batch.free();
       return false;
     }
 
@@ -78,7 +92,10 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
   }
 
   private boolean checkContextSize(LlamaBatch batch) {
-    return currentState.getContext().nCtxUsedCells() + batch.nTokens() <= currentState.getContext().nCtx();
+    return (
+      currentState.getContext().nCtxUsedCells() + batch.nTokens() <=
+      currentState.getContext().nCtx()
+    );
   }
 
   @Override

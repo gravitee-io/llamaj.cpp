@@ -23,6 +23,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.List;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -34,7 +35,8 @@ public final class LlamaRuntime {
 
   private static final String pkg = PlatformResolver.platform().getPackage();
   private static final String runtime = PlatformResolver.platform().runtime();
-  private static final String basePackage = "io.gravitee.llama.cpp.%s.".formatted(pkg);
+  private static final String basePackage =
+    "io.gravitee.llama.cpp.%s.".formatted(pkg);
 
   private LlamaRuntime() {}
 
@@ -44,7 +46,11 @@ public final class LlamaRuntime {
   }
 
   public static void ggml_backend_load_all_from_path(Arena arena, String path) {
-    llama_h("ggml_backend_load_all_from_path", new Class<?>[] { MemorySegment.class }, arena.allocateUtf8String(path));
+    llama_h(
+      "ggml_backend_load_all_from_path",
+      new Class<?>[] { MemorySegment.class },
+      arena.allocateFrom(path)
+    );
   }
 
   public static void llama_backend_free() {
@@ -57,16 +63,21 @@ public final class LlamaRuntime {
 
   /* logging */
   public static void llama_log_set(MemorySegment m1, MemorySegment m2) {
-    llama_h("llama_log_set", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, m1, m2);
+    llama_h(
+      "llama_log_set",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      m1,
+      m2
+    );
   }
 
   /* Model Parameters */
-  public static MemorySegment llama_model_params_ofAddress(MemorySegment segment, Arena arena) {
-    return invoke("llama_model_params", "ofAddress", new Class<?>[] { MEM_SEG_CLASS, Arena.class }, segment, arena);
-  }
-
   public static MemorySegment llama_model_default_params(Arena arena) {
-    return llama_h("llama_model_default_params", new Class<?>[] { SegmentAllocator.class }, arena);
+    return llama_h(
+      "llama_model_default_params",
+      new Class<?>[] { SegmentAllocator.class },
+      arena
+    );
   }
 
   public static long llama_max_devices() {
@@ -74,85 +85,580 @@ public final class LlamaRuntime {
   }
 
   public static int n_gpu_layers(MemorySegment segment) {
-    return llama_model_params("n_gpu_layers$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_model_params(
+      "n_gpu_layers",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void n_gpu_layers(MemorySegment segment, int layers) {
-    llama_model_params("n_gpu_layers$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, layers);
+    llama_model_params(
+      "n_gpu_layers",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      layers
+    );
   }
 
   public static int split_mode(MemorySegment segment) {
-    return llama_model_params("split_mode$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_model_params(
+      "split_mode",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void split_mode(MemorySegment segment, int ordinal) {
-    llama_model_params("split_mode$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, ordinal);
+    llama_model_params(
+      "split_mode",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      ordinal
+    );
   }
 
   public static int main_gpu(MemorySegment segment) {
-    return llama_model_params("main_gpu$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_model_params(
+      "main_gpu",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void main_gpu(MemorySegment segment, int mainGpu) {
-    llama_model_params("main_gpu$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, mainGpu);
+    llama_model_params(
+      "main_gpu",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      mainGpu
+    );
   }
 
   public static MemorySegment tensor_split(MemorySegment segment) {
-    return llama_model_params("tensor_split$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_model_params(
+      "tensor_split",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
-  public static void tensor_split(MemorySegment segment, MemorySegment tensorSplit) {
-    llama_model_params("tensor_split$set", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, segment, tensorSplit);
+  public static void tensor_split(
+    MemorySegment segment,
+    MemorySegment tensorSplit
+  ) {
+    llama_model_params(
+      "tensor_split",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      segment,
+      tensorSplit
+    );
   }
 
   public static boolean vocab_only(MemorySegment segment) {
-    return llama_model_params("vocab_only$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_model_params(
+      "vocab_only",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void vocab_only(MemorySegment segment, boolean vocabOnly) {
-    llama_model_params("vocab_only$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, vocabOnly);
+    llama_model_params(
+      "vocab_only",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      vocabOnly
+    );
   }
 
   public static boolean use_mmap(MemorySegment segment) {
-    return llama_model_params("use_mmap$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_model_params(
+      "use_mmap",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void use_mmap(MemorySegment segment, boolean useMmap) {
-    llama_model_params("use_mmap$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, useMmap);
+    llama_model_params(
+      "use_mmap",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      useMmap
+    );
   }
 
   public static boolean use_mlock(MemorySegment segment) {
-    return llama_model_params("use_mlock$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_model_params(
+      "use_mlock",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void use_mlock(MemorySegment segment, boolean useMlock) {
-    llama_model_params("use_mlock$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, useMlock);
+    llama_model_params(
+      "use_mlock",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      useMlock
+    );
   }
 
   public static boolean check_tensors(MemorySegment segment) {
-    return llama_model_params("check_tensors$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_model_params(
+      "check_tensors",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
-  public static void check_tensors(MemorySegment segment, boolean checkTensors) {
-    llama_model_params("check_tensors$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, checkTensors);
+  public static void check_tensors(
+    MemorySegment segment,
+    boolean checkTensors
+  ) {
+    llama_model_params(
+      "check_tensors",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      checkTensors
+    );
   }
 
   /* Model */
-  public static MemorySegment llama_model_load_from_file(MemorySegment modelPath, MemorySegment path) {
-    return llama_h("llama_model_load_from_file", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, modelPath, path);
+  public static MemorySegment llama_model_load_from_file(
+    MemorySegment modelPath,
+    MemorySegment path
+  ) {
+    return llama_h(
+      "llama_model_load_from_file",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      modelPath,
+      path
+    );
   }
 
-  public static MemorySegment llama_adapter_lora_init(MemorySegment model, MemorySegment path) {
-    return llama_h("llama_adapter_lora_init", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, path);
+  public static MemorySegment llama_adapter_lora_init(
+    MemorySegment model,
+    MemorySegment path
+  ) {
+    return llama_h(
+      "llama_adapter_lora_init",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      model,
+      path
+    );
+  }
+
+  /* Multimodal (mtmd) functions */
+
+  public static MemorySegment mtmd_init_from_file(
+    MemorySegment mmprojPath,
+    MemorySegment llamaModel,
+    MemorySegment mtmdParams
+  ) {
+    return llama_h(
+      "mtmd_init_from_file",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, MEM_SEG_CLASS },
+      mmprojPath,
+      llamaModel,
+      mtmdParams
+    );
+  }
+
+  public static void mtmd_free(MemorySegment mtmdContext) {
+    llama_h("mtmd_free", new Class<?>[] { MEM_SEG_CLASS }, mtmdContext);
+  }
+
+  public static MemorySegment mtmd_context_params_default(
+    SegmentAllocator allocator
+  ) {
+    return llama_h(
+      "mtmd_context_params_default",
+      new Class<?>[] { SegmentAllocator.class },
+      allocator
+    );
+  }
+
+  public static boolean mtmd_support_vision(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_support_vision",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static boolean mtmd_support_audio(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_support_audio",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static int mtmd_get_audio_bitrate(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_get_audio_bitrate",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static int mtmd_encode_chunk(
+    MemorySegment mtmdContext,
+    MemorySegment mtmdInputChunkSegment
+  ) {
+    return llama_h(
+      "mtmd_encode_chunk",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      mtmdContext,
+      mtmdInputChunkSegment
+    );
+  }
+
+  public static MemorySegment mtmd_get_output_embd(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_get_output_embd",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunks_init() {
+    return llama_h("mtmd_input_chunks_init", new Class<?>[] {});
+  }
+
+  public static void mtmd_input_chunks_free(MemorySegment chunks) {
+    llama_h("mtmd_input_chunks_free", new Class<?>[] { MEM_SEG_CLASS }, chunks);
+  }
+
+  public static long mtmd_input_chunks_size(MemorySegment chunks) {
+    return llama_h(
+      "mtmd_input_chunks_size",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunks
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunks_get(
+    MemorySegment chunks,
+    long index
+  ) {
+    return llama_h(
+      "mtmd_input_chunks_get",
+      new Class<?>[] { MEM_SEG_CLASS, long.class },
+      chunks,
+      index
+    );
+  }
+
+  public static int mtmd_input_chunk_get_type(MemorySegment chunk) {
+    return llama_h(
+      "mtmd_input_chunk_get_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunk_get_tokens_text(
+    MemorySegment chunk,
+    MemorySegment nTokensOutput // This is an output parameter, needs special handling or can be null if not needed
+  ) {
+    return llama_h(
+      "mtmd_input_chunk_get_tokens_text",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      chunk,
+      nTokensOutput
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunk_get_tokens_image(
+    MemorySegment chunk
+  ) {
+    return llama_h(
+      "mtmd_input_chunk_get_tokens_image",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  public static long mtmd_input_chunk_get_n_tokens(MemorySegment chunk) {
+    return llama_h(
+      "mtmd_input_chunk_get_n_tokens",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  public static MemorySegment mtmd_input_chunk_get_id(MemorySegment chunk) {
+    return llama_h(
+      "mtmd_input_chunk_get_id",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  public static int mtmd_input_chunk_get_n_pos(MemorySegment chunk) {
+    return llama_h(
+      "mtmd_input_chunk_get_n_pos",
+      new Class<?>[] { MEM_SEG_CLASS },
+      chunk
+    );
+  }
+
+  /* mtmd_input_text functions */
+
+  public static MemorySegment mtmd_input_text_allocate(
+    SegmentAllocator allocator
+  ) {
+    return mtmd_input_text(
+      "allocate",
+      new Class[] { SegmentAllocator.class },
+      allocator
+    );
+  }
+
+  public static void mtmd_input_text_set_text(
+    MemorySegment mtmdInputText,
+    MemorySegment text
+  ) {
+    mtmd_input_text(
+      "text",
+      new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      mtmdInputText,
+      text
+    );
+  }
+
+  public static void mtmd_input_text_set_add_special(
+    MemorySegment mtmdInputText,
+    boolean addSpecial
+  ) {
+    mtmd_input_text(
+      "add_special",
+      new Class[] { MEM_SEG_CLASS, boolean.class },
+      mtmdInputText,
+      addSpecial
+    );
+  }
+
+  public static void mtmd_input_text_set_parse_special(
+    MemorySegment mtmdInputText,
+    boolean parseSpecial
+  ) {
+    mtmd_input_text(
+      "parse_special",
+      new Class[] { MEM_SEG_CLASS, boolean.class },
+      mtmdInputText,
+      parseSpecial
+    );
+  }
+
+  public static MemorySegment mtmd_bitmap_init(
+    int width,
+    int height,
+    MemorySegment data
+  ) {
+    return llama_h(
+      "mtmd_bitmap_init",
+      new Class<?>[] { int.class, int.class, MEM_SEG_CLASS },
+      width,
+      height,
+      data
+    );
+  }
+
+  public static MemorySegment mtmd_bitmap_init_from_audio(
+    long nSamples,
+    MemorySegment data
+  ) {
+    return llama_h(
+      "mtmd_bitmap_init_from_audio",
+      new Class<?>[] { long.class, MEM_SEG_CLASS },
+      nSamples,
+      data
+    );
+  }
+
+  public static void mtmd_bitmap_free(MemorySegment bitmap) {
+    llama_h("mtmd_bitmap_free", new Class<?>[] { MEM_SEG_CLASS }, bitmap);
+  }
+
+  public static void mtmd_bitmap_set_id(
+    MemorySegment bitmap,
+    MemorySegment id
+  ) {
+    llama_h(
+      "mtmd_bitmap_set_id",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      bitmap,
+      id
+    );
+  }
+
+  /**
+   * Evaluates all multimodal input chunks (text, image, audio) in sequence.
+   * This is the top-level native helper that handles everything: text token decoding,
+   * image/audio encoding, M-RoPE 2D/1D position computation, non-causal attention,
+   * and batch splitting. Matches the exact behavior of the reference llama.cpp server.
+   *
+   * @param mtmdContext The multimodal context
+   * @param llamaContext The llama context
+   * @param chunks The tokenized input chunks
+   * @param nPast Starting position in the KV cache
+   * @param seqId Sequence ID
+   * @param nBatch Maximum batch size for decoding
+   * @param logitsLast Whether to compute logits for the last token
+   * @param newNPast Output parameter — updated position after processing
+   * @return 0 on success, non-zero on error
+   */
+  public static int mtmd_helper_eval_chunks(
+    MemorySegment mtmdContext,
+    MemorySegment llamaContext,
+    MemorySegment chunks,
+    int nPast,
+    int seqId,
+    int nBatch,
+    boolean logitsLast,
+    MemorySegment newNPast
+  ) {
+    return llama_h(
+      "mtmd_helper_eval_chunks",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        int.class,
+        int.class,
+        int.class,
+        boolean.class,
+        MEM_SEG_CLASS,
+      },
+      mtmdContext,
+      llamaContext,
+      chunks,
+      nPast,
+      seqId,
+      nBatch,
+      logitsLast,
+      newNPast
+    );
+  }
+
+  /**
+   * Creates a bitmap from raw encoded image/audio file bytes (PNG, JPEG, WAV, etc.).
+   * This delegates to the native stb_image / miniaudio decoders, matching the exact
+   * behavior of the reference llama.cpp server's image processing pipeline.
+   *
+   * @param mtmdContext The multimodal context (needed for audio bitrate detection)
+   * @param buf Buffer containing the encoded file bytes
+   * @param len Length of the buffer in bytes
+   * @return A new mtmd_bitmap pointer, or NULL (address 0) on failure
+   */
+  public static MemorySegment mtmd_helper_bitmap_init_from_buf(
+    MemorySegment mtmdContext,
+    MemorySegment buf,
+    long len
+  ) {
+    return llama_h(
+      "mtmd_helper_bitmap_init_from_buf",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, long.class },
+      mtmdContext,
+      buf,
+      len
+    );
+  }
+
+  public static int mtmd_tokenize(
+    MemorySegment mtmdContext,
+    MemorySegment outputChunks,
+    MemorySegment mtmdInputText,
+    MemorySegment bitmapArray,
+    long numBitmaps
+  ) {
+    return llama_h(
+      "mtmd_tokenize",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        long.class,
+      },
+      mtmdContext,
+      outputChunks,
+      mtmdInputText,
+      bitmapArray,
+      numBitmaps
+    );
+  }
+
+  public static boolean mtmd_decode_use_mrope(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_decode_use_mrope",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static boolean mtmd_decode_use_non_causal(MemorySegment mtmdContext) {
+    return llama_h(
+      "mtmd_decode_use_non_causal",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+  }
+
+  public static void llama_set_causal_attn(
+    MemorySegment llamaContext,
+    boolean causal
+  ) {
+    llama_h(
+      "llama_set_causal_attn",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      llamaContext,
+      causal
+    );
+  }
+
+  public static int llama_model_n_embd(MemorySegment model) {
+    return llama_h(
+      "llama_model_n_embd",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  /**
+   * Returns the input embedding dimension for the model.
+   * For multimodal models, this may differ from {@link #llama_model_n_embd}
+   * as it reflects the mmproj output dimension used for image/audio embeddings.
+   */
+  public static int llama_model_n_embd_inp(MemorySegment model) {
+    return llama_h(
+      "llama_model_n_embd_inp",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
   }
 
   /* Vocab */
   public static MemorySegment llama_model_get_vocab(MemorySegment model) {
-    return llama_h("llama_model_get_vocab", new Class<?>[] { MEM_SEG_CLASS }, model);
+    return llama_h(
+      "llama_model_get_vocab",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
   }
 
   public static boolean llama_vocab_is_eog(MemorySegment vocab, int tokenId) {
-    return llama_h("llama_vocab_is_eog", new Class<?>[] { MEM_SEG_CLASS, int.class }, vocab, tokenId);
+    return llama_h(
+      "llama_vocab_is_eog",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      vocab,
+      tokenId
+    );
   }
 
   public static int llama_token_to_piece(
@@ -163,21 +669,51 @@ public final class LlamaRuntime {
     int lstrip,
     boolean special
   ) {
-    Class<?>[] parameterTypes = { MEM_SEG_CLASS, int.class, MEM_SEG_CLASS, int.class, int.class, boolean.class };
-    return llama_h("llama_token_to_piece", parameterTypes, vocab, token, buf, length, lstrip, special);
+    Class<?>[] parameterTypes = {
+      MEM_SEG_CLASS,
+      int.class,
+      MEM_SEG_CLASS,
+      int.class,
+      int.class,
+      boolean.class,
+    };
+    return llama_h(
+      "llama_token_to_piece",
+      parameterTypes,
+      vocab,
+      token,
+      buf,
+      length,
+      lstrip,
+      special
+    );
   }
 
   /* Sampler */
 
   public static MemorySegment llama_sampler_chain_init(MemorySegment sampler) {
-    return llama_h("llama_sampler_chain_init", new Class<?>[] { MEM_SEG_CLASS }, sampler);
+    return llama_h(
+      "llama_sampler_chain_init",
+      new Class<?>[] { MEM_SEG_CLASS },
+      sampler
+    );
   }
 
-  public static MemorySegment llama_sampler_chain_default_params(SegmentAllocator allocator) {
-    return llama_h("llama_sampler_chain_default_params", new Class<?>[] { SegmentAllocator.class }, allocator);
+  public static MemorySegment llama_sampler_chain_default_params(
+    SegmentAllocator allocator
+  ) {
+    return llama_h(
+      "llama_sampler_chain_default_params",
+      new Class<?>[] { SegmentAllocator.class },
+      allocator
+    );
   }
 
-  public static int llama_sampler_sample(MemorySegment sampler, MemorySegment context, int idx) {
+  public static int llama_sampler_sample(
+    MemorySegment sampler,
+    MemorySegment context,
+    int idx
+  ) {
     return llama_h(
       "llama_sampler_sample",
       new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, int.class },
@@ -187,12 +723,24 @@ public final class LlamaRuntime {
     );
   }
 
-  public static void llama_sampler_chain_add(MemorySegment sampler, MemorySegment config) {
-    llama_h("llama_sampler_chain_add", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, sampler, config);
+  public static void llama_sampler_chain_add(
+    MemorySegment sampler,
+    MemorySegment config
+  ) {
+    llama_h(
+      "llama_sampler_chain_add",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      sampler,
+      config
+    );
   }
 
   public static MemorySegment llama_sampler_init_temp(float temperature) {
-    return llama_h("llama_sampler_init_temp", new Class<?>[] { float.class }, temperature);
+    return llama_h(
+      "llama_sampler_init_temp",
+      new Class<?>[] { float.class },
+      temperature
+    );
   }
 
   public static MemorySegment llama_sampler_init_greedy() {
@@ -200,22 +748,56 @@ public final class LlamaRuntime {
   }
 
   public static MemorySegment llama_sampler_init_top_k(int topK) {
-    return llama_h("llama_sampler_init_top_k", new Class<?>[] { int.class }, topK);
+    return llama_h(
+      "llama_sampler_init_top_k",
+      new Class<?>[] { int.class },
+      topK
+    );
   }
 
-  public static MemorySegment llama_sampler_init_top_p(float topP, long minKeep) {
-    return llama_h("llama_sampler_init_top_p", new Class<?>[] { float.class, long.class }, topP, minKeep);
+  public static MemorySegment llama_sampler_init_top_p(
+    float topP,
+    long minKeep
+  ) {
+    return llama_h(
+      "llama_sampler_init_top_p",
+      new Class<?>[] { float.class, long.class },
+      topP,
+      minKeep
+    );
   }
 
-  public static MemorySegment llama_sampler_init_min_p(float minP, long minKeep) {
-    return llama_h("llama_sampler_init_min_p", new Class<?>[] { float.class, long.class }, minP, minKeep);
+  public static MemorySegment llama_sampler_init_min_p(
+    float minP,
+    long minKeep
+  ) {
+    return llama_h(
+      "llama_sampler_init_min_p",
+      new Class<?>[] { float.class, long.class },
+      minP,
+      minKeep
+    );
   }
 
-  public static MemorySegment llama_sampler_init_mirostat_v2(int seed, float tau, float eta) {
-    return llama_h("llama_sampler_init_mirostat_v2", new Class<?>[] { int.class, float.class, float.class }, seed, tau, eta);
+  public static MemorySegment llama_sampler_init_mirostat_v2(
+    int seed,
+    float tau,
+    float eta
+  ) {
+    return llama_h(
+      "llama_sampler_init_mirostat_v2",
+      new Class<?>[] { int.class, float.class, float.class },
+      seed,
+      tau,
+      eta
+    );
   }
 
-  public static MemorySegment llama_sampler_init_grammar(MemorySegment vocab, MemorySegment grammar, MemorySegment root) {
+  public static MemorySegment llama_sampler_init_grammar(
+    MemorySegment vocab,
+    MemorySegment grammar,
+    MemorySegment root
+  ) {
     return llama_h(
       "llama_sampler_init_grammar",
       new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, MEM_SEG_CLASS },
@@ -242,113 +824,239 @@ public final class LlamaRuntime {
   }
 
   public static MemorySegment llama_sampler_init_dist(int seed) {
-    return llama_h("llama_sampler_init_dist", new Class<?>[] { int.class }, seed);
+    return llama_h(
+      "llama_sampler_init_dist",
+      new Class<?>[] { int.class },
+      seed
+    );
   }
 
   /* Context Params */
-  public static MemorySegment llama_context_default_params(SegmentAllocator allocator) {
-    return llama_h("llama_context_default_params", new Class<?>[] { SegmentAllocator.class }, allocator);
+  public static MemorySegment llama_context_default_params(
+    SegmentAllocator allocator
+  ) {
+    return llama_h(
+      "llama_context_default_params",
+      new Class<?>[] { SegmentAllocator.class },
+      allocator
+    );
   }
 
   public static int n_ctx(MemorySegment contextParams) {
-    return llama_context_params("n_ctx$get", new Class<?>[] { MEM_SEG_CLASS }, contextParams);
+    return llama_context_params(
+      "n_ctx",
+      new Class<?>[] { MEM_SEG_CLASS },
+      contextParams
+    );
   }
 
   public static void n_ctx(MemorySegment segment, int nCtx) {
-    llama_context_params("n_ctx$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nCtx);
+    llama_context_params(
+      "n_ctx",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      nCtx
+    );
   }
 
   public static int n_batch(MemorySegment segment) {
-    return llama_context_params("n_batch$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "n_batch",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void n_batch(MemorySegment segment, int nBatch) {
-    llama_context_params("n_batch$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nBatch);
+    llama_context_params(
+      "n_batch",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      nBatch
+    );
   }
 
   public static int n_ubatch(MemorySegment segment) {
-    return llama_context_params("n_ubatch$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "n_ubatch",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void n_ubatch(MemorySegment segment, int nUBatch) {
-    llama_context_params("n_ubatch$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nUBatch);
+    llama_context_params(
+      "n_ubatch",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      nUBatch
+    );
   }
 
   public static int n_seq_max(MemorySegment segment) {
-    return llama_context_params("n_seq_max$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "n_seq_max",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void n_seq_max(MemorySegment segment, int nSeqMax) {
-    llama_context_params("n_seq_max$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nSeqMax);
+    llama_context_params(
+      "n_seq_max",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      nSeqMax
+    );
   }
 
   public static int n_threads(MemorySegment segment) {
-    return llama_context_params("n_threads$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "n_threads",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void n_threads(MemorySegment segment, int nThreads) {
-    llama_context_params("n_threads$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nThreads);
+    llama_context_params(
+      "n_threads",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      nThreads
+    );
   }
 
   public static int n_threads_batch(MemorySegment segment) {
-    return llama_context_params("n_threads_batch$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "n_threads_batch",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void n_threads_batch(MemorySegment segment, int nThreadBatch) {
-    llama_context_params("n_threads_batch$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, nThreadBatch);
+    llama_context_params(
+      "n_threads_batch",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      nThreadBatch
+    );
   }
 
   public static int pooling_type(MemorySegment segment) {
-    return llama_context_params("pooling_type$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "pooling_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void pooling_type(MemorySegment segment, int ordinal) {
-    llama_context_params("pooling_type$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, ordinal);
+    llama_context_params(
+      "pooling_type",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      ordinal
+    );
   }
 
   public static int attention_type(MemorySegment segment) {
-    return llama_context_params("attention_type$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "attention_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void attention_type(MemorySegment segment, int ordinal) {
-    llama_context_params("attention_type$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, ordinal);
+    llama_context_params(
+      "attention_type",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      ordinal
+    );
   }
 
   public static boolean embeddings(MemorySegment segment) {
-    return llama_context_params("embeddings$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "embeddings",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void embeddings(MemorySegment segment, boolean embeddings) {
-    llama_context_params("embeddings$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, embeddings);
+    llama_context_params(
+      "embeddings",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      embeddings
+    );
   }
 
   public static boolean offload_kqv(MemorySegment segment) {
-    return llama_context_params("offload_kqv$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "offload_kqv",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void offload_kqv(MemorySegment segment, boolean offloadKQV) {
-    llama_context_params("offload_kqv$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, offloadKQV);
+    llama_context_params(
+      "offload_kqv",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      offloadKQV
+    );
   }
 
   public static int flash_attn_type(MemorySegment segment) {
-    return llama_context_params("flash_attn_type$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "flash_attn_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
   public static void flash_attn_type(MemorySegment segment, int flashAttnType) {
-    llama_context_params("flash_attn_type$set", new Class<?>[] { MEM_SEG_CLASS, int.class }, segment, flashAttnType);
+    llama_context_params(
+      "flash_attn_type",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      flashAttnType
+    );
   }
 
   public static boolean no_perf(MemorySegment segment) {
-    return llama_context_params("no_perf$get", new Class<?>[] { MEM_SEG_CLASS }, segment);
+    return llama_context_params(
+      "no_perf",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
-  public static void no_perf(MemorySegment segment, boolean flashAttn) {
-    llama_context_params("no_perf$set", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, segment, flashAttn);
+  public static void no_perf(MemorySegment segment, boolean noPerf) {
+    llama_context_params(
+      "no_perf",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      noPerf
+    );
   }
 
   /* Context */
-  public static MemorySegment llama_init_from_model(MemorySegment model, MemorySegment params) {
-    return llama_h("llama_init_from_model", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, params);
+  public static MemorySegment llama_init_from_model(
+    MemorySegment model,
+    MemorySegment params
+  ) {
+    return llama_h(
+      "llama_init_from_model",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      model,
+      params
+    );
   }
 
   /* Memory */
@@ -358,18 +1066,38 @@ public final class LlamaRuntime {
   }
 
   public static int llama_memory_seq_pos_max(MemorySegment memory, int seq_id) {
-    return llama_h("llama_memory_seq_pos_max", new Class<?>[] { MEM_SEG_CLASS, int.class }, memory, seq_id);
+    return llama_h(
+      "llama_memory_seq_pos_max",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      memory,
+      seq_id
+    );
   }
 
   public static int llama_memory_seq_pos_min(MemorySegment memory, int seq_id) {
-    return llama_h("llama_memory_seq_pos_min", new Class<?>[] { MEM_SEG_CLASS, int.class }, memory, seq_id);
+    return llama_h(
+      "llama_memory_seq_pos_min",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      memory,
+      seq_id
+    );
   }
 
   public static void llama_memory_clear(MemorySegment memory, boolean data) {
-    llama_h("llama_memory_clear", new Class<?>[] { MEM_SEG_CLASS, boolean.class }, memory, data);
+    llama_h(
+      "llama_memory_clear",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      memory,
+      data
+    );
   }
 
-  public static boolean llama_memory_seq_rm(MemorySegment memory, int seqId, int p0, int p1) {
+  public static boolean llama_memory_seq_rm(
+    MemorySegment memory,
+    int seqId,
+    int p0,
+    int p1
+  ) {
     return llama_h(
       "llama_memory_seq_rm",
       new Class<?>[] { MEM_SEG_CLASS, int.class, int.class, int.class },
@@ -380,10 +1108,22 @@ public final class LlamaRuntime {
     );
   }
 
-  public static void llama_memory_seq_cp(MemorySegment memory, int seqIdSrc, int seqIdDst, int p0, int p1) {
+  public static void llama_memory_seq_cp(
+    MemorySegment memory,
+    int seqIdSrc,
+    int seqIdDst,
+    int p0,
+    int p1
+  ) {
     llama_h(
       "llama_memory_seq_cp",
-      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class, int.class, int.class },
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        int.class,
+        int.class,
+        int.class,
+        int.class,
+      },
       memory,
       seqIdSrc,
       seqIdDst,
@@ -393,13 +1133,30 @@ public final class LlamaRuntime {
   }
 
   public static void llama_memory_seq_keep(MemorySegment memory, int seqId) {
-    llama_h("llama_memory_seq_keep", new Class<?>[] { MEM_SEG_CLASS, int.class }, memory, seqId);
+    llama_h(
+      "llama_memory_seq_keep",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      memory,
+      seqId
+    );
   }
 
-  public static void llama_memory_seq_add(MemorySegment memory, int seqId, int p0, int p1, int delta) {
+  public static void llama_memory_seq_add(
+    MemorySegment memory,
+    int seqId,
+    int p0,
+    int p1,
+    int delta
+  ) {
     llama_h(
       "llama_memory_seq_add",
-      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class, int.class, int.class },
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        int.class,
+        int.class,
+        int.class,
+        int.class,
+      },
       memory,
       seqId,
       p0,
@@ -408,10 +1165,22 @@ public final class LlamaRuntime {
     );
   }
 
-  public static void llama_memory_seq_div(MemorySegment memory, int seqId, int p0, int p1, int d) {
+  public static void llama_memory_seq_div(
+    MemorySegment memory,
+    int seqId,
+    int p0,
+    int p1,
+    int d
+  ) {
     llama_h(
       "llama_memory_seq_div",
-      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class, int.class, int.class },
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        int.class,
+        int.class,
+        int.class,
+        int.class,
+      },
       memory,
       seqId,
       p0,
@@ -421,8 +1190,16 @@ public final class LlamaRuntime {
   }
 
   /* Chat Template */
-  public static MemorySegment llama_model_chat_template(MemorySegment model, MemorySegment name) {
-    return llama_h("llama_model_chat_template", new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, model, name);
+  public static MemorySegment llama_model_chat_template(
+    MemorySegment model,
+    MemorySegment name
+  ) {
+    return llama_h(
+      "llama_model_chat_template",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      model,
+      name
+    );
   }
 
   public static int llama_chat_apply_template(
@@ -435,7 +1212,14 @@ public final class LlamaRuntime {
   ) {
     return llama_h(
       "llama_chat_apply_template",
-      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, long.class, boolean.class, MEM_SEG_CLASS, int.class },
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        long.class,
+        boolean.class,
+        MEM_SEG_CLASS,
+        int.class,
+      },
       tmpl,
       chat,
       n_msg,
@@ -446,28 +1230,64 @@ public final class LlamaRuntime {
   }
 
   /* Chat Message */
-  public static MemorySegment llama_chat_message_allocate(SegmentAllocator allocator) {
-    return llama_chat_message("allocate", new Class[] { SegmentAllocator.class }, allocator);
+  public static MemorySegment llama_chat_message_allocate(
+    SegmentAllocator allocator
+  ) {
+    return llama_chat_message(
+      "allocate",
+      new Class[] { SegmentAllocator.class },
+      allocator
+    );
   }
 
-  public static MemorySegment llama_chat_message_allocateArray(long size, SegmentAllocator allocator) {
-    return llama_chat_message("allocateArray", new Class[] { long.class, SegmentAllocator.class }, size, allocator);
+  public static MemorySegment llama_chat_message_allocateArray(
+    long size,
+    SegmentAllocator allocator
+  ) {
+    return llama_chat_message(
+      "allocateArray",
+      new Class[] { long.class, SegmentAllocator.class },
+      size,
+      allocator
+    );
   }
 
   public static MemorySegment llama_chat_message_role(MemorySegment segment) {
-    return llama_chat_message("role$get", new Class[] { MEM_SEG_CLASS }, segment);
+    return llama_chat_message("role", new Class[] { MEM_SEG_CLASS }, segment);
   }
 
-  public static void llama_chat_message_role(MemorySegment message, MemorySegment role) {
-    llama_chat_message("role$set", new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, message, role);
+  public static void llama_chat_message_role(
+    MemorySegment message,
+    MemorySegment role
+  ) {
+    llama_chat_message(
+      "role",
+      new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      message,
+      role
+    );
   }
 
-  public static MemorySegment llama_chat_message_content(MemorySegment segment) {
-    return llama_chat_message("content$get", new Class[] { MEM_SEG_CLASS }, segment);
+  public static MemorySegment llama_chat_message_content(
+    MemorySegment segment
+  ) {
+    return llama_chat_message(
+      "content",
+      new Class[] { MEM_SEG_CLASS },
+      segment
+    );
   }
 
-  public static void llama_chat_message_content(MemorySegment message, MemorySegment content) {
-    llama_chat_message("content$set", new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, message, content);
+  public static void llama_chat_message_content(
+    MemorySegment message,
+    MemorySegment content
+  ) {
+    llama_chat_message(
+      "content",
+      new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      message,
+      content
+    );
   }
 
   public static long llama_chat_message_sizeof() {
@@ -486,7 +1306,15 @@ public final class LlamaRuntime {
   ) {
     return llama_h(
       "llama_tokenize",
-      new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS, int.class, MEM_SEG_CLASS, int.class, boolean.class, boolean.class },
+      new Class[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        int.class,
+        MEM_SEG_CLASS,
+        int.class,
+        boolean.class,
+        boolean.class,
+      },
       vocab,
       text,
       text_len,
@@ -498,7 +1326,11 @@ public final class LlamaRuntime {
   }
 
   /* Batch */
-  public static MemorySegment llama_batch_get_one(SegmentAllocator allocator, MemorySegment segment, int size) {
+  public static MemorySegment llama_batch_get_one(
+    SegmentAllocator allocator,
+    MemorySegment segment,
+    int size
+  ) {
     return llama_h(
       "llama_batch_get_one",
       new Class[] { SegmentAllocator.class, MEM_SEG_CLASS, int.class },
@@ -508,7 +1340,12 @@ public final class LlamaRuntime {
     );
   }
 
-  public static MemorySegment llama_batch_init(SegmentAllocator allocator, int nTokens, int embd, int nSeqMax) {
+  public static MemorySegment llama_batch_init(
+    SegmentAllocator allocator,
+    int nTokens,
+    int embd,
+    int nSeqMax
+  ) {
     return llama_h(
       "llama_batch_init",
       new Class[] { SegmentAllocator.class, int.class, int.class, int.class },
@@ -519,19 +1356,32 @@ public final class LlamaRuntime {
     );
   }
 
+  /**
+   * Adds a single token to a batch using cached field references.
+   * This optimized version eliminates 5 reflection calls per token by using a pre-computed cache.
+   *
+   * @param batch The llama_batch MemorySegment
+   * @param token The token ID to add
+   * @param pos The position in the sequence
+   * @param seqIds The sequence IDs
+   * @param logits Whether to request logits for this token
+   * @param cache The pre-computed batch field cache (created once, reused for all tokens)
+   */
   public static void llama_batch_add(
     MemorySegment batch,
     int token,
     int pos,
     java.util.List<Integer> seqIds,
-    boolean logits
+    boolean logits,
+    BatchFieldCache cache
   ) {
-    // Get batch struct fields
-    MemorySegment tokens = invoke("llama_batch", "token$get", new Class[] { MEM_SEG_CLASS }, batch);
-    MemorySegment positions = invoke("llama_batch", "pos$get", new Class[] { MEM_SEG_CLASS }, batch);
-    MemorySegment nSeqId = invoke("llama_batch", "n_seq_id$get", new Class[] { MEM_SEG_CLASS }, batch);
-    MemorySegment seqIdPtr = invoke("llama_batch", "seq_id$get", new Class[] { MEM_SEG_CLASS }, batch);
-    MemorySegment logitsPtr = invoke("llama_batch", "logits$get", new Class[] { MEM_SEG_CLASS }, batch);
+    // Use cached field references (zero reflection!)
+    MemorySegment tokens = cache.getTokens();
+    MemorySegment positions = cache.getPositions();
+    MemorySegment nSeqId = cache.getNSeqId();
+    MemorySegment seqIdPtr = cache.getSeqIdPtr();
+    MemorySegment logitsPtr = cache.getLogitsPtr();
+
     int nTokens = llama_batch_n_tokens(batch);
 
     // Set token
@@ -544,28 +1394,185 @@ public final class LlamaRuntime {
     // Set sequence IDs
     // Get the pointer to the array of seq_ids for this token position
     // The pointer needs to be reinterpreted with the correct size (seqIds.size() * sizeof(int))
-    MemorySegment seqIdArray = seqIdPtr.getAtIndex(ValueLayout.ADDRESS, nTokens).reinterpret(seqIds.size() * Integer.BYTES);
+    MemorySegment seqIdArray = seqIdPtr
+      .getAtIndex(ValueLayout.ADDRESS, nTokens)
+      .reinterpret((long) seqIds.size() * Integer.BYTES);
     for (int i = 0; i < seqIds.size(); i++) {
       seqIdArray.setAtIndex(ValueLayout.JAVA_INT, i, seqIds.get(i));
     }
 
     // Set logits flag
-    logitsPtr.setAtIndex(ValueLayout.JAVA_BYTE, nTokens, logits ? (byte) 1 : (byte) 0);
+    logitsPtr.setAtIndex(
+      ValueLayout.JAVA_BYTE,
+      nTokens,
+      logits ? (byte) 1 : (byte) 0
+    );
 
     // Increment n_tokens
-    invoke("llama_batch", "n_tokens$set", new Class[] { MEM_SEG_CLASS, int.class }, batch, nTokens + 1);
+    invoke(
+      "llama_batch",
+      "n_tokens",
+      new Class[] { MEM_SEG_CLASS, int.class },
+      batch,
+      nTokens + 1
+    );
+  }
+
+  /**
+   * Legacy method for backward compatibility. Creates a cache internally.
+   * For better performance, prefer the version that accepts a BatchFieldCache.
+   *
+   * @deprecated Use {@link #llama_batch_add(MemorySegment, int, int, List, boolean, BatchFieldCache)}
+   *             which allows cache reuse across multiple token additions.
+   */
+  @Deprecated
+  public static void llama_batch_add(
+    MemorySegment batch,
+    int token,
+    int pos,
+    java.util.List<Integer> seqIds,
+    boolean logits
+  ) {
+    // Create a temporary cache for this single call (inefficient!)
+    // This exists only for backward compatibility
+    BatchFieldCache cache = new BatchFieldCache(batch);
+    llama_batch_add(batch, token, pos, seqIds, logits, cache);
+  }
+
+  /**
+   * Adds multiple embedding tokens to a batch using cached field references.
+   * Optimized for image/audio embeddings which often have many tokens.
+   *
+   * @param batch The llama_batch MemorySegment
+   * @param embd The embedding MemorySegment
+   * @param pos The starting position in the sequence
+   * @param seqIds The sequence IDs
+   * @param logits Whether to request logits for the last token
+   * @param nTokensToAdd Number of embedding tokens to add
+   * @param cache The pre-computed batch field cache
+   */
+  public static void llama_batch_add(
+    MemorySegment batch,
+    MemorySegment embd,
+    int pos,
+    List<Integer> seqIds,
+    boolean logits,
+    int nTokensToAdd,
+    BatchFieldCache cache
+  ) {
+    // Use cached field references (zero reflection!)
+    MemorySegment embds = cache.getLogitsPtr(); // reuse cache method (embd field)
+    // Actually, we need to get embds through invoke since it's not in the standard cache
+    // For now, we'll use invoke but cache it locally
+    MemorySegment embeddings = invoke(
+      "llama_batch",
+      "embd",
+      new Class[] { MEM_SEG_CLASS },
+      batch
+    );
+
+    MemorySegment positions = cache.getPositions();
+    MemorySegment nSeqId = cache.getNSeqId();
+    MemorySegment seqIdPtr = cache.getSeqIdPtr();
+    MemorySegment logitsPtr = cache.getLogitsPtr();
+    int nTokens = llama_batch_n_tokens(batch);
+
+    // Copy embedding data
+    MemorySegment.copy(
+      embd,
+      0,
+      embeddings,
+      (long) nTokens * embd.byteSize(),
+      embd.byteSize()
+    );
+
+    // Pre-convert seqIds to array for faster access
+    int[] seqIdsArray = seqIds.stream().mapToInt(Integer::intValue).toArray();
+    int seqIdsSize = seqIdsArray.length;
+
+    // Pre-compute last token index to avoid repeated calculation
+    int lastTokenIdx = nTokensToAdd - 1;
+
+    for (int i = 0; i < nTokensToAdd; i++) {
+      int tokenPos = nTokens + i;
+
+      // Set position
+      positions.setAtIndex(ValueLayout.JAVA_INT, tokenPos, pos + i);
+      // Set number of sequence IDs
+      nSeqId.setAtIndex(ValueLayout.JAVA_INT, tokenPos, seqIdsSize);
+
+      // Set sequence IDs (cached array access)
+      MemorySegment seqIdArray = seqIdPtr
+        .getAtIndex(ValueLayout.ADDRESS, tokenPos)
+        .reinterpret((long) seqIdsSize * Integer.BYTES);
+      for (int j = 0; j < seqIdsSize; j++) {
+        seqIdArray.setAtIndex(ValueLayout.JAVA_INT, j, seqIdsArray[j]);
+      }
+
+      // Set logits flag (only for last token if requested)
+      logitsPtr.setAtIndex(
+        ValueLayout.JAVA_BYTE,
+        tokenPos,
+        (logits && i == lastTokenIdx) ? (byte) 1 : (byte) 0
+      );
+    }
+
+    // Increment n_tokens
+    invoke(
+      "llama_batch",
+      "n_tokens",
+      new Class[] { MEM_SEG_CLASS, int.class },
+      batch,
+      nTokens + nTokensToAdd
+    );
+  }
+
+  /**
+   * Legacy method for backward compatibility. Creates a cache internally.
+   * For better performance, prefer the version that accepts a BatchFieldCache.
+   *
+   * @deprecated Use {@link #llama_batch_add(MemorySegment, MemorySegment, int, List, boolean, int, BatchFieldCache)}
+   */
+  @Deprecated
+  public static void llama_batch_add(
+    MemorySegment batch,
+    MemorySegment embd,
+    int pos,
+    List<Integer> seqIds,
+    boolean logits,
+    int n_tokens_to_add
+  ) {
+    // Create a temporary cache for this single call (inefficient!)
+    BatchFieldCache cache = new BatchFieldCache(batch);
+    llama_batch_add(batch, embd, pos, seqIds, logits, n_tokens_to_add, cache);
   }
 
   public static void llama_batch_clear(MemorySegment batch) {
-    invoke("llama_batch", "n_tokens$set", new Class[] { MEM_SEG_CLASS, int.class }, batch, 0);
+    invoke(
+      "llama_batch",
+      "n_tokens",
+      new Class[] { MEM_SEG_CLASS, int.class },
+      batch,
+      0
+    );
   }
 
   public static int llama_batch_n_tokens(MemorySegment batch) {
-    return invoke("llama_batch", "n_tokens$get", new Class[] { MEM_SEG_CLASS }, batch);
+    return invoke(
+      "llama_batch",
+      "n_tokens",
+      new Class[] { MEM_SEG_CLASS },
+      batch
+    );
   }
 
   public static int llama_decode(MemorySegment context, MemorySegment batch) {
-    return llama_h("llama_decode", new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS }, context, batch);
+    return llama_h(
+      "llama_decode",
+      new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      context,
+      batch
+    );
   }
 
   /* Free Memory */
@@ -578,7 +1585,11 @@ public final class LlamaRuntime {
   }
 
   public static void llama_sampler_free(LlamaSampler sampler) {
-    llama_h("llama_sampler_free", new Class[] { MEM_SEG_CLASS }, sampler.segment);
+    llama_h(
+      "llama_sampler_free",
+      new Class[] { MEM_SEG_CLASS },
+      sampler.segment
+    );
   }
 
   public static void llama_model_free(LlamaModel model) {
@@ -586,7 +1597,11 @@ public final class LlamaRuntime {
   }
 
   public static void llama_adapter_lora_free(LlamaLoraAdapter adapter) {
-    llama_h("llama_adapter_lora_free", new Class[] { MEM_SEG_CLASS }, adapter.segment);
+    llama_h(
+      "llama_adapter_lora_free",
+      new Class[] { MEM_SEG_CLASS },
+      adapter.segment
+    );
   }
 
   /* Utils */
@@ -597,48 +1612,109 @@ public final class LlamaRuntime {
 
   /* Performance */
 
-  public static MemorySegment llama_perf_context(SegmentAllocator allocator, MemorySegment ctx) {
-    return llama_h("llama_perf_context", new Class[] { SegmentAllocator.class, MEM_SEG_CLASS }, allocator, ctx);
+  public static MemorySegment llama_perf_context(
+    SegmentAllocator allocator,
+    MemorySegment ctx
+  ) {
+    return llama_h(
+      "llama_perf_context",
+      new Class[] { SegmentAllocator.class, MEM_SEG_CLASS },
+      allocator,
+      ctx
+    );
   }
 
-  public static MemorySegment llama_perf_sampler(SegmentAllocator allocator, MemorySegment sampler) {
-    return llama_h("llama_perf_sampler", new Class[] { SegmentAllocator.class, MEM_SEG_CLASS }, allocator, sampler);
+  public static MemorySegment llama_perf_sampler(
+    SegmentAllocator allocator,
+    MemorySegment sampler
+  ) {
+    return llama_h(
+      "llama_perf_sampler",
+      new Class[] { SegmentAllocator.class, MEM_SEG_CLASS },
+      allocator,
+      sampler
+    );
   }
 
   public static double llama_perf_context_t_start_ms(MemorySegment perfData) {
-    return invoke("llama_perf_context_data", "t_start_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+    return invoke(
+      "llama_perf_context_data",
+      "t_start_ms",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
   }
 
   public static double llama_perf_context_t_load_ms(MemorySegment perfData) {
-    return invoke("llama_perf_context_data", "t_load_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+    return invoke(
+      "llama_perf_context_data",
+      "t_load_ms",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
   }
 
   public static double llama_perf_context_t_p_eval_ms(MemorySegment perfData) {
-    return invoke("llama_perf_context_data", "t_p_eval_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+    return invoke(
+      "llama_perf_context_data",
+      "t_p_eval_ms",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
   }
 
   public static double llama_perf_context_t_eval_ms(MemorySegment perfData) {
-    return invoke("llama_perf_context_data", "t_eval_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+    return invoke(
+      "llama_perf_context_data",
+      "t_eval_ms",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
   }
 
   public static int llama_perf_context_n_p_eval(MemorySegment perfData) {
-    return invoke("llama_perf_context_data", "n_p_eval$get", new Class[] { MEM_SEG_CLASS }, perfData);
+    return invoke(
+      "llama_perf_context_data",
+      "n_p_eval",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
   }
 
   public static int llama_perf_context_n_eval(MemorySegment perfData) {
-    return invoke("llama_perf_context_data", "n_eval$get", new Class[] { MEM_SEG_CLASS }, perfData);
+    return invoke(
+      "llama_perf_context_data",
+      "n_eval",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
   }
 
   public static int llama_perf_context_n_reused(MemorySegment perfData) {
-    return invoke("llama_perf_context_data", "n_reused$get", new Class[] { MEM_SEG_CLASS }, perfData);
+    return invoke(
+      "llama_perf_context_data",
+      "n_reused",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
   }
 
   public static double llama_perf_sampler_t_sample_ms(MemorySegment perfData) {
-    return invoke("llama_perf_sampler_data", "t_sample_ms$get", new Class[] { MEM_SEG_CLASS }, perfData);
+    return invoke(
+      "llama_perf_sampler_data",
+      "t_sample_ms",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
   }
 
   public static int llama_perf_sampler_n_sample(MemorySegment perfData) {
-    return invoke("llama_perf_sampler_data", "n_sample$get", new Class[] { MEM_SEG_CLASS }, perfData);
+    return invoke(
+      "llama_perf_sampler_data",
+      "n_sample",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
   }
 
   /**
@@ -650,7 +1726,11 @@ public final class LlamaRuntime {
    * @return The result of the method invocation.
    * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
    */
-  public static <T> T llama_h(String methodName, Class<?>[] parameterTypes, Object... args) {
+  public static <T> T llama_h(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
     return invoke("llama_h", methodName, parameterTypes, args);
   }
 
@@ -663,7 +1743,11 @@ public final class LlamaRuntime {
    * @return The result of the method invocation.
    * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
    */
-  public static <T> T llama_model_params(String methodName, Class<?>[] parameterTypes, Object... args) {
+  public static <T> T llama_model_params(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
     return invoke("llama_model_params", methodName, parameterTypes, args);
   }
 
@@ -676,7 +1760,11 @@ public final class LlamaRuntime {
    * @return The result of the method invocation.
    * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
    */
-  public static <T> T llama_context_params(String methodName, Class<?>[] parameterTypes, Object... args) {
+  public static <T> T llama_context_params(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
     return invoke("llama_context_params", methodName, parameterTypes, args);
   }
 
@@ -689,8 +1777,236 @@ public final class LlamaRuntime {
    * @return The result of the method invocation.
    * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
    */
-  public static <T> T llama_chat_message(String methodName, Class<?>[] parameterTypes, Object... args) {
+  public static <T> T llama_chat_message(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
     return invoke("llama_chat_message", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific mtmd_context_params class.
+   *
+   * @param methodName The name of the method to invoke.
+   * @param parameterTypes An array of Class objects representing the parameter types of the method.
+   * @param args The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T mtmd_context_params(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
+    return invoke("mtmd_context_params", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific mtmd_input_text class.
+   *
+   * @param methodName The name of the method to invoke.
+   * @param parameterTypes An array of Class objects representing the parameter types of the method.
+   * @param args The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T mtmd_input_text(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
+    return invoke("mtmd_input_text", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific mtmd_input_chunk class.
+   *
+   * @param methodName The name of the method to invoke.
+   * @param parameterTypes An array of Class objects representing the parameter types of the method.
+   * @param args The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T mtmd_input_chunk(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
+    return invoke("mtmd_input_chunk", methodName, parameterTypes, args);
+  }
+
+  /**
+   * Dynamically invokes a static method on the correct platform-specific mtmd_input_chunks class.
+   *
+   * @param methodName The name of the method to invoke.
+   * @param parameterTypes An array of Class objects representing the parameter types of the method.
+   * @param args The arguments to pass to the method.
+   * @return The result of the method invocation.
+   * @throws IllegalStateException If the runtime is unknown or if reflection fails.
+   */
+  public static <T> T mtmd_input_chunks(
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
+    return invoke("mtmd_input_chunks", methodName, parameterTypes, args);
+  }
+
+  public static boolean mtmd_context_params_use_gpu(MemorySegment segment) {
+    return (boolean) mtmd_context_params(
+      "use_gpu",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_use_gpu(
+    MemorySegment segment,
+    boolean useGpu
+  ) {
+    mtmd_context_params(
+      "use_gpu",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      useGpu
+    );
+  }
+
+  public static boolean mtmd_context_params_print_timings(
+    MemorySegment segment
+  ) {
+    return (boolean) mtmd_context_params(
+      "print_timings",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_print_timings(
+    MemorySegment segment,
+    boolean printTimings
+  ) {
+    mtmd_context_params(
+      "print_timings",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      printTimings
+    );
+  }
+
+  public static int mtmd_context_params_n_threads(MemorySegment segment) {
+    return (int) mtmd_context_params(
+      "n_threads",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_n_threads(
+    MemorySegment segment,
+    int nThreads
+  ) {
+    mtmd_context_params(
+      "n_threads",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      nThreads
+    );
+  }
+
+  public static int mtmd_context_params_verbosity(MemorySegment segment) {
+    return (int) mtmd_context_params(
+      "verbosity",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static MemorySegment mtmd_context_params_media_marker(
+    MemorySegment segment
+  ) {
+    return (MemorySegment) mtmd_context_params(
+      "media_marker",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_media_marker(
+    MemorySegment segment,
+    MemorySegment mediaMarker
+  ) {
+    mtmd_context_params(
+      "media_marker",
+      new Class<?>[] { MEM_SEG_CLASS, MemorySegment.class },
+      segment,
+      mediaMarker
+    );
+  }
+
+  public static int mtmd_context_params_flash_attn_type(MemorySegment segment) {
+    return (int) mtmd_context_params(
+      "flash_attn_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_flash_attn_type(
+    MemorySegment segment,
+    int flashAttnType
+  ) {
+    mtmd_context_params(
+      "flash_attn_type",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      flashAttnType
+    );
+  }
+
+  public static int mtmd_context_params_image_min_tokens(
+    MemorySegment segment
+  ) {
+    return (int) mtmd_context_params(
+      "image_min_tokens",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_image_min_tokens(
+    MemorySegment segment,
+    int imageMinTokens
+  ) {
+    mtmd_context_params(
+      "image_min_tokens",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      imageMinTokens
+    );
+  }
+
+  public static int mtmd_context_params_image_max_tokens(
+    MemorySegment segment
+  ) {
+    return (int) mtmd_context_params(
+      "image_max_tokens",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void mtmd_context_params_image_max_tokens(
+    MemorySegment segment,
+    int imageMaxTokens
+  ) {
+    mtmd_context_params(
+      "image_max_tokens",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      imageMaxTokens
+    );
   }
 
   /**
@@ -703,23 +2019,43 @@ public final class LlamaRuntime {
    * @return The result of the method invocation.
    * @throws IllegalStateException    If the runtime is unknown or if reflection fails.
    */
-  public static <T> T invoke(String classNameSuffix, String methodName, Class<?>[] parameterTypes, Object... args) {
+  public static <T> T invoke(
+    String classNameSuffix,
+    String methodName,
+    Class<?>[] parameterTypes,
+    Object... args
+  ) {
     try {
       String fullClassName = basePackage + classNameSuffix;
       Class<?> targetClass = Class.forName(fullClassName);
       Method method = targetClass.getMethod(methodName, parameterTypes);
       return (T) method.invoke(null, args); // Invoke static method, so obj is null
     } catch (ClassNotFoundException e) {
-      throw new IllegalStateException("Class not found for runtime " + runtime + ": " + e.getMessage(), e);
+      throw new IllegalStateException(
+        "Class not found for runtime " + runtime + ": " + e.getMessage(),
+        e
+      );
     } catch (NoSuchMethodException e) {
-      throw new IllegalStateException("Method not found for runtime " + runtime + ": " + e.getMessage(), e);
+      throw new IllegalStateException(
+        "Method not found for runtime " + runtime + ": " + e.getMessage(),
+        e
+      );
     } catch (InvocationTargetException e) {
       if (e.getTargetException() instanceof RuntimeException) {
         throw (RuntimeException) e.getTargetException();
       }
-      throw new IllegalStateException("Error invoking method for runtime " + runtime + ": " + e.getMessage(), e);
+      throw new IllegalStateException(
+        "Error invoking method for runtime " + runtime + ": " + e.getMessage(),
+        e
+      );
     } catch (IllegalAccessException e) {
-      throw new IllegalStateException("Illegal access to method for runtime " + runtime + ": " + e.getMessage(), e);
+      throw new IllegalStateException(
+        "Illegal access to method for runtime " +
+          runtime +
+          ": " +
+          e.getMessage(),
+        e
+      );
     }
   }
 
@@ -727,9 +2063,9 @@ public final class LlamaRuntime {
    * Instantiates a MemorySegment for a functional interface using reflection.
    *
    * @param callbackInterfaceName The simple name of the jextract-generated functional interface (e.g., "ggml_log_callback").
-   * @param callbackMethodName The simple name of the jextract-generated functional interface (e.g., "allocate").
+   * @param callbackMethodName The name of the static factory method (e.g., "allocate").
    * @param targetObject     The object on which the actual callback method will be invoked.
-   * @param targetMethodName   The name of the method on the targetObject to be invoked by the native callback.
+   * @param targetMethodName The name of the method on the targetObject to be invoked by the native callback.
    * @param arena            The Arena to allocate the MemorySegment in.
    * @return A MemorySegment representing the native function pointer for the callback.
    * @throws Exception if any reflective operation fails.
@@ -743,20 +2079,54 @@ public final class LlamaRuntime {
   ) throws Exception {
     String fullInterfaceName = basePackage + callbackInterfaceName;
 
-    var callbackInterface = Class.forName(fullInterfaceName);
-    var proxyCallbackInstance = Proxy.newProxyInstance(
+    // --- 1. Load the interface class ---
+    Class<?> callbackInterface;
+    try {
+      callbackInterface = Class.forName(fullInterfaceName);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(
+        "jextract-generated callback interface not found: " +
+          fullInterfaceName +
+          "\nVerify that jextract ran successfully and the classpath includes generated classes.",
+        e
+      );
+    }
+
+    // --- 2. Validate that the interface has a nested Function interface ---
+    Class<?> functionInterface = null;
+    for (Class<?> inner : callbackInterface.getDeclaredClasses()) {
+      if ("Function".equals(inner.getSimpleName())) {
+        functionInterface = inner;
+        break;
+      }
+    }
+
+    if (functionInterface == null) {
+      throw new IllegalStateException(
+        "Expected inner interface 'Function' not found in " +
+          fullInterfaceName +
+          "\nThis suggests jextract generation has changed. Expected structure: " +
+          "class ggml_log_callback { public interface Function { void apply(...); } }"
+      );
+    }
+
+    // --- 3. Create dynamic proxy implementing the Function interface ---
+    Object proxyCallbackInstance = Proxy.newProxyInstance(
       callbackInterface.getClassLoader(),
-      new Class<?>[] { callbackInterface },
+      new Class<?>[] { functionInterface },
       (proxy, method, args) -> {
         try {
-          Method targetMethod = targetObject.getClass().getMethod(targetMethodName, method.getParameterTypes());
+          Method targetMethod = targetObject
+            .getClass()
+            .getMethod(targetMethodName, method.getParameterTypes());
           return targetMethod.invoke(targetObject, args);
         } catch (NoSuchMethodException e) {
           throw new UnsupportedOperationException(
-            "Callback method '%s' not found on target object '%s' with matching signature.".formatted(
-                method.getName(),
-                targetObject.getClass().getName()
-              ),
+            "Callback method '" +
+              method.getName() +
+              "' not found on target object '" +
+              targetObject.getClass().getName() +
+              "' with matching signature.",
             e
           );
         } catch (InvocationTargetException e) {
@@ -765,8 +2135,46 @@ public final class LlamaRuntime {
       }
     );
 
-    return (MemorySegment) callbackInterface
-      .getMethod(callbackMethodName, callbackInterface, Arena.class)
-      .invoke(null, proxyCallbackInstance, arena);
+    // --- 4. Find the static allocate method: (Function, Arena) -> MemorySegment ---
+    Method allocateMethod;
+    try {
+      allocateMethod = callbackInterface.getMethod(
+        callbackMethodName,
+        functionInterface,
+        Arena.class
+      );
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException(
+        "Static method '" +
+          callbackMethodName +
+          "' with signature (" +
+          functionInterface.getName() +
+          ", Arena) not found in " +
+          fullInterfaceName +
+          "\nThis suggests jextract generation has changed. Expected: " +
+          "public static MemorySegment allocate(Function, Arena)",
+        e
+      );
+    }
+
+    // --- 5. Invoke allocate(null, proxy, arena) ---
+    try {
+      return (MemorySegment) allocateMethod.invoke(
+        null,
+        proxyCallbackInstance,
+        arena
+      );
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException(
+        "Cannot access " +
+          fullInterfaceName +
+          "." +
+          callbackMethodName +
+          ". Ensure classes are in the same module or module is exported.",
+        e
+      );
+    } catch (InvocationTargetException e) {
+      throw new RuntimeException("Failed to create upcall stub", e.getCause());
+    }
   }
 }

@@ -23,7 +23,8 @@ import java.util.List;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class StopString implements Initializable<List<String>>, Evaluable<String, Boolean> {
+public class StopString
+  implements Initializable<List<String>>, Evaluable<String, Boolean> {
 
   private List<String> stopStrings;
 
@@ -35,7 +36,10 @@ public class StopString implements Initializable<List<String>>, Evaluable<String
   @Override
   public void initialize(List<String> stopStrings) {
     if (stopStrings != null) {
-      this.stopStrings = stopStrings.stream().filter(not(String::isBlank)).toList();
+      this.stopStrings = stopStrings
+        .stream()
+        .filter(not(String::isBlank))
+        .toList();
     }
   }
 

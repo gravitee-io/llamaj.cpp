@@ -15,6 +15,11 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_PATH;
+import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_TO_DOWNLOAD;
+import static io.gravitee.llama.cpp.LlamaCppTest.SYSTEM;
+import static io.gravitee.llama.cpp.LlamaCppTest.buildMessages;
+import static io.gravitee.llama.cpp.LlamaCppTest.getPrompt;
 import static io.gravitee.llama.cpp.LlamaRuntime.ggml_backend_reg_count;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -55,7 +60,9 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
 
     System.out.println("****************************");
     System.out.println("Libraries loaded at: " + libPath);
-    System.out.println("Number of devices registered: " + ggml_backend_reg_count());
+    System.out.println(
+      "Number of devices registered: " + ggml_backend_reg_count()
+    );
     System.out.println("****************************");
   }
 
@@ -66,25 +73,34 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
     logger.setLogging(LlamaLogLevel.DEBUG);
 
     var modelParameters = new LlamaModelParams(arena);
-    Path absolutePath = getModelPath(REASONING_MODEL_PATH, REASONNING_MODEL_TO_DOWNLOAD);
+    Path absolutePath = getModelPath(
+      REASONING_MODEL_PATH,
+      REASONNING_MODEL_TO_DOWNLOAD
+    );
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-
     var contextParams = new LlamaContextParams(arena);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
-    var prompt = getPrompt(model, arena, buildMessages(arena, system, input), contextParams);
+    var prompt = getPrompt(
+      model,
+      arena,
+      buildMessages(arena, system, input),
+      contextParams
+    );
 
-    var state = ConversationState
-      .create(arena, context, tokenizer, sampler)
+    var state = ConversationState.create(arena, context, tokenizer, sampler)
       .setReasoning("<think>", "</think>")
       .initialize(prompt);
 
     var it = new DefaultLlamaIterator(state);
 
-    LlamaOutput output = it.stream().reduce(LlamaOutput::merge).orElse(new LlamaOutput("", 0));
+    LlamaOutput output = it
+      .stream()
+      .reduce(LlamaOutput::merge)
+      .orElse(new LlamaOutput("", 0));
     System.out.println(output);
 
     int inputTokens = state.getInputTokens();
@@ -95,10 +111,18 @@ class ReasoningLlamaIteratorTest extends LlamaCppTest {
     assertThat(outputTokens).isGreaterThan(0);
     assertThat(reasoningTokens).isGreaterThan(0);
 
-    assertThat(output.numberOfTokens()).isEqualTo(outputTokens + reasoningTokens);
-    assertThat(state.getTotalTokenCount()).isEqualTo(inputTokens + outputTokens + reasoningTokens);
+    assertThat(output.numberOfTokens()).isEqualTo(
+      outputTokens + reasoningTokens
+    );
+    assertThat(state.getTotalTokenCount()).isEqualTo(
+      inputTokens + outputTokens + reasoningTokens
+    );
 
-    assertThat(state.getFinishReason()).isIn(FinishReason.EOS, FinishReason.LENGTH, FinishReason.STOP);
+    assertThat(state.getFinishReason()).isIn(
+      FinishReason.EOS,
+      FinishReason.LENGTH,
+      FinishReason.STOP
+    );
 
     context.free();
     sampler.free();

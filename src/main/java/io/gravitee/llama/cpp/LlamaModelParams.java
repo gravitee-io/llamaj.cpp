@@ -17,7 +17,7 @@ package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_max_devices;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_default_params;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_params_ofAddress;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_params;
 import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
 
 import java.lang.foreign.Arena;
@@ -32,10 +32,21 @@ import java.util.Arrays;
 public final class LlamaModelParams extends MemorySegmentAware {
 
   private final int maxDevices;
+  private int nThreads;
 
   public LlamaModelParams(Arena arena) {
-    super(llama_model_params_ofAddress(llama_model_default_params(arena), arena));
+    super(llama_model_default_params(arena));
     this.maxDevices = (int) llama_max_devices();
+    this.nThreads = Runtime.getRuntime().availableProcessors(); // Default
+  }
+
+  public int getNThreads() {
+    return nThreads;
+  }
+
+  public LlamaModelParams setNThreads(int nThreads) {
+    this.nThreads = nThreads;
+    return this;
   }
 
   public float[] buildDefaultTensorSplit() {
@@ -83,8 +94,11 @@ public final class LlamaModelParams extends MemorySegmentAware {
     return tensorSplit;
   }
 
-  public LlamaModelParams tensorSplit(SegmentAllocator allocator, float[] tensorSplit) {
-    var tensorSplitSegment = allocator.allocateArray(JAVA_FLOAT, maxDevices);
+  public LlamaModelParams tensorSplit(
+    SegmentAllocator allocator,
+    float[] tensorSplit
+  ) {
+    var tensorSplitSegment = allocator.allocate(JAVA_FLOAT, maxDevices);
     MemorySegment.copy(
       MemorySegment.ofArray(tensorSplit),
       0,

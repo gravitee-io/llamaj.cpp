@@ -35,7 +35,10 @@ public final class LlamaChatMessages extends MemorySegmentAware {
     this.messages = messages;
   }
 
-  private static MemorySegment initMessages(Arena arena, List<LlamaChatMessage> messages) {
+  private static MemorySegment initMessages(
+    Arena arena,
+    List<LlamaChatMessage> messages
+  ) {
     long structSize = llama_chat_message_sizeof();
     var chatArray = llama_chat_message_allocateArray(messages.size(), arena);
     for (var index = 0; index < messages.size(); index++) {

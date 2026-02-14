@@ -31,7 +31,8 @@ import java.util.Map.Entry;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class StateEvaluation implements Initializable<Config>, Evaluable<Context, GenerationState> {
+public class StateEvaluation
+  implements Initializable<Config>, Evaluable<Context, GenerationState> {
 
   private Map<GenerationState, StateBounds> states;
   private Map<GenerationState, Boolean> occurredState;
@@ -46,13 +47,19 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
     return isInitialized()
       ? switch (context.currentState) {
         case ANSWER -> detectNewState(context.piece);
-        case REASONING, TOOLS -> detectEndState(context.currentState, context.piece);
+        case REASONING, TOOLS -> detectEndState(
+          context.currentState,
+          context.piece
+        );
         case null -> GenerationState.ANSWER;
       }
       : GenerationState.ANSWER;
   }
 
-  private GenerationState detectEndState(GenerationState currentState, String piece) {
+  private GenerationState detectEndState(
+    GenerationState currentState,
+    String piece
+  ) {
     var state = states.get(currentState);
 
     if (stateAlreadyOccurred(state)) {
@@ -98,8 +105,12 @@ public class StateEvaluation implements Initializable<Config>, Evaluable<Context
 
   @Override
   public void initialize(Config config) {
-    this.states = config.states.stream().collect(toMap(StateBounds::state, identity()));
-    this.occurredState = this.states.keySet().stream().collect(toMap(identity(), __ -> false));
+    this.states = config.states
+      .stream()
+      .collect(toMap(StateBounds::state, identity()));
+    this.occurredState = this.states.keySet()
+      .stream()
+      .collect(toMap(identity(), __ -> false));
   }
 
   public record Config(List<StateBounds> states) {}

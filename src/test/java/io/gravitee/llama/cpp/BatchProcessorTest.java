@@ -49,7 +49,9 @@ class BatchProcessorTest extends LlamaCppTest {
 
     System.out.println("****************************");
     System.out.println("Libraries loaded at: " + libPath);
-    System.out.println("Number of devices registered: " + ggml_backend_reg_count());
+    System.out.println(
+      "Number of devices registered: " + ggml_backend_reg_count()
+    );
     System.out.println("****************************");
   }
 
@@ -62,32 +64,54 @@ class BatchProcessorTest extends LlamaCppTest {
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-
-    // Use a larger context to support multiple sequences
     var contextParams = new LlamaContextParams(arena)
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(4) // Support up to 4 parallel sequences
       .noPerf(false);
-    var context = new LlamaContext(model, contextParams);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
 
     // Create 3 different conversations
     String[] prompts = {
-      getPrompt(model, arena, buildMessages(arena, SYSTEM, "What is the capital of France?"), contextParams),
-      getPrompt(model, arena, buildMessages(arena, SYSTEM, "What is the capital of England?"), contextParams),
-      getPrompt(model, arena, buildMessages(arena, SYSTEM, "What is the capital of Poland?"), contextParams),
+      getPrompt(
+        model,
+        arena,
+        buildMessages(arena, SYSTEM, "What is the capital of France?"),
+        contextParams
+      ),
+      getPrompt(
+        model,
+        arena,
+        buildMessages(arena, SYSTEM, "What is the capital of England?"),
+        contextParams
+      ),
+      getPrompt(
+        model,
+        arena,
+        buildMessages(arena, SYSTEM, "What is the capital of Poland?"),
+        contextParams
+      ),
     };
 
     // Create conversation states with different sequence IDs (0, 1, 2)
-    var state1 = ConversationState.create(arena, context, tokenizer, sampler, 0).setMaxTokens(50).initialize(prompts[0]);
-    var state2 = ConversationState.create(arena, context, tokenizer, sampler, 1).setMaxTokens(50).initialize(prompts[1]);
-    var state3 = ConversationState.create(arena, context, tokenizer, sampler, 2).setMaxTokens(50).initialize(prompts[2]);
+    var state1 = ConversationState.create(arena, context, tokenizer, sampler, 0)
+      .setMaxTokens(50)
+      .initialize(prompts[0]);
+    var state2 = ConversationState.create(arena, context, tokenizer, sampler, 1)
+      .setMaxTokens(50)
+      .initialize(prompts[1]);
+    var state3 = ConversationState.create(arena, context, tokenizer, sampler, 2)
+      .setMaxTokens(50)
+      .initialize(prompts[2]);
 
     // Create parallel iterator - prompts are auto-processed when states are added
-    var parallel = new BatchIterator(arena, context).addState(state1).addState(state2).addState(state3);
+    var parallel = new BatchIterator(arena, context)
+      .addState(state1)
+      .addState(state2)
+      .addState(state3);
 
     // Map to accumulate outputs per sequence
     Map<Integer, StringBuilder> sequenceOutputs = new HashMap<>();
@@ -98,17 +122,27 @@ class BatchProcessorTest extends LlamaCppTest {
     // Generate tokens in parallel using stream
     long startTime = System.nanoTime();
 
-    parallel.stream().forEach(output -> sequenceOutputs.get(output.sequenceId()).append(output.text()));
+    parallel
+      .stream()
+      .forEach(output ->
+        sequenceOutputs.get(output.sequenceId()).append(output.text())
+      );
 
     long endTime = System.nanoTime();
     double durationMs = (endTime - startTime) / 1_000_000.0;
 
     System.out.println("\n=== Parallel Generation Results ===");
-    System.out.println("Conversation 1 (seq 0): " + sequenceOutputs.get(0).toString());
+    System.out.println(
+      "Conversation 1 (seq 0): " + sequenceOutputs.get(0).toString()
+    );
     System.out.println("  Tokens: " + state1.getAnswerTokens());
-    System.out.println("Conversation 2 (seq 1): " + sequenceOutputs.get(1).toString());
+    System.out.println(
+      "Conversation 2 (seq 1): " + sequenceOutputs.get(1).toString()
+    );
     System.out.println("  Tokens: " + state2.getAnswerTokens());
-    System.out.println("Conversation 3 (seq 2): " + sequenceOutputs.get(2).toString());
+    System.out.println(
+      "Conversation 3 (seq 2): " + sequenceOutputs.get(2).toString()
+    );
     System.out.println("  Tokens: " + state3.getAnswerTokens());
     System.out.println("Total time: " + durationMs + " ms");
     System.out.println("===================================");
@@ -134,21 +168,40 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-    var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512).nSeqMax(4);
-    var context = new LlamaContext(model, contextParams);
+    var contextParams = new LlamaContextParams(arena)
+      .nCtx(2048)
+      .nBatch(512)
+      .nSeqMax(4);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
 
     String[] prompts = {
-      getPrompt(model, arena, buildMessages(arena, SYSTEM, "Count from 1 to 100"), contextParams),
-      getPrompt(model, arena, buildMessages(arena, SYSTEM, "Count from 200 to 300"), contextParams),
+      getPrompt(
+        model,
+        arena,
+        buildMessages(arena, SYSTEM, "Count from 1 to 100"),
+        contextParams
+      ),
+      getPrompt(
+        model,
+        arena,
+        buildMessages(arena, SYSTEM, "Count from 200 to 300"),
+        contextParams
+      ),
     };
 
-    var state1 = ConversationState.create(arena, context, tokenizer, sampler, 0).setMaxTokens(50).initialize(prompts[0]);
-    var state2 = ConversationState.create(arena, context, tokenizer, sampler, 1).setMaxTokens(50).initialize(prompts[1]);
+    var state1 = ConversationState.create(arena, context, tokenizer, sampler, 0)
+      .setMaxTokens(50)
+      .initialize(prompts[0]);
+    var state2 = ConversationState.create(arena, context, tokenizer, sampler, 1)
+      .setMaxTokens(50)
+      .initialize(prompts[1]);
 
-    var parallel = new BatchIterator(arena, context).addState(state1).addState(state2);
+    var parallel = new BatchIterator(arena, context)
+      .addState(state1)
+      .addState(state2);
 
     // Test removeState immediately after adding - should succeed
     boolean removed = parallel.removeState(1);
@@ -184,14 +237,24 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-    var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512).nSeqMax(2);
-    var context = new LlamaContext(model, contextParams);
+    var contextParams = new LlamaContextParams(arena)
+      .nCtx(2048)
+      .nBatch(512)
+      .nSeqMax(2);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
 
-    var prompt = getPrompt(model, arena, buildMessages(arena, SYSTEM, "Count to 100"), contextParams);
-    var state = ConversationState.create(arena, context, tokenizer, sampler, 0).setMaxTokens(100).initialize(prompt);
+    var prompt = getPrompt(
+      model,
+      arena,
+      buildMessages(arena, SYSTEM, "Count to 100"),
+      contextParams
+    );
+    var state = ConversationState.create(arena, context, tokenizer, sampler, 0)
+      .setMaxTokens(100)
+      .initialize(prompt);
 
     var parallel = new BatchIterator(arena, context).addState(state);
 
@@ -220,15 +283,35 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-    var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512).nSeqMax(2);
-    var context = new LlamaContext(model, contextParams);
+    var contextParams = new LlamaContextParams(arena)
+      .nCtx(2048)
+      .nBatch(512)
+      .nSeqMax(2);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
 
-    var prompt = getPrompt(model, arena, buildMessages(arena, SYSTEM, "Hello"), contextParams);
-    var state1 = ConversationState.create(arena, context, tokenizer, sampler, 0).initialize(prompt);
-    var state2 = ConversationState.create(arena, context, tokenizer, sampler, 0).initialize(prompt); // Same seq ID!
+    var prompt = getPrompt(
+      model,
+      arena,
+      buildMessages(arena, SYSTEM, "Hello"),
+      contextParams
+    );
+    var state1 = ConversationState.create(
+      arena,
+      context,
+      tokenizer,
+      sampler,
+      0
+    ).initialize(prompt);
+    var state2 = ConversationState.create(
+      arena,
+      context,
+      tokenizer,
+      sampler,
+      0
+    ).initialize(prompt); // Same seq ID!
 
     var parallel = new BatchIterator(arena, context).addState(state1);
 
@@ -248,24 +331,46 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-    var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512).nSeqMax(2);
-    var context1 = new LlamaContext(model, contextParams);
-    var context2 = new LlamaContext(model, contextParams);
+    var contextParams = new LlamaContextParams(arena)
+      .nCtx(2048)
+      .nBatch(512)
+      .nSeqMax(2);
+    var context1 = new LlamaContext(arena, model, contextParams);
+    var context2 = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer1 = new LlamaTokenizer(vocab, context1);
     var tokenizer2 = new LlamaTokenizer(vocab, context2);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
 
-    var prompt = getPrompt(model, arena, buildMessages(arena, SYSTEM, "Hello"), contextParams);
-    var state1 = ConversationState.create(arena, context1, tokenizer1, sampler, 0).initialize(prompt);
-    var state2 = ConversationState.create(arena, context2, tokenizer2, sampler, 1).initialize(prompt);
+    var prompt = getPrompt(
+      model,
+      arena,
+      buildMessages(arena, SYSTEM, "Hello"),
+      contextParams
+    );
+    var state1 = ConversationState.create(
+      arena,
+      context1,
+      tokenizer1,
+      sampler,
+      0
+    ).initialize(prompt);
+    var state2 = ConversationState.create(
+      arena,
+      context2,
+      tokenizer2,
+      sampler,
+      1
+    ).initialize(prompt);
 
     var parallel = new BatchIterator(arena, context1).addState(state1);
 
     // Should throw when adding state with different context
     assertThatThrownBy(() -> parallel.addState(state2))
       .isInstanceOf(LlamaException.class)
-      .hasMessageContaining("All conversation states must share the same LlamaContext");
+      .hasMessageContaining(
+        "All conversation states must share the same LlamaContext"
+      );
 
     parallel.free();
     context1.free();
@@ -279,14 +384,24 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
-    var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512).nSeqMax(2);
-    var context = new LlamaContext(model, contextParams);
+    var contextParams = new LlamaContextParams(arena)
+      .nCtx(2048)
+      .nBatch(512)
+      .nSeqMax(2);
+    var context = new LlamaContext(arena, model, contextParams);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
 
-    var prompt = getPrompt(model, arena, buildMessages(arena, SYSTEM, "Hi"), contextParams);
-    var state = ConversationState.create(arena, context, tokenizer, sampler, 0).setMaxTokens(1).initialize(prompt);
+    var prompt = getPrompt(
+      model,
+      arena,
+      buildMessages(arena, SYSTEM, "Hi"),
+      contextParams
+    );
+    var state = ConversationState.create(arena, context, tokenizer, sampler, 0)
+      .setMaxTokens(1)
+      .initialize(prompt);
 
     var parallel = new BatchIterator(arena, context).addState(state);
 

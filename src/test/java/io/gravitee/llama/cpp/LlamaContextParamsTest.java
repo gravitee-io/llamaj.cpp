@@ -15,8 +15,8 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.FlashAttentionType.AUTO;
 import static io.gravitee.llama.cpp.FlashAttentionType.ENABLED;
-import static io.gravitee.llama.cpp.FlashAttentionType.UNSPECIFIED;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
@@ -45,11 +45,15 @@ class LlamaContextParamsTest extends LlamaCppTest {
       assertThat(contextParams.nSeqMax()).isEqualTo(1);
       assertThat(contextParams.nThreads()).isEqualTo(4);
       assertThat(contextParams.nThreadsBatch()).isEqualTo(4);
-      assertThat(contextParams.poolingType()).isEqualTo(PoolingType.UNSPECIFIED);
-      assertThat(contextParams.attentionType()).isEqualTo(AttentionType.UNSPECIFIED);
+      assertThat(contextParams.poolingType()).isEqualTo(
+        PoolingType.UNSPECIFIED
+      );
+      assertThat(contextParams.attentionType()).isEqualTo(
+        AttentionType.UNSPECIFIED
+      );
       assertThat(contextParams.embeddings()).isFalse();
       assertThat(contextParams.offloadKQV()).isTrue();
-      assertThat(contextParams.flashAttnType()).isEqualTo(UNSPECIFIED);
+      assertThat(contextParams.flashAttnType()).isEqualTo(AUTO);
       assertThat(contextParams.noPerf()).isTrue();
     }
   }

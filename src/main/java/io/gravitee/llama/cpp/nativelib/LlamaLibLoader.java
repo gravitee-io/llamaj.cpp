@@ -39,7 +39,8 @@ import java.util.stream.Stream;
 public final class LlamaLibLoader {
 
   static final String LLAMA_CPP_LIB_PATH = "LLAMA_CPP_LIB_PATH";
-  static final String LLAMA_CPP_USE_TMP_PATH_LIBS = "LLAMA_CPP_USE_TMP_LIB_PATH";
+  static final String LLAMA_CPP_USE_TMP_PATH_LIBS =
+    "LLAMA_CPP_USE_TMP_LIB_PATH";
 
   static final String DYLIB_EXT = ".dylib";
   static final String SO_EXT = ".*\\.so(\\..+)?";
@@ -61,10 +62,16 @@ public final class LlamaLibLoader {
 
   private static String loadFromExternalPath(String envLibPath) {
     try {
-      boolean useTmpPath = Boolean.parseBoolean(System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS));
+      boolean useTmpPath = Boolean.parseBoolean(
+        System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS)
+      );
       if (useTmpPath) {
         var destination = Files.createTempDirectory(LLAMA_CPP_FOLDER);
-        Files.copy(Path.of(envLibPath), destination, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(
+          Path.of(envLibPath),
+          destination,
+          StandardCopyOption.REPLACE_EXISTING
+        );
         load(destination.toString());
       } else {
         load(envLibPath);
@@ -97,11 +104,19 @@ public final class LlamaLibLoader {
 
   private static String loadFromClasspath(Platform platform) {
     try {
-      boolean useTmpPath = Boolean.parseBoolean(System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS));
-      Path libDirectory = useTmpPath ? Files.createTempDirectory(LLAMA_CPP_FOLDER) : getHomeLlamaCpp();
+      boolean useTmpPath = Boolean.parseBoolean(
+        System.getProperty(LLAMA_CPP_USE_TMP_PATH_LIBS)
+      );
+      Path libDirectory = useTmpPath
+        ? Files.createTempDirectory(LLAMA_CPP_FOLDER)
+        : getHomeLlamaCpp();
 
       String libDirStr = libDirectory.toString();
-      if (!useTmpPath && Files.isDirectory(libDirectory) && !Files.list(libDirectory).toList().isEmpty()) {
+      if (
+        !useTmpPath &&
+        Files.isDirectory(libDirectory) &&
+        !Files.list(libDirectory).toList().isEmpty()
+      ) {
         load(libDirStr);
       } else {
         List<String> resources;
@@ -111,7 +126,9 @@ public final class LlamaLibLoader {
           System.out.println("Copying llama.cpp native libraries from jar");
           resources = listJarResources(platform.getPackage(), jarFile);
         } else {
-          System.out.println("Copying llama.cpp native libraries from classes folder");
+          System.out.println(
+            "Copying llama.cpp native libraries from classes folder"
+          );
           resources = listResourcesFromClassesFolder(platform.getPackage());
         }
 
@@ -127,16 +144,24 @@ public final class LlamaLibLoader {
     }
   }
 
-  private static List<String> listJarResources(String packageName, File jarFile) throws IOException {
+  private static List<String> listJarResources(String packageName, File jarFile)
+    throws IOException {
     String prefix = packageName.replace('.', '/') + "/";
     try (JarFile jar = new JarFile(jarFile)) {
-      return jar.stream().map(JarEntry::getName).filter(name -> name.startsWith(prefix) && !name.endsWith("/")).toList();
+      return jar
+        .stream()
+        .map(JarEntry::getName)
+        .filter(name -> name.startsWith(prefix) && !name.endsWith("/"))
+        .toList();
     }
   }
 
-  private static List<String> listResourcesFromClassesFolder(String packageName) throws IOException, URISyntaxException {
+  private static List<String> listResourcesFromClassesFolder(String packageName)
+    throws IOException, URISyntaxException {
     String path = packageName.replace('.', '/');
-    Path classesFolder = Path.of(Thread.currentThread().getContextClassLoader().getResource(path).toURI());
+    Path classesFolder = Path.of(
+      Thread.currentThread().getContextClassLoader().getResource(path).toURI()
+    );
     List<String> resources = new ArrayList<>();
 
     try (var walk = Files.walk(classesFolder)) {
@@ -144,14 +169,20 @@ public final class LlamaLibLoader {
         .filter(Files::isRegularFile)
         .forEach(file -> {
           Path relative = classesFolder.relativize(file);
-          resources.add(path + "/" + relative.toString().replace(File.separatorChar, '/'));
+          resources.add(
+            path + "/" + relative.toString().replace(File.separatorChar, '/')
+          );
         });
     }
     return resources;
   }
 
   private static File getRunningJarFile() throws URISyntaxException {
-    String path = LlamaLibLoader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+    String path = LlamaLibLoader.class.getProtectionDomain()
+      .getCodeSource()
+      .getLocation()
+      .toURI()
+      .getPath();
     File file = new File(path);
     if (file.isFile() && file.getName().endsWith(".jar")) {
       return file;
@@ -161,7 +192,9 @@ public final class LlamaLibLoader {
 
   private static Path getHomeLlamaCpp() throws IOException {
     var homeLlamaCpp = Paths.get(USER_HOME, LLAMA_CPP_FOLDER);
-    return Files.exists(homeLlamaCpp) ? homeLlamaCpp : Files.createDirectory(homeLlamaCpp);
+    return Files.exists(homeLlamaCpp)
+      ? homeLlamaCpp
+      : Files.createDirectory(homeLlamaCpp);
   }
 
   private static void copyFromClasspath(String name, Path libDirectory) {
@@ -172,7 +205,10 @@ public final class LlamaLibLoader {
       String[] fileSplit = resource.getFile().split(File.separator);
       String fileName = fileSplit[fileSplit.length - 1];
 
-      Files.write(libDirectory.resolve(fileName), resource.openStream().readAllBytes());
+      Files.write(
+        libDirectory.resolve(fileName),
+        resource.openStream().readAllBytes()
+      );
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

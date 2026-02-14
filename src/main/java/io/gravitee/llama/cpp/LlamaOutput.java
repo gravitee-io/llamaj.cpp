@@ -19,7 +19,12 @@ package io.gravitee.llama.cpp;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public record LlamaOutput(String content, int numberOfTokens, Integer sequenceId, LlamaPerformance performance) {
+public record LlamaOutput(
+  String content,
+  int numberOfTokens,
+  Integer sequenceId,
+  LlamaPerformance performance
+) {
   public LlamaOutput(String content, int numberOfTokens) {
     this(content, numberOfTokens, null, null);
   }

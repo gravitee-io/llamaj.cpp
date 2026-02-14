@@ -21,7 +21,10 @@ package io.gravitee.llama.cpp;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public record LlamaPerformance(ContextPerformance context, SamplerPerformance sampler) {
+public record LlamaPerformance(
+  ContextPerformance context,
+  SamplerPerformance sampler
+) {
   /**
    * Context performance metrics from llama.cpp.
    */

@@ -58,7 +58,13 @@ public class PromptMemory implements Consumer<Integer, String> {
     int pieceLength = pieceChars.length;
 
     if (pieceLength >= maxMemorySize) {
-      System.arraycopy(pieceChars, pieceLength - maxMemorySize, buffer, 0, maxMemorySize);
+      System.arraycopy(
+        pieceChars,
+        pieceLength - maxMemorySize,
+        buffer,
+        0,
+        maxMemorySize
+      );
       head = 0;
       tail = 0;
       length = maxMemorySize;
