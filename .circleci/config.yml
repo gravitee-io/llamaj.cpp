@@ -360,7 +360,7 @@ jobs:
       - install-java-macos
       - install-maven-macos
       - get_llama_cpp:
-          "llama-cpp-version": b8373
+          "llama-cpp-version": b8646
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
       - download_model:
@@ -397,7 +397,7 @@ jobs:
       - install_java_dependencies
       - install_dependencies_jextract
       - get_llama_cpp:
-          "llama-cpp-version": b8373
+          "llama-cpp-version": b8646
       - checkout:
           path: "/home/circleci/llamaj.cpp"
       - download_model:
@@ -433,7 +433,7 @@ jobs:
       - install-java-macos
       - install-maven-macos
       - get_llama_cpp:
-          "llama-cpp-version": b8373
+          "llama-cpp-version": b8646
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
       - generate_sources:
@@ -449,7 +449,7 @@ jobs:
       - install_java_dependencies
       - install_dependencies_jextract
       - get_llama_cpp:
-          "llama-cpp-version": b8373
+          "llama-cpp-version": b8646
       - checkout:
           path: "/home/circleci/llamaj.cpp"
       - generate_sources:
