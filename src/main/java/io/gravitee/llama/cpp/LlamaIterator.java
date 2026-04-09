@@ -259,14 +259,20 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
 
     // Check for end-of-generation token
     if (tokenizer.isEog(tokenId)) {
-      state.setFinishReason(FinishReason.STOP);
+      // Preserve TOOL_CALL — the model produced tool calls and then stopped.
+      // Only set STOP if no tool calls were made.
+      if (state.getFinishReason() != FinishReason.TOOL_CALL) {
+        state.setFinishReason(FinishReason.STOP);
+      }
+      state.setFinished(true);
       return false;
     }
 
-    // Check token limit
+    // Check token limit — LENGTH always overrides, even TOOL_CALL
     int maxTokens = state.getMaxTokens();
     if (maxTokens != -1 && maxTokens <= state.getAnswerTokens()) {
       state.setFinishReason(FinishReason.LENGTH);
+      state.setFinished(true);
       return false;
     }
 
