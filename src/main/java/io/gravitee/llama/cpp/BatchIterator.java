@@ -169,8 +169,11 @@ public final class BatchIterator extends LlamaIterator<LlamaOutput> {
       var entry = it.next();
       var state = entry.getValue();
 
-      // Clean up and remove states that have finished their generation.
-      if (state.getFinishReason() != null) {
+      // Clean up and remove states that have truly finished generating.
+      // The `finished` flag is set by shouldContinue() when EOG or LENGTH
+      // is hit — this is distinct from finishReason which may be set as a
+      // marker (e.g. TOOL_CALL) while the model is still producing tokens.
+      if (state.isFinished()) {
         cleanupState(state.getSequenceId());
         it.remove();
         continue;

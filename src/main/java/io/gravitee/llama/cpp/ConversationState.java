@@ -57,6 +57,7 @@ public class ConversationState {
   // Generation state
   private GenerationState generationState = ANSWER;
   private FinishReason finishReason;
+  private boolean finished;
 
   // Configuration
   private int maxTokens = -1;
@@ -319,6 +320,23 @@ public class ConversationState {
 
   public void setFinishReason(FinishReason finishReason) {
     this.finishReason = finishReason;
+  }
+
+  /**
+   * Returns {@code true} when the model has actually stopped generating tokens
+   * (EOG token or token limit). Distinct from {@link #getFinishReason()} which
+   * may be set as a marker (e.g. {@code TOOL_CALL}) while generation continues.
+   */
+  public boolean isFinished() {
+    return finished;
+  }
+
+  /**
+   * Marks the model as done generating. Set by {@code shouldContinue()} when
+   * EOG or LENGTH is detected.
+   */
+  public void setFinished(boolean finished) {
+    this.finished = finished;
   }
 
   public int getMaxTokens() {
