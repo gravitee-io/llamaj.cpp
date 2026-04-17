@@ -31,7 +31,7 @@ import java.util.List;
 abstract class LlamaCppTest {
 
   static final String MODEL_TO_DOWNLOAD =
-    "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf";
+    "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf";
   static final String REASONNING_MODEL_TO_DOWNLOAD =
     "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf";
 
@@ -64,7 +64,7 @@ abstract class LlamaCppTest {
   static final String AUDIO_MMPROJ_PATH = "models/mmproj_audio.gguf";
 
   static final String LORA_ADAPTER_TO_DOWNLOAD =
-    "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf";
+    "https://huggingface.co/phh/Qwen3-0.6B-TLDR-Lora/resolve/main/Qwen3-0.6B-tldr-lora-f16.gguf";
   static final String LORA_ADATAPTER_PATH = "models/lora-adapter.gguf";
 
   static Path getModelPath(String modelPath, String modelToDownload) {

@@ -98,7 +98,7 @@ class LlamaModelDimsTest {
 
     LlamaModelDims dims = LlamaModelDims.loadFrom(modelPath);
 
-    // Llama-3.2-1B-Instruct-IQ3_M: ~1B params, 16 layers, 32 heads, 8 kv heads
+    // Qwen3-0.6B-Q8_0: ~0.6B params
     assertThat(dims.totalWeightBytes()).isGreaterThan(0);
     assertThat(dims.nLayers()).isGreaterThan(0);
     assertThat(dims.nHead()).isGreaterThan(0);

@@ -151,18 +151,26 @@ commands:
             mv jextract-25 "$HOME_DIR/jextract"
             rm openjdk-25-jextract+2-4_linux-x64_bin.tar.gz
 
-  download_model:
+  download_models:
     parameters:
-      model_url:
+      repo:
         type: string
-      model_path:
+      files:
+        type: string
+      destinations:
         type: string
     steps:
       - run:
-          name: Download Model
+          name: Download Models from << parameters.repo >>
           command: |
             mkdir -p $HOME_DIR/llamaj.cpp/models/
-            curl -L -o $HOME_DIR/llamaj.cpp/<< parameters.model_path >> << parameters.model_url >>
+            IFS=',' read -ra FILES \<<< "<< parameters.files >>"
+            IFS=',' read -ra DESTS \<<< "<< parameters.destinations >>"
+            for i in "${!FILES[@]}"; do
+              echo "Downloading ${FILES[$i]} -> ${DESTS[$i]}"
+              curl -L -o "$HOME_DIR/llamaj.cpp/${DESTS[$i]}" \
+                "https://huggingface.co/<< parameters.repo >>/resolve/main/${FILES[$i]}"
+            done
 
   run-tests:
     parameters:
@@ -363,27 +371,25 @@ jobs:
           "llama-cpp-version": b8665
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
-      - download_model:
-          model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
-          model_path: "models/model.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf"
-          model_path: "models/reasoning.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf"
-          model_path: "models/lora-adapter.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/Qwen3VL-2B-Instruct-Q8_0.gguf"
-          model_path: "models/model_vl.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
-          model_path: "models/mmproj.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q8_0.gguf"
-          model_path: "models/model_audio.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
-          model_path: "models/mmproj_audio.gguf"
+      - download_models:
+          repo: "Qwen/Qwen3-0.6B-GGUF"
+          files: "Qwen3-0.6B-Q8_0.gguf"
+          destinations: "models/model.gguf"
+      - run:
+          name: Copy model for reasoning
+          command: cp $HOME_DIR/llamaj.cpp/models/model.gguf $HOME_DIR/llamaj.cpp/models/reasoning.gguf
+      - download_models:
+          repo: "phh/Qwen3-0.6B-TLDR-Lora"
+          files: "Qwen3-0.6B-tldr-lora-f16.gguf"
+          destinations: "models/lora-adapter.gguf"
+      - download_models:
+          repo: "Qwen/Qwen3-VL-2B-Instruct-GGUF"
+          files: "Qwen3VL-2B-Instruct-Q8_0.gguf,mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
+          destinations: "models/model_vl.gguf,models/mmproj.gguf"
+      - download_models:
+          repo: "ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF"
+          files: "Llama-3.2-1B-Instruct-Q8_0.gguf,mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
+          destinations: "models/model_audio.gguf,models/mmproj_audio.gguf"
       - run-tests:
           os: "macosx"
           platform: "aarch64"
@@ -400,27 +406,25 @@ jobs:
           "llama-cpp-version": b8665
       - checkout:
           path: "/home/circleci/llamaj.cpp"
-      - download_model:
-          model_url: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-IQ3_M.gguf"
-          model_path: "models/model.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf"
-          model_path: "models/reasoning.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/bunnycore/LLama-3.2-1B-General-lora_model-F16-GGUF/resolve/main/LLama-3.2-1B-General-lora_model-f16.gguf"
-          model_path: "models/lora-adapter.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/Qwen3VL-2B-Instruct-Q8_0.gguf"
-          model_path: "models/model_vl.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
-          model_path: "models/mmproj.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q8_0.gguf"
-          model_path: "models/model_audio.gguf"
-      - download_model:
-          model_url: "https://huggingface.co/ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF/resolve/main/mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
-          model_path: "models/mmproj_audio.gguf"
+      - download_models:
+          repo: "Qwen/Qwen3-0.6B-GGUF"
+          files: "Qwen3-0.6B-Q8_0.gguf"
+          destinations: "models/model.gguf"
+      - run:
+          name: Copy model for reasoning
+          command: cp $HOME_DIR/llamaj.cpp/models/model.gguf $HOME_DIR/llamaj.cpp/models/reasoning.gguf
+      - download_models:
+          repo: "phh/Qwen3-0.6B-TLDR-Lora"
+          files: "Qwen3-0.6B-tldr-lora-f16.gguf"
+          destinations: "models/lora-adapter.gguf"
+      - download_models:
+          repo: "Qwen/Qwen3-VL-2B-Instruct-GGUF"
+          files: "Qwen3VL-2B-Instruct-Q8_0.gguf,mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
+          destinations: "models/model_vl.gguf,models/mmproj.gguf"
+      - download_models:
+          repo: "ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF"
+          files: "Llama-3.2-1B-Instruct-Q8_0.gguf,mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
+          destinations: "models/model_audio.gguf,models/mmproj_audio.gguf"
       - run-tests:
           os: "linux"
           platform: "x86_64"

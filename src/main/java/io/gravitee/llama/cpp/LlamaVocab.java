@@ -17,6 +17,9 @@ package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_get_vocab;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_token_to_piece;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_bos;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_eos;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_get_text;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_is_eog;
 
 import java.lang.foreign.Arena;
@@ -36,6 +39,26 @@ public final class LlamaVocab extends MemorySegmentAware {
 
   public boolean isEog(int tokenId) {
     return llama_vocab_is_eog(this.segment, tokenId);
+  }
+
+  /**
+   * Returns the BOS (beginning-of-sentence) token text, or empty string if undefined.
+   */
+  public String bosTokenText() {
+    int tokenId = llama_vocab_bos(this.segment);
+    if (tokenId < 0) return "";
+    var ptr = llama_vocab_get_text(this.segment, tokenId);
+    return (ptr != null && ptr.address() != 0) ? ptr.getString(0) : "";
+  }
+
+  /**
+   * Returns the EOS (end-of-sentence) token text, or empty string if undefined.
+   */
+  public String eosTokenText() {
+    int tokenId = llama_vocab_eos(this.segment);
+    if (tokenId < 0) return "";
+    var ptr = llama_vocab_get_text(this.segment, tokenId);
+    return (ptr != null && ptr.address() != 0) ? ptr.getString(0) : "";
   }
 
   public byte[] tokenToPiece(int tokenId) {

@@ -340,7 +340,7 @@ On linux, don't forget to link your libraries with the environment variable belo
 $ export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
 ```
 
-There are plenty of models on HuggingFace, we suggest the one [here](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF)
+There are plenty of models on HuggingFace, we suggest the one [here](https://huggingface.co/Qwen/Qwen3-0.6B-GGUF)
 
 ### Usage
 ```

@@ -1546,6 +1546,28 @@ public final class LlamaRuntime {
     );
   }
 
+  /* Vocab — special tokens */
+
+  public static int llama_vocab_bos(MemorySegment vocab) {
+    return llama_h("llama_vocab_bos", new Class<?>[] { MEM_SEG_CLASS }, vocab);
+  }
+
+  public static int llama_vocab_eos(MemorySegment vocab) {
+    return llama_h("llama_vocab_eos", new Class<?>[] { MEM_SEG_CLASS }, vocab);
+  }
+
+  public static MemorySegment llama_vocab_get_text(
+    MemorySegment vocab,
+    int token
+  ) {
+    return llama_h(
+      "llama_vocab_get_text",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      vocab,
+      token
+    );
+  }
+
   /* Chat Template */
   public static MemorySegment llama_model_chat_template(
     MemorySegment model,
