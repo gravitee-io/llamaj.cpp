@@ -32,6 +32,15 @@ public final class LlamaTemplate extends MemorySegmentAware {
     super(llama_model_chat_template(llamaModel.segment, MemorySegment.NULL));
   }
 
+  /**
+   * Returns the raw Jinja2 chat template string from the model.
+   * Returns {@code null} if the model has no chat template.
+   */
+  public String templateString() {
+    if (segment == null || segment.address() == 0) return null;
+    return segment.getString(0);
+  }
+
   public String applyTemplate(
     Arena arena,
     LlamaChatMessages messages,

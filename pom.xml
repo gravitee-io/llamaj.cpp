@@ -22,7 +22,7 @@
     <parent>
         <groupId>io.gravitee</groupId>
         <artifactId>gravitee-parent</artifactId>
-        <version>23.5.0</version>
+        <version>24.0.2</version>
     </parent>
 
     <groupId>io.gravitee.llama.cpp</groupId>
@@ -405,7 +405,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.4</version>
+                <version>3.5.5</version>
                 <configuration>
                     <argLine>--enable-native-access=ALL-UNNAMED</argLine>
                 </configuration>
@@ -421,7 +421,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
                         <id>add-source</id>
