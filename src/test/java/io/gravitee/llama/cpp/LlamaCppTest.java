@@ -67,6 +67,22 @@ abstract class LlamaCppTest {
     "https://huggingface.co/phh/Qwen3-0.6B-TLDR-Lora/resolve/main/Qwen3-0.6B-tldr-lora-f16.gguf";
   static final String LORA_ADATAPTER_PATH = "models/lora-adapter.gguf";
 
+  static final String EMBEDDING_MODEL_TO_DOWNLOAD =
+    "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B-GGUF/resolve/main/Qwen3-Embedding-0.6B-Q8_0.gguf";
+  static final String EMBEDDING_MODEL_PATH = "models/embedding.gguf";
+
+  static final String RERANKER_MODEL_TO_DOWNLOAD =
+    "https://huggingface.co/n24q02m/Qwen3-Reranker-0.6B-GGUF/resolve/main/qwen3-reranker-0.6b-q4-k-m.gguf";
+  static final String RERANKER_MODEL_PATH = "models/reranker.gguf";
+
+  static final String JINA_RERANKER_MODEL_TO_DOWNLOAD =
+    "https://huggingface.co/gpustack/jina-reranker-v1-tiny-en-GGUF/resolve/main/jina-reranker-v1-tiny-en-Q4_K_M.gguf";
+  static final String JINA_RERANKER_MODEL_PATH = "models/jina-reranker.gguf";
+
+  static final String BGE_M3_MODEL_TO_DOWNLOAD =
+    "https://huggingface.co/ggml-org/bge-m3-Q8_0-GGUF/resolve/main/bge-m3-q8_0.gguf";
+  static final String BGE_M3_MODEL_PATH = "models/bge-m3.gguf";
+
   static Path getModelPath(String modelPath, String modelToDownload) {
     return getPath(modelPath, modelToDownload);
   }

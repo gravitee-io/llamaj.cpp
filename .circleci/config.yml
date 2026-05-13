@@ -390,12 +390,29 @@ jobs:
           repo: "ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF"
           files: "Llama-3.2-1B-Instruct-Q8_0.gguf,mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
           destinations: "models/model_audio.gguf,models/mmproj_audio.gguf"
+      - download_models:
+          repo: "Qwen/Qwen3-Embedding-0.6B-GGUF"
+          files: "Qwen3-Embedding-0.6B-Q8_0.gguf"
+          destinations: "models/embedding.gguf"
+      - download_models:
+          repo: "ggml-org/bge-m3-Q8_0-GGUF"
+          files: "bge-m3-q8_0.gguf"
+          destinations: "models/bge-m3.gguf"
+      - download_models:
+          repo: "n24q02m/Qwen3-Reranker-0.6B-GGUF"
+          files: "qwen3-reranker-0.6b-q4-k-m.gguf"
+          destinations: "models/reranker.gguf"
+      - download_models:
+          repo: "gpustack/jina-reranker-v1-tiny-en-GGUF"
+          files: "jina-reranker-v1-tiny-en-Q4_K_M.gguf"
+          destinations: "models/jina-reranker.gguf"
       - run-tests:
           os: "macosx"
           platform: "aarch64"
 
   build_and_test_linux_x86_64:
     executor: ubuntu_linux_x86_64
+    resource_class: large
     environment:
       HOME_DIR: "/home/circleci"
     steps:
@@ -425,6 +442,22 @@ jobs:
           repo: "ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF"
           files: "Llama-3.2-1B-Instruct-Q8_0.gguf,mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
           destinations: "models/model_audio.gguf,models/mmproj_audio.gguf"
+      - download_models:
+          repo: "Qwen/Qwen3-Embedding-0.6B-GGUF"
+          files: "Qwen3-Embedding-0.6B-Q8_0.gguf"
+          destinations: "models/embedding.gguf"
+      - download_models:
+          repo: "ggml-org/bge-m3-Q8_0-GGUF"
+          files: "bge-m3-q8_0.gguf"
+          destinations: "models/bge-m3.gguf"
+      - download_models:
+          repo: "n24q02m/Qwen3-Reranker-0.6B-GGUF"
+          files: "qwen3-reranker-0.6b-q4-k-m.gguf"
+          destinations: "models/reranker.gguf"
+      - download_models:
+          repo: "gpustack/jina-reranker-v1-tiny-en-GGUF"
+          files: "jina-reranker-v1-tiny-en-Q4_K_M.gguf"
+          destinations: "models/jina-reranker.gguf"
       - run-tests:
           os: "linux"
           platform: "x86_64"
