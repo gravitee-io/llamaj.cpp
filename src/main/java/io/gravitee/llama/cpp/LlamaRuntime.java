@@ -850,6 +850,44 @@ public final class LlamaRuntime {
     );
   }
 
+  /**
+   * Enables or disables embedding extraction on an existing context at runtime.
+   * Equivalent to setting {@code embeddings=true} in {@link LlamaContextParams} before
+   * context creation, but can be toggled post-creation.
+   *
+   * @param ctx        The llama context segment
+   * @param embeddings {@code true} to activate embedding output
+   */
+  public static void llama_set_embeddings(
+    MemorySegment ctx,
+    boolean embeddings
+  ) {
+    llama_h(
+      "llama_set_embeddings",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      ctx,
+      embeddings
+    );
+  }
+
+  /**
+   * Returns the active pooling type for the given context.
+   * The C function returns the raw {@code llama_pooling_type} enum value (starting at -1),
+   * which is mapped back to the Java {@link PoolingType} enum using the same +1 offset
+   * used in {@link LlamaContextParams#poolingType()}.
+   *
+   * @param ctx The llama context segment
+   * @return The {@link PoolingType} in use
+   */
+  public static PoolingType llama_pooling_type(MemorySegment ctx) {
+    int raw = llama_h(
+      "llama_pooling_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      ctx
+    );
+    return PoolingType.fromOrdinal(raw + 1);
+  }
+
   public static int llama_model_n_embd(MemorySegment model) {
     return llama_h(
       "llama_model_n_embd",
@@ -869,6 +907,189 @@ public final class LlamaRuntime {
       new Class<?>[] { MEM_SEG_CLASS },
       model
     );
+  }
+
+  /**
+   * Returns the output embedding dimension of the model.
+   * Use this to size the {@code float[]} buffers when reading embedding vectors via
+   * {@link #llama_get_embeddings_ith} or {@link #llama_get_embeddings_seq}.
+   * For most models this equals {@link #llama_model_n_embd}, but for classifier /
+   * reranker models it may differ.
+   *
+   * @param model A MemorySegment handle to the loaded llama_model
+   * @return The output embedding dimension
+   */
+  public static int llama_model_n_embd_out(MemorySegment model) {
+    return llama_h(
+      "llama_model_n_embd_out",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  /**
+   * Returns the number of classifier output classes for classifier / reranker models.
+   * When {@link PoolingType#RANK} is active and this returns {@code 1}, the model is
+   * a reranker (single relevance score). When it returns {@code > 1}, the model exposes
+   * multiple labelled classes.
+   * <p>
+   * Behaviour is undefined for non-classifier generative models.
+   *
+   * @param model A MemorySegment handle to the loaded llama_model
+   * @return The number of classifier output classes
+   */
+  public static int llama_model_n_cls_out(MemorySegment model) {
+    return llama_h(
+      "llama_model_n_cls_out",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  /**
+   * Returns the label string for classifier output index {@code i}.
+   * Returns {@code null} if the model does not provide class labels or if {@code i} is
+   * out of range.
+   *
+   * @param arena Used to allocate the temporary C string buffer
+   * @param model A MemorySegment handle to the loaded llama_model
+   * @param i     The classifier output index (0-based, must be {@code < n_cls_out})
+   * @return The label string, or {@code null} if not available
+   */
+  public static String llama_model_cls_label(
+    Arena arena,
+    MemorySegment model,
+    int i
+  ) {
+    MemorySegment ptr = llama_h(
+      "llama_model_cls_label",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      model,
+      i
+    );
+    if (ptr == null || ptr.address() == 0) {
+      return null;
+    }
+    return ptr.reinterpret(Long.MAX_VALUE).getString(0);
+  }
+
+  /**
+   * Reads a GGUF metadata value by key name (e.g. {@code "general.architecture"}).
+   * The buffer is allocated internally via the provided arena.
+   * Returns {@code null} if the key is not present in the model metadata.
+   *
+   * @param arena Used to allocate the C string buffer
+   * @param model A MemorySegment handle to the loaded llama_model
+   * @param key   The GGUF metadata key to look up
+   * @return The value string, or {@code null} if the key does not exist
+   */
+  public static String llama_model_meta_val_str(
+    Arena arena,
+    MemorySegment model,
+    String key
+  ) {
+    MemorySegment buf = arena.allocate(4096);
+    int len = llama_h(
+      "llama_model_meta_val_str",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        long.class,
+      },
+      model,
+      arena.allocateFrom(key),
+      buf,
+      4096L
+    );
+    return len < 0 ? null : buf.getString(0);
+  }
+
+  /**
+   * Returns the total number of GGUF metadata key/value pairs stored in the model.
+   *
+   * @param model A MemorySegment handle to the loaded llama_model
+   * @return The number of metadata entries
+   */
+  public static int llama_model_meta_count(MemorySegment model) {
+    return llama_h(
+      "llama_model_meta_count",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  /**
+   * Returns the metadata key name at index {@code i}.
+   * Use together with {@link #llama_model_meta_count} to iterate all metadata entries.
+   *
+   * @param arena Used to allocate the C string buffer
+   * @param model A MemorySegment handle to the loaded llama_model
+   * @param i     The metadata entry index (0-based)
+   * @return The key string, or {@code null} if {@code i} is out of range
+   */
+  public static String llama_model_meta_key_by_index(
+    Arena arena,
+    MemorySegment model,
+    int i
+  ) {
+    MemorySegment buf = arena.allocate(512);
+    int len = llama_h(
+      "llama_model_meta_key_by_index",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, MEM_SEG_CLASS, long.class },
+      model,
+      i,
+      buf,
+      512L
+    );
+    return len < 0 ? null : buf.getString(0);
+  }
+
+  /**
+   * Returns the metadata value at index {@code i} as a string.
+   * Use together with {@link #llama_model_meta_key_by_index} and
+   * {@link #llama_model_meta_count} to iterate all metadata entries.
+   *
+   * @param arena Used to allocate the C string buffer
+   * @param model A MemorySegment handle to the loaded llama_model
+   * @param i     The metadata entry index (0-based)
+   * @return The value string, or {@code null} if {@code i} is out of range
+   */
+  public static String llama_model_meta_val_str_by_index(
+    Arena arena,
+    MemorySegment model,
+    int i
+  ) {
+    MemorySegment buf = arena.allocate(4096);
+    int len = llama_h(
+      "llama_model_meta_val_str_by_index",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, MEM_SEG_CLASS, long.class },
+      model,
+      i,
+      buf,
+      4096L
+    );
+    return len < 0 ? null : buf.getString(0);
+  }
+
+  /**
+   * Returns a human-readable description of the model type (architecture, size, etc.).
+   * The string is populated by llama.cpp from GGUF metadata.
+   *
+   * @param arena Used to allocate the C string buffer
+   * @param model A MemorySegment handle to the loaded llama_model
+   * @return The description string
+   */
+  public static String llama_model_desc(Arena arena, MemorySegment model) {
+    MemorySegment buf = arena.allocate(256);
+    llama_h(
+      "llama_model_desc",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, long.class },
+      model,
+      buf,
+      256L
+    );
+    return buf.getString(0);
   }
 
   /**
@@ -1407,6 +1628,56 @@ public final class LlamaRuntime {
   }
 
   /**
+   * Returns a pointer to the embedding vector for the i-th token in the last decoded batch.
+   * The segment points to {@code n_embd_out} contiguous floats in native memory.
+   * Negative indices count from the end ({@code -1} = last token).
+   * <p>
+   * The token must have been added to the batch with {@code logits=true}, and the context
+   * must have been created with {@code embeddings=true} in {@link LlamaContextParams}.
+   * Returns {@code NULL} for invalid indices.
+   *
+   * @param ctx The llama context segment
+   * @param i   Batch output index (negative counts from end)
+   * @return A MemorySegment pointing to n_embd_out floats, or NULL on error
+   */
+  public static MemorySegment llama_get_embeddings_ith(
+    MemorySegment ctx,
+    int i
+  ) {
+    return llama_h(
+      "llama_get_embeddings_ith",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      ctx,
+      i
+    );
+  }
+
+  /**
+   * Returns a pointer to the pooled embedding vector for the given sequence.
+   * The segment points to {@code n_embd_out} contiguous floats in native memory.
+   * <p>
+   * Returns {@code NULL} when {@code pooling_type == NONE}.
+   * When {@code pooling_type == RANK}, returns {@code float[n_cls_out]} containing
+   * the reranker relevance score(s) for the sequence.
+   *
+   * @param ctx   The llama context segment
+   * @param seqId The sequence id
+   * @return A MemorySegment pointing to n_embd_out (or n_cls_out for RANK) floats,
+   *         or NULL if pooling is disabled
+   */
+  public static MemorySegment llama_get_embeddings_seq(
+    MemorySegment ctx,
+    int seqId
+  ) {
+    return llama_h(
+      "llama_get_embeddings_seq",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      ctx,
+      seqId
+    );
+  }
+
+  /**
    * Returns the total number of tokens in the vocabulary.
    *
    * @param vocab The llama vocab
@@ -1414,6 +1685,39 @@ public final class LlamaRuntime {
    */
   public static int llama_n_vocab(MemorySegment vocab) {
     return llama_h("llama_n_vocab", new Class<?>[] { MEM_SEG_CLASS }, vocab);
+  }
+
+  /**
+   * Returns the effective context size (post-substitution if the input was 0).
+   */
+  public static int llama_n_ctx(MemorySegment ctx) {
+    return llama_h("llama_n_ctx", new Class<?>[] { MEM_SEG_CLASS }, ctx);
+  }
+
+  /** Returns the effective logical batch size. */
+  public static int llama_n_batch(MemorySegment ctx) {
+    return llama_h("llama_n_batch", new Class<?>[] { MEM_SEG_CLASS }, ctx);
+  }
+
+  /** Returns the effective physical (micro) batch size. */
+  public static int llama_n_ubatch(MemorySegment ctx) {
+    return llama_h("llama_n_ubatch", new Class<?>[] { MEM_SEG_CLASS }, ctx);
+  }
+
+  /** Returns the effective maximum number of sequences. */
+  public static int llama_n_seq_max(MemorySegment ctx) {
+    return llama_h("llama_n_seq_max", new Class<?>[] { MEM_SEG_CLASS }, ctx);
+  }
+
+  /**
+   * Returns the model's trained context length (GGUF {@code {arch}.context_length}).
+   */
+  public static int llama_model_n_ctx_train(MemorySegment model) {
+    return llama_h(
+      "llama_model_n_ctx_train",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
   }
 
   /* Memory */

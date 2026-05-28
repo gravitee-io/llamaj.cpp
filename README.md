@@ -297,6 +297,191 @@ $ java --enable-preview --enable-native-access=ALL-UNNAMED \
   --rpc 192.168.1.10:50052,192.168.1.11:50052
 ```
 
+### Example 5: Reranking
+
+`LlamaReranker` is a cross-encoder wrapper that scores how relevant a document is to a
+query. Pooling and attention are auto-detected from the GGUF architecture, so
+`Options.defaults()` works for most reranker models. Use `score` for a single pair and
+`scoreAll` to rank a batch of documents against one query.
+
+```java
+import io.gravitee.llama.cpp.*;
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
+import java.lang.foreign.Arena;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
+
+public class RerankExample {
+    public static void main(String[] args) {
+        var arena = Arena.ofConfined();
+        String libPath = LlamaLibLoader.load();
+        LlamaRuntime.llama_backend_init();
+        LlamaRuntime.ggml_backend_load_all_from_path(arena, libPath);
+
+        var model = new LlamaModel(arena, Path.of("models/reranker.gguf"), new LlamaModelParams(arena));
+        var reranker = new LlamaReranker(arena, model, LlamaReranker.Options.defaults());
+
+        String query = "What is the capital of France?";
+        List<String> documents = List.of(
+            "Paris is the capital and most populous city of France.",
+            "The Eiffel Tower is a landmark in Paris.",
+            "Bananas are a good source of potassium."
+        );
+
+        // One raw score array per document, in input order.
+        List<float[]> scores = reranker.scoreAll(query, documents);
+
+        // Rank documents by their first logit, highest first.
+        java.util.stream.IntStream.range(0, documents.size())
+            .boxed()
+            .sorted(Comparator.comparingDouble((Integer i) -> scores.get(i)[0]).reversed())
+            .forEach(i -> System.out.printf("%.4f  %s%n", scores.get(i)[0], documents.get(i)));
+
+        reranker.close();   // frees only the context; the model is owned by the caller
+        model.free();
+        LlamaRuntime.llama_backend_free();
+        arena.close();
+    }
+}
+```
+
+`score(query, document)` returns a `float[]` whose size is `reranker.nClsOut()` — typically
+`1` for BERT-style cross-encoders and `2` for chat-style rerankers. For models that need a
+structured prompt, supply a `RerankTemplate` (a `(query, document) -> String` lambda) via
+`Options.defaults().withTemplate(...)`; the default is `RerankTemplate.PLAIN`
+(`query + " " + document`).
+
+### Example 6: Reranking with Qwen3 and a custom RerankTemplate
+
+Chat-style rerankers like Qwen3-Reranker expect the (query, document) pair wrapped in a
+system/user prompt that asks the model to judge relevance. Provide that format as a
+`RerankTemplate`. Unlike a BERT cross-encoder (which emits a single raw logit), Qwen3-Reranker
+has a 2-class classifier head: `nClsOut() == 2` and `score` returns a softmax `float[2]` where
+index `0` is `P(relevant)`. That probability is still a perfectly good ranking score — sort by
+it descending to rerank a candidate set.
+
+```java
+import io.gravitee.llama.cpp.*;
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
+import java.lang.foreign.Arena;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.IntStream;
+
+public class Qwen3RerankExample {
+    // Wraps the pair in Qwen3's chat format, instructing the model to answer yes/no.
+    static final RerankTemplate QWEN3_TEMPLATE = (query, document) ->
+        "<|im_start|>system\n" +
+        "Judge whether the Document is relevant to the Query. Answer 'yes' or 'no'." +
+        "<|im_end|>\n" +
+        "<|im_start|>user\n" +
+        "Query: " + query + "\n" +
+        "Document: " + document + "\n" +
+        "Relevant:<|im_end|>\n";
+
+    public static void main(String[] args) {
+        var arena = Arena.ofConfined();
+        String libPath = LlamaLibLoader.load();
+        LlamaRuntime.llama_backend_init();
+        LlamaRuntime.ggml_backend_load_all_from_path(arena, libPath);
+
+        var model = new LlamaModel(arena, Path.of("models/reranker.gguf"), new LlamaModelParams(arena));
+        var reranker = new LlamaReranker(
+            arena,
+            model,
+            LlamaReranker.Options.defaults().withTemplate(QWEN3_TEMPLATE)
+        );
+
+        String query = "What is the capital of France?";
+        List<String> documents = List.of(
+            "Paris is the capital and most populous city of France.",
+            "The Eiffel Tower is a landmark in Paris.",
+            "Bananas are a good source of potassium."
+        );
+
+        List<float[]> scores = reranker.scoreAll(query, documents);
+
+        // Rank by P(relevant) = score[0], highest first.
+        IntStream.range(0, documents.size())
+            .boxed()
+            .sorted(Comparator.comparingDouble((Integer i) -> scores.get(i)[0]).reversed())
+            .forEach(i -> System.out.printf("P(relevant)=%.4f  %s%n", scores.get(i)[0], documents.get(i)));
+
+        reranker.close();
+        model.free();
+        LlamaRuntime.llama_backend_free();
+        arena.close();
+    }
+}
+```
+
+> **Classifier probabilities vs. raw scores.** Qwen3-Reranker's `score[0]` is a calibrated
+> probability in `[0, 1]`. BERT cross-encoders (`nClsOut() == 1`, Example 5) instead return a
+> single **unbounded logit** — larger means more relevant, but it is not a probability. Ranking
+> works the same way for both (sort descending); only apply `sigmoid(logit)` if you specifically
+> need a `[0, 1]` score from a single-logit model.
+
+### Example 7: Embeddings
+
+`LlamaEmbedder` turns text into a dense vector. Pooling and attention are auto-detected from
+the GGUF architecture (CLS/NON_CAUSAL for encoders, LAST/CAUSAL for decoders), so
+`Options.defaults()` covers most models. Use `embed` for a single string or `embedAll` to
+batch many texts through a single decode. Vectors are returned **un-normalised** — L2-normalise
+them yourself before computing cosine similarity.
+
+```java
+import io.gravitee.llama.cpp.*;
+import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
+import java.lang.foreign.Arena;
+import java.nio.file.Path;
+import java.util.List;
+
+public class EmbeddingExample {
+    static float[] l2normalize(float[] v) {
+        double sum = 0;
+        for (float f : v) sum += (double) f * f;
+        double norm = Math.sqrt(sum);
+        if (norm > 1e-9) for (int i = 0; i < v.length; i++) v[i] = (float) (v[i] / norm);
+        return v;
+    }
+
+    static double cosine(float[] a, float[] b) {
+        double dot = 0;
+        for (int i = 0; i < a.length; i++) dot += (double) a[i] * b[i];
+        return dot; // inputs are L2-normalised, so the dot product is the cosine
+    }
+
+    public static void main(String[] args) {
+        var arena = Arena.ofConfined();
+        String libPath = LlamaLibLoader.load();
+        LlamaRuntime.llama_backend_init();
+        LlamaRuntime.ggml_backend_load_all_from_path(arena, libPath);
+
+        var model = new LlamaModel(arena, Path.of("models/embedding.gguf"), new LlamaModelParams(arena));
+        var embedder = new LlamaEmbedder(arena, model, LlamaEmbedder.Options.defaults());
+
+        System.out.println("embedding dimension: " + embedder.nEmbdOut());
+
+        List<float[]> embeddings = embedder.embedAll(List.of(
+            "The capital of France is Paris.",
+            "Paris is France's largest city.",
+            "Bananas are a good source of potassium."
+        ));
+        embeddings.forEach(EmbeddingExample::l2normalize);
+
+        System.out.printf("similar pair:   %.4f%n", cosine(embeddings.get(0), embeddings.get(1)));
+        System.out.printf("unrelated pair: %.4f%n", cosine(embeddings.get(0), embeddings.get(2)));
+
+        embedder.close();
+        model.free();
+        LlamaRuntime.llama_backend_free();
+        arena.close();
+    }
+}
+```
+
 ## Build
 
 The build uses a **platform-specific Maven profile** to download the correct jextract tool and pre-built llama.cpp native libraries, generate the Java FFM bindings, format the code, apply license headers, and install the artifact to your local Maven repository.

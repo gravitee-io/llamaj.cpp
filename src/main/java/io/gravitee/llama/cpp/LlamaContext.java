@@ -34,6 +34,7 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   private final LlamaModel model;
   private final int nCtx;
   private final int nBatch;
+  private final int nUBatch;
   private final int nSeqMax;
   private final LlamaMemory memory;
 
@@ -48,9 +49,10 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     }
     this.arena = arena;
     this.model = model;
-    this.nCtx = params.nCtx();
-    this.nBatch = params.nBatch();
-    this.nSeqMax = params.nSeqMax();
+    this.nCtx = LlamaRuntime.llama_n_ctx(segment);
+    this.nBatch = LlamaRuntime.llama_n_batch(segment);
+    this.nUBatch = LlamaRuntime.llama_n_ubatch(segment);
+    this.nSeqMax = LlamaRuntime.llama_n_seq_max(segment);
     this.memory = new LlamaMemory(this);
   }
 
@@ -68,6 +70,10 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
 
   public int nBatch() {
     return nBatch;
+  }
+
+  public int nUBatch() {
+    return nUBatch;
   }
 
   public int nSeqMax() {
@@ -95,6 +101,84 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   public int decode(LlamaBatch batch) {
     checkNotFreed();
     return llama_decode(segment, batch.segment);
+  }
+
+  /**
+   * Enables or disables embedding extraction on this context at runtime.
+   * Equivalent to the {@code embeddings} flag in {@link LlamaContextParams} but settable
+   * after context creation.
+   *
+   * @param embeddings {@code true} to activate embedding output
+   */
+  public void setEmbeddings(boolean embeddings) {
+    checkNotFreed();
+    llama_set_embeddings(segment, embeddings);
+  }
+
+  /**
+   * Returns the pooled embedding vector for the given sequence.
+   * <p>
+   * Use when the context was created with a pooling type other than {@code NONE}
+   * (e.g. {@link PoolingType#MEAN}, {@link PoolingType#CLS}, {@link PoolingType#LAST}).
+   * When {@link PoolingType#RANK} is active the returned array contains
+   * {@code nClsOut} reranker / classifier scores instead of a full embedding vector.
+   * The size is determined by the active pooling type:
+   * <ul>
+   *   <li>{@link PoolingType#RANK}: {@code float[nClsOut]} (per-class relevance scores)</li>
+   *   <li>Any other non-NONE pooling: {@code float[nEmbdOut]} (pooled embedding vector)</li>
+   * </ul>
+   * <p>
+   * Returns {@code null} when pooling is {@code NONE}.
+   * The context must have been created with {@code embeddings=true}.
+   *
+   * @param seqId The sequence id assigned when building the batch
+   * @return A new {@code float[]} copy of the pooled embedding / score vector,
+   *         or {@code null} if pooling is disabled
+   */
+  public float[] getEmbeddingsSeq(int seqId) {
+    checkNotFreed();
+    MemorySegment ptr = llama_get_embeddings_seq(segment, seqId);
+    if (ptr == null || ptr.address() == 0) {
+      return null;
+    }
+    // For RANK pooling the buffer holds n_cls_out floats (classifier scores).
+    // For all other non-NONE pooling types it holds n_embd_out floats.
+    PoolingType pooling = llama_pooling_type(segment);
+    int size = pooling == PoolingType.RANK ? model.nClsOut() : model.nEmbdOut();
+    return ptr
+      .reinterpret(size * ValueLayout.JAVA_FLOAT.byteSize())
+      .toArray(ValueLayout.JAVA_FLOAT);
+  }
+
+  /**
+   * Returns the embedding vector for the i-th token in the last decoded batch.
+   * <p>
+   * Use when the context was created with {@link PoolingType#NONE} and you need
+   * per-token embeddings (e.g. for span-based NER heads). Negative indices count from
+   * the end ({@code -1} = last token in the batch).
+   * <p>
+   * The token at index {@code i} must have been added to the batch with
+   * {@code logits=true}, and the context must have been created with
+   * {@code embeddings=true}.
+   *
+   * @param i Batch output index (negative counts from end; {@code -1} = last token)
+   * @return A new {@code float[nEmbdOut]} copy of the token embedding
+   * @throws LlamaException if the native call returns a NULL pointer
+   */
+  public float[] getEmbeddingsIth(int i) {
+    checkNotFreed();
+    MemorySegment ptr = llama_get_embeddings_ith(segment, i);
+    if (ptr == null || ptr.address() == 0) {
+      throw new LlamaException(
+        "llama_get_embeddings_ith returned NULL for index " +
+          i +
+          " – ensure the token was added with logits=true and embeddings=true was set on the context"
+      );
+    }
+    int nEmbd = model.nEmbdOut();
+    return ptr
+      .reinterpret(nEmbd * ValueLayout.JAVA_FLOAT.byteSize())
+      .toArray(ValueLayout.JAVA_FLOAT);
   }
 
   public MemorySegment getMemorySegment() {
