@@ -12,7 +12,7 @@ executors:
 
   ubuntu_linux_x86_64:
     docker:
-      - image: ubuntu:noble
+      - image: ubuntu:resolute
     working_directory: /home/circleci
     resource_class: medium
 
