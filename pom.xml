@@ -22,7 +22,7 @@
     <parent>
         <groupId>io.gravitee</groupId>
         <artifactId>gravitee-parent</artifactId>
-        <version>24.0.2</version>
+        <version>25.0.0</version>
     </parent>
 
     <groupId>io.gravitee.llama.cpp</groupId>
@@ -45,7 +45,7 @@
         <maven.compiler.release>25</maven.compiler.release>
         <junit-jupiter-api.version>6.0.3</junit-jupiter-api.version>
         <assertj-core.version>3.27.7</assertj-core.version>
-        <llama.cpp.version>b9524</llama.cpp.version>
+        <llama.cpp.version>b9432</llama.cpp.version>
         <llama.cpp.dir>${project.basedir}/../llama.cpp</llama.cpp.dir>
         <jextract.dir>${project.basedir}/.jextract/bin</jextract.dir>
     </properties>
@@ -436,6 +436,22 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <!--
+                  Inherited from gravitee-parent. ArchUnit 1.2.1 bundles a
+                  shaded ASM that cannot parse Java 25 (class-file major 69)
+                  bytecode, so scanning the jextract-generated bindings spams
+                  "Unsupported class file major version 69". The rule only logs
+                  (it never fails the build) and cannot read the generated FFM
+                  bindings anyway, so skip it until the parent ships an
+                  ArchUnit new enough for class v69.
+                -->
+                <groupId>io.gravitee.maven</groupId>
+                <artifactId>gravitee-archrules-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

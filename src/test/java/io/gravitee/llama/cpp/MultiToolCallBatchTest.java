@@ -105,14 +105,17 @@ class MultiToolCallBatchTest extends LlamaCppTest {
     );
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    track(model);
     var contextParams = new LlamaContextParams(arena)
       .nCtx(4096)
       .nBatch(4096)
       .nSeqMax(2);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(42);
+    track(sampler);
 
     var prompt = getPrompt(
       model,

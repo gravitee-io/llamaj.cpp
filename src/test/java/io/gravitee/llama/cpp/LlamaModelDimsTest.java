@@ -50,7 +50,7 @@ import org.junit.jupiter.api.TestMethodOrder;
  * @author GraviteeSource Team
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class LlamaModelDimsTest {
+class LlamaModelDimsTest extends LlamaCppTest {
 
   private static Arena arena;
 
@@ -176,6 +176,7 @@ class LlamaModelDimsTest {
     // Second: full model load (the real inference path) — should still work
     var modelParams = new LlamaModelParams(arena);
     var model = new LlamaModel(arena, modelPath, modelParams);
+    track(model);
     try {
       long modelSize = LlamaRuntime.llama_model_size(model.segment);
       assertThat(modelSize).isEqualTo(dims.totalWeightBytes());

@@ -62,7 +62,7 @@ class LlamaVocabTokenTest extends LlamaCppTest {
       REASONNING_MODEL_TO_DOWNLOAD
     );
     var modelParams = new LlamaModelParams(arena);
-    var model = new LlamaModel(arena, modelPath, modelParams);
+    var model = track(new LlamaModel(arena, modelPath, modelParams));
     var vocab = new LlamaVocab(model);
 
     String bos = vocab.bosTokenText();
@@ -83,7 +83,7 @@ class LlamaVocabTokenTest extends LlamaCppTest {
       REASONNING_MODEL_TO_DOWNLOAD
     );
     var modelParams = new LlamaModelParams(arena);
-    var model = new LlamaModel(arena, modelPath, modelParams);
+    var model = track(new LlamaModel(arena, modelPath, modelParams));
 
     var template = new LlamaTemplate(model);
     String templateString = template.templateString();

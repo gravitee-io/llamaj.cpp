@@ -90,6 +90,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    track(model);
     if (allowLoraAdapter) {
       model.initLoraAdapter(
         arena,
@@ -116,6 +117,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
       .mirostat(SEED, 3, 0.1f)
       .grammar(vocab, ENGLISH_GRAMMAR, "root")
       .penalties(10, 1.2f, 0.3f, 0.0f);
+    track(sampler);
 
     var prompt = getPrompt(
       model,
@@ -125,6 +127,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
     );
 
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var tokenizer = new LlamaTokenizer(vocab, context);
 
     var state = ConversationState.create(arena, context, tokenizer, sampler)

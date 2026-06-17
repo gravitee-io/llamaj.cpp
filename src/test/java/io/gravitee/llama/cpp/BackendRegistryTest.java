@@ -52,7 +52,7 @@ import org.junit.jupiter.api.TestMethodOrder;
  * @author GraviteeSource Team
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class BackendRegistryTest {
+class BackendRegistryTest extends LlamaCppTest {
 
   private static final String RPC_HOST = "127.0.0.1";
   private static final int RPC_PORT = 50099; // Use a non-standard port to avoid conflicts
@@ -228,11 +228,14 @@ class BackendRegistryTest {
     modelParams.devices(arena, rpcDevices);
 
     var model = new LlamaModel(arena, modelPath, modelParams);
+    track(model);
     var contextParams = new LlamaContextParams(arena).noPerf(false);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
 
     var prompt = getPrompt(
       model,

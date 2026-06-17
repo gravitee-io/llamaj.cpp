@@ -61,7 +61,16 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
       );
     }
 
-    if (checkContextSize(batch) && batch.decode(context) != 0) {
+    if (!checkContextSize(batch)) {
+      // Context is full: decoding another token is impossible. Stop here,
+      // otherwise we would skip the decode and keep re-sampling stale logits
+      // in an infinite loop.
+      setFinishReason(FinishReason.LENGTH);
+      batch.free();
+      return false;
+    }
+
+    if (batch.decode(context) != 0) {
       setFinishReason(FinishReason.STOP);
       batch.free();
       return false;
