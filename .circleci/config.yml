@@ -77,6 +77,9 @@ commands:
       - run:
           name: Install Maven
           command: |
+            # `brew update` first: a stale bottle cache otherwise crashes the
+            # pour with `undefined method '[]' for nil` in Utils::Bottles.load_tab.
+            brew update
             brew install maven
             source ~/.zprofile
 
