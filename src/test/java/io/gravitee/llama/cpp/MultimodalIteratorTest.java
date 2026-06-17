@@ -80,6 +80,7 @@ class MultimodalIteratorTest extends LlamaCppTest {
       mainModelAbsolutePath,
       modelParameters
     );
+    track(llamaModel);
 
     // 2. Setup MtmdContextParams and MtmdContext for multi-modal processing
     var mtmdContextParams = new MtmdContextParams(arena)
@@ -108,10 +109,12 @@ class MultimodalIteratorTest extends LlamaCppTest {
       mmprojModelAbsolutePath.toAbsolutePath(),
       mtmdContextParams
     );
+    track(mtmdContext);
 
     // 3. Create a regular LlamaContext for model inference
     var llamaContextParams = new LlamaContextParams(arena).noPerf(false);
     var llamaContext = new LlamaContext(arena, llamaModel, llamaContextParams);
+    track(llamaContext);
 
     // 4. Load the image
     Path imagePath = Path.of(
@@ -123,6 +126,7 @@ class MultimodalIteratorTest extends LlamaCppTest {
     var vocab = new LlamaVocab(llamaModel);
     var tokenizer = new LlamaTokenizer(vocab, llamaContext);
     var sampler = new LlamaSampler(arena).greedy().seed(42);
+    track(sampler);
 
     String promptText = "USER: What is in this image?\n<IMG>\nASSISTANT:";
     var state = ConversationState.create(
@@ -132,6 +136,7 @@ class MultimodalIteratorTest extends LlamaCppTest {
       sampler
     )
       .initialize(promptText)
+      .setMaxTokens(256)
       .setImages(List.of(mtmdImage));
 
     // 6. Instantiate DefaultLlamaIterator with MtmdContext
@@ -256,6 +261,7 @@ class MultimodalIteratorTest extends LlamaCppTest {
       mainModelAbsolutePath,
       modelParameters
     );
+    track(llamaModel);
 
     // 2. Setup MtmdContextParams and MtmdContext for audio processing
     var mtmdContextParams = new MtmdContextParams(arena)
@@ -285,10 +291,12 @@ class MultimodalIteratorTest extends LlamaCppTest {
       mmprojModelAbsolutePath.toAbsolutePath(),
       mtmdContextParams
     );
+    track(mtmdContext);
 
     // 3. Create a regular LlamaContext for model inference
     var llamaContextParams = new LlamaContextParams(arena).noPerf(false);
     var llamaContext = new LlamaContext(arena, llamaModel, llamaContextParams);
+    track(llamaContext);
 
     // 4. Load audio file
     Path audioPath = Path.of(
@@ -308,6 +316,7 @@ class MultimodalIteratorTest extends LlamaCppTest {
     var vocab = new LlamaVocab(llamaModel);
     var tokenizer = new LlamaTokenizer(vocab, llamaContext);
     var sampler = new LlamaSampler(arena).greedy().seed(42);
+    track(sampler);
 
     // Use the model's chat template with the default media marker
     String mediaMarker = mtmdContextParams.mediaMarker();
@@ -336,6 +345,7 @@ class MultimodalIteratorTest extends LlamaCppTest {
       sampler
     )
       .initialize(promptText)
+      .setMaxTokens(256)
       .setMedia(List.of(mtmdAudio));
 
     // 6. Instantiate DefaultLlamaIterator with MtmdContext and audio

@@ -58,11 +58,14 @@ class LogprobsLlamaIteratorTest extends LlamaCppTest {
       getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD),
       new LlamaModelParams(arena)
     );
+    track(model);
     var contextParams = new LlamaContextParams(arena).noPerf(false);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
     var prompt = getPrompt(
       model,
       arena,
@@ -99,11 +102,14 @@ class LogprobsLlamaIteratorTest extends LlamaCppTest {
       getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD),
       new LlamaModelParams(arena)
     );
+    track(model);
     var contextParams = new LlamaContextParams(arena).noPerf(false);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
     var prompt = getPrompt(
       model,
       arena,
@@ -180,11 +186,14 @@ class LogprobsLlamaIteratorTest extends LlamaCppTest {
       getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD),
       new LlamaModelParams(arena)
     );
+    track(model);
     var contextParams = new LlamaContextParams(arena).noPerf(false);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(42);
+    track(sampler);
     var prompt = getPrompt(
       model,
       arena,

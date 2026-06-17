@@ -64,15 +64,18 @@ class BatchProcessorTest extends LlamaCppTest {
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    track(model);
     var contextParams = new LlamaContextParams(arena)
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(4) // Support up to 4 parallel sequences
       .noPerf(false);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
 
     // Create 3 different conversations
     String[] prompts = {
@@ -168,14 +171,17 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    track(model);
     var contextParams = new LlamaContextParams(arena)
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(4);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
 
     String[] prompts = {
       getPrompt(
@@ -237,14 +243,17 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    track(model);
     var contextParams = new LlamaContextParams(arena)
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(2);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
 
     var prompt = getPrompt(
       model,
@@ -283,14 +292,17 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    track(model);
     var contextParams = new LlamaContextParams(arena)
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(2);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
 
     var prompt = getPrompt(
       model,
@@ -331,16 +343,20 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    track(model);
     var contextParams = new LlamaContextParams(arena)
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(2);
     var context1 = new LlamaContext(arena, model, contextParams);
+    track(context1);
     var context2 = new LlamaContext(arena, model, contextParams);
+    track(context2);
     var vocab = new LlamaVocab(model);
     var tokenizer1 = new LlamaTokenizer(vocab, context1);
     var tokenizer2 = new LlamaTokenizer(vocab, context2);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
 
     var prompt = getPrompt(
       model,
@@ -384,14 +400,17 @@ class BatchProcessorTest extends LlamaCppTest {
     var modelParameters = new LlamaModelParams(arena);
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    track(model);
     var contextParams = new LlamaContextParams(arena)
       .nCtx(2048)
       .nBatch(512)
       .nSeqMax(2);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
 
     var prompt = getPrompt(
       model,

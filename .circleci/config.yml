@@ -77,6 +77,9 @@ commands:
       - run:
           name: Install Maven
           command: |
+            # `brew update` first: a stale bottle cache otherwise crashes the
+            # pour with `undefined method '[]' for nil` in Utils::Bottles.load_tab.
+            brew update
             brew install maven
             source ~/.zprofile
 
@@ -368,7 +371,7 @@ jobs:
       - install-java-macos
       - install-maven-macos
       - get_llama_cpp:
-          "llama-cpp-version": b9028
+          "llama-cpp-version": b9673
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
       - download_models:
@@ -420,7 +423,7 @@ jobs:
       - install_java_dependencies
       - install_dependencies_jextract
       - get_llama_cpp:
-          "llama-cpp-version": b9028
+          "llama-cpp-version": b9673
       - checkout:
           path: "/home/circleci/llamaj.cpp"
       - download_models:
@@ -470,7 +473,7 @@ jobs:
       - install-java-macos
       - install-maven-macos
       - get_llama_cpp:
-          "llama-cpp-version": b9028
+          "llama-cpp-version": b9673
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
       - generate_sources:
@@ -486,7 +489,7 @@ jobs:
       - install_java_dependencies
       - install_dependencies_jextract
       - get_llama_cpp:
-          "llama-cpp-version": b9028
+          "llama-cpp-version": b9673
       - checkout:
           path: "/home/circleci/llamaj.cpp"
       - generate_sources:

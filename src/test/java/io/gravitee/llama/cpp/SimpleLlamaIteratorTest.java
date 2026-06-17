@@ -85,6 +85,7 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
     Path absolutePath = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
 
     var model = new LlamaModel(arena, absolutePath, modelParameters);
+    track(model);
     if (allowLoraAdapter) {
       model.initLoraAdapter(
         arena,
@@ -94,9 +95,11 @@ class SimpleLlamaIteratorTest extends LlamaCppTest {
 
     var contextParams = new LlamaContextParams(arena).noPerf(false);
     var context = new LlamaContext(arena, model, contextParams);
+    track(context);
     var vocab = new LlamaVocab(model);
     var tokenizer = new LlamaTokenizer(vocab, context);
     var sampler = new LlamaSampler(arena).seed(new Random().nextInt());
+    track(sampler);
     var prompt = getPrompt(
       model,
       arena,

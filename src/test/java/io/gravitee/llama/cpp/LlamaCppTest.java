@@ -22,13 +22,55 @@ import java.lang.foreign.Arena;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
 abstract class LlamaCppTest {
+
+  /**
+   * Native resources created during a test, freed after it in reverse order.
+   * <p>
+   * Every Metal buffer must be released before the JVM exits, otherwise
+   * llama.cpp's per-process Metal device aborts from a static destructor
+   * ({@code GGML_ASSERT([rsets->data count] == 0)}, ggml-org/llama.cpp#24368).
+   * Wrap native handles in {@link #track(Freeable)} so they are freed even when
+   * a test fails or returns early.
+   */
+  private final Deque<Freeable> trackedResources = new ArrayDeque<>();
+
+  /**
+   * Registers a native resource for automatic teardown and returns it, so it
+   * can be used inline: {@code var model = track(new LlamaModel(...));}.
+   */
+  protected <T extends Freeable> T track(T resource) {
+    trackedResources.push(resource);
+    return resource;
+  }
+
+  @AfterEach
+  void freeTrackedResources() {
+    while (!trackedResources.isEmpty()) {
+      Freeable resource = trackedResources.pop();
+      try {
+        if (resource instanceof MemorySegmentAware aware && !aware.isFreed()) {
+          resource.free();
+        }
+      } catch (RuntimeException e) {
+        System.err.println(
+          "Teardown: failed to free " +
+            resource.getClass().getSimpleName() +
+            ": " +
+            e.getMessage()
+        );
+      }
+    }
+  }
 
   static final String MODEL_TO_DOWNLOAD =
     "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf";

@@ -77,6 +77,7 @@ class MultimodalBatchTest extends LlamaCppTest {
       mainModelAbsolutePath,
       modelParameters
     );
+    track(llamaModel);
 
     // 2. Setup MtmdContextParams and MtmdContext for multi-modal processing
     var mtmdContextParams = new MtmdContextParams(arena)
@@ -104,6 +105,7 @@ class MultimodalBatchTest extends LlamaCppTest {
       mmprojModelAbsolutePath.toAbsolutePath(),
       mtmdContextParams
     );
+    track(mtmdContext);
 
     // 3. Create a regular LlamaContext for model inference
     var llamaContextParams = new LlamaContextParams(arena)
@@ -112,6 +114,7 @@ class MultimodalBatchTest extends LlamaCppTest {
       .nBatch(8192)
       .nSeqMax(3);
     var llamaContext = new LlamaContext(arena, llamaModel, llamaContextParams);
+    track(llamaContext);
 
     // 4. Load the image
     Path imagePath = Path.of(
@@ -167,8 +170,11 @@ class MultimodalBatchTest extends LlamaCppTest {
 
     // Create separate samplers for each state - samplers are stateful and must not be shared
     var sampler1 = new LlamaSampler(arena).greedy().seed(42);
+    track(sampler1);
     var sampler2 = new LlamaSampler(arena).greedy().seed(42);
+    track(sampler2);
     var sampler3 = new LlamaSampler(arena).greedy().seed(42);
+    track(sampler3);
 
     // Create three conversation states with unique sequence IDs
     var state1 = ConversationState.create(
@@ -298,6 +304,7 @@ class MultimodalBatchTest extends LlamaCppTest {
       mainModelAbsolutePath,
       modelParameters
     );
+    track(llamaModel);
 
     // 2. Setup MtmdContextParams and MtmdContext for audio processing
     var mtmdContextParams = new MtmdContextParams(arena)
@@ -327,6 +334,7 @@ class MultimodalBatchTest extends LlamaCppTest {
       mmprojModelAbsolutePath.toAbsolutePath(),
       mtmdContextParams
     );
+    track(mtmdContext);
 
     // 3. Create a regular LlamaContext for model inference
     var llamaContextParams = new LlamaContextParams(arena)
@@ -335,6 +343,7 @@ class MultimodalBatchTest extends LlamaCppTest {
       .nBatch(8192)
       .nSeqMax(2);
     var llamaContext = new LlamaContext(arena, llamaModel, llamaContextParams);
+    track(llamaContext);
 
     // 4. Load audio file
     Path audioPath = Path.of(
@@ -387,7 +396,9 @@ class MultimodalBatchTest extends LlamaCppTest {
 
     // Create separate samplers for each state - samplers are stateful and must not be shared
     var audioSampler1 = new LlamaSampler(arena).greedy().seed(42);
+    track(audioSampler1);
     var audioSampler2 = new LlamaSampler(arena).greedy().seed(42);
+    track(audioSampler2);
 
     // Create two conversation states with audio
     var state1 = ConversationState.create(
