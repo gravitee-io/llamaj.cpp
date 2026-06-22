@@ -21,6 +21,7 @@ import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_bos;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_eos;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_get_text;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_is_eog;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_mask;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
@@ -39,6 +40,14 @@ public final class LlamaVocab extends MemorySegmentAware {
 
   public boolean isEog(int tokenId) {
     return llama_vocab_is_eog(this.segment, tokenId);
+  }
+
+  /**
+   * Returns the mask token id used by diffusion models to mark positions still to be
+   * generated, or {@code -1} if the model defines none.
+   */
+  public int maskToken() {
+    return llama_vocab_mask(this.segment);
   }
 
   /**

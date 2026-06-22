@@ -1200,6 +1200,34 @@ public final class LlamaRuntime {
     );
   }
 
+  /**
+   * Returns {@code true} if the model is diffusion-based (e.g. LLaDA, Dream),
+   * meaning text is produced by iterative denoising of a masked sequence rather than
+   * autoregressive token-by-token decoding.
+   *
+   * @param model The model segment
+   * @return {@code true} for diffusion models, {@code false} otherwise
+   */
+  public static boolean llama_model_is_diffusion(MemorySegment model) {
+    return llama_h(
+      "llama_model_is_diffusion",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  /**
+   * Returns the mask token id for the vocabulary, or {@code LLAMA_TOKEN_NULL} ({@code -1})
+   * if the model defines none. Diffusion models use this token to mark positions that are
+   * still to be generated.
+   *
+   * @param vocab The vocab segment
+   * @return The mask token id, or {@code -1} if undefined
+   */
+  public static int llama_vocab_mask(MemorySegment vocab) {
+    return llama_h("llama_vocab_mask", new Class<?>[] { MEM_SEG_CLASS }, vocab);
+  }
+
   public static boolean llama_vocab_is_eog(MemorySegment vocab, int tokenId) {
     return llama_h(
       "llama_vocab_is_eog",
@@ -1268,6 +1296,31 @@ public final class LlamaRuntime {
       sampler,
       context,
       idx
+    );
+  }
+
+  /**
+   * Applies the sampler chain in-place to a caller-owned {@code llama_token_data_array}.
+   * Unlike {@link #llama_sampler_sample}, which reads the context's logits and returns only
+   * a token id, this lets the caller build a candidates array from arbitrary logits and read
+   * back both the selected index and the per-token probabilities after the chain runs.
+   * <p>
+   * Used by diffusion decoding, which samples each masked position from its own logit row and
+   * needs the resulting confidence ({@code p} of the selected token) to decide which positions
+   * to unmask.
+   *
+   * @param sampler The sampler chain segment
+   * @param curP    A {@code llama_token_data_array} segment, mutated in place
+   */
+  public static void llama_sampler_apply(
+    MemorySegment sampler,
+    MemorySegment curP
+  ) {
+    llama_h(
+      "llama_sampler_apply",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      sampler,
+      curP
     );
   }
 
@@ -1608,6 +1661,21 @@ public final class LlamaRuntime {
   }
 
   /* Logits */
+
+  /**
+   * Returns a pointer to the full logits buffer for the last decoded batch.
+   * The returned MemorySegment points to {@code n_outputs * n_vocab} floats laid out
+   * row-major (one {@code n_vocab}-sized row per output token), in native memory.
+   * <p>
+   * Used by diffusion decoding, where every position in the batch requests logits
+   * ({@code logits=true}) and all rows are read in a single pass.
+   *
+   * @param ctx The llama context
+   * @return A MemorySegment over the logits buffer, or NULL on error
+   */
+  public static MemorySegment llama_get_logits(MemorySegment ctx) {
+    return llama_h("llama_get_logits", new Class<?>[] { MEM_SEG_CLASS }, ctx);
+  }
 
   /**
    * Returns the logit vector for the i-th output token in the last decoded batch.

@@ -22,6 +22,8 @@ import static java.util.Optional.ofNullable;
 
 import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
 import java.lang.foreign.Arena;
+import java.lang.foreign.ValueLayout;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -30,6 +32,32 @@ import java.util.regex.Pattern;
 public class Main {
 
   public static final Arena ARENA = Arena.ofAuto();
+
+  // ANSI escape codes for styling output (disabled with --no_color or when not a TTY).
+  private static final String ANSI_RESET = "\033[0m";
+  private static final String ANSI_DIM = "\033[2m";
+  private static final String ANSI_BOLD = "\033[1m";
+  private static final String ANSI_CYAN = "\033[36m";
+  private static final String ANSI_GREEN = "\033[32m";
+  private static final String ANSI_YELLOW = "\033[33m";
+  private static final String ANSI_BLUE = "\033[34m";
+
+  private static boolean useColor = true;
+
+  private static String style(String code, String text) {
+    return useColor ? code + text + ANSI_RESET : text;
+  }
+
+  private static String styleFor(GenerationState state) {
+    if (state == null || !useColor) {
+      return "";
+    }
+    return switch (state) {
+      case REASONING -> ANSI_DIM;
+      case TOOLS -> ANSI_CYAN;
+      case ANSWER -> ANSI_RESET;
+    };
+  }
 
   public enum SamplingStrategy {
     DETERMINISTIC,
@@ -79,6 +107,14 @@ public class Main {
 
   public static void main(String[] args) {
     Map<String, String> params = parseArgs(args);
+
+    if (params.containsKey("help") || params.containsKey("h")) {
+      printUsage();
+      System.exit(0);
+    }
+
+    // Colour by default on a real terminal; honour an explicit --no_color opt-out.
+    useColor = !params.containsKey("no_color") && System.console() != null;
 
     String modelGguf = params.get("model");
     String lora = params.get("lora");
@@ -181,10 +217,8 @@ public class Main {
       ggml_backend_load_all_from_path(ARENA, libPath);
     }
 
-    System.out.println("****************************");
-    System.out.println("Libraries loaded at: " + libPath);
+    printBanner(modelGguf, params, nCtx, nBatch, libPath, useRpc);
     BackendRegistry.printSummary();
-    System.out.println("****************************");
 
     var logger = new LlamaLogger(ARENA);
     logger.setLogging(logLevel);
@@ -214,12 +248,34 @@ public class Main {
     ofNullable(lora).ifPresent(path ->
       model.initLoraAdapter(ARENA, Path.of(path).toAbsolutePath())
     );
+    System.out.println(style(ANSI_GREEN, "[OK]") + " Model loaded.");
 
     var vocab = new LlamaVocab(model);
+
+    // Diffusion models (LLaDA, Dream, ...) generate by denoising a fixed-length canvas,
+    // decoded whole in one (u)batch per step — so the context must fit the canvas.
+    boolean diffusion = model.isDiffusion();
+    int diffusionSteps = parseInt(params.getOrDefault("diffusion_steps", "32"));
+    int diffusionLength = parseInt(
+      params.getOrDefault("diffusion_length", "128")
+    );
+    // null => auto-resolve shift_logits from the model; true/false forces it.
+    Boolean diffusionShiftLogits = params.containsKey("diffusion_shift_logits")
+      ? parseBoolean(params.get("diffusion_shift_logits"))
+      : null;
+    // >0 enables semi-autoregressive block decoding (faster: only the active block is
+    // decoded each step); 0 uses whole-canvas timestep denoising.
+    int diffusionBlockLength = parseInt(
+      params.getOrDefault("diffusion_block_length", "32")
+    );
+
     var contextParams = new LlamaContextParams(ARENA)
-      .nCtx(nCtx)
-      .nBatch(nBatch)
+      .nCtx(diffusion ? Math.max(nCtx, diffusionLength) : nCtx)
+      .nBatch(diffusion ? Math.max(nBatch, diffusionLength) : nBatch)
       .noPerf(!showPerf);
+    if (diffusion) {
+      contextParams.nUBatch(Math.max(nBatch, diffusionLength));
+    }
 
     // Multimodal context initialization
     MtmdContext mtmdContext = null;
@@ -246,6 +302,20 @@ public class Main {
     );
     LlamaContext context = new LlamaContext(ARENA, model, contextParams);
     LlamaSampler sampler = llamaSampler(strategy, context, vocab, params);
+    System.out.println(
+      style(ANSI_GREEN, "[OK]") +
+        " Context ready (strategy: " +
+        strategy.name().toLowerCase() +
+        ", n_ctx: " +
+        nCtx +
+        ")."
+    );
+    if (mtmdContext != null) {
+      System.out.println(
+        style(ANSI_GREEN, "[OK]") + " Multimodal projector loaded."
+      );
+    }
+    System.out.println(style(ANSI_DIM, "Type your prompt, or 'bye' to exit."));
 
     List<LlamaChatMessage> messages = new ArrayList<>();
     messages.add(new LlamaChatMessage(ARENA, Role.SYSTEM, systemMessage));
@@ -288,16 +358,44 @@ public class Main {
       }
     }
 
+    Scanner scanIn = new Scanner(System.in);
     while (!input.trim().equals("bye")) {
-      Scanner scanIn = new Scanner(System.in);
-      System.out.print("Please enter your prompt: ");
+      System.out.print(style(ANSI_BOLD + ANSI_BLUE, "\nyou ▸ "));
+      if (!scanIn.hasNextLine()) {
+        break;
+      }
       input = scanIn.nextLine();
 
-      if (input.isBlank()) {
+      if (input.isBlank() || input.trim().equals("bye")) {
         break;
       }
 
       messages.add(new LlamaChatMessage(ARENA, Role.USER, input));
+
+      // Diffusion models use a separate denoising loop with a live canvas visualiser.
+      if (diffusion) {
+        String diffAnswer = diffusionTurn(
+          model,
+          context,
+          vocab,
+          tokenizer,
+          contextParams,
+          messageTrimmer.trimMessages(messages),
+          diffusionSteps,
+          diffusionLength,
+          diffusionBlockLength,
+          diffusionShiftLogits,
+          useColor
+        );
+        messages.add(new LlamaChatMessage(ARENA, Role.ASSISTANT, diffAnswer));
+        context.clearCache();
+        // Print the clean answer after the live animation (which only showed the canvas).
+        System.out.println();
+        System.out.println(
+          style(ANSI_BOLD + ANSI_GREEN, "bot ▸ ") + diffAnswer.strip()
+        );
+        continue;
+      }
 
       String prompt = buildPrompt(
         model,
@@ -323,13 +421,27 @@ public class Main {
       // Create iterator with state
       var iterator = new DefaultLlamaIterator(state, mtmdContext);
 
-      // Filter reasoning tags from display, but keep tool tags visible
-      var answer = iterator
+      System.out.print(style(ANSI_BOLD + ANSI_GREEN, "bot ▸ "));
+
+      // Stream tokens, colouring each by the conversation's current generation state
+      // (dim for reasoning, cyan for tool calls, normal for the answer).
+      var answer = new StringBuilder();
+      iterator
         .stream()
-        .map(LlamaOutput::content)
-        .peek(System.out::print)
-        .reduce((a, b) -> a + b)
-        .orElse("");
+        .forEach(output -> {
+          String content = output.content();
+          if (content.isEmpty()) {
+            return;
+          }
+          System.out.print(styleFor(state.getGenerationState()) + content);
+          answer.append(content);
+        });
+      if (useColor) {
+        System.out.print(ANSI_RESET);
+      }
+      System.out.println();
+
+      printTokenBreakdown(state, reasoningTags, toolTags);
 
       if (LlamaLogLevel.DEBUG.equals(logLevel)) {
         if (reasoningTags.isConfigured()) {
@@ -376,7 +488,9 @@ public class Main {
         System.out.println("===================");
       }
 
-      messages.add(new LlamaChatMessage(ARENA, Role.ASSISTANT, answer));
+      messages.add(
+        new LlamaChatMessage(ARENA, Role.ASSISTANT, answer.toString())
+      );
       messages = messageTrimmer.trimMessages(messages);
 
       context.clearCache();
@@ -472,6 +586,101 @@ public class Main {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  // ── Diffusion turn (denoising with live visualisation) ──────────────
+
+  private static String diffusionTurn(
+    LlamaModel model,
+    LlamaContext context,
+    LlamaVocab vocab,
+    LlamaTokenizer tokenizer,
+    LlamaContextParams contextParams,
+    List<LlamaChatMessage> messages,
+    int steps,
+    int length,
+    int blockLength,
+    Boolean shiftLogits,
+    boolean color
+  ) {
+    String prompt = buildPrompt(model, messages, contextParams);
+    int[] promptTokens = tokenIds(tokenizer.tokenize(ARENA, prompt));
+
+    int maxLength = Math.min(length, contextParams.nCtx());
+    if (maxLength <= promptTokens.length) {
+      System.err.println(
+        "Prompt (" +
+          promptTokens.length +
+          " tokens) is too long for --diffusion_length " +
+          length +
+          "; increase it."
+      );
+      return "";
+    }
+
+    var params = new DiffusionParams()
+      .maxLength(maxLength)
+      .steps(steps)
+      .shiftLogits(shiftLogits);
+
+    // Enable block decoding when a valid block length is given; the block count must divide
+    // both the canvas and the step budget, else fall back to whole-canvas timestep mode.
+    if (
+      blockLength > 0 &&
+      maxLength % blockLength == 0 &&
+      steps % (maxLength / blockLength) == 0
+    ) {
+      params
+        .schedule(DiffusionTransferSchedule.BLOCK_BASED)
+        .blockLength(blockLength);
+    } else if (blockLength > 0) {
+      System.err.println(
+        "Ignoring --diffusion_block_length " +
+          blockLength +
+          ": it must divide diffusion_length (" +
+          maxLength +
+          ") and the block count must divide --diffusion_steps (" +
+          steps +
+          "). Using timestep schedule."
+      );
+    }
+
+    var visualizer = new DiffusionVisualizer(
+      vocab,
+      vocab.maskToken(),
+      promptTokens.length,
+      "·",
+      color
+    );
+    int[] output = new DiffusionGenerator(context).generate(
+      promptTokens,
+      params,
+      visualizer
+    );
+
+    // The answer is the generated region after the prompt, up to the first end-of-generation
+    // token (the rest is padding), skipping any still-masked tail left by early-stop.
+    int maskToken = vocab.maskToken();
+    var sb = new StringBuilder();
+    for (int i = promptTokens.length; i < output.length; i++) {
+      int token = output[i];
+      if (vocab.isEog(token)) {
+        break; // answer terminates at the first EOS
+      }
+      if (token == maskToken) {
+        continue; // skip un-denoised positions (e.g. the tail after early-stop)
+      }
+      sb.append(new String(vocab.tokenToPiece(token), StandardCharsets.UTF_8));
+    }
+    return sb.toString();
+  }
+
+  private static int[] tokenIds(LlamaTokenizer.TokenizerResponse response) {
+    int[] ids = new int[response.size()];
+    for (int i = 0; i < response.size(); i++) {
+      ids[i] = response.data().getAtIndex(ValueLayout.JAVA_INT, i);
+    }
+    return ids;
   }
 
   private static String buildPrompt(
@@ -604,6 +813,55 @@ public class Main {
     }
   }
 
+  // ── Banner & token breakdown ────────────────────────────────────────
+
+  private static void printBanner(
+    String model,
+    Map<String, String> params,
+    int nCtx,
+    int nBatch,
+    String libPath,
+    boolean useRpc
+  ) {
+    System.out.println();
+    System.out.println(style(ANSI_BOLD + ANSI_CYAN, "  llamaj.cpp"));
+    System.out.printf("  %-9s %s%n", "model", model);
+    System.out.printf(
+      "  %-9s %s%n",
+      "strategy",
+      SamplingStrategy.fromString(params.get("strategy")).name().toLowerCase()
+    );
+    System.out.printf("  %-9s n_ctx=%d  n_batch=%d%n", "context", nCtx, nBatch);
+    if (params.get("mmproj") != null) {
+      System.out.printf("  %-9s %s%n", "mmproj", params.get("mmproj"));
+    }
+    if (useRpc) {
+      System.out.printf("  %-9s %s%n", "rpc", params.get("rpc"));
+    }
+    System.out.printf("  %-9s %s%n", "lib", libPath);
+    System.out.println();
+  }
+
+  private static void printTokenBreakdown(
+    ConversationState state,
+    TagConfig reasoningTags,
+    TagConfig toolTags
+  ) {
+    var sb = new StringBuilder("  [tokens]");
+    sb.append(" prompt=").append(state.getInputTokens());
+    sb.append(" answer=").append(state.getAnswerTokens());
+    if (reasoningTags.isConfigured()) {
+      sb.append(" reasoning=").append(state.getReasoningTokens());
+    }
+    if (toolTags.isConfigured()) {
+      sb.append(" tools=").append(state.getToolsTokens());
+    }
+    if (state.getFinishReason() != null) {
+      sb.append(" finish=").append(state.getFinishReason());
+    }
+    System.out.println(style(ANSI_YELLOW, sb.toString()));
+  }
+
   private static void printUsage() {
     System.err.println(
       """
@@ -644,6 +902,25 @@ public class Main {
 
       Logging:
         --log_level <LEVEL>         Log level: TRACE, DEBUG, INFO, WARN, ERROR (default: ERROR)
+
+      Diffusion (auto-detected for LLaDA / Dream models):
+        --diffusion_steps <int>     Denoising steps (default: 32; more = better, slower)
+        --diffusion_length <int>    Canvas length incl. prompt (default: 128)
+                                    Cost is ~steps*length per reply regardless of answer
+                                    length, so keep this near your expected output size.
+                                    The canvas is rendered live each step.
+        --diffusion_block_length <int>
+                                    Semi-autoregressive block size (default: 32; 0 disables).
+                                    >0 decodes only the active block each step (faster) and
+                                    must divide diffusion_length; the block count must divide
+                                    diffusion_steps, else it falls back to timestep mode.
+        --diffusion_shift_logits <bool>
+                                    Force shift_logits (Dream=true, LLaDA=false).
+                                    Omit to auto-detect from the model metadata/architecture.
+
+      Display:
+        --no_color                  Disable ANSI colour output (auto-disabled when not a TTY)
+        --help, -h                  Show this help and exit
 
       Performance:
         --perf <true|false>         Show performance metrics (default: false)

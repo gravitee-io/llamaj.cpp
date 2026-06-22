@@ -176,6 +176,18 @@ public final class LlamaModel extends MemorySegmentAware implements Freeable {
     return LlamaRuntime.llama_model_desc(arena, segment);
   }
 
+  /**
+   * Returns {@code true} if this is a diffusion-based model (e.g. LLaDA, Dream)
+   * that generates text by iterative denoising rather than autoregressive
+   * decoding. Use {@link DiffusionGenerator} to run such models.
+   *
+   * @return {@code true} for diffusion models, {@code false} otherwise
+   */
+  public boolean isDiffusion() {
+    checkNotFreed();
+    return LlamaRuntime.llama_model_is_diffusion(segment);
+  }
+
   @Override
   public void free() {
     checkNotFreed();
