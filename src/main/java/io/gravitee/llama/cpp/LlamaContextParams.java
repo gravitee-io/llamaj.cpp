@@ -110,6 +110,33 @@ public final class LlamaContextParams extends MemorySegmentAware {
     return this;
   }
 
+  /**
+   * KV cache data type for the K cache (default {@link GgmlType#F16}). Quantizing (e.g.
+   * {@link GgmlType#Q8_0}) reduces KV memory.
+   */
+  public GgmlType typeK() {
+    return GgmlType.fromNative(type_k(this.segment));
+  }
+
+  public LlamaContextParams typeK(GgmlType typeK) {
+    type_k(this.segment, typeK.nativeValue());
+    return this;
+  }
+
+  /**
+   * KV cache data type for the V cache (default {@link GgmlType#F16}). A quantized V cache
+   * requires flash attention to be enabled (see {@link #flashAttnType}); creating a
+   * {@link LlamaContext} without it will fail.
+   */
+  public GgmlType typeV() {
+    return GgmlType.fromNative(type_v(this.segment));
+  }
+
+  public LlamaContextParams typeV(GgmlType typeV) {
+    type_v(this.segment, typeV.nativeValue());
+    return this;
+  }
+
   public boolean embeddings() {
     return LlamaRuntime.embeddings(this.segment);
   }

@@ -55,6 +55,9 @@ class LlamaContextParamsTest extends LlamaCppTest {
       assertThat(contextParams.offloadKQV()).isTrue();
       assertThat(contextParams.flashAttnType()).isEqualTo(AUTO);
       assertThat(contextParams.noPerf()).isTrue();
+      // KV cache defaults to F16.
+      assertThat(contextParams.typeK()).isEqualTo(GgmlType.F16);
+      assertThat(contextParams.typeV()).isEqualTo(GgmlType.F16);
     }
   }
 
@@ -73,7 +76,9 @@ class LlamaContextParamsTest extends LlamaCppTest {
         .embeddings(true)
         .offloadKQV(false)
         .flashAttnType(FlashAttentionType.ENABLED)
-        .noPerf(true);
+        .noPerf(true)
+        .typeK(GgmlType.Q8_0)
+        .typeV(GgmlType.Q4_0);
 
       assertThat(contextParams.nCtx()).isEqualTo(99);
       assertThat(contextParams.nBatch()).isEqualTo(42);
@@ -87,6 +92,8 @@ class LlamaContextParamsTest extends LlamaCppTest {
       assertThat(contextParams.offloadKQV()).isFalse();
       assertThat(contextParams.flashAttnType()).isEqualTo(ENABLED);
       assertThat(contextParams.noPerf()).isTrue();
+      assertThat(contextParams.typeK()).isEqualTo(GgmlType.Q8_0);
+      assertThat(contextParams.typeV()).isEqualTo(GgmlType.Q4_0);
     }
   }
 }
