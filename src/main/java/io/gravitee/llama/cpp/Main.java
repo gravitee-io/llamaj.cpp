@@ -265,7 +265,31 @@ public class Main {
     SamplingStrategy strategy = SamplingStrategy.fromString(
       params.get("strategy")
     );
+
+    // Speculative decoding (optional): validate up front so we fail before loading a draft model.
+    SpeculativeConfig speculativeConfig = speculativeConfig(strategy, params);
+    if (speculativeConfig != null && mmprojGguf != null) {
+      System.err.println(
+        "Error: speculative decoding is not supported together with multimodal (--mmproj)."
+      );
+      System.exit(1);
+    }
+
     LlamaContext context = new LlamaContext(ARENA, model, contextParams);
+
+    // Optional draft model + context for model drafting. setDraft() enforces a shared vocab size.
+    LlamaModel draftModel = null;
+    LlamaContext draftContext = null;
+    String draftGguf = params.get("draft");
+    if (draftGguf != null && !draftGguf.isBlank()) {
+      draftModel = new LlamaModel(
+        ARENA,
+        Path.of(draftGguf).toAbsolutePath(),
+        modelParameters
+      );
+      draftContext = new LlamaContext(ARENA, draftModel, contextParams);
+    }
+
     LlamaSampler sampler = llamaSampler(strategy, context, vocab, params);
 
     List<LlamaChatMessage> messages = new ArrayList<>();
@@ -331,6 +355,16 @@ public class Main {
         .setMaxTokens(quota)
         .setMedia(initialMedia); // Set initial media (images and/or audio)
 
+      // Enable speculation for this turn: model drafting if a draft context exists, else n-gram.
+      // DefaultLlamaIterator dispatches to the speculative path when state.isSpeculative().
+      if (speculativeConfig != null) {
+        if (draftContext != null) {
+          state.setDraft(draftContext, speculativeConfig);
+        } else {
+          state.setNgram(speculativeConfig);
+        }
+      }
+
       if (reasoningTags.isConfigured()) {
         state.setReasoning(reasoningTags.openTag, reasoningTags.closeTag);
       }
@@ -344,13 +378,20 @@ public class Main {
       // Create iterator with state
       var iterator = new DefaultLlamaIterator(state, mtmdContext);
 
-      // Filter reasoning tags from display, but keep tool tags visible
+      // Filter reasoning tags from display, but keep tool tags visible.
+      // Measure generation in wall-clock and sum emitted tokens: under speculative decoding the
+      // native gen-speed counter (single-token n_eval) can't see batch-verified tokens, and the
+      // target context's timers exclude the draft model — so emitted/wall-clock is the honest rate.
+      int[] emitted = { 0 };
+      long genStartNs = System.nanoTime();
       var answer = iterator
         .stream()
+        .peek(o -> emitted[0] += o.numberOfTokens())
         .map(LlamaOutput::content)
         .peek(System.out::print)
         .reduce((a, b) -> a + b)
         .orElse("");
+      double genWallSec = (System.nanoTime() - genStartNs) / 1_000_000_000.0;
 
       if (LlamaLogLevel.DEBUG.equals(logLevel)) {
         if (reasoningTags.isConfigured()) {
@@ -394,6 +435,19 @@ public class Main {
           perf.sampler().sampleCount(),
           perf.averageSamplingTimeMs()
         );
+        if (state.isSpeculative()) {
+          System.out.printf(
+            "Speculative accept rate: %.2f%n",
+            state.acceptRate()
+          );
+        }
+        // Speculation-correct rate: emitted tokens over wall-clock (captures draft + target time).
+        // Compare this line across --draft vs no-draft runs; the native gen-speed above is invalid
+        // under speculation. Includes prompt time, so use a short prompt or large --quota to compare.
+        System.out.printf(
+          "Effective generation: %.2f tokens/sec%n",
+          genWallSec > 0 ? emitted[0] / genWallSec : 0.0
+        );
         System.out.println("===================");
       }
 
@@ -411,7 +465,13 @@ public class Main {
 
     context.free();
     sampler.free();
+    if (draftContext != null) {
+      draftContext.free();
+    }
     model.free();
+    if (draftModel != null) {
+      draftModel.free();
+    }
     if (mtmdContext != null) {
       mtmdContext.free();
     }
@@ -485,6 +545,109 @@ public class Main {
         )
         .seed(seed);
     };
+  }
+
+  /**
+   * Builds the {@link SpeculativeConfig} for the run, or {@code null} when neither {@code --draft}
+   * (model drafting) nor {@code --ngram} (prompt-lookup) is requested. Greedy (lossless) under the
+   * DETERMINISTIC strategy; an exact memoryless sampler (temperature/top-k/top-p) otherwise. Rejects
+   * strategies whose sampler is not memoryless (grammar/mirostat) and the draft+ngram combination.
+   */
+  private static SpeculativeConfig speculativeConfig(
+    SamplingStrategy strategy,
+    Map<String, String> params
+  ) {
+    String draftPath = params.get("draft");
+    boolean modelDraft = draftPath != null && !draftPath.isBlank();
+    boolean ngramDraft = params.containsKey("ngram");
+
+    if (params.containsKey("draft") && !modelDraft) {
+      System.err.println(
+        "Error: --draft requires a path to a draft GGUF model."
+      );
+      System.exit(1);
+    }
+    if (!modelDraft && !ngramDraft) {
+      return null;
+    }
+    if (modelDraft && ngramDraft) {
+      System.err.println(
+        "Error: use either --draft (model drafting) or --ngram (prompt-lookup), not both."
+      );
+      System.exit(1);
+    }
+    if (
+      strategy == SamplingStrategy.CONSTRAINED ||
+      strategy == SamplingStrategy.ADAPTIVE
+    ) {
+      System.err.println(
+        "Error: speculative decoding is incompatible with the " +
+          strategy +
+          " strategy — grammar/mirostat are not memoryless. Use DETERMINISTIC for lossless " +
+          "greedy, or a temperature strategy (CLASSIC_CHAT/FOCUSED/BALANCED) for exact sampling."
+      );
+      System.exit(1);
+    }
+
+    boolean greedy = strategy == SamplingStrategy.DETERMINISTIC;
+    int nDraft = parseSpecInt(params.get("n_draft"), 4);
+
+    if (!greedy) {
+      System.out.println(
+        "Note: speculative draws use only temperature/top-k/top-p — other sampler shaping " +
+          "(penalties, min-p, grammar, mirostat) does not apply during speculation."
+      );
+    }
+
+    float temperature = Float.parseFloat(
+      params.getOrDefault("temperature", "0.7")
+    );
+    int topK = parseInt(params.getOrDefault("top_k", "40"));
+    float topP = Float.parseFloat(params.getOrDefault("top_p", "0.9"));
+    long seed = Long.parseLong(params.getOrDefault("seed", "42"));
+
+    // Adaptive early-stop: draft fewer tokens when draft confidence falls below pMin. Model-draft
+    // only — n-gram has no draft-model confidence to gate on. pMin <= 0 disables it.
+    float pMin = parseSpecFloat(params.get("p_min"), 0.0f);
+    int draftMin = parseSpecInt(params.get("draft_min"), 1);
+    boolean adaptive = pMin > 0.0f;
+
+    if (ngramDraft) {
+      if (adaptive) {
+        System.err.println(
+          "Error: --p_min/--draft_min (adaptive early-stop) apply only to --draft model drafting, not --ngram."
+        );
+        System.exit(1);
+      }
+      int ngram = parseSpecInt(params.get("ngram"), 2);
+      return greedy
+        ? SpeculativeConfig.ngramGreedy(nDraft, ngram)
+        : SpeculativeConfig.ngram(nDraft, ngram, temperature, topK, topP, seed);
+    }
+
+    if (greedy) {
+      return adaptive
+        ? SpeculativeConfig.greedyAdaptive(nDraft, draftMin, pMin)
+        : SpeculativeConfig.greedy(nDraft);
+    }
+    SpeculativeConfig sampling = new SpeculativeConfig(
+      nDraft,
+      temperature,
+      topK,
+      topP,
+      seed
+    );
+    return adaptive ? sampling.withDraftMin(draftMin).withPMin(pMin) : sampling;
+  }
+
+  private static int parseSpecInt(String value, int fallback) {
+    return (value == null || value.isBlank()) ? fallback : parseInt(value);
+  }
+
+  private static float parseSpecFloat(String value, float fallback) {
+    return (value == null || value.isBlank())
+      ? fallback
+      : Float.parseFloat(value);
   }
 
   private static String safeRead(String grammar) {
@@ -669,10 +832,25 @@ public class Main {
                                     instruction: Only keep system message + current user input
 
       Logging:
-        --log_level <LEVEL>         Log level: TRACE, DEBUG, INFO, WARN, ERROR (default: ERROR)
+        --log_level <LEVEL>         Log level: TRACE, DEBUG, INFO, WARN, ERROR (default: INFO)
 
       Performance:
         --perf <true|false>         Show performance metrics (default: false)
+
+      Speculative decoding (optional; draft-->verify-->accept speedup):
+        --draft <path>              Draft model GGUF for model drafting (must share the target's
+                                    vocab). Mutually exclusive with --ngram.
+        --ngram <window>            Enable n-gram prompt-lookup drafting with this window, no draft
+                                    model (default window: 2).
+        --n_draft <int>             Max tokens drafted/proposed per round (default: 4).
+                                    Lossless greedy under --strategy DETERMINISTIC; otherwise an exact
+                                    sampler using temperature/top-k/top-p only (penalties/min-p/grammar/
+                                    mirostat do not apply). Incompatible with CONSTRAINED/ADAPTIVE and --mmproj.
+        --p_min <float>             Adaptive early-stop: stop drafting once the draft's top-token
+                                    probability drops below this (model drafting only; 0 = disabled).
+                                    Distinct from --min_p (which is min-p sampling).
+        --draft_min <int>           Min tokens to draft before --p_min applies (default: 1; clamped to
+                                    [1, n_draft]).
 
       Tag handling:
         --reasoning_tags <open|close>  Reasoning tags to filter from output (default: disabled)
@@ -717,6 +895,9 @@ public class Main {
         java -jar llamaj.cpp.jar --model ./llava.gguf --mmproj ./mmproj.gguf --image ./image.jpg --system "Describe this image."
         java -jar llamaj.cpp.jar --model ./qwen.gguf --mmproj ./mmproj.gguf --media ./audio.wav --system "Transcribe this audio."
         java -jar llamaj.cpp.jar --model ./model.gguf --rpc 192.168.1.10:50052,192.168.1.11:50052
+        java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --ngram 2 --n_draft 4
+        java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --draft ./draft.gguf --n_draft 6
+        java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --draft ./draft.gguf --n_draft 8 --p_min 0.6
       """
     );
   }

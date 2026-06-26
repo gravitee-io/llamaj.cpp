@@ -482,6 +482,40 @@ public class EmbeddingExample {
 }
 ```
 
+### Example 8: Speculative Decoding
+
+Speculative decoding speeds up generation by having a cheap *drafter* propose several tokens that the
+target model verifies in a single pass. It's enabled per conversation via `setDraft` (draft model) or
+`setNgram` (prompt-lookup), works with both `DefaultLlamaIterator` and `BatchIterator`, and the output is
+unchanged — greedy stays lossless, sampling stays an exact draw of the target distribution. Track how
+well it's working with `state.acceptRate()`.
+
+```java
+// Draft with a small model (must share the target's vocab) — pass a context over the draft model:
+state.setDraft(draftContext, SpeculativeConfig.greedy(4));                  // greedy, fixed window
+state.setDraft(draftContext, SpeculativeConfig.greedyAdaptive(8, 1, 0.6f)); // greedy, stop early on low draft confidence
+state.setDraft(draftContext, new SpeculativeConfig(4, 0.8f, 40, 0.95f, 42));// sampling (temp/top-k/top-p/seed)
+
+// Or draft with no model at all — n-gram (prompt-lookup), best for repetitive output (code, JSON, RAG):
+state.setNgram(SpeculativeConfig.ngramGreedy(4, 2));                        // greedy
+state.setNgram(SpeculativeConfig.ngram(4, 2, 0.8f, 40, 0.95f, 42));         // sampling
+```
+
+A `SpeculativeConfig` can be built three interchangeable ways — pick whichever reads best:
+
+```java
+// 1. Factory presets (above): greedy / greedyAdaptive / ngramGreedy / ngram
+// 2. Fluent "withers" — start from a preset and override fields:
+SpeculativeConfig.greedy(8).withTemperature(0.8f).withTopK(40).withTopP(0.95f).withSeed(42);
+// 3. Builder:
+SpeculativeConfig.builder().nDraft(8).temperature(0.8f).topK(40).topP(0.95f).seed(42).build();
+```
+
+> **Note:** only memoryless sampling (temperature / top-k / top-p) is supported inside speculation, and
+> the distribution itself is computed by llama.cpp's native sampler — these settings just configure it.
+> For the fused `BatchIterator` path, size the target context with `nBatch >= sum(nDraft + 1)` across
+> sequences.
+
 ## Build
 
 The build uses a **platform-specific Maven profile** to download the correct jextract tool and pre-built llama.cpp native libraries, generate the Java FFM bindings, format the code, apply license headers, and install the artifact to your local Maven repository.

@@ -15,13 +15,26 @@
  */
 package io.gravitee.llama.cpp;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 /**
  * Default implementation of LlamaIterator that processes conversations token by token.
+ *
+ * <p>When the {@link ConversationState} has a draft context configured
+ * ({@link ConversationState#setDraft}), it runs greedy speculative decoding instead:
+ * a draft → verify → accept cycle producing a burst of tokens per step, drained one per
+ * {@link #next()} via {@link #pending}.
  *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
+public final class DefaultLlamaIterator
+  extends LlamaIterator<LlamaOutput>
+  implements AutoCloseable {
+
+  // Accepted speculative tokens awaiting emission (speculative mode only).
+  private final Deque<LlamaOutput> pending = new ArrayDeque<>();
 
   public DefaultLlamaIterator(
     ConversationState initialState,
@@ -36,6 +49,9 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
 
   @Override
   protected boolean batch() {
+    if (currentState.isSpeculative()) {
+      return speculativeBatch();
+    }
     var arena = currentState.getArena();
     var context = currentState.getContext();
     var sampler = currentState.getSampler();
@@ -111,12 +127,64 @@ public final class DefaultLlamaIterator extends LlamaIterator<LlamaOutput> {
     );
   }
 
+  /** Speculative-mode step: prompt prefill (target + draft) + first token, then accept bursts. */
+  private boolean speculativeBatch() {
+    if (!pending.isEmpty()) {
+      return true;
+    }
+    if (currentState.isFinished()) {
+      return false;
+    }
+    if (currentState.getNewTokenId() == null) {
+      processPrompt(currentState);
+      prefillDraft(currentState); // no-op for n-gram (no draft context)
+      feedPromptMemory(currentState.getPiece());
+      if (currentState.getFinishReason() == null) {
+        if (currentState.isNgram()) {
+          currentState.seedNgramHistory();
+        }
+        pending.add(
+          new LlamaOutput(
+            currentState.getPiece(),
+            1,
+            currentState.getLogprobs()
+          )
+        );
+      } else {
+        currentState.setFinished(true);
+      }
+      return !pending.isEmpty();
+    }
+    pending.addAll(speculativeRound(currentState));
+    return !pending.isEmpty();
+  }
+
   @Override
   public LlamaOutput next() {
+    if (currentState.isSpeculative()) {
+      return pending.poll();
+    }
     return new LlamaOutput(
       currentState.getPiece(),
       1,
       currentState.getLogprobs()
     );
+  }
+
+  /**
+   * Releases this conversation's resources: frees the speculative state's persistent native scratch
+   * (if any) and removes its sequence from the context KV cache. Idempotent (null-on-free + a no-op
+   * seqRm), so it is safe whether the stream ran to completion or was abandoned early — call it via
+   * try-with-resources when not consuming the whole stream.
+   */
+  @Override
+  public void close() {
+    if (currentState.isSpeculative()) {
+      currentState.getSpeculation().free();
+    }
+    currentState
+      .getContext()
+      .getMemory()
+      .seqRm(currentState.getSequenceId(), -1, -1);
   }
 }
