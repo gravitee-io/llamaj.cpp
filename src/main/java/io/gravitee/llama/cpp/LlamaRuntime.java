@@ -1577,6 +1577,42 @@ public final class LlamaRuntime {
     );
   }
 
+  /** KV cache data type (ggml_type) for the K cache. */
+  public static int type_k(MemorySegment segment) {
+    return llama_context_params(
+      "type_k",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void type_k(MemorySegment segment, int typeK) {
+    llama_context_params(
+      "type_k",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      typeK
+    );
+  }
+
+  /** KV cache data type (ggml_type) for the V cache. */
+  public static int type_v(MemorySegment segment) {
+    return llama_context_params(
+      "type_v",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void type_v(MemorySegment segment, int typeV) {
+    llama_context_params(
+      "type_v",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      typeV
+    );
+  }
+
   public static boolean no_perf(MemorySegment segment) {
     return llama_context_params(
       "no_perf",

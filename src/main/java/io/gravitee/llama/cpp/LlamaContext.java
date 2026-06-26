@@ -43,7 +43,7 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     LlamaModel model,
     LlamaContextParams params
   ) {
-    super(llama_init_from_model(model.segment, params.segment));
+    super(createContext(model, params));
     if (segment == null || segment.address() == 0) {
       throw new LlamaException("Failed to create context from model");
     }
@@ -54,6 +54,28 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     this.nUBatch = LlamaRuntime.llama_n_ubatch(segment);
     this.nSeqMax = LlamaRuntime.llama_n_seq_max(segment);
     this.memory = new LlamaMemory(this);
+  }
+
+  /**
+   * Validates KV-cache settings before context creation, then creates the native context.
+   * Mirrors llama.cpp's constraint that a quantized V cache requires flash attention —
+   * surfaced here as a clear {@link LlamaException} instead of an opaque native failure.
+   */
+  private static MemorySegment createContext(
+    LlamaModel model,
+    LlamaContextParams params
+  ) {
+    if (
+      params.typeV().isQuantized() &&
+      params.flashAttnType() == FlashAttentionType.DISABLED
+    ) {
+      throw new LlamaException(
+        "Quantized V cache (typeV=" +
+          params.typeV() +
+          ") requires flash attention; set flashAttnType(ENABLED) or AUTO."
+      );
+    }
+    return llama_init_from_model(model.segment, params.segment);
   }
 
   public Arena getArena() {

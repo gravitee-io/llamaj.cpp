@@ -221,6 +221,27 @@ public class Main {
       .nBatch(nBatch)
       .noPerf(!showPerf);
 
+    // Optional KV cache quantization (memory savings). A quantized V cache requires
+    // flash attention, so auto-enable it unless the user set it explicitly.
+    ofNullable(params.get("cache_type_k")).ifPresent(t ->
+      contextParams.typeK(GgmlType.fromString(t))
+    );
+    ofNullable(params.get("cache_type_v")).ifPresent(t ->
+      contextParams.typeV(GgmlType.fromString(t))
+    );
+    if (
+      contextParams.typeV().isQuantized() && !params.containsKey("flash_attn")
+    ) {
+      contextParams.flashAttnType(FlashAttentionType.ENABLED);
+    }
+    ofNullable(params.get("flash_attn")).ifPresent(v ->
+      contextParams.flashAttnType(
+        parseBoolean(v)
+          ? FlashAttentionType.ENABLED
+          : FlashAttentionType.DISABLED
+      )
+    );
+
     // Multimodal context initialization
     MtmdContext mtmdContext = null;
     if (mmprojGguf != null) {
@@ -636,6 +657,11 @@ public class Main {
         --n_batch <int>             Batch size (default: 4096)
         --quota <int>               Max output tokens (default: n_ctx)
         --nKeep <int>               Number of messages to keep (default: n_ctx)
+        --cache_type_k <type>       KV K-cache type: f16 (default), q8_0, q5_1, q5_0,
+                                    q4_1, q4_0, iq4_nl, bf16, f32 — saves memory
+        --cache_type_v <type>       KV V-cache type (same values). Quantizing V
+                                    requires flash attention (auto-enabled).
+        --flash_attn <true|false>   Force flash attention on/off (default: auto)
 
       Conversation mode:
         --conversation_mode <mode>  Conversation history mode (default: full)
