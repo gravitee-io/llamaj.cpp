@@ -16,6 +16,7 @@
 package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.GenerationState.ANSWER;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
 import io.gravitee.llama.cpp.modules.PromptMemory;
@@ -62,6 +63,20 @@ public class ConversationState {
   // Configuration
   private int maxTokens = -1;
   private int topLogprobs = 0;
+
+  // Optional speculative decoding: a draft context (separate small model, same vocab) whose
+  // KV is kept in lockstep with this state's target context. When set, the iterators run a
+  // draft→verify→accept cycle (greedy or rejection-sampling) instead of single-token decoding.
+  // For n-gram (prompt-lookup) drafting the draftContext is null and proposals come from `history`.
+  private LlamaContext draftContext;
+  private SpeculativeConfig speculativeConfig;
+  private Speculation speculation;
+  private long nDrafted;
+  private long nAccepted;
+
+  // N-gram (prompt-lookup) drafting history + position index (the committed token stream
+  // prompt+generated, on the heap, NOT the confined arena). Built lazily by setNgram().
+  private NgramIndex ngramIndex;
   private final List<StateBounds> stateBounds = new ArrayList<>();
   private List<MtmdMedia> media = new ArrayList<>();
 
@@ -163,6 +178,122 @@ public class ConversationState {
   public ConversationState setMaxTokens(int maxTokens) {
     this.maxTokens = maxTokens;
     return this;
+  }
+
+  /**
+   * Enables speculative decoding: {@code draftContext} (a small model sharing this target's
+   * tokenizer/vocab) proposes {@code config.nDraft()} tokens per step that the target verifies
+   * in a single decode. Greedy config is lossless w.r.t. greedy decoding; a sampling config
+   * (temp/top-k/top-p) uses rejection sampling, preserving the target distribution. The state's
+   * main sampler is bypassed for accepted tokens — speculative sampling is governed by
+   * {@code config}.
+   *
+   * @param draftContext A context over the draft model (must share the target's vocab size)
+   * @param config       Speculative decoding configuration
+   */
+  public ConversationState setDraft(
+    LlamaContext draftContext,
+    SpeculativeConfig config
+  ) {
+    if (draftContext.nVocab() != context.nVocab()) {
+      throw new LlamaException(
+        "Draft vocab size (" +
+          draftContext.nVocab() +
+          ") differs from target (" +
+          context.nVocab() +
+          ") — speculative decoding requires a shared tokenizer/vocab"
+      );
+    }
+    this.draftContext = draftContext;
+    this.speculativeConfig = config;
+    this.speculation = new Speculation(arena, context.nVocab(), config);
+    return this;
+  }
+
+  /**
+   * Enables n-gram (prompt-lookup) speculative decoding: proposes up to {@code config.nDraft()}
+   * tokens per round by matching the last {@code config.ngram()} committed tokens against this
+   * conversation's generation history — no draft model, no draft forward pass. The target still
+   * verifies every proposed token, so output is lossless (greedy) / exact (sampling). Requires an
+   * n-gram config ({@code config.isNgram()}).
+   */
+  public ConversationState setNgram(SpeculativeConfig config) {
+    if (!config.isNgram()) {
+      throw new LlamaException(
+        "setNgram requires an n-gram config (ngram >= 1); use setDraft for model drafting"
+      );
+    }
+    this.speculativeConfig = config;
+    this.speculation = new Speculation(arena, context.nVocab(), config);
+    this.ngramIndex = new NgramIndex(config.ngram());
+    return this;
+  }
+
+  public boolean hasDraft() {
+    return draftContext != null;
+  }
+
+  /** Whether any speculative drafting (model or n-gram) is enabled on this state. */
+  public boolean isSpeculative() {
+    return speculation != null;
+  }
+
+  /** Whether n-gram (prompt-lookup) drafting is enabled (vs model drafting). */
+  public boolean isNgram() {
+    return speculativeConfig != null && speculativeConfig.isNgram();
+  }
+
+  public LlamaContext getDraftContext() {
+    return draftContext;
+  }
+
+  public int getNDraft() {
+    return speculativeConfig.nDraft();
+  }
+
+  Speculation getSpeculation() {
+    return speculation;
+  }
+
+  /**
+   * Seeds the n-gram history with the prompt tokens plus the first sampled token (idLast). Must be
+   * called once after {@code processPrompt} has set {@code newTokenId} (n-gram mode only).
+   */
+  void seedNgramHistory() {
+    ngramIndex.clear();
+    int promptLen = tokenized.size();
+    var data = tokenized.data();
+    for (int i = 0; i < promptLen; i++) {
+      ngramIndex.append(data.getAtIndex(JAVA_INT, i));
+    }
+    ngramIndex.append(newTokenId); // idLast, position == nPast (not yet in KV)
+  }
+
+  /** Appends one committed token to the n-gram history (and its index). */
+  void appendHistory(int token) {
+    ngramIndex.append(token);
+  }
+
+  /**
+   * Proposes up to {@code kMax} draft tokens by finding the most recent earlier occurrence of the
+   * last {@code ngram} history tokens and returning the tokens that followed it (via the position
+   * index). Returns an empty array when there is no match (the round then degenerates to a single
+   * target decode). Pure heap/CPU work — no native calls, no draft KV. A wrong proposal only lowers
+   * the accept rate; the target verify is the sole arbiter of emitted tokens.
+   */
+  int[] proposeNgram(int kMax) {
+    return ngramIndex.propose(kMax);
+  }
+
+  /** Accumulates speculative accept statistics for {@link #acceptRate()}. */
+  public void recordSpeculation(int drafted, int accepted) {
+    this.nDrafted += drafted;
+    this.nAccepted += accepted;
+  }
+
+  /** Fraction of drafted tokens accepted so far — a sanity check on the speedup. */
+  public double acceptRate() {
+    return nDrafted == 0 ? 0.0 : (double) nAccepted / nDrafted;
   }
 
   /**

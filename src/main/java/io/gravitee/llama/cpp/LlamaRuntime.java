@@ -1271,6 +1271,18 @@ public final class LlamaRuntime {
     );
   }
 
+  public static void llama_sampler_apply(
+    MemorySegment sampler,
+    MemorySegment curP
+  ) {
+    llama_h(
+      "llama_sampler_apply",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      sampler,
+      curP
+    );
+  }
+
   public static void llama_sampler_chain_add(
     MemorySegment sampler,
     MemorySegment config

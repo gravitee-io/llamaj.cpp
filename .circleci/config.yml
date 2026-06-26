@@ -409,6 +409,10 @@ jobs:
           repo: "gpustack/jina-reranker-v1-tiny-en-GGUF"
           files: "jina-reranker-v1-tiny-en-Q4_K_M.gguf"
           destinations: "models/jina-reranker.gguf"
+      - download_models:
+          repo: "Qwen/Qwen3-1.7B-GGUF"
+          files: "Qwen3-1.7B-Q8_0.gguf"
+          destinations: "models/spec-target.gguf"
       - run-tests:
           os: "macosx"
           platform: "aarch64"
@@ -461,6 +465,10 @@ jobs:
           repo: "gpustack/jina-reranker-v1-tiny-en-GGUF"
           files: "jina-reranker-v1-tiny-en-Q4_K_M.gguf"
           destinations: "models/jina-reranker.gguf"
+      - download_models:
+          repo: "Qwen/Qwen3-1.7B-GGUF"
+          files: "Qwen3-1.7B-Q8_0.gguf"
+          destinations: "models/spec-target.gguf"
       - run-tests:
           os: "linux"
           platform: "x86_64"
