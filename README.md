@@ -1,674 +1,109 @@
-#  Llamaj.cpp
+# Llamaj.cpp
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/gravitee-io/llamaj.cpp/LICENSE.txt)
-[![Releases](https://img.shields.io/badge/semantic--release-conventional%20commits-e10079?logo=semantic-release)](https://github.com/gravitee-io/llamaj.cpp/releases)
+[![llamaj.cpp](https://img.shields.io/github/v/release/gravitee-io/llamaj.cpp?label=llamaj.cpp&color=orange&sort=semver)](https://github.com/gravitee-io/llamaj.cpp/releases)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE.txt)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/gravitee-io/llamaj.cpp/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/gravitee-io/llamaj.cpp/tree/main)
 [![Community Forum](https://img.shields.io/badge/Gravitee-Community%20Forum-white?logo=githubdiscussion&logoColor=white)](https://community.gravitee.io?utm_source=readme)
 
-**Llamaj.cpp** is a Java and JVM port of llama.cpp using jextract, enabling local large language model (LLM) inference through native foreign function & memory API interop. Natively supports macOS M-series and Linux x86_64 with GPU acceleration. Platform and hardware support (Windows, ARM, CUDA, etc.) can be extended through custom builds.
+[![llama.cpp](https://img.shields.io/badge/llama.cpp-b9673-blue.svg)](https://github.com/ggml-org/llama.cpp/releases/tag/b9673)
+[![llama.cpp license](https://img.shields.io/badge/llama.cpp%20license-MIT-green.svg)](./licenses/LICENSE-llama-cpp)
 
-## Keywords
-
-`llama.cpp` · `java` · `jvm` · `llm` · `large language models` · `inference` · `ai` · `native interop` · `foreign function & memory api` · `jextract`
+**Llamaj.cpp** is a Java and JVM port of [llama.cpp](https://github.com/ggml-org/llama.cpp) using jextract, enabling local large language model (LLM) inference through the native foreign function & memory API. It natively supports macOS M-series and Linux x86_64 with GPU acceleration; other platforms (Windows, ARM, CUDA, …) can be added through [custom builds](./docs/custom-builds/README.md).
 
 ## Requirements
 
 - Java 25
-- mvn
-- MacOS M-series / Linux x86_64 (CPU) (you can check the last section if you do not see your platform here)
+- Maven
+- macOS M-series / Linux x86_64 (other platforms via [custom builds](./docs/custom-builds/README.md))
 
-## How to use
+## Installation
 
-Include the dependency in your pom.xml
-```
-    <dependencies>
-        ...
-        <dependency>
-            <groupId>io.gravitee.llama.cpp</groupId>
-            <artifactId>llamaj.cpp</artifactId>
-            <version>x.x.x</version>
-        </dependency>
-    </dependencies>
+```xml
+<dependency>
+    <groupId>io.gravitee.llama.cpp</groupId>
+    <artifactId>llamaj.cpp</artifactId>
+    <version>1.3.0</version>
+</dependency>
 ```
 
-> **Note:** All examples below use `LlamaVocab` to handle tokenization. It's obtained from a loaded `LlamaModel` and is essential for converting between tokens and text representations.
+## Capabilities
 
-### Example 1: Basic Conversation
+Full documentation lives in **[`docs/`](./docs/README.md)** — one page per capability. New here? Start with **[Getting Started](./docs/getting-started/README.md)**.
+
+### Core
+- **[Getting Started](./docs/getting-started/README.md)** — runtime init, load a model, build a context, tokenize, and the `Arena`/`Freeable` resource model.
+- **[Text Generation & Sampling](./docs/text-generation/README.md)** — stream a conversation with `ConversationState` + `DefaultLlamaIterator` and a `LlamaSampler` chain.
+- **[Chat Templates](./docs/chat-templates/README.md)** — render role-tagged messages into a model-specific prompt.
+- **[Log Probabilities](./docs/logprobs/README.md)** — per-token logprobs with top-N alternatives.
+
+### Scale & serve
+- **[Parallel Conversations](./docs/parallel-conversations/README.md)** — decode many conversations through one shared context with `BatchIterator`.
+- **[Speculative Decoding](./docs/speculative-decoding/README.md)** — draft→verify→accept speedup (draft model or n-gram), greedy (lossless) or sampling (exact).
+- **[Distributed Inference (RPC)](./docs/distributed-inference/README.md)** — offload layers/KV-cache to remote `rpc-server` backends.
+- **[Quantized KV Cache](./docs/quantized-kv-cache/README.md)** — shrink KV-cache memory by quantizing the K/V cache type.
+
+### Retrieval & multimodal
+- **[Embeddings](./docs/embeddings/README.md)** — dense vectors with `LlamaEmbedder`.
+- **[Reranking](./docs/reranking/README.md)** — score documents against a query with `LlamaReranker`.
+- **[Multimodal (Vision & Audio)](./docs/multimodal/README.md)** — attach images and audio via `MtmdContext`.
+
+### Advanced generation
+- **[Reasoning & Tool Calls](./docs/reasoning-and-tool-calls/README.md)** — tag reasoning / answer / tool-call sections during generation.
+- **[LoRA Adapters](./docs/lora-adapters/README.md)** — load and attach a GGUF LoRA adapter.
+
+### Operations
+- **[Devices & Memory](./docs/device-and-memory/README.md)** — enumerate backends/devices, query memory, read model dims and performance metrics.
+- **[Logging](./docs/logging/README.md)** — custom log callback and level filtering.
+- **[Custom Builds & Platform Support](./docs/custom-builds/README.md)** — build llama.cpp and regenerate the jextract bindings for other platforms.
+
+## Quick start
 
 ```java
-import io.gravitee.llama.cpp.*;
-import java.lang.foreign.Arena;
-import java.nio.file.Path;
+var arena = Arena.ofConfined();
+LlamaRuntime.llama_backend_init();
+LlamaRuntime.ggml_backend_load_all_from_path(arena, LlamaLibLoader.load());
 
-public class BasicExample {
-    public static void main(String[] args) {
-        var arena = Arena.ofConfined();
+var model   = new LlamaModel(arena, Path.of("models/model.gguf"), new LlamaModelParams(arena));
+var context = new LlamaContext(arena, model, new LlamaContextParams(arena).nCtx(2048).nBatch(512));
+var vocab   = new LlamaVocab(model);
+var sampler = new LlamaSampler(arena).temperature(0.7f).topK(40).topP(0.9f, 1).seed(42);
 
-        // Initialize runtime
-        LlamaRuntime.llama_backend_init();
+var state = ConversationState.create(arena, context, new LlamaTokenizer(vocab, context), sampler)
+    .setMaxTokens(100)
+    .initialize("What is the capital of France?");
 
-        // Load model
-        var modelParams = new LlamaModelParams(arena);
-        var model = new LlamaModel(arena, Path.of("models/model.gguf"), modelParams);
-
-        // Create context
-        var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512);
-        var context = new LlamaContext(model, contextParams);
-
-        // Set up tokenizer and sampler
-        var vocab = new LlamaVocab(model);
-        var tokenizer = new LlamaTokenizer(vocab, context);
-        var sampler = new LlamaSampler(arena)
-            .temperature(0.7f)
-            .topK(40)
-            .topP(0.9f, 1)
-            .seed(42);
-
-        // Create conversation state
-        var state = ConversationState.create(arena, context, tokenizer, sampler, 0)
-            .setMaxTokens(100)
-            .initialize("What is the capital of France?");
-
-        // Generate response
-        var iterator = new DefaultLlamaIterator(state);
-        while (iterator.hasNext()) {
-            var output = iterator.next();
-            System.out.print(output.text());
-        }
-
-        // Cleanup
-        context.free();
-        sampler.free();
-        model.free();
-        LlamaRuntime.llama_backend_free();
-    }
-}
+new DefaultLlamaIterator(state).stream().forEach(o -> System.out.print(o.content()));
 ```
 
-### Example 2: Log Probabilities
+See [Getting Started](./docs/getting-started/README.md) and [Text Generation & Sampling](./docs/text-generation/README.md) for the full walkthrough.
 
-Enable log-probability collection to inspect the model's confidence at each token position.
-Set `topLogprobs` to the number of top-alternative tokens you want alongside the sampled one (0 = disabled, no overhead):
+## Build from source
 
-```java
-import io.gravitee.llama.cpp.*;
-import java.lang.foreign.Arena;
-import java.nio.file.Path;
-
-public class LogprobsExample {
-    public static void main(String[] args) {
-        var arena = Arena.ofConfined();
-        LlamaRuntime.llama_backend_init();
-
-        var model = new LlamaModel(arena, Path.of("models/model.gguf"), new LlamaModelParams(arena));
-        var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512);
-        var context = new LlamaContext(arena, model, contextParams);
-        var vocab = new LlamaVocab(model);
-        var tokenizer = new LlamaTokenizer(vocab, context);
-        var sampler = new LlamaSampler(arena).temperature(0.7f).seed(42);
-
-        var state = ConversationState.create(arena, context, tokenizer, sampler)
-            .setMaxTokens(50)
-            .setTopLogprobs(5)   // return top-5 alternatives at every token position
-            .initialize("What is the capital of France?");
-
-        var iterator = new DefaultLlamaIterator(state);
-        while (iterator.hasNext()) {
-            var output = iterator.next();
-            System.out.print(output.text());
-
-            Logprobs lp = output.logprobs();
-            System.out.printf("%n  chosen: \"%s\"  logprob=%.4f%n",
-                lp.chosenToken().token(), lp.chosenToken().logprob());
-            lp.topLogprobs().forEach(t ->
-                System.out.printf("    alt: \"%s\"  logprob=%.4f%n", t.token(), t.logprob()));
-        }
-
-        context.free();
-        sampler.free();
-        model.free();
-        LlamaRuntime.llama_backend_free();
-    }
-}
-```
-
-Each `LlamaOutput` carries a `Logprobs` object with:
-- `chosenToken()` — the token that was sampled, its text, vocabulary ID, log-probability, and raw UTF-8 bytes
-- `topLogprobs()` — up to N alternatives sorted by descending log-probability; the chosen token is always included
-
-When `topLogprobs` is `0` (the default), `output.logprobs()` is `null` and no logit processing is done.
-
-### Example 3: Parallel Conversations
-
-Process multiple conversations simultaneously in a single batch:
-
-```java
-import io.gravitee.llama.cpp.*;
-
-import java.lang.foreign.Arena;
-import java.nio.file.Path;
-
-public class ParallelExample {
-    public static void main(String[] args) {
-        var arena = Arena.ofConfined();
-
-        // Initialize runtime
-        LlamaRuntime.llama_backend_init();
-
-        // Load model
-        var modelParams = new LlamaModelParams(arena);
-        var model = new LlamaModel(arena, Path.of("models/model.gguf"), modelParams);
-
-        // Create context with multi-sequence support
-        var contextParams = new LlamaContextParams(arena)
-                .nCtx(2048)
-                .nBatch(512)
-                .nSeqMax(4);  // Support up to 4 parallel conversations
-        var context = new LlamaContext(model, contextParams);
-
-        // Set up shared tokenizer and sampler
-        var vocab = new LlamaVocab(model);
-        var tokenizer = new LlamaTokenizer(vocab, context);
-        var sampler = new LlamaSampler(arena).temperature(0.7f).seed(42);
-
-        // Create multiple conversation states with unique sequence IDs
-        var state1 = ConversationState.create(arena, context, tokenizer, sampler, 0)
-                .setMaxTokens(100).initialize("What is the capital of France?");
-        var state2 = ConversationState.create(arena, context, tokenizer, sampler, 1)
-                .setMaxTokens(100).initialize("What is the capital of England?");
-        var state3 = ConversationState.create(arena, context, tokenizer, sampler, 2)
-                .setMaxTokens(100).initialize("What is the capital of Poland?");
-
-        // Create parallel iterator - prompts are auto-processed when states are added
-        var parallel = new BatchIterator(arena, context, 512, 4)
-                .addState(state1)
-                .addState(state2)
-                .addState(state3);
-
-        // Generate tokens in parallel
-        System.out.println("=== Parallel Generation ===");
-        while (parallel.hasNext()) {
-            // Each hasNext() generates tokens for all active conversations
-            // Get all outputs from this batch (one per active conversation)
-            var outputs = parallel.getOutputs();
-            for (var output : outputs) {
-                System.out.println("Seq " + output.sequenceId() + ": " + output.text());
-            }
-        }
-        System.out.println();
-
-        // Print results
-        System.out.println("Conversation 1: " + state1.getAnswer());
-        System.out.println("  Tokens: " + state1.getAnswerTokens());
-        System.out.println("Conversation 2: " + state2.getAnswer());
-        System.out.println("  Tokens: " + state2.getAnswerTokens());
-        System.out.println("Conversation 3: " + state3.getAnswer());
-        System.out.println("  Tokens: " + state3.getAnswerTokens());
-
-        // Cleanup
-        parallel.free();
-        context.free();
-        sampler.free();
-        model.free();
-        LlamaRuntime.llama_backend_free();
-    }
-}
-```
-
-### Example 4: Distributed Inference with RPC
-
-Offload model weights and KV-cache to remote machines using the RPC backend.
-When using `--rpc`, weights are loaded **exclusively** on the remote servers -- the local GPU is not used.
-
-Start RPC server nodes first (see [containers/README.md](containers/README.md)):
+A platform-specific Maven profile downloads jextract + the pre-built llama.cpp native libraries, generates the FFM bindings, and installs the artifact:
 
 ```bash
-# On the remote machine (or another terminal)
-./scripts/start-rpc-server.sh
-```
-
-Then connect from Java:
-
-```java
-import io.gravitee.llama.cpp.*;
-import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
-import java.lang.foreign.Arena;
-import java.nio.file.Path;
-
-public class RpcExample {
-    public static void main(String[] args) {
-        var arena = Arena.ofConfined();
-
-        // Initialize runtime
-        String libPath = LlamaLibLoader.load();
-        LlamaRuntime.llama_backend_init();
-
-        // Register remote RPC servers -- returns their device handles
-        var rpcDevices = BackendRegistry.addRpcServer(arena, "127.0.0.1:50052");
-
-        // Print all discovered backends and devices
-        BackendRegistry.printSummary();
-
-        // Load model, restricting offloading to only the RPC devices
-        var modelParams = new LlamaModelParams(arena)
-            .devices(arena, rpcDevices)
-            .nGpuLayers(999);
-        var model = new LlamaModel(arena, Path.of("models/model.gguf"), modelParams);
-
-        // Everything else works exactly the same as local inference
-        var contextParams = new LlamaContextParams(arena).nCtx(2048).nBatch(512);
-        var context = new LlamaContext(model, contextParams);
-        var vocab = new LlamaVocab(model);
-        var tokenizer = new LlamaTokenizer(vocab, context);
-        var sampler = new LlamaSampler(arena).temperature(0.7f).seed(42);
-
-        var state = ConversationState.create(arena, context, tokenizer, sampler, 0)
-            .setMaxTokens(100)
-            .initialize("What is the capital of France?");
-
-        var iterator = new DefaultLlamaIterator(state);
-        while (iterator.hasNext()) {
-            System.out.print(iterator.next().text());
-        }
-
-        context.free();
-        sampler.free();
-        model.free();
-        LlamaRuntime.llama_backend_free();
-    }
-}
-```
-
-Or from the CLI:
-
-```bash
-$ java --enable-preview --enable-native-access=ALL-UNNAMED \
-  -jar llamaj.cpp-<version>.jar \
-  --model models/model.gguf \
-  --rpc 127.0.0.1:50052
-```
-
-Multiple RPC servers:
-
-```bash
-$ java --enable-preview --enable-native-access=ALL-UNNAMED \
-  -jar llamaj.cpp-<version>.jar \
-  --model models/model.gguf \
-  --rpc 192.168.1.10:50052,192.168.1.11:50052
-```
-
-### Example 5: Reranking
-
-`LlamaReranker` is a cross-encoder wrapper that scores how relevant a document is to a
-query. Pooling and attention are auto-detected from the GGUF architecture, so
-`Options.defaults()` works for most reranker models. Use `score` for a single pair and
-`scoreAll` to rank a batch of documents against one query.
-
-```java
-import io.gravitee.llama.cpp.*;
-import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
-import java.lang.foreign.Arena;
-import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.List;
-
-public class RerankExample {
-    public static void main(String[] args) {
-        var arena = Arena.ofConfined();
-        String libPath = LlamaLibLoader.load();
-        LlamaRuntime.llama_backend_init();
-        LlamaRuntime.ggml_backend_load_all_from_path(arena, libPath);
-
-        var model = new LlamaModel(arena, Path.of("models/reranker.gguf"), new LlamaModelParams(arena));
-        var reranker = new LlamaReranker(arena, model, LlamaReranker.Options.defaults());
-
-        String query = "What is the capital of France?";
-        List<String> documents = List.of(
-            "Paris is the capital and most populous city of France.",
-            "The Eiffel Tower is a landmark in Paris.",
-            "Bananas are a good source of potassium."
-        );
-
-        // One raw score array per document, in input order.
-        List<float[]> scores = reranker.scoreAll(query, documents);
-
-        // Rank documents by their first logit, highest first.
-        java.util.stream.IntStream.range(0, documents.size())
-            .boxed()
-            .sorted(Comparator.comparingDouble((Integer i) -> scores.get(i)[0]).reversed())
-            .forEach(i -> System.out.printf("%.4f  %s%n", scores.get(i)[0], documents.get(i)));
-
-        reranker.close();   // frees only the context; the model is owned by the caller
-        model.free();
-        LlamaRuntime.llama_backend_free();
-        arena.close();
-    }
-}
-```
-
-`score(query, document)` returns a `float[]` whose size is `reranker.nClsOut()` — typically
-`1` for BERT-style cross-encoders and `2` for chat-style rerankers. For models that need a
-structured prompt, supply a `RerankTemplate` (a `(query, document) -> String` lambda) via
-`Options.defaults().withTemplate(...)`; the default is `RerankTemplate.PLAIN`
-(`query + " " + document`).
-
-### Example 6: Reranking with Qwen3 and a custom RerankTemplate
-
-Chat-style rerankers like Qwen3-Reranker expect the (query, document) pair wrapped in a
-system/user prompt that asks the model to judge relevance. Provide that format as a
-`RerankTemplate`. Unlike a BERT cross-encoder (which emits a single raw logit), Qwen3-Reranker
-has a 2-class classifier head: `nClsOut() == 2` and `score` returns a softmax `float[2]` where
-index `0` is `P(relevant)`. That probability is still a perfectly good ranking score — sort by
-it descending to rerank a candidate set.
-
-```java
-import io.gravitee.llama.cpp.*;
-import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
-import java.lang.foreign.Arena;
-import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.IntStream;
-
-public class Qwen3RerankExample {
-    // Wraps the pair in Qwen3's chat format, instructing the model to answer yes/no.
-    static final RerankTemplate QWEN3_TEMPLATE = (query, document) ->
-        "<|im_start|>system\n" +
-        "Judge whether the Document is relevant to the Query. Answer 'yes' or 'no'." +
-        "<|im_end|>\n" +
-        "<|im_start|>user\n" +
-        "Query: " + query + "\n" +
-        "Document: " + document + "\n" +
-        "Relevant:<|im_end|>\n";
-
-    public static void main(String[] args) {
-        var arena = Arena.ofConfined();
-        String libPath = LlamaLibLoader.load();
-        LlamaRuntime.llama_backend_init();
-        LlamaRuntime.ggml_backend_load_all_from_path(arena, libPath);
-
-        var model = new LlamaModel(arena, Path.of("models/reranker.gguf"), new LlamaModelParams(arena));
-        var reranker = new LlamaReranker(
-            arena,
-            model,
-            LlamaReranker.Options.defaults().withTemplate(QWEN3_TEMPLATE)
-        );
-
-        String query = "What is the capital of France?";
-        List<String> documents = List.of(
-            "Paris is the capital and most populous city of France.",
-            "The Eiffel Tower is a landmark in Paris.",
-            "Bananas are a good source of potassium."
-        );
-
-        List<float[]> scores = reranker.scoreAll(query, documents);
-
-        // Rank by P(relevant) = score[0], highest first.
-        IntStream.range(0, documents.size())
-            .boxed()
-            .sorted(Comparator.comparingDouble((Integer i) -> scores.get(i)[0]).reversed())
-            .forEach(i -> System.out.printf("P(relevant)=%.4f  %s%n", scores.get(i)[0], documents.get(i)));
-
-        reranker.close();
-        model.free();
-        LlamaRuntime.llama_backend_free();
-        arena.close();
-    }
-}
-```
-
-> **Classifier probabilities vs. raw scores.** Qwen3-Reranker's `score[0]` is a calibrated
-> probability in `[0, 1]`. BERT cross-encoders (`nClsOut() == 1`, Example 5) instead return a
-> single **unbounded logit** — larger means more relevant, but it is not a probability. Ranking
-> works the same way for both (sort descending); only apply `sigmoid(logit)` if you specifically
-> need a `[0, 1]` score from a single-logit model.
-
-### Example 7: Embeddings
-
-`LlamaEmbedder` turns text into a dense vector. Pooling and attention are auto-detected from
-the GGUF architecture (CLS/NON_CAUSAL for encoders, LAST/CAUSAL for decoders), so
-`Options.defaults()` covers most models. Use `embed` for a single string or `embedAll` to
-batch many texts through a single decode. Vectors are returned **un-normalised** — L2-normalise
-them yourself before computing cosine similarity.
-
-```java
-import io.gravitee.llama.cpp.*;
-import io.gravitee.llama.cpp.nativelib.LlamaLibLoader;
-import java.lang.foreign.Arena;
-import java.nio.file.Path;
-import java.util.List;
-
-public class EmbeddingExample {
-    static float[] l2normalize(float[] v) {
-        double sum = 0;
-        for (float f : v) sum += (double) f * f;
-        double norm = Math.sqrt(sum);
-        if (norm > 1e-9) for (int i = 0; i < v.length; i++) v[i] = (float) (v[i] / norm);
-        return v;
-    }
-
-    static double cosine(float[] a, float[] b) {
-        double dot = 0;
-        for (int i = 0; i < a.length; i++) dot += (double) a[i] * b[i];
-        return dot; // inputs are L2-normalised, so the dot product is the cosine
-    }
-
-    public static void main(String[] args) {
-        var arena = Arena.ofConfined();
-        String libPath = LlamaLibLoader.load();
-        LlamaRuntime.llama_backend_init();
-        LlamaRuntime.ggml_backend_load_all_from_path(arena, libPath);
-
-        var model = new LlamaModel(arena, Path.of("models/embedding.gguf"), new LlamaModelParams(arena));
-        var embedder = new LlamaEmbedder(arena, model, LlamaEmbedder.Options.defaults());
-
-        System.out.println("embedding dimension: " + embedder.nEmbdOut());
-
-        List<float[]> embeddings = embedder.embedAll(List.of(
-            "The capital of France is Paris.",
-            "Paris is France's largest city.",
-            "Bananas are a good source of potassium."
-        ));
-        embeddings.forEach(EmbeddingExample::l2normalize);
-
-        System.out.printf("similar pair:   %.4f%n", cosine(embeddings.get(0), embeddings.get(1)));
-        System.out.printf("unrelated pair: %.4f%n", cosine(embeddings.get(0), embeddings.get(2)));
-
-        embedder.close();
-        model.free();
-        LlamaRuntime.llama_backend_free();
-        arena.close();
-    }
-}
-```
-
-### Example 8: Speculative Decoding
-
-Speculative decoding speeds up generation by having a cheap *drafter* propose several tokens that the
-target model verifies in a single pass. It's enabled per conversation via `setDraft` (draft model) or
-`setNgram` (prompt-lookup), works with both `DefaultLlamaIterator` and `BatchIterator`, and the output is
-unchanged — greedy stays lossless, sampling stays an exact draw of the target distribution. Track how
-well it's working with `state.acceptRate()`.
-
-```java
-// Draft with a small model (must share the target's vocab) — pass a context over the draft model:
-state.setDraft(draftContext, SpeculativeConfig.greedy(4));                  // greedy, fixed window
-state.setDraft(draftContext, SpeculativeConfig.greedyAdaptive(8, 1, 0.6f)); // greedy, stop early on low draft confidence
-state.setDraft(draftContext, new SpeculativeConfig(4, 0.8f, 40, 0.95f, 42));// sampling (temp/top-k/top-p/seed)
-
-// Or draft with no model at all — n-gram (prompt-lookup), best for repetitive output (code, JSON, RAG):
-state.setNgram(SpeculativeConfig.ngramGreedy(4, 2));                        // greedy
-state.setNgram(SpeculativeConfig.ngram(4, 2, 0.8f, 40, 0.95f, 42));         // sampling
-```
-
-A `SpeculativeConfig` can be built three interchangeable ways — pick whichever reads best:
-
-```java
-// 1. Factory presets (above): greedy / greedyAdaptive / ngramGreedy / ngram
-// 2. Fluent "withers" — start from a preset and override fields:
-SpeculativeConfig.greedy(8).withTemperature(0.8f).withTopK(40).withTopP(0.95f).withSeed(42);
-// 3. Builder:
-SpeculativeConfig.builder().nDraft(8).temperature(0.8f).topK(40).topP(0.95f).seed(42).build();
-```
-
-> **Note:** only memoryless sampling (temperature / top-k / top-p) is supported inside speculation, and
-> the distribution itself is computed by llama.cpp's native sampler — these settings just configure it.
-> For the fused `BatchIterator` path, size the target context with `nBatch >= sum(nDraft + 1)` across
-> sequences.
-
-## Build
-
-The build uses a **platform-specific Maven profile** to download the correct jextract tool and pre-built llama.cpp native libraries, generate the Java FFM bindings, format the code, apply license headers, and install the artifact to your local Maven repository.
-
-**macOS (Apple Silicon):**
-
-```bash
-cd llamaj.cpp/
+# macOS (Apple Silicon)
 mvn prettier:write license:format clean generate-sources -Pmacosx-aarch64 install
-```
 
-**Linux (x86_64):**
-
-```bash
-cd llamaj.cpp/
+# Linux (x86_64) — then export the library path at runtime:
 mvn prettier:write license:format clean generate-sources -Plinux-x86_64 install
+export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
 ```
 
-> On Linux, you also need to set the library path at runtime:
-> ```bash
-> export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
-> ```
+For other platforms (Windows, ARM, CUDA, …) or your own llama.cpp build, see **[Custom Builds & Platform Support](./docs/custom-builds/README.md)**.
 
-## Run
+## Run the bundled CLI
 
 ```bash
-$ mvn exec:java -Dexec.mainClass=io.gravitee.llama.cpp.Main \
-    -Dexec.args="--model /path/to/model/model.gguf --system 'You are a helpful assistant. Answer question to the best of your ability'"
+java -jar llamaj.cpp-<version>.jar --model models/model.gguf \
+  --system 'You are a helpful assistant.'
 ```
 
-or
+## License & attribution
 
-```bash
-$ java --enable-preview -jar llamaj.cpp-<version>.jar \
-  --model models/model.gguf \
-  --system 'You are a helpful assistant. Answer question to the best of your ability'
-```
+- llamaj.cpp is licensed under the [Apache License 2.0](./LICENSE.txt).
+- It binds to the native **llama.cpp / ggml** libraries, which are [MIT-licensed](./licenses/LICENSE-llama-cpp).
 
-On linux, don't forget to link your libraries with the environment variable below:
-```bash
-$ export LD_LIBRARY_PATH="$HOME/.llama.cpp:$LD_LIBRARY_PATH"
-```
+## Community
 
-There are plenty of models on HuggingFace, we suggest the one [here](https://huggingface.co/Qwen/Qwen3-0.6B-GGUF)
-
-### Usage
-```
-Usage: java -jar llamaj.cpp-<version>.jar --model <path_to_gguf_model> [options...]
-Options:
---system <message>       : System message (default: "You are a helpful AI assistant.")
---n_gpu_layers <int>     : Number of GPU layers (default: 999)
---use_mlock <boolean>    : Use mlock (default: true)
---use_mmap <boolean>     : Use mmap (default: true)
---rpc <endpoints>        : Comma-separated RPC server endpoints for distributed inference
-                           (e.g., "127.0.0.1:50052,192.168.1.11:50052")
-                           When set, weights are offloaded exclusively to the remote servers
---temperature <float>    : Sampler temperature (default: 0.4)
---min_p <float>          : Sampler min_p (default: 0.1)
---min_p_window <int>     : Sampler min_p_window (default: 40)
---top_k <int>            : Sampler top_k (default: 10)
---top_p <float>          : Sampler top_p (default: 0.2)
---top_p_window <int>     : Sampler top_p_window (default: 10)
---seed <long>            : Sampler seed (default: random)
---n_ctx <int>            : Context size (default: 512)
---n_batch <int>          : Batch size (default: 512)
---n_seq_max <int>        : Max sequence length (default: 512)
---quota <int>            : Iterator quota (default: 512)
---n_keep <int>         : Tokens to keep when exceeding ctx size (default: 256)
---log_level <level>      : Logging level (ERROR, WARN, INFO, DEBUG, default: ERROR)
-```
-
-## Use your own llama.cpp build
-
-1. Clone `llama.cpp` repository
-
-> Make sure the jextract folder is in the same path level as your repository
-
-```bash
-$ git clone https://github.com/ggml-org/llama.cpp
-$ cd llama.cpp
-```
-
-2. Compile sources
-
-> Make sure you have gcc / g++ compiler
-
-```bash
-$ gcc --help
-$ g++ --help
-```
-
-On Linux:
-```bash
-$ cmake -B build
-$ cmake --build build --config Release -j $(nproc)  
-```
-
-On MacOs:
-```bash
-$ cmake -B build
-$ cmake --build build --config Release  -j $(sysctl -n hw.ncpu)
-```
-
-If you wish to build llama.cpp with particular configuration (CUDA, OpenBLAS, AVX2, AVX512, ...)
-Please refer to the [llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md) documentation
-
-3. Link sources
-
-You can use the environment variable `LLAMA_CPP_LIB_PATH=/path/to/llama.cpp/build/bin/`
-This will directly load the dynamically shared object library files (`.so` for linux, `.dylib` for macos) 
-You can also decide to copy these files into a temporary folder using the environment variable `LLAMA_CPP_USE_TMP_LIB_PATH=true`
-The path temporary file will be used to load the shared object libraries
-
-## Beyond Apple M-Series and Linux x86_64
-
-To add support for other platforms (Windows, ARM, CUDA, etc.), follow this approach:
-
-### 1. Build llama.cpp
-
-Clone and build llama.cpp for your target platform:
-
-```bash
-git clone https://github.com/ggerganov/llama.cpp.git
-cd llama.cpp
-cmake -B build
-cmake --build build --config Release
-```
-
-### 2. Generate FFM API Bindings with jextract
-
-Download jextract for your platform from [OpenJDK early-access builds](https://download.java.net/java/early_access/jextract/25/2/), then generate the Java bindings:
-
-```bash
-# Example for Windows x86_64
-jextract -t io.gravitee.llama.cpp.windows.x86_64 \
-  --include-dir /path/to/llama.cpp/ggml/include \
-  --include-dir /path/to/llama.cpp/include \
-  --output src/main/java \
-  --header-class-name llama_h \
-  /path/to/llama.cpp/tools/mtmd/mtmd.h \
-  /path/to/llama.cpp/tools/mtmd/mtmd-helper.h \
-  /path/to/llama.cpp/include/llama.h \
-  /path/to/llama.cpp/ggml/include/ggml-rpc.h
-```
-
-### 3. Post-process Generated Sources
-
-Check the generated sources and apply any necessary fixes (e.g., visibility modifiers, fully-qualified method calls).
-
-### 4. Build the Bindings JAR
-
-Compile the generated sources and build a JAR using your own build system (Maven, Gradle, etc.).
-
-### 5. Integrate into Your Classpath
-
-Add the generated JAR to your project's classpath and ensure the native libraries from step 1 are available at runtime.
+Questions and discussion: [Gravitee Community Forum](https://community.gravitee.io?utm_source=readme).
