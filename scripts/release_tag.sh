@@ -27,10 +27,13 @@ echo "release version: $RELEASE_VERSION"
 
 mvn versions:set -DgenerateBackupPoms=false -DnewVersion="$RELEASE_VERSION"
 
+# Keep the README "Installation" dependency snippet in sync with the released version.
+sed -i'' -E "s|<version>${OLD_VERSION}</version>|<version>${RELEASE_VERSION}</version>|g" README.md
+
 conventional-changelog -p conventionalcommits -i CHANGELOG.md -s
 tail -n+3 CHANGELOG.md | sed -r "s/###/##/g" > ./release-note.md
 rm CHANGELOG.md
 
-git add pom.xml
+git add pom.xml README.md
 git commit -m "chore: release $RELEASE_VERSION [skip ci]"
 git tag -a "$RELEASE_VERSION" -m "$RELEASE_VERSION"

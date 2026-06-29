@@ -77,7 +77,7 @@ public class Main {
     }
   }
 
-  public static void main(String[] args) {
+  static void main(String[] args) {
     Map<String, String> params = parseArgs(args);
 
     String modelGguf = params.get("model");

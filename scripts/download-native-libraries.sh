@@ -145,4 +145,8 @@ else
   exit 1
 fi
 
+# Drop libraries the binding never loads: llama.cpp's tool implementations (*-impl: cli, server, bench, quantize, perplexity, *-common).
+# We only call the C ABI (libllama / libmtmd / libggml*)
+find "$OUTPUT_DIR" -maxdepth 1 \( -name "*-common*" -o -name "*-impl*" \) -delete
+
 echo "✅ Downloaded and extracted libraries to $OUTPUT_DIR"

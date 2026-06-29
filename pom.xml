@@ -350,7 +350,42 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>licenses</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE-llama-cpp</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>remove-native-libs-from-resources</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.basedir}/src/main/resources/macosx</directory>
+                                </fileset>
+                                <fileset>
+                                    <directory>${project.basedir}/src/main/resources/linux</directory>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
@@ -363,6 +398,7 @@
                         <licenseSet>
                             <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
                             <excludes>
+                                <exclude>licenses/LICENSE-llama-cpp</exclude>
                                 <exclude>CONTRIBUTING.adoc</exclude>
                                 <exclude>LICENSE.txt</exclude>
                                 <exclude>.circleci/config.yml</exclude>
@@ -400,6 +436,10 @@
                             <mainClass>io.gravitee.llama.cpp.Main</mainClass>
                         </manifest>
                     </archive>
+                    <excludes>
+                        <exclude>macosx/**</exclude>
+                        <exclude>linux/**</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
