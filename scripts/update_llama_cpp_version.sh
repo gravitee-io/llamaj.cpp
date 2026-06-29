@@ -23,6 +23,7 @@ CLONE_DIR="$HOME_DIR/llama.cpp"
 PROJECT_DIR="$HOME_DIR/llamaj.cpp"
 POM_FILE="$PROJECT_DIR/pom.xml"
 CIRCLECI_CONFIG="$PROJECT_DIR/.circleci/config.yml"
+README_FILE="$PROJECT_DIR/README.md"
 
 # --- Clone llama.cpp repo ---
 echo "Cloning llama.cpp into $CLONE_DIR..."
@@ -47,16 +48,25 @@ git checkout -b "$branch_name"
 echo "Updating versions from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION..."
 sed -i'' -E "s/$OLD_LLAMA_CPP_VERSION/$NEW_LLAMA_CPP_VERSION/g" "$POM_FILE"
 sed -i'' -E "s/$OLD_LLAMA_CPP_VERSION/$NEW_LLAMA_CPP_VERSION/g" "$CIRCLECI_CONFIG"
+# README badge + attribution reference the pinned llama.cpp tag (e.g. b9673).
+sed -i'' -E "s/$OLD_LLAMA_CPP_VERSION/$NEW_LLAMA_CPP_VERSION/g" "$README_FILE"
+
+# --- Refresh the bundled llama.cpp license ---
+# Keep licenses/LICENSE-llama-cpp in sync with the version we ship
+LICENSE_DEST="$PROJECT_DIR/licenses/LICENSE-llama-cpp"
+echo "Refreshing $LICENSE_DEST from llama.cpp $NEW_LLAMA_CPP_VERSION..."
+mkdir -p "$PROJECT_DIR/licenses"
+cp "$CLONE_DIR/LICENSE" "$LICENSE_DEST"
 
 # --- Commit and push changes ---
 echo "Committing and pushing changes..."
-git add "$POM_FILE" "$CIRCLECI_CONFIG"
+git add "$POM_FILE" "$CIRCLECI_CONFIG" "$README_FILE" "$LICENSE_DEST"
 
-TITLE="chore(deps): update llama.cpp from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION"
+TITLE="feat(deps): update llama.cpp from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION"
 git commit -m "$TITLE"
 git push origin "$branch_name"
 
 # --- Create GitHub PR ---
 echo "Creating pull request..."
 gh pr create --title "$TITLE" \
-  --body "This PR updates llama.cpp from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION"
+  --body "This PR updates llama.cpp from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION."

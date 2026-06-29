@@ -257,11 +257,7 @@ commands:
           steps:
             - persist_to_workspace:
                 root: "/home/circleci/llamaj.cpp"
-                paths:
-                  [
-                    "src/main/resources/linux",
-                    "target/generated-sources/io/gravitee/llama/cpp/linux",
-                  ]
+                paths: ["target/generated-sources/io/gravitee/llama/cpp/linux"]
       - when:
           condition:
             and:
@@ -269,11 +265,7 @@ commands:
           steps:
             - persist_to_workspace:
                 root: "/Users/distiller/llamaj.cpp"
-                paths:
-                  [
-                    "src/main/resources/macosx",
-                    "target/generated-sources/io/gravitee/llama/cpp/macosx",
-                  ]
+                paths: ["target/generated-sources/io/gravitee/llama/cpp/macosx"]
 
   release_tag:
     steps:

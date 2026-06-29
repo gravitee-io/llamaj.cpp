@@ -28,8 +28,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
 /**
@@ -174,18 +172,15 @@ public final class LlamaLibLoader {
       ) {
         load(libDirStr);
       } else {
-        List<String> resources;
-
-        File jarFile = getRunningJarFile();
-        if (jarFile != null) {
-          System.out.println("Copying llama.cpp native libraries from jar");
-          resources = listJarResources(platform.getPackage(), jarFile);
-        } else {
-          System.out.println(
-            "Copying llama.cpp native libraries from classes folder"
-          );
-          resources = listResourcesFromClassesFolder(platform.getPackage());
-        }
+        // Native libraries are no longer shipped in the jar. During the build/tests they live in
+        // the classes folder (downloaded into src/main/resources); copy them into the lib dir.
+        // End users instead provide libs via ~/.llama.cpp or LLAMA_CPP_LIB_PATH (handled above).
+        System.out.println(
+          "Copying llama.cpp native libraries from classes folder"
+        );
+        List<String> resources = listResourcesFromClassesFolder(
+          platform.getPackage()
+        );
 
         // Extract real files first, then recreate symlinks.
         // This ensures symlink targets exist before symlinks are created.
@@ -209,22 +204,19 @@ public final class LlamaLibLoader {
     }
   }
 
-  private static List<String> listJarResources(String packageName, File jarFile)
-    throws IOException {
-    String prefix = packageName.replace('.', '/') + "/";
-    try (JarFile jar = new JarFile(jarFile)) {
-      return jar
-        .stream()
-        .map(JarEntry::getName)
-        .filter(name -> name.startsWith(prefix) && !name.endsWith("/"))
-        .toList();
-    }
-  }
-
   private static List<String> listResourcesFromClassesFolder(String packageName)
     throws IOException, URISyntaxException {
     String path = packageName.replace('.', '/');
-    Path classesFolder = Path.of(classLoader().getResource(path).toURI());
+    var resource = classLoader().getResource(path);
+    if (resource == null) {
+      throw new IllegalStateException(
+        "No llama.cpp native libraries found for '" +
+          path +
+          "'. They are not bundled in the jar — install them with " +
+          "scripts/download-native-libraries.sh into ~/.llama.cpp, or set LLAMA_CPP_LIB_PATH."
+      );
+    }
+    Path classesFolder = Path.of(resource.toURI());
     List<String> resources = new ArrayList<>();
 
     try (var walk = Files.walk(classesFolder)) {
@@ -238,19 +230,6 @@ public final class LlamaLibLoader {
         });
     }
     return resources;
-  }
-
-  private static File getRunningJarFile() throws URISyntaxException {
-    String path = LlamaLibLoader.class.getProtectionDomain()
-      .getCodeSource()
-      .getLocation()
-      .toURI()
-      .getPath();
-    File file = new File(path);
-    if (file.isFile() && file.getName().endsWith(".jar")) {
-      return file;
-    }
-    return null;
   }
 
   private static Path getHomeLlamaCpp() throws IOException {
