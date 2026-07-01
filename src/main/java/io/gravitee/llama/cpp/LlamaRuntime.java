@@ -785,16 +785,26 @@ public final class LlamaRuntime {
    * @return A new mtmd_bitmap pointer, or NULL (address 0) on failure
    */
   public static MemorySegment mtmd_helper_bitmap_init_from_buf(
+    SegmentAllocator allocator,
     MemorySegment mtmdContext,
     MemorySegment buf,
-    long len
+    long len,
+    boolean placeholder
   ) {
     return llama_h(
       "mtmd_helper_bitmap_init_from_buf",
-      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, long.class },
+      new Class<?>[] {
+        SegmentAllocator.class,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        long.class,
+        boolean.class,
+      },
+      allocator,
       mtmdContext,
       buf,
-      len
+      len,
+      placeholder
     );
   }
 
@@ -830,11 +840,15 @@ public final class LlamaRuntime {
     );
   }
 
-  public static boolean mtmd_decode_use_non_causal(MemorySegment mtmdContext) {
+  public static boolean mtmd_decode_use_non_causal(
+    MemorySegment mtmdContext,
+    MemorySegment chunk
+  ) {
     return llama_h(
       "mtmd_decode_use_non_causal",
-      new Class<?>[] { MEM_SEG_CLASS },
-      mtmdContext
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      mtmdContext,
+      chunk
     );
   }
 
@@ -2643,14 +2657,6 @@ public final class LlamaRuntime {
       new Class<?>[] { MEM_SEG_CLASS, int.class },
       segment,
       nThreads
-    );
-  }
-
-  public static int mtmd_context_params_verbosity(MemorySegment segment) {
-    return (int) mtmd_context_params(
-      "verbosity",
-      new Class<?>[] { MEM_SEG_CLASS },
-      segment
     );
   }
 

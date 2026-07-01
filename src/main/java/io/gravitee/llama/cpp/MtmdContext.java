@@ -141,11 +141,16 @@ public class MtmdContext extends MemorySegmentAware implements Freeable {
       0,
       fileBytes.length
     );
-    MemorySegment bitmap = mtmd_helper_bitmap_init_from_buf(
+    // We decode single image/audio files here (placeholder=false, no video), so the
+    // bitmap pointer is the first field at offset 0.
+    MemorySegment wrapper = mtmd_helper_bitmap_init_from_buf(
+      arena,
       segment,
       buf,
-      fileBytes.length
+      fileBytes.length,
+      false
     );
+    MemorySegment bitmap = wrapper.get(ValueLayout.ADDRESS, 0);
     if (bitmap == null || bitmap.address() == 0) {
       throw new LlamaException(
         "Failed to create bitmap from file bytes (unsupported format or corrupt data)"
