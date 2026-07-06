@@ -275,6 +275,13 @@ public class Main {
       System.exit(1);
     }
 
+    // MTP self-speculation: rejecting draft tokens rewinds the target, and hybrid
+    // attention+SSM models can only rewind recurrent state from rollback snapshots —
+    // allocate them on the target context (harmless for pure-attention models).
+    if (speculativeConfig != null && params.containsKey("mtp")) {
+      contextParams.nRsSeq(speculativeConfig.nDraft() + 1);
+    }
+
     LlamaContext context = new LlamaContext(ARENA, model, contextParams);
 
     // Optional draft model + context for model drafting. setDraft() enforces a shared vocab size.
@@ -288,6 +295,46 @@ public class Main {
         modelParameters
       );
       draftContext = new LlamaContext(ARENA, draftModel, contextParams);
+    }
+
+    // Optional MTP self-speculation: a second context over the TARGET model driving its nextn
+    // head (no separate draft model). Requires a model with a multi-token-prediction head.
+    LlamaContext mtpContext = null;
+    if (speculativeConfig != null && params.containsKey("mtp")) {
+      if (LlamaRuntime.llama_model_n_layer_nextn(model.segment) <= 0) {
+        System.err.println(
+          "Error: --mtp requires a model with an MTP head (n_layer_nextn > 0)."
+        );
+        System.exit(1);
+      }
+      var mtpParams = new LlamaContextParams(ARENA)
+        .nCtx(context.nCtx())
+        .nBatch(context.nBatch())
+        .poolingType(PoolingType.NONE)
+        .nRsSeq(speculativeConfig.nDraft() + 1)
+        // Sized for the fused BatchIterator path: one KV stream + one output row per
+        // concurrent sequence (a single-sequence run just uses fewer).
+        .nSeqMax(context.nSeqMax())
+        .nOutputsMax(Math.max(1, context.nSeqMax()))
+        .ctxOther(context)
+        .ctxTypeMtp()
+        .noPerf(true);
+      mtpContext = new LlamaContext(ARENA, model, mtpParams);
+    }
+
+    // Optional EAGLE3 head model + context (separate tiny trained speculator).
+    LlamaModel eagle3Model = null;
+    LlamaContext eagle3Context = null;
+    String eagle3Gguf = params.get("eagle3");
+    if (
+      speculativeConfig != null && eagle3Gguf != null && !eagle3Gguf.isBlank()
+    ) {
+      eagle3Model = new LlamaModel(
+        ARENA,
+        Path.of(eagle3Gguf).toAbsolutePath(),
+        modelParameters
+      );
+      eagle3Context = new LlamaContext(ARENA, eagle3Model, contextParams);
     }
 
     LlamaSampler sampler = llamaSampler(strategy, context, vocab, params);
@@ -355,11 +402,15 @@ public class Main {
         .setMaxTokens(quota)
         .setMedia(initialMedia); // Set initial media (images and/or audio)
 
-      // Enable speculation for this turn: model drafting if a draft context exists, else n-gram.
-      // DefaultLlamaIterator dispatches to the speculative path when state.isSpeculative().
+      // Enable speculation for this turn: model drafting, MTP self-speculation, EAGLE3 head
+      // drafting, or n-gram. DefaultLlamaIterator dispatches when state.isSpeculative().
       if (speculativeConfig != null) {
         if (draftContext != null) {
           state.setDraft(draftContext, speculativeConfig);
+        } else if (mtpContext != null) {
+          state.setMtp(mtpContext, speculativeConfig);
+        } else if (eagle3Context != null) {
+          state.setEagle3(eagle3Context, eagle3Model, speculativeConfig);
         } else {
           state.setNgram(speculativeConfig);
         }
@@ -463,6 +514,14 @@ public class Main {
       System.out.println();
     }
 
+    // Free contexts before their models; the MTP context borrows the target's tensors
+    // (ctx_other), so it must go before the target context.
+    if (mtpContext != null) {
+      mtpContext.free();
+    }
+    if (eagle3Context != null) {
+      eagle3Context.free();
+    }
     context.free();
     sampler.free();
     if (draftContext != null) {
@@ -471,6 +530,9 @@ public class Main {
     model.free();
     if (draftModel != null) {
       draftModel.free();
+    }
+    if (eagle3Model != null) {
+      eagle3Model.free();
     }
     if (mtmdContext != null) {
       mtmdContext.free();
@@ -560,6 +622,9 @@ public class Main {
     String draftPath = params.get("draft");
     boolean modelDraft = draftPath != null && !draftPath.isBlank();
     boolean ngramDraft = params.containsKey("ngram");
+    boolean mtpDraft = params.containsKey("mtp");
+    String eagle3Path = params.get("eagle3");
+    boolean eagle3Draft = eagle3Path != null && !eagle3Path.isBlank();
 
     if (params.containsKey("draft") && !modelDraft) {
       System.err.println(
@@ -567,12 +632,24 @@ public class Main {
       );
       System.exit(1);
     }
-    if (!modelDraft && !ngramDraft) {
+    if (params.containsKey("eagle3") && !eagle3Draft) {
+      System.err.println(
+        "Error: --eagle3 requires a path to an EAGLE3 head GGUF model."
+      );
+      System.exit(1);
+    }
+    if (!modelDraft && !ngramDraft && !mtpDraft && !eagle3Draft) {
       return null;
     }
-    if (modelDraft && ngramDraft) {
+    int flavours =
+      (modelDraft ? 1 : 0) +
+      (ngramDraft ? 1 : 0) +
+      (mtpDraft ? 1 : 0) +
+      (eagle3Draft ? 1 : 0);
+    if (flavours > 1) {
       System.err.println(
-        "Error: use either --draft (model drafting) or --ngram (prompt-lookup), not both."
+        "Error: use exactly one of --draft (model drafting), --ngram (prompt-lookup), " +
+          "--mtp (nextn self-speculation) or --eagle3 (EAGLE3 head)."
       );
       System.exit(1);
     }
@@ -615,7 +692,7 @@ public class Main {
     if (ngramDraft) {
       if (adaptive) {
         System.err.println(
-          "Error: --p_min/--draft_min (adaptive early-stop) apply only to --draft model drafting, not --ngram."
+          "Error: --p_min/--draft_min (adaptive early-stop) do not apply to --ngram (no draft confidence to gate on)."
         );
         System.exit(1);
       }
@@ -837,17 +914,24 @@ public class Main {
       Performance:
         --perf <true|false>         Show performance metrics (default: false)
 
-      Speculative decoding (optional; draft-->verify-->accept speedup):
+      Speculative decoding (optional; draft-->verify-->accept speedup; pick exactly one flavour):
         --draft <path>              Draft model GGUF for model drafting (must share the target's
-                                    vocab). Mutually exclusive with --ngram.
+                                    vocab).
         --ngram <window>            Enable n-gram prompt-lookup drafting with this window, no draft
                                     model (default window: 2).
+        --mtp                       MTP (nextn) self-speculation: the target model's own multi-token-
+                                    prediction head drafts, no separate model. Requires a model with
+                                    n_layer_nextn > 0 and the staging nextn API in the bundled
+                                    llama.cpp.
+        --eagle3 <path>             EAGLE3 head model GGUF (arch eagle3, trained for this target)
+                                    drafting from the target's intermediate hidden states. Dense
+                                    targets; prompt must fit one batch.
         --n_draft <int>             Max tokens drafted/proposed per round (default: 4).
                                     Lossless greedy under --strategy DETERMINISTIC; otherwise an exact
                                     sampler using temperature/top-k/top-p only (penalties/min-p/grammar/
                                     mirostat do not apply). Incompatible with CONSTRAINED/ADAPTIVE and --mmproj.
         --p_min <float>             Adaptive early-stop: stop drafting once the draft's top-token
-                                    probability drops below this (model drafting only; 0 = disabled).
+                                    probability drops below this (not --ngram; 0 = disabled).
                                     Distinct from --min_p (which is min-p sampling).
         --draft_min <int>           Min tokens to draft before --p_min applies (default: 1; clamped to
                                     [1, n_draft]).
@@ -898,6 +982,8 @@ public class Main {
         java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --ngram 2 --n_draft 4
         java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --draft ./draft.gguf --n_draft 6
         java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --draft ./draft.gguf --n_draft 8 --p_min 0.6
+        java -jar llamaj.cpp.jar --model ./mtp-model.gguf --strategy DETERMINISTIC --mtp --n_draft 2
+        java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --eagle3 ./eagle3-head.gguf --n_draft 2
       """
     );
   }

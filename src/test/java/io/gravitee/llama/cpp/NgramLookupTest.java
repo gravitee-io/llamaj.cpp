@@ -17,6 +17,7 @@ package io.gravitee.llama.cpp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.gravitee.llama.cpp.draft.NgramIndex;
 import org.junit.jupiter.api.Test;
 
 /**

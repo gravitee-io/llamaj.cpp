@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.llama.cpp;
+package io.gravitee.llama.cpp.speculative;
 
 import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
 
+import io.gravitee.llama.cpp.*;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.util.Random;
@@ -34,17 +35,17 @@ import java.util.Random;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-final class Speculation {
+public final class Speculation {
 
   /** Post-sampler candidate distribution snapshot ({@code id -> prob} over the kept support). */
-  record Snapshot(
+  public record Snapshot(
     int[] ids,
     float[] probs,
     int selectedId,
     float selectedProbability
   ) {
     /** Highest probability over the kept support — the draft's confidence (for adaptive stop). */
-    float maxProb() {
+    public float maxProb() {
       float max = 0.0f;
       for (float p : probs) {
         if (p > max) {
@@ -71,7 +72,7 @@ final class Speculation {
   private LlamaBatch draftBatch;
   private LlamaBatch verifyBatch;
 
-  Speculation(Arena arena, int nVocab, SpeculativeConfig config) {
+  public Speculation(Arena arena, int nVocab, SpeculativeConfig config) {
     this.config = config;
     this.arena = arena;
     this.targetBuf = new LlamaTokenDataArray(arena, nVocab);
@@ -80,19 +81,19 @@ final class Speculation {
     this.qScatter = new float[nVocab];
   }
 
-  boolean isGreedy() {
+  public boolean isGreedy() {
     return config.isGreedy();
   }
 
-  boolean isAdaptive() {
+  public boolean isAdaptive() {
     return config.isAdaptive();
   }
 
-  int draftMin() {
+  public int draftMin() {
     return config.draftMin();
   }
 
-  float pMin() {
+  public float pMin() {
     return config.pMin();
   }
 
@@ -101,7 +102,7 @@ final class Speculation {
    * reused across rounds. Reuse gives the stochastic chain a single continuous RNG stream (more
    * correct than re-seeding every round); the greedy chain is stateless. Freed by {@link #free()}.
    */
-  LlamaSampler chain() {
+  public LlamaSampler chain() {
     if (chain == null) {
       chain = buildChain();
     }
@@ -126,7 +127,7 @@ final class Speculation {
   }
 
   /** Persistent single-token draft batch (reused via {@code clear()}). */
-  LlamaBatch draftBatch() {
+  public LlamaBatch draftBatch() {
     if (draftBatch == null) {
       draftBatch = new LlamaBatch(arena, 1, 0, 1);
     }
@@ -134,7 +135,7 @@ final class Speculation {
   }
 
   /** Persistent verify batch sized for idLast + up to {@code nDraft} drafted tokens. */
-  LlamaBatch verifyBatch() {
+  public LlamaBatch verifyBatch() {
     if (verifyBatch == null) {
       verifyBatch = new LlamaBatch(arena, config.nDraft() + 1, 0, 1);
     }
@@ -146,7 +147,7 @@ final class Speculation {
    * idempotent (a double-free is a no-op) and a re-initialized conversation lazily rebuilds them on
    * next use. Must be called on the owning iterator thread before the state's arena is closed.
    */
-  void free() {
+  public void free() {
     if (chain != null) {
       chain.free();
       chain = null;
@@ -168,7 +169,7 @@ final class Speculation {
    * tie-break) and writes its softmax probability {@code 1/Σexp(logit-maxLogit)} into
    * {@code probOut[0]}. Used only when adaptive early stop is enabled.
    */
-  int draftGreedyConfident(
+  public int draftGreedyConfident(
     MemorySegment logitsRow,
     int nVocab,
     float[] probOut
@@ -190,12 +191,12 @@ final class Speculation {
     return argmax;
   }
 
-  Snapshot draft(LlamaSampler chain, MemorySegment logitsRow) {
+  public Snapshot draft(LlamaSampler chain, MemorySegment logitsRow) {
     return snapshot(draftBuf, chain, logitsRow);
   }
 
   /** Selected token only — applies the chain to the target buffer and returns its choice. */
-  int targetSelect(LlamaSampler chain, MemorySegment logitsRow) {
+  public int targetSelect(LlamaSampler chain, MemorySegment logitsRow) {
     return select(targetBuf, chain, logitsRow);
   }
 
@@ -243,7 +244,7 @@ final class Speculation {
    * as the {@link Snapshot}-based {@link #accept} (one native apply + at most one accept coin), so the
    * sampled distribution is identical — this only avoids materializing the target snapshot.
    */
-  boolean acceptTarget(
+  public boolean acceptTarget(
     LlamaSampler chain,
     MemorySegment logitsRow,
     int draftedToken,
@@ -275,7 +276,7 @@ final class Speculation {
    * (two passes; no {@code float[]} of differences). Must be called immediately after a rejecting
    * {@link #acceptTarget} for the same position (no intervening fill/apply).
    */
-  int residualTargetScatter(Snapshot draft) {
+  public int residualTargetScatter(Snapshot draft) {
     int[] draftIds = draft.ids();
     float[] draftProbs = draft.probs();
     for (int i = 0; i < draftIds.length; i++) {
@@ -321,7 +322,7 @@ final class Speculation {
    * {@code (p - 1)₊ = 0} there) and renormalized. Allocation-free. Must be called immediately after
    * a rejecting {@link #acceptTarget} for the same position.
    */
-  int residualTargetPointMass(int token) {
+  public int residualTargetPointMass(int token) {
     int n = (int) targetBuf.size();
     double sum = 0.0;
     for (int i = 0; i < n; i++) {

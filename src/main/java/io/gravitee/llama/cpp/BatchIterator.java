@@ -15,7 +15,10 @@
  */
 package io.gravitee.llama.cpp;
 
+import io.gravitee.llama.cpp.draft.HiddenStateDraft;
+import io.gravitee.llama.cpp.speculative.Speculation;
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.util.*;
 
 /**
@@ -26,12 +29,17 @@ public final class BatchIterator
   extends LlamaIterator<LlamaOutput>
   implements AutoCloseable {
 
+  private final Arena arena;
   private final LlamaContext context;
   private final LlamaBatch batch;
   private final Map<Integer, ConversationState> seqIdToState;
   private final Map<Integer, Boolean> firstTokenEmitted;
   private final Map<Integer, Integer> seqIdToBatchPos;
   private final List<LlamaOutput> currentOutputs = new ArrayList<>();
+  // Per-head-context dual token+embd scratch for fused MTP/EAGLE3 draft chains (lazily built,
+  // freed with the iterator).
+  private final Map<LlamaContext, FusedDualBatch> dualScratch =
+    new LinkedHashMap<>();
   private int currentOutputIndex = 0;
   private volatile boolean stopped = false;
   private boolean freed = false;
@@ -49,6 +57,7 @@ public final class BatchIterator
     MtmdContext mtmdContext
   ) {
     super(null, mtmdContext); // No initial state - states are added via addState()
+    this.arena = arena;
     this.context = context;
     this.batch = new LlamaBatch(arena, context.nBatch(), 0, context.nSeqMax());
     this.seqIdToState = new HashMap<>();
@@ -226,11 +235,17 @@ public final class BatchIterator
       }
     }
     Map<LlamaContext, List<Integer>> byDraftContext = new LinkedHashMap<>();
+    Map<LlamaContext, List<Integer>> byHiddenContext = new LinkedHashMap<>();
     for (int c = 0; c < n; c++) {
       ConversationState s = states.get(c);
       if (s.hasDraft()) {
         byDraftContext
           .computeIfAbsent(s.getDraftContext(), key -> new ArrayList<>())
+          .add(c);
+      } else if (s.isMtp() || s.isEagle3()) {
+        // MTP/EAGLE3: fused per shared head context (dual token+embd chain steps).
+        byHiddenContext
+          .computeIfAbsent(hiddenDraft(s).context(), key -> new ArrayList<>())
           .add(c);
       } else {
         // n-gram: propose up to nDraft tokens from the committed history (no draft decode).
@@ -250,12 +265,26 @@ public final class BatchIterator
         nDrafted
       );
     }
+    for (var entry : byHiddenContext.entrySet()) {
+      draftHiddenGroupFused(
+        states,
+        entry.getKey(),
+        entry.getValue(),
+        chains,
+        drafted,
+        snaps,
+        nDrafted
+      );
+    }
 
-    // Phase B — one fused target decode over all sequences' drafts.
+    // Phase B — one fused target decode over all sequences' drafts. Each sequence's pre-verify
+    // idLast is captured for the hidden-state advance (acceptSequence overwrites newTokenId).
+    int[] idLast = new int[n];
     batch.clear();
     for (int c = 0; c < n; c++) {
       ConversationState s = states.get(c);
       base[c] = batch.nTokens();
+      idLast[c] = s.getNewTokenId();
       var seq = List.of(s.getSequenceId());
       batch.add(s.getNewTokenId(), s.getNPast(), seq, true);
       for (int i = 0; i < nDrafted[c]; i++) {
@@ -282,6 +311,24 @@ public final class BatchIterator
         snaps[c],
         nVocab
       );
+    }
+
+    // Phase C' — advance MTP seeds / EAGLE3 boundaries from the verify decode's capture buffers.
+    // Must run before any further TARGET decode (the captures cover only the last target decode);
+    // Phase D only decodes draft contexts, so ordering here is safe.
+    for (int c = 0; c < n; c++) {
+      ConversationState s = states.get(c);
+      if (s.isMtp() || s.isEagle3()) {
+        advanceHiddenState(
+          s,
+          base[c],
+          idLast[c],
+          oldNPast[c],
+          matched[c],
+          nDrafted[c],
+          drafted[c]
+        );
+      }
     }
 
     // Phase D — fused gap-fill, only for full-accept (still-running) sequences. On partial accept
@@ -408,6 +455,235 @@ public final class BatchIterator
           active[j] = false;
         }
       }
+    }
+  }
+
+  /**
+   * Fused draft chain for a group of MTP/EAGLE3 sequences sharing one head context: each chain
+   * step decodes one dual (token, hidden) row per still-drafting sequence in a single batched
+   * head decode, then samples per row and chains each sequence on its own row's hidden output
+   * ({@link HiddenStateDraft#chainHidden(int)}). Semantics per sequence are identical to the
+   * single-sequence rounds (greedy/confident/snapshot sampling, adaptive early-stop).
+   */
+  private void draftHiddenGroupFused(
+    List<ConversationState> states,
+    LlamaContext headContext,
+    List<Integer> group,
+    LlamaSampler[] chains,
+    int[][] drafted,
+    Speculation.Snapshot[][] snaps,
+    int[] nDrafted
+  ) {
+    int g = group.size();
+    FusedDualBatch dual = dualScratch.computeIfAbsent(headContext, ctx ->
+      new FusedDualBatch(
+        ctx,
+        hiddenDraft(states.get(group.get(0))).hiddenSize()
+      )
+    );
+    if (g > dual.capacity) {
+      throw new LlamaException(
+        "Fused MTP/EAGLE3 draft needs head n_seq_max >= " +
+          g +
+          " (sequences sharing a head context); got " +
+          dual.capacity
+      );
+    }
+    int nVocab = context.nVocab();
+    int[] prev = new int[g];
+    int[] basePos = new int[g];
+    float[][] hidden = new float[g][];
+    boolean[] active = new boolean[g];
+    float[] probOut = new float[1];
+    int maxK = 0;
+    for (int j = 0; j < g; j++) {
+      ConversationState s = states.get(group.get(j));
+      HiddenStateDraft drafter = hiddenDraft(s);
+      prev[j] = s.getNewTokenId();
+      // MTP pairs (token @ P, hidden @ P-1) starting at nPast; the EAGLE3 decoder pairs
+      // (token @ P+1, g @ P) starting at the pending boundary nPast-1.
+      basePos[j] = s.isMtp() ? s.getNPast() : s.getNPast() - 1;
+      hidden[j] = s.isMtp()
+        ? s.getMtpDraft().seed()
+        : s.getEagle3Draft().boundary();
+      active[j] = true;
+      nDrafted[group.get(j)] = 0;
+      maxK = Math.max(maxK, s.getNDraft());
+      // Wipe stale head cells in this round's write window (previous round's chain overrun).
+      headContext.getMemory().seqRm(s.getSequenceId(), basePos[j], -1);
+    }
+
+    int[] row = new int[g];
+    for (int step = 0; step < maxK; step++) {
+      dual.clear();
+      int packed = 0;
+      for (int j = 0; j < g; j++) {
+        if (!active[j]) {
+          continue;
+        }
+        ConversationState s = states.get(group.get(j));
+        row[j] = dual.addRow(
+          prev[j],
+          basePos[j] + step,
+          s.getSequenceId(),
+          hidden[j]
+        );
+        packed++;
+      }
+      if (packed == 0) {
+        break;
+      }
+      if (dual.decode() != 0) {
+        throw new LlamaException("Fused MTP/EAGLE3 draft decode failed");
+      }
+      for (int j = 0; j < g; j++) {
+        if (!active[j]) {
+          continue;
+        }
+        int c = group.get(j);
+        ConversationState s = states.get(c);
+        Speculation spec = s.getSpeculation();
+        int sampled;
+        float topProb;
+        if (spec.isGreedy()) {
+          if (spec.isAdaptive()) {
+            sampled = spec.draftGreedyConfident(
+              logitsRow(headContext, row[j], nVocab),
+              nVocab,
+              probOut
+            );
+            topProb = probOut[0];
+          } else {
+            sampled = chains[c].sample(headContext, row[j]);
+            topProb = 1.0f; // unused without adaptive stop
+          }
+        } else {
+          Speculation.Snapshot ds = spec.draft(
+            chains[c],
+            logitsRow(headContext, row[j], nVocab)
+          );
+          sampled = ds.selectedId();
+          snaps[c][nDrafted[c]] = ds;
+          topProb = ds.maxProb();
+        }
+        drafted[c][nDrafted[c]] = sampled;
+        nDrafted[c]++;
+        prev[j] = sampled;
+        if (nDrafted[c] >= s.getNDraft()) {
+          active[j] = false;
+        } else if (
+          spec.isAdaptive() &&
+          nDrafted[c] >= spec.draftMin() &&
+          topProb < spec.pMin()
+        ) {
+          active[j] = false;
+        } else {
+          // The head's own hidden for this row seeds this sequence's next chained draft.
+          hidden[j] = hiddenDraft(s).chainHidden(row[j]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Post-accept advance of a hidden-state sequence from its slice of the fused verify decode:
+   * MTP re-seeds from the target's hidden at the last accepted row; EAGLE3 encodes its verify
+   * rows' captured features, re-syncs the head decoder with only the accepted shifted pairs,
+   * and moves the pending boundary. Must run before the next TARGET decode (the capture buffers
+   * cover only the last one).
+   */
+  private void advanceHiddenState(
+    ConversationState s,
+    int base,
+    int idLast,
+    int oldNPast,
+    int matched,
+    int m,
+    int[] drafted
+  ) {
+    int seqId = s.getSequenceId();
+    int newNPast = oldNPast + matched + 1;
+    if (s.isMtp()) {
+      var mtp = s.getMtpDraft();
+      mtp.setSeed(context.getEmbeddingsIth(base + matched));
+      mtp.context().getMemory().seqRm(seqId, newNPast, -1);
+      return;
+    }
+    var e3 = s.getEagle3Draft();
+    int boundaryPos = oldNPast - 1;
+    // gv[r] = g at target pos oldNPast + r, from this sequence's verify-row slice.
+    float[][] gv = e3.encodeCaptured(context, base, m + 1);
+    // Head resync: wipe from the boundary, re-decode only the accepted shifted pairs.
+    e3.context().getMemory().seqRm(seqId, boundaryPos, -1);
+    int[] toks = new int[matched + 1];
+    int[] poss = new int[matched + 1];
+    float[][] rows = new float[matched + 1][];
+    toks[0] = idLast;
+    poss[0] = boundaryPos;
+    rows[0] = e3.boundary();
+    for (int k = 0; k < matched; k++) {
+      toks[k + 1] = drafted[k];
+      poss[k + 1] = boundaryPos + 1 + k;
+      rows[k + 1] = gv[k];
+    }
+    e3.syncPairs(toks, poss, rows, List.of(seqId));
+    e3.setBoundary(gv[matched]);
+  }
+
+  /** The state's hidden-state draft source (MTP head or EAGLE3 head). */
+  private static HiddenStateDraft hiddenDraft(ConversationState s) {
+    return s.isMtp() ? s.getMtpDraft() : s.getEagle3Draft();
+  }
+
+  /**
+   * Persistent dual token+embd batch for fused MTP/EAGLE3 chain steps on one head context:
+   * up to {@code n_seq_max} rows, each carrying a token plus that sequence's hidden-state row.
+   * The embd buffer is arena-owned and injected into the batch (nulled before free — see
+   * {@code LlamaExt.setBatchEmbd}).
+   */
+  private final class FusedDualBatch {
+
+    final LlamaContext head;
+    final LlamaBatch batch;
+    final MemorySegment embd;
+    final int nEmbd;
+    final int capacity;
+
+    FusedDualBatch(LlamaContext headContext, int nEmbd) {
+      this.head = headContext;
+      this.nEmbd = nEmbd;
+      this.capacity = Math.max(1, context.nSeqMax());
+      this.embd = arena.allocate((long) capacity * nEmbd * Float.BYTES);
+      this.batch = new LlamaBatch(arena, capacity, 0, 1);
+      LlamaExt.setBatchEmbd(batch, embd);
+    }
+
+    void clear() {
+      batch.clear();
+    }
+
+    /** Adds one (token, hidden) row; returns its batch row index (== logits row). */
+    int addRow(int token, int pos, int seqId, float[] hidden) {
+      int r = batch.nTokens();
+      batch.add(token, pos, List.of(seqId), true);
+      MemorySegment.copy(
+        hidden,
+        0,
+        embd,
+        java.lang.foreign.ValueLayout.JAVA_FLOAT,
+        (long) r * nEmbd * Float.BYTES,
+        nEmbd
+      );
+      return r;
+    }
+
+    int decode() {
+      return batch.decode(head);
+    }
+
+    void free() {
+      LlamaExt.setBatchEmbd(batch, MemorySegment.NULL);
+      batch.free();
     }
   }
 
@@ -805,6 +1081,10 @@ public final class BatchIterator
     }
     freed = true;
     stop();
+    for (FusedDualBatch dual : dualScratch.values()) {
+      dual.free();
+    }
+    dualScratch.clear();
     batch.free();
   }
 
@@ -820,7 +1100,7 @@ public final class BatchIterator
     // Free the speculative state's persistent native scratch (idempotent: null-on-free, so the
     // common path of removal-then-stop never double-frees). Non-speculative states have none.
     if (state.isSpeculative()) {
-      state.getSpeculation().free();
+      state.freeSpeculativeScratch();
     }
     firstTokenEmitted.remove(sequenceId);
     seqIdToBatchPos.remove(sequenceId);
