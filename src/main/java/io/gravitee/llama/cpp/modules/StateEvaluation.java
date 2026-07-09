@@ -85,10 +85,17 @@ public class StateEvaluation
       .stream()
       .filter(not(e -> this.stateAlreadyOccurred(e.getValue())))
       .map(Entry::getValue)
-      .filter(stateBounds -> stateBounds.start().equals(piece))
+      .filter(
+        stateBounds ->
+          isNullOrBlank(stateBounds) || stateBounds.start().equals(piece)
+      )
       .map(StateBounds::state)
       .findFirst()
       .orElse(GenerationState.ANSWER);
+  }
+
+  private static boolean isNullOrBlank(StateBounds stateBounds) {
+    return stateBounds.start() == null || stateBounds.start().isBlank();
   }
 
   private Boolean stateAlreadyOccurred(StateBounds stateBounds) {
