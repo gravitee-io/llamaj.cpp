@@ -18,6 +18,7 @@ package io.gravitee.llama.cpp;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import io.gravitee.llama.cpp.speculative.Speculation;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;

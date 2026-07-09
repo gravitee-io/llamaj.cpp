@@ -231,6 +231,16 @@ public final class LlamaBatch extends MemorySegmentAware implements Freeable {
   }
 
   /**
+   * Runs this batch through the context's <b>encoder</b> graph ({@code llama_encode}) —
+   * used by encoder-bearing architectures (e.g. EAGLE3 draft heads).
+   *
+   * @return 0 on success, non-zero on error
+   */
+  public int encode(LlamaContext context) {
+    return LlamaRuntime.llama_encode(context.segment, this.segment);
+  }
+
+  /**
    * Returns the number of tokens currently in this batch.
    */
   public int nTokens() {

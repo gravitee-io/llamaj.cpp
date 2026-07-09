@@ -942,6 +942,18 @@ public final class LlamaRuntime {
   }
 
   /**
+   * Returns the number of MTP "nextn" prediction layers the model carries
+   * ({@code 0} for models without a multi-token-prediction head).
+   */
+  public static int llama_model_n_layer_nextn(MemorySegment model) {
+    return llama_h(
+      "llama_model_n_layer_nextn",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  /**
    * Returns the number of classifier output classes for classifier / reranker models.
    * When {@link PoolingType#RANK} is active and this returns {@code 1}, the model is
    * a reranker (single relevance score). When it returns {@code > 1}, the model exposes
@@ -2320,6 +2332,15 @@ public final class LlamaRuntime {
     );
   }
 
+  public static int llama_encode(MemorySegment context, MemorySegment batch) {
+    return llama_h(
+      "llama_encode",
+      new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      context,
+      batch
+    );
+  }
+
   /* Free Memory */
   public static void llama_batch_free(LlamaBatch batch) {
     llama_h("llama_batch_free", new Class[] { MEM_SEG_CLASS }, batch.segment);
@@ -2641,7 +2662,7 @@ public final class LlamaRuntime {
   }
 
   public static int mtmd_context_params_n_threads(MemorySegment segment) {
-    return (int) mtmd_context_params(
+    return mtmd_context_params(
       "n_threads",
       new Class<?>[] { MEM_SEG_CLASS },
       segment
@@ -2663,7 +2684,7 @@ public final class LlamaRuntime {
   public static MemorySegment mtmd_context_params_media_marker(
     MemorySegment segment
   ) {
-    return (MemorySegment) mtmd_context_params(
+    return mtmd_context_params(
       "media_marker",
       new Class<?>[] { MEM_SEG_CLASS },
       segment
@@ -2727,7 +2748,7 @@ public final class LlamaRuntime {
   public static int mtmd_context_params_image_max_tokens(
     MemorySegment segment
   ) {
-    return (int) mtmd_context_params(
+    return mtmd_context_params(
       "image_max_tokens",
       new Class<?>[] { MEM_SEG_CLASS },
       segment
@@ -2805,7 +2826,6 @@ public final class LlamaRuntime {
    * @param targetMethodName The name of the method on the targetObject to be invoked by the native callback.
    * @param arena            The Arena to allocate the MemorySegment in.
    * @return A MemorySegment representing the native function pointer for the callback.
-   * @throws Exception if any reflective operation fails.
    */
   public static MemorySegment instantiateCallbackSegment(
     String callbackInterfaceName,
@@ -2813,7 +2833,7 @@ public final class LlamaRuntime {
     Object targetObject,
     String targetMethodName,
     Arena arena
-  ) throws Exception {
+  ) {
     String fullInterfaceName = basePackage + callbackInterfaceName;
 
     // --- 1. Load the interface class ---

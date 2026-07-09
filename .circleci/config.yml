@@ -156,24 +156,26 @@ commands:
 
   download_models:
     parameters:
-      repo:
+      os:
         type: string
-      files:
-        type: string
-      destinations:
+      models-dir:
         type: string
     steps:
+      # Bump the version suffix (also CACHE_KEY_VERSION note in the script) when
+      # scripts/ci-models.txt changes so the cache is invalidated.
+      - restore_cache:
+          keys:
+            - models-v1-<< parameters.os >>
       - run:
-          name: Download Models from << parameters.repo >>
+          name: Download models (parallel, cache-filling)
           command: |
-            mkdir -p $HOME_DIR/llamaj.cpp/models/
-            IFS=',' read -ra FILES \<<< "<< parameters.files >>"
-            IFS=',' read -ra DESTS \<<< "<< parameters.destinations >>"
-            for i in "${!FILES[@]}"; do
-              echo "Downloading ${FILES[$i]} -> ${DESTS[$i]}"
-              curl -L -o "$HOME_DIR/llamaj.cpp/${DESTS[$i]}" \
-                "https://huggingface.co/<< parameters.repo >>/resolve/main/${FILES[$i]}"
-            done
+            MODELS_ROOT="$HOME_DIR/llamaj.cpp" \
+              bash "$HOME_DIR/llamaj.cpp/scripts/download_ci_models.sh"
+      - save_cache:
+          # No-op when the key already exists (warm cache).
+          key: models-v1-<< parameters.os >>
+          paths:
+            - << parameters.models-dir >>
 
   run-tests:
     parameters:
@@ -367,44 +369,8 @@ jobs:
       - checkout:
           path: "/Users/distiller/llamaj.cpp"
       - download_models:
-          repo: "Qwen/Qwen3-0.6B-GGUF"
-          files: "Qwen3-0.6B-Q8_0.gguf"
-          destinations: "models/model.gguf"
-      - run:
-          name: Copy model for reasoning
-          command: cp $HOME_DIR/llamaj.cpp/models/model.gguf $HOME_DIR/llamaj.cpp/models/reasoning.gguf
-      - download_models:
-          repo: "phh/Qwen3-0.6B-TLDR-Lora"
-          files: "Qwen3-0.6B-tldr-lora-f16.gguf"
-          destinations: "models/lora-adapter.gguf"
-      - download_models:
-          repo: "Qwen/Qwen3-VL-2B-Instruct-GGUF"
-          files: "Qwen3VL-2B-Instruct-Q8_0.gguf,mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
-          destinations: "models/model_vl.gguf,models/mmproj.gguf"
-      - download_models:
-          repo: "ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF"
-          files: "Llama-3.2-1B-Instruct-Q8_0.gguf,mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
-          destinations: "models/model_audio.gguf,models/mmproj_audio.gguf"
-      - download_models:
-          repo: "Qwen/Qwen3-Embedding-0.6B-GGUF"
-          files: "Qwen3-Embedding-0.6B-Q8_0.gguf"
-          destinations: "models/embedding.gguf"
-      - download_models:
-          repo: "ggml-org/bge-m3-Q8_0-GGUF"
-          files: "bge-m3-q8_0.gguf"
-          destinations: "models/bge-m3.gguf"
-      - download_models:
-          repo: "n24q02m/Qwen3-Reranker-0.6B-GGUF"
-          files: "qwen3-reranker-0.6b-q4-k-m.gguf"
-          destinations: "models/reranker.gguf"
-      - download_models:
-          repo: "gpustack/jina-reranker-v1-tiny-en-GGUF"
-          files: "jina-reranker-v1-tiny-en-Q4_K_M.gguf"
-          destinations: "models/jina-reranker.gguf"
-      - download_models:
-          repo: "Qwen/Qwen3-1.7B-GGUF"
-          files: "Qwen3-1.7B-Q8_0.gguf"
-          destinations: "models/spec-target.gguf"
+          os: "macosx"
+          models-dir: "/Users/distiller/llamaj.cpp/models"
       - run-tests:
           os: "macosx"
           platform: "aarch64"
@@ -423,44 +389,8 @@ jobs:
       - checkout:
           path: "/home/circleci/llamaj.cpp"
       - download_models:
-          repo: "Qwen/Qwen3-0.6B-GGUF"
-          files: "Qwen3-0.6B-Q8_0.gguf"
-          destinations: "models/model.gguf"
-      - run:
-          name: Copy model for reasoning
-          command: cp $HOME_DIR/llamaj.cpp/models/model.gguf $HOME_DIR/llamaj.cpp/models/reasoning.gguf
-      - download_models:
-          repo: "phh/Qwen3-0.6B-TLDR-Lora"
-          files: "Qwen3-0.6B-tldr-lora-f16.gguf"
-          destinations: "models/lora-adapter.gguf"
-      - download_models:
-          repo: "Qwen/Qwen3-VL-2B-Instruct-GGUF"
-          files: "Qwen3VL-2B-Instruct-Q8_0.gguf,mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
-          destinations: "models/model_vl.gguf,models/mmproj.gguf"
-      - download_models:
-          repo: "ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF"
-          files: "Llama-3.2-1B-Instruct-Q8_0.gguf,mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf"
-          destinations: "models/model_audio.gguf,models/mmproj_audio.gguf"
-      - download_models:
-          repo: "Qwen/Qwen3-Embedding-0.6B-GGUF"
-          files: "Qwen3-Embedding-0.6B-Q8_0.gguf"
-          destinations: "models/embedding.gguf"
-      - download_models:
-          repo: "ggml-org/bge-m3-Q8_0-GGUF"
-          files: "bge-m3-q8_0.gguf"
-          destinations: "models/bge-m3.gguf"
-      - download_models:
-          repo: "n24q02m/Qwen3-Reranker-0.6B-GGUF"
-          files: "qwen3-reranker-0.6b-q4-k-m.gguf"
-          destinations: "models/reranker.gguf"
-      - download_models:
-          repo: "gpustack/jina-reranker-v1-tiny-en-GGUF"
-          files: "jina-reranker-v1-tiny-en-Q4_K_M.gguf"
-          destinations: "models/jina-reranker.gguf"
-      - download_models:
-          repo: "Qwen/Qwen3-1.7B-GGUF"
-          files: "Qwen3-1.7B-Q8_0.gguf"
-          destinations: "models/spec-target.gguf"
+          os: "linux"
+          models-dir: "/home/circleci/llamaj.cpp/models"
       - run-tests:
           os: "linux"
           platform: "x86_64"

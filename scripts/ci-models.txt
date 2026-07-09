@@ -1,0 +1,16 @@
+# CI model manifest: one entry per line as `repo file dest` (space-separated).
+# Consumed by scripts/download_ci_models.sh, which downloads every entry in
+# parallel from https://huggingface.co/<repo>/resolve/main/<file> into <dest>.
+# NOTE: bump CACHE_KEY_VERSION in that script whenever this list changes so the
+# CircleCI cache is invalidated.
+Qwen/Qwen3-0.6B-GGUF Qwen3-0.6B-Q8_0.gguf models/model.gguf
+phh/Qwen3-0.6B-TLDR-Lora Qwen3-0.6B-tldr-lora-f16.gguf models/lora-adapter.gguf
+Qwen/Qwen3-VL-2B-Instruct-GGUF Qwen3VL-2B-Instruct-Q8_0.gguf models/model_vl.gguf
+Qwen/Qwen3-VL-2B-Instruct-GGUF mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf models/mmproj.gguf
+ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF Llama-3.2-1B-Instruct-Q8_0.gguf models/model_audio.gguf
+ggml-org/ultravox-v0_5-llama-3_2-1b-GGUF mmproj-ultravox-v0_5-llama-3_2-1b-f16.gguf models/mmproj_audio.gguf
+Qwen/Qwen3-Embedding-0.6B-GGUF Qwen3-Embedding-0.6B-Q8_0.gguf models/embedding.gguf
+ggml-org/bge-m3-Q8_0-GGUF bge-m3-q8_0.gguf models/bge-m3.gguf
+n24q02m/Qwen3-Reranker-0.6B-GGUF qwen3-reranker-0.6b-q4-k-m.gguf models/reranker.gguf
+gpustack/jina-reranker-v1-tiny-en-GGUF jina-reranker-v1-tiny-en-Q4_K_M.gguf models/jina-reranker.gguf
+Qwen/Qwen3-1.7B-GGUF Qwen3-1.7B-Q8_0.gguf models/spec-target.gguf

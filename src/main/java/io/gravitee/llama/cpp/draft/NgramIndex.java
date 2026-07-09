@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.llama.cpp;
+package io.gravitee.llama.cpp.draft;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,7 +36,7 @@ import java.util.Map;
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
-final class NgramIndex {
+public final class NgramIndex {
 
   private static final int[] NO_DRAFT = new int[0];
   private static final long HASH_PRIME = 1099511628211L;
@@ -46,19 +46,19 @@ final class NgramIndex {
   private int histLen;
   private final Map<Long, Positions> index = new HashMap<>();
 
-  NgramIndex(int ngram) {
+  public NgramIndex(int ngram) {
     this.ngram = ngram;
     this.history = new int[16];
   }
 
   /** Resets to empty, reusing the buffer — for a re-initialized conversation. */
-  void clear() {
+  public void clear() {
     histLen = 0;
     index.clear();
   }
 
   /** Appends one committed token and indexes the {@code ngram} window it completes (if any). */
-  void append(int token) {
+  public void append(int token) {
     if (histLen == history.length) {
       history = Arrays.copyOf(history, history.length * 2);
     }
@@ -74,7 +74,7 @@ final class NgramIndex {
    * Proposes up to {@code kMax} tokens that followed the most recent earlier occurrence of the last
    * {@code ngram} tokens; empty array if there is no earlier match.
    */
-  int[] propose(int kMax) {
+  public int[] propose(int kMax) {
     if (histLen < ngram + 1) {
       return NO_DRAFT;
     }

@@ -94,6 +94,11 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     return nBatch;
   }
 
+  /** The micro-batch size ({@code n_ubatch}) this context was created with. */
+  public int nUbatch() {
+    return LlamaRuntime.llama_n_ubatch(segment);
+  }
+
   public int nUBatch() {
     return nUBatch;
   }

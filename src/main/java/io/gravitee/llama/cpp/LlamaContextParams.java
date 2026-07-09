@@ -18,6 +18,7 @@ package io.gravitee.llama.cpp;
 import static io.gravitee.llama.cpp.LlamaRuntime.*;
 
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -161,6 +162,46 @@ public final class LlamaContextParams extends MemorySegmentAware {
 
   public LlamaContextParams noPerf(boolean noPerf) {
     no_perf(this.segment, noPerf);
+    return this;
+  }
+
+  /* ----- MTP self-speculation (nextn) context fields (public llama.h) ----- */
+
+  private static final Class<?>[] SEG_INT = new Class<?>[] {
+    MemorySegment.class,
+    int.class,
+  };
+
+  /**
+   * Sets {@code ctx_type = LLAMA_CONTEXT_TYPE_MTP (1)} — build this context as an MTP
+   * self-speculation draft. The context must be created from a model that carries a nextn head
+   * ({@code n_layer_nextn > 0}), with {@link #ctxOther(LlamaContext)} pointing at the target.
+   */
+  public LlamaContextParams ctxTypeMtp() {
+    llama_context_params("ctx_type", SEG_INT, this.segment, 1);
+    return this;
+  }
+
+  /** Links this (draft) context to a source/target context — borrows tensors / shares memory. */
+  public LlamaContextParams ctxOther(LlamaContext other) {
+    llama_context_params(
+      "ctx_other",
+      new Class<?>[] { MemorySegment.class, MemorySegment.class },
+      this.segment,
+      other.segment
+    );
+    return this;
+  }
+
+  /** Recurrent-state rollback snapshots per sequence — must be {@code > 0} for MTP. */
+  public LlamaContextParams nRsSeq(int nRsSeq) {
+    llama_context_params("n_rs_seq", SEG_INT, this.segment, nRsSeq);
+    return this;
+  }
+
+  /** Max outputs per decode (set to the parallelism for MTP). */
+  public LlamaContextParams nOutputsMax(int nOutputsMax) {
+    llama_context_params("n_outputs_max", SEG_INT, this.segment, nOutputsMax);
     return this;
   }
 }

@@ -19,10 +19,14 @@ import static io.gravitee.llama.cpp.GenerationState.ANSWER;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
+import io.gravitee.llama.cpp.draft.Eagle3Draft;
+import io.gravitee.llama.cpp.draft.MtpDraft;
+import io.gravitee.llama.cpp.draft.NgramIndex;
 import io.gravitee.llama.cpp.modules.PromptMemory;
 import io.gravitee.llama.cpp.modules.StateEvaluation;
 import io.gravitee.llama.cpp.modules.StopString;
 import io.gravitee.llama.cpp.modules.TokenTracking;
+import io.gravitee.llama.cpp.speculative.*;
 import io.gravitee.llama.cpp.utils.Utf8Decoder;
 import java.lang.foreign.Arena;
 import java.util.ArrayList;
@@ -77,6 +81,13 @@ public class ConversationState {
   // N-gram (prompt-lookup) drafting history + position index (the committed token stream
   // prompt+generated, on the heap, NOT the confined arena). Built lazily by setNgram().
   private NgramIndex ngramIndex;
+
+  // MTP self-speculation (setMtp) / EAGLE3 head drafting (setEagle3) proposal state.
+  private MtpDraft mtpDraft;
+  private Eagle3Draft eagle3Draft;
+
+  // The speculative flavour attached by setDraft/setNgram/setMtp/setEagle3 (stateless singleton).
+  private SpeculativeDecoding speculativeDecoding;
   private final List<StateBounds> stateBounds = new ArrayList<>();
   private List<MtmdMedia> media = new ArrayList<>();
 
@@ -207,6 +218,7 @@ public class ConversationState {
     this.draftContext = draftContext;
     this.speculativeConfig = config;
     this.speculation = new Speculation(arena, context.nVocab(), config);
+    this.speculativeDecoding = ModelDraftSpeculativeDecoding.INSTANCE;
     return this;
   }
 
@@ -226,6 +238,128 @@ public class ConversationState {
     this.speculativeConfig = config;
     this.speculation = new Speculation(arena, context.nVocab(), config);
     this.ngramIndex = new NgramIndex(config.ngram());
+    this.speculativeDecoding = NgramSpeculativeDecoding.INSTANCE;
+    return this;
+  }
+
+  /**
+   * Enables MTP (nextn) self-speculative decoding: the target model's own multi-token-prediction
+   * head proposes tokens — no separate draft model. Requires a model with {@code n_layer_nextn > 0},
+   * the staging nextn API in the loaded llama.cpp
+   * ({@link LlamaExt#available()}), and {@code mtpContext} built from the <b>same model</b> as this
+   * state's target with {@code LlamaContextParams.ctxTypeMtp().ctxOther(target).nRsSeq(>0)}.
+   *
+   * <p>Enables embeddings output on the target context (the MTP head is seeded with the target's
+   * post-norm hidden states). Greedy config is lossless; sampling configs use rejection sampling.
+   * N-gram configs are rejected.
+   *
+   * @param mtpContext An MTP draft context over the target's model (caller-owned, like a draft ctx)
+   * @param config     Speculative decoding configuration ({@code ngram} must be 0)
+   */
+  public ConversationState setMtp(
+    LlamaContext mtpContext,
+    SpeculativeConfig config
+  ) {
+    if (config.isNgram()) {
+      throw new LlamaException(
+        "setMtp requires a model-draft config (ngram == 0)"
+      );
+    }
+    if (!LlamaExt.available()) {
+      throw new LlamaException(
+        "MTP requires the staging nextn API in the loaded libllama:\n" +
+          LlamaExt.resolutionReport()
+      );
+    }
+    // The MTP context must share the target's vocab (it is the same model).
+    if (mtpContext.nVocab() != context.nVocab()) {
+      throw new LlamaException(
+        "MTP context vocab (" +
+          mtpContext.nVocab() +
+          ") differs from target (" +
+          context.nVocab() +
+          ") — the MTP context must be built from the target's model"
+      );
+    }
+    // Seed extraction reads the target's post-norm hidden rows.
+    LlamaRuntime.llama_set_embeddings(context.segment, true);
+    // The MTP graph stores its own nextn hidden per output row for nDraft>1 chaining.
+    LlamaExt.setEmbeddingsNextn(mtpContext, true, false);
+    this.speculativeConfig = config;
+    this.speculation = new Speculation(arena, context.nVocab(), config);
+    this.mtpDraft = new MtpDraft(
+      arena,
+      mtpContext,
+      context.getModel().nEmbdOut()
+    );
+    this.speculativeDecoding = MtpSpeculativeDecoding.INSTANCE;
+    return this;
+  }
+
+  /**
+   * Enables EAGLE3 speculative decoding: a separate tiny trained head model (GGUF arch
+   * {@code eagle3}) proposes tokens from the target's intermediate hidden states. Works with
+   * targets that carry no nextn head (dense models). Requires the staging layer-input API
+   * ({@link LlamaExt#eagle3Available()}), a head model declaring exactly 3 target extract layers,
+   * and a shared vocab.
+   *
+   * <p>Enables capture of the declared target layers' input hiddens on the target context and
+   * nextn (pre-norm) capture on the head context. Greedy config is lossless; sampling configs use
+   * rejection sampling. N-gram configs are rejected.
+   *
+   * @param eagle3Context A context over the EAGLE3 head model (caller-owned)
+   * @param eagle3Model   The EAGLE3 head model (for its target-layer ids and hidden size)
+   * @param config        Speculative decoding configuration ({@code ngram} must be 0)
+   */
+  public ConversationState setEagle3(
+    LlamaContext eagle3Context,
+    LlamaModel eagle3Model,
+    SpeculativeConfig config
+  ) {
+    if (config.isNgram()) {
+      throw new LlamaException(
+        "setEagle3 requires a model-draft config (ngram == 0)"
+      );
+    }
+    if (!LlamaExt.eagle3Available()) {
+      throw new LlamaException(
+        "EAGLE3 requires the staging layer-input API in the loaded libllama:\n" +
+          LlamaExt.eagle3ResolutionReport()
+      );
+    }
+    int[] layerIds = LlamaExt.targetLayerIds(eagle3Model);
+    if (layerIds.length != 3) {
+      throw new LlamaException(
+        "Not an EAGLE3 head model: expected 3 target extract layers, got " +
+          layerIds.length
+      );
+    }
+    if (eagle3Context.nVocab() != context.nVocab()) {
+      throw new LlamaException(
+        "EAGLE3 head vocab (" +
+          eagle3Context.nVocab() +
+          ") differs from target (" +
+          context.nVocab() +
+          ") — the head must be converted against this target model"
+      );
+    }
+    // Capture the declared target layers' input hiddens on every target decode.
+    for (int id : layerIds) {
+      LlamaExt.setEmbeddingsLayerInp(context, id, true);
+    }
+    // Head pre-norm hidden capture: encoder g_embd rows + decoder chain seeds.
+    LlamaExt.setEmbeddingsNextn(eagle3Context, true, true);
+    this.speculativeConfig = config;
+    this.speculation = new Speculation(arena, context.nVocab(), config);
+    this.eagle3Draft = new Eagle3Draft(
+      arena,
+      eagle3Context,
+      layerIds,
+      context.getModel().nEmbdOut(),
+      eagle3Model.nEmbdOut(),
+      config.nDraft()
+    );
+    this.speculativeDecoding = Eagle3SpeculativeDecoding.INSTANCE;
     return this;
   }
 
@@ -243,6 +377,37 @@ public class ConversationState {
     return speculativeConfig != null && speculativeConfig.isNgram();
   }
 
+  /** Whether MTP (nextn) self-speculation is enabled. */
+  public boolean isMtp() {
+    return mtpDraft != null;
+  }
+
+  /** Whether EAGLE3 head drafting is enabled. */
+  public boolean isEagle3() {
+    return eagle3Draft != null;
+  }
+
+  public MtpDraft getMtpDraft() {
+    return mtpDraft;
+  }
+
+  public Eagle3Draft getEagle3Draft() {
+    return eagle3Draft;
+  }
+
+  /** Frees all speculative persistent native scratch (idempotent; safe when none is set). */
+  public void freeSpeculativeScratch() {
+    if (speculation != null) {
+      speculation.free();
+    }
+    if (mtpDraft != null) {
+      mtpDraft.free();
+    }
+    if (eagle3Draft != null) {
+      eagle3Draft.free();
+    }
+  }
+
   public LlamaContext getDraftContext() {
     return draftContext;
   }
@@ -251,8 +416,13 @@ public class ConversationState {
     return speculativeConfig.nDraft();
   }
 
-  Speculation getSpeculation() {
+  public Speculation getSpeculation() {
     return speculation;
+  }
+
+  /** The speculative flavour enabled on this state (null when not speculative). */
+  public SpeculativeDecoding getSpeculativeDecoding() {
+    return speculativeDecoding;
   }
 
   /**
@@ -270,7 +440,7 @@ public class ConversationState {
   }
 
   /** Appends one committed token to the n-gram history (and its index). */
-  void appendHistory(int token) {
+  public void appendHistory(int token) {
     ngramIndex.append(token);
   }
 
@@ -281,7 +451,7 @@ public class ConversationState {
    * target decode). Pure heap/CPU work — no native calls, no draft KV. A wrong proposal only lowers
    * the accept rate; the target verify is the sole arbiter of emitted tokens.
    */
-  int[] proposeNgram(int kMax) {
+  public int[] proposeNgram(int kMax) {
     return ngramIndex.propose(kMax);
   }
 

@@ -180,7 +180,7 @@ public final class DefaultLlamaIterator
   @Override
   public void close() {
     if (currentState.isSpeculative()) {
-      currentState.getSpeculation().free();
+      currentState.freeSpeculativeScratch();
     }
     currentState
       .getContext()
