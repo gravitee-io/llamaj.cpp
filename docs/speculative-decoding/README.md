@@ -82,7 +82,7 @@ var mtpParams = new LlamaContextParams(arena)
     .ctxOther(targetCtx)     // borrows the target's tensors
     .ctxTypeMtp();
 var mtpCtx = new LlamaContext(arena, model, mtpParams);
-state.setMtp(mtpCtx, SpeculativeConfig.greedy(2)); // K=2 is the measured optimum on Metal
+state.setMtp(mtpCtx, SpeculativeConfig.greedy(2));
 ```
 
 Hybrid attention+SSM targets (the Qwen3.6-MoE family) also need `nRsSeq(nDraft + 1)` on the
@@ -152,9 +152,42 @@ Helpers: `isGreedy()` (`temperature <= 0`), `isAdaptive()` (`pMin > 0` and model
 - **Adaptive early stop** (`pMin > 0`) changes only *how many* tokens are speculated per round, not *which* are emitted, so it preserves greedy losslessness and sampling exactness.
 - All four flavours work with both `DefaultLlamaIterator` (single sequence) and `BatchIterator` (fused multi-sequence). For the fused path, size the target context so `nBatch >= sum(nDraft + 1)` across sequences.
 - **Fused MTP/EAGLE3**: sequences sharing a head context draft in lockstep — each chain step is one batched dual *(token, hidden)* decode across sequences (this also amortizes the per-draft dispatch cost that dominates small-graph decodes), they verify in the shared fused target decode, and each sequence then advances its own seed (MTP: the target's hidden at its last accepted verify row) or boundary (EAGLE3: per-sequence slice of the layer capture, encoded and re-synced) from its slice of the verify buffers. Size the **head context** for the batch: `nSeqMax` matching the target's and `nOutputsMax >= nSeqMax` (the bundled CLI does this; if you build the MTP context yourself, see the usage snippet above).
-- EAGLE3 tip: keep `nDraft` small (2–3) and benchmark with chat-shaped prompts — community heads are instruct-trained, raw completions understate them. MTP/EAGLE3 pay off most where no compatible small draft model exists (MTP: the head ships inside the GGUF; EAGLE3: dense targets with a published head).
 - **Staging-API dependency:** MTP/EAGLE3 resolve C++-mangled symbols from the bundled llama.cpp at runtime (`LlamaExt.available()` / `eagle3Available()`). A llama.cpp version bump can invalidate them; the setters then fail fast with a per-symbol resolution report rather than mis-calling a changed ABI.
 - **Resources/lifecycle:** the `Speculation` allocates persistent native scratch (sampler chain + draft/verify batches) on the state's `Arena`, freed once on teardown. Close the iterator (try-with-resources) when abandoning a stream so the scratch is freed and the sequence cleared; the contexts stay reusable afterward.
+
+## Benchmarks (July 2026, Apple M4 Max)
+
+Measured with the bundled CLI (`--perf true`) on an Apple M4 Max (Metal), reading the
+**Effective decode** line — emitted tokens over wall-clock from the first emitted token, the
+only rate that is valid under speculation (the native `Generation speed` counter cannot see
+batch-verified tokens and reads `0.00`). Chat-shaped prompts of a few hundred tokens;
+run-to-run variance is a few percent, and accept rate (and therefore speedup) depends on the
+content being generated.
+
+**Target: Qwen3.6-35B-A3B (MoE, Q4_K_S)**
+
+| Config | Effective decode | Accept rate | Speedup |
+|---|---|---|---|
+| Autoregressive (no speculation) | 62.8 tok/s | — | 1.00× |
+| `--mtp true`, K=2–4, `p_min` 0.6–0.8 | 82–84 tok/s | ~0.78 | **~1.34×** |
+
+MTP plateaus at the same throughput for every draft length — the per-round decode dispatch
+floor dominates on a fast MoE — so prefer `--n_draft 2`.
+
+**Target: Qwen3-14B (Q8_0)**
+
+| Config | Effective decode | Accept rate | Speedup |
+|---|---|---|---|
+| Autoregressive (no speculation) | 22.0 tok/s | — | 1.00× |
+| `--draft` Qwen3-8B Q4_K_M, K=2 | 28.7 tok/s | 0.83 | 1.30× |
+| `--eagle3` Qwen3-14B EAGLE3 head Q8_0, K=2–3 | 32–34 tok/s | 0.52–0.57 | 1.46–1.53× |
+| `--draft` **Qwen3-0.6B Q8_0, K=3, `p_min` 0.6** | **35.0 tok/s** | 0.69 | **1.59×** |
+| `--draft` Qwen3-0.6B Q8_0, K=4 | 31.6 tok/s | 0.58 | 1.44× |
+
+Takeaways: the winning formula is a *cheap* draft with a *decent* accept rate — the 8B draft
+accepts best (0.83) but each drafted token costs ~40% of a target decode, while the 0.6B
+draft costs ~4% and wins overall despite the lower accept. Drafting deeper than the accept
+rate supports (K=4 here) lowers throughput: tail proposals fail, dragging whole rounds down.
 
 ## See also
 - [Text Generation & Sampling](../text-generation/README.md) — the underlying sampler chain and iterators speculation builds on.

@@ -77,6 +77,13 @@ public class ConversationState {
   private Speculation speculation;
   private long nDrafted;
   private long nAccepted;
+  // Rolling accept rate driving the adaptive per-round draft budget (getNDraft). Starts
+  // optimistic so the first rounds draft at the configured maximum.
+  private static final double EWMA_ALPHA = 0.3;
+  private double ewmaAcceptRate = 1.0;
+  // Deferred draft-KV fill from a full-accept round (model-draft flavour); -1 = none.
+  private int pendingDraftFillToken = -1;
+  private int pendingDraftFillPos;
 
   // N-gram (prompt-lookup) drafting history + position index (the committed token stream
   // prompt+generated, on the heap, NOT the confined arena). Built lazily by setNgram().
@@ -412,8 +419,22 @@ public class ConversationState {
     return draftContext;
   }
 
+  /**
+   * Tokens to draft this round. Fixed configs always return the configured {@code nDraft}.
+   * Adaptive configs ({@code pMin > 0}) additionally scale the per-round budget with the
+   * recent accept rate (EWMA): a draft that keeps getting rejected wastes its decodes past
+   * the first position, so the budget shrinks toward {@code draftMin} and recovers as
+   * accepts return. Verify-batch capacity is sized off the configured maximum, so the
+   * dynamic value is always safe.
+   */
   public int getNDraft() {
-    return speculativeConfig.nDraft();
+    int max = speculativeConfig.nDraft();
+    if (!speculativeConfig.isAdaptive()) {
+      return max;
+    }
+    int min = speculativeConfig.draftMin();
+    int k = (int) Math.round(min + ewmaAcceptRate * (max - min));
+    return Math.max(min, Math.min(max, k));
   }
 
   public Speculation getSpeculation() {
@@ -455,10 +476,38 @@ public class ConversationState {
     return ngramIndex.propose(kMax);
   }
 
-  /** Accumulates speculative accept statistics for {@link #acceptRate()}. */
+  /** Accumulates speculative accept statistics for {@link #acceptRate()} and {@link #getNDraft()}. */
   public void recordSpeculation(int drafted, int accepted) {
     this.nDrafted += drafted;
     this.nAccepted += accepted;
+    if (drafted > 0) {
+      ewmaAcceptRate =
+        (1 - EWMA_ALPHA) * ewmaAcceptRate +
+        EWMA_ALPHA * ((double) accepted / drafted);
+    }
+  }
+
+  /* ----- deferred draft-KV fill (model-draft flavour, see ModelDraftSpeculativeDecoding) ----- */
+
+  public boolean hasPendingDraftFill() {
+    return pendingDraftFillToken != -1;
+  }
+
+  public int pendingDraftFillToken() {
+    return pendingDraftFillToken;
+  }
+
+  public int pendingDraftFillPos() {
+    return pendingDraftFillPos;
+  }
+
+  public void setPendingDraftFill(int token, int pos) {
+    this.pendingDraftFillToken = token;
+    this.pendingDraftFillPos = pos;
+  }
+
+  public void clearPendingDraftFill() {
+    this.pendingDraftFillToken = -1;
   }
 
   /** Fraction of drafted tokens accepted so far — a sanity check on the speedup. */

@@ -434,15 +434,28 @@ public class Main {
       // native gen-speed counter (single-token n_eval) can't see batch-verified tokens, and the
       // target context's timers exclude the draft model — so emitted/wall-clock is the honest rate.
       int[] emitted = { 0 };
+      long[] firstTokenNs = { 0 };
       long genStartNs = System.nanoTime();
       var answer = iterator
         .stream()
-        .peek(o -> emitted[0] += o.numberOfTokens())
+        .peek(o -> {
+          if (firstTokenNs[0] == 0) {
+            firstTokenNs[0] = System.nanoTime();
+          }
+          emitted[0] += o.numberOfTokens();
+        })
         .map(LlamaOutput::content)
         .peek(System.out::print)
         .reduce((a, b) -> a + b)
         .orElse("");
-      double genWallSec = (System.nanoTime() - genStartNs) / 1_000_000_000.0;
+      long genEndNs = System.nanoTime();
+      double genWallSec = (genEndNs - genStartNs) / 1_000_000_000.0;
+      // Decode-only window: first emitted token → end. The first token's own latency carries
+      // the prompt eval, so it anchors the window rather than counting toward it.
+      double decodeWallSec = firstTokenNs[0] == 0
+        ? 0.0
+        : (genEndNs - firstTokenNs[0]) / 1_000_000_000.0;
+      int decodeTokens = Math.max(0, emitted[0] - 1);
 
       if (LlamaLogLevel.DEBUG.equals(logLevel)) {
         if (reasoningTags.isConfigured()) {
@@ -492,12 +505,17 @@ public class Main {
             state.acceptRate()
           );
         }
-        // Speculation-correct rate: emitted tokens over wall-clock (captures draft + target time).
-        // Compare this line across --draft vs no-draft runs; the native gen-speed above is invalid
-        // under speculation. Includes prompt time, so use a short prompt or large --quota to compare.
+        // Speculation-correct rates: emitted tokens over wall-clock (captures draft + target
+        // time — the native gen-speed above is invalid under speculation). The first line
+        // includes prompt eval; the second starts at the first emitted token, so it is the one
+        // to compare across --draft vs no-draft runs regardless of prompt length.
         System.out.printf(
-          "Effective generation: %.2f tokens/sec%n",
+          "Effective generation (incl. prompt): %.2f tokens/sec%n",
           genWallSec > 0 ? emitted[0] / genWallSec : 0.0
+        );
+        System.out.printf(
+          "Effective decode: %.2f tokens/sec%n",
+          decodeWallSec > 0 ? decodeTokens / decodeWallSec : 0.0
         );
         System.out.println("===================");
       }
