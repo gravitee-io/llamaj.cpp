@@ -22,7 +22,7 @@
 <dependency>
     <groupId>io.gravitee.llama.cpp</groupId>
     <artifactId>llamaj.cpp</artifactId>
-    <version>2.2.1</version>
+    <version>2.2.2</version>
 </dependency>
 ```
 
