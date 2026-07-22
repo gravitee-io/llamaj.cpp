@@ -175,7 +175,7 @@ public class ConversationState {
     this.promptText = prompt;
     this.tokenTracking.initialize(tokenized.size());
     this.stateEvaluation.initialize(new StateEvaluation.Config(stateBounds));
-    this.generationState = ANSWER;
+    this.generationState = stateEvaluation.initialState(prompt);
     this.finishReason = null;
     this.newTokenId = null;
     this.piece = null;

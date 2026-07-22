@@ -96,48 +96,69 @@ class StateEvaluationTest {
   }
 
   @Test
-  void blank_start_tools_enters_on_first_piece() {
-    var eval = of(new StateBounds(TOOLS, "", "<|eom_id|>"));
-
-    assertThat(step(eval, ANSWER, "{\"name\"")).isEqualTo(TOOLS);
-    assertThat(step(eval, TOOLS, ":\"get_weather\"")).isEqualTo(TOOLS);
-    assertThat(step(eval, TOOLS, "<|eom_id|>")).isEqualTo(ANSWER);
-  }
-
-  @Test
-  void null_start_tools_enters_on_first_piece_without_throwing() {
-    var eval = of(new StateBounds(TOOLS, null, "<|eom_id|>"));
-
-    assertThat(step(eval, ANSWER, "{\"name\"")).isEqualTo(TOOLS);
-    assertThat(step(eval, TOOLS, "<|eom_id|>")).isEqualTo(ANSWER);
-  }
-
-  @Test
-  void blank_start_tools_reenters_after_end() {
-    var eval = of(new StateBounds(TOOLS, "", "<|eom_id|>"));
-
-    step(eval, ANSWER, "{\"a\"");
-    step(eval, TOOLS, "<|eom_id|>");
-    assertThat(step(eval, ANSWER, "next")).isEqualTo(TOOLS);
-  }
-
-  @Test
-  void blank_start_reasoning_occurs_once_then_answers() {
+  void blank_start_bounds_never_match_a_generated_piece() {
     var eval = of(new StateBounds(REASONING, "", "</think>"));
 
-    assertThat(step(eval, ANSWER, "first")).isEqualTo(REASONING);
-    assertThat(step(eval, REASONING, "more")).isEqualTo(REASONING);
-    assertThat(step(eval, REASONING, "</think>")).isEqualTo(ANSWER);
-
-    assertThat(step(eval, ANSWER, "actual answer")).isEqualTo(ANSWER);
+    assertThat(step(eval, ANSWER, "first")).isEqualTo(ANSWER);
+    assertThat(step(eval, ANSWER, "more")).isEqualTo(ANSWER);
   }
 
   @Test
-  void blank_start_section_still_terminates_only_on_its_end_delimiter() {
-    var eval = of(new StateBounds(TOOLS, "", "<|eom_id|>"));
+  void null_start_bounds_never_match_a_generated_piece() {
+    var eval = of(new StateBounds(TOOLS, null, "<|eom_id|>"));
 
-    step(eval, ANSWER, "{");
-    assertThat(step(eval, TOOLS, "<|eot_id|>")).isEqualTo(TOOLS);
-    assertThat(step(eval, TOOLS, "<|eom_id|>")).isEqualTo(ANSWER);
+    assertThat(step(eval, ANSWER, "{\"name\"")).isEqualTo(ANSWER);
+  }
+
+  @Test
+  void initial_state_is_answer_when_prompt_lacks_open_tag() {
+    var eval = of(new StateBounds(REASONING, "<think>", "</think>"));
+
+    assertThat(eval.initialState("<|im_start|>assistant\n")).isEqualTo(ANSWER);
+  }
+
+  @Test
+  void initial_state_enters_reasoning_when_prompt_ends_with_open_tag() {
+    var eval = of(new StateBounds(REASONING, "<think>", "</think>"));
+
+    assertThat(eval.initialState("<|im_start|>assistant\n<think>")).isEqualTo(
+      REASONING
+    );
+  }
+
+  @Test
+  void initial_state_ignores_trailing_whitespace_after_open_tag() {
+    var eval = of(new StateBounds(REASONING, "<think>", "</think>"));
+
+    assertThat(
+      eval.initialState("<|im_start|>assistant\n<think>\n\n")
+    ).isEqualTo(REASONING);
+  }
+
+  @Test
+  void initial_state_ignores_blank_start_bounds() {
+    var eval = of(new StateBounds(REASONING, "", "</think>"));
+
+    assertThat(eval.initialState("any prompt at all")).isEqualTo(ANSWER);
+  }
+
+  @Test
+  void initial_state_is_answer_when_uninitialized_or_null_prompt() {
+    var uninitialized = new StateEvaluation();
+    assertThat(uninitialized.initialState("prompt<think>")).isEqualTo(ANSWER);
+
+    var eval = of(new StateBounds(REASONING, "<think>", "</think>"));
+    assertThat(eval.initialState(null)).isEqualTo(ANSWER);
+  }
+
+  @Test
+  void seeded_reasoning_exits_on_end_tag_and_does_not_reenter() {
+    var eval = of(new StateBounds(REASONING, "<think>", "</think>"));
+    var state = eval.initialState("prompt ending with <think>\n");
+    assertThat(state).isEqualTo(REASONING);
+
+    assertThat(step(eval, state, "pondering")).isEqualTo(REASONING);
+    assertThat(step(eval, REASONING, "</think>")).isEqualTo(ANSWER);
+    assertThat(step(eval, ANSWER, "<think>")).isEqualTo(ANSWER);
   }
 }

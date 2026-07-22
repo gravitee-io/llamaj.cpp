@@ -85,10 +85,29 @@ public class StateEvaluation
       .stream()
       .filter(not(e -> this.stateAlreadyOccurred(e.getValue())))
       .map(Entry::getValue)
-      .filter(
-        stateBounds ->
-          isNullOrBlank(stateBounds) || stateBounds.start().equals(piece)
-      )
+      .filter(not(StateEvaluation::isNullOrBlank))
+      .filter(stateBounds -> stateBounds.start().equals(piece))
+      .map(StateBounds::state)
+      .findFirst()
+      .orElse(GenerationState.ANSWER);
+  }
+
+  /**
+   * Resolves the state generation should start in for the given prompt.
+   * Chat templates may pre-fill a state's open tag at the end of the prompt
+   * (e.g. a template ending with {@code <think>}), in which case the model
+   * never emits the tag itself and generation must begin inside that state.
+   */
+  public GenerationState initialState(String prompt) {
+    if (!isInitialized() || prompt == null) {
+      return GenerationState.ANSWER;
+    }
+    var trimmed = prompt.stripTrailing();
+    return states
+      .values()
+      .stream()
+      .filter(not(StateEvaluation::isNullOrBlank))
+      .filter(stateBounds -> trimmed.endsWith(stateBounds.start()))
       .map(StateBounds::state)
       .findFirst()
       .orElse(GenerationState.ANSWER);
