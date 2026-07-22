@@ -49,6 +49,7 @@ public final class ModelDraftSpeculativeDecoding extends SpeculativeDecoding {
     int total = tokenized.size();
     int nBatch = Math.max(1, draft.nBatch());
     int seqId = state.getSequenceId();
+    state.clearPendingDraftFill(); // a fresh prompt replay invalidates any deferred fill
     draft.getMemory().seqRm(seqId, -1, -1);
     int offset = 0;
     while (offset < total) {
@@ -101,6 +102,17 @@ public final class ModelDraftSpeculativeDecoding extends SpeculativeDecoding {
     int prev = idLast;
     for (int i = 0; i < kMax; i++) {
       draftBatch.clear();
+      // Piggy-back the deferred fill from the previous round's full accept (see below) onto
+      // this round's first draft decode — one dispatch instead of two.
+      if (i == 0 && state.hasPendingDraftFill()) {
+        draftBatch.add(
+          state.pendingDraftFillToken(),
+          state.pendingDraftFillPos(),
+          seq,
+          false
+        );
+        state.clearPendingDraftFill();
+      }
       draftBatch.add(prev, nPast + i, seq, true);
       if (draftBatch.decode(draft) != 0) {
         throw new LlamaException("Speculative draft decode failed");
@@ -142,16 +154,14 @@ public final class ModelDraftSpeculativeDecoding extends SpeculativeDecoding {
     target.getMemory().seqRm(seqId, newNPast, -1);
     draft.getMemory().seqRm(seqId, newNPast, -1);
 
-    // Fill decode, only on full accept: advance the draft KV by one so it covers position
-    // nPast+m for next round (no gap). On partial accept the seqRm above already trimmed the
-    // draft past nPast+matched, so a fill would be discarded — skipping it saves a draft
-    // forward pass. The sampled token is discarded.
+    // Fill, only on full accept: the draft KV must eventually cover position nPast+m (token
+    // drafted[m-1]) so there is no gap before next round's drafting. Instead of a dedicated
+    // decode here, defer it into the next round's first draft batch (one dispatch instead of
+    // two). On partial accept the seqRm above already trimmed the draft past nPast+matched,
+    // so no fill is needed. If the conversation finishes on this round the pending fill is
+    // simply never consumed.
     if (v.matched() == m) {
-      draftBatch.clear();
-      draftBatch.add(prev, nPast + m, seq, true);
-      if (draftBatch.decode(draft) != 0) {
-        throw new LlamaException("Speculative draft decode failed");
-      }
+      state.setPendingDraftFill(prev, nPast + m);
     }
 
     List<LlamaOutput> out = emitCommitted(it, state, drafted, v);

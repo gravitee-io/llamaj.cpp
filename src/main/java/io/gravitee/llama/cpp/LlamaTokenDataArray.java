@@ -58,11 +58,23 @@ public final class LlamaTokenDataArray {
   private final int nVocab;
   private final MemorySegment data; // n_vocab * llama_token_data
   private final MemorySegment array; // the llama_token_data_array header
+  // Pristine candidate image (ids ascending, logit 0, p 0). fill() restores it with one bulk
+  // copy instead of three per-element writes; a sorting/truncating apply() can then never leak
+  // stale ids or probs into the next fill.
+  private final MemorySegment template;
 
   public LlamaTokenDataArray(SegmentAllocator allocator, int nVocab) {
     this.nVocab = nVocab;
     this.data = allocator.allocate(TD_SIZE * nVocab, 4);
     this.array = allocator.allocate(ARR_SIZE, 8);
+    this.template = allocator.allocate(TD_SIZE * nVocab, 4);
+    for (int id = 0; id < nVocab; id++) {
+      template.set(
+        ValueLayout.JAVA_INT,
+        (long) id * TD_SIZE + TD_ID_OFFSET,
+        id
+      );
+    }
     array.set(ValueLayout.ADDRESS, ARR_DATA_OFFSET, data);
     array.set(ValueLayout.JAVA_LONG, ARR_SIZE_OFFSET, nVocab);
   }
@@ -75,12 +87,13 @@ public final class LlamaTokenDataArray {
    * @param rowOffset  Float offset into {@code logits} where the row begins
    */
   public void fill(MemorySegment logits, long rowOffset) {
+    data.copyFrom(template);
     for (int id = 0; id < nVocab; id++) {
-      long base = (long) id * TD_SIZE;
-      float logit = logits.getAtIndex(ValueLayout.JAVA_FLOAT, rowOffset + id);
-      data.set(ValueLayout.JAVA_INT, base + TD_ID_OFFSET, id);
-      data.set(ValueLayout.JAVA_FLOAT, base + TD_LOGIT_OFFSET, logit);
-      data.set(ValueLayout.JAVA_FLOAT, base + TD_P_OFFSET, 0.0f);
+      data.set(
+        ValueLayout.JAVA_FLOAT,
+        (long) id * TD_SIZE + TD_LOGIT_OFFSET,
+        logits.getAtIndex(ValueLayout.JAVA_FLOAT, rowOffset + id)
+      );
     }
     array.set(ValueLayout.JAVA_LONG, ARR_SIZE_OFFSET, nVocab);
     array.set(ValueLayout.JAVA_LONG, ARR_SELECTED_OFFSET, -1L);

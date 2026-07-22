@@ -126,10 +126,14 @@ public final class Speculation {
     return s;
   }
 
-  /** Persistent single-token draft batch (reused via {@code clear()}). */
+  /**
+   * Persistent draft batch (reused via {@code clear()}). Capacity 2: the first draft decode of
+   * a round may carry a deferred KV fill row from the previous round's full accept alongside
+   * the drafted token (see {@link ModelDraftSpeculativeDecoding}).
+   */
   public LlamaBatch draftBatch() {
     if (draftBatch == null) {
-      draftBatch = new LlamaBatch(arena, 1, 0, 1);
+      draftBatch = new LlamaBatch(arena, 2, 0, 1);
     }
     return draftBatch;
   }
@@ -183,9 +187,16 @@ public final class Speculation {
         argmax = id;
       }
     }
+    // Logits more than 17 nats below the max contribute < nVocab * e^-17 (~1e-2 even at a
+    // 150k vocab) to the softmax denominator — skip their Math.exp entirely. The confidence
+    // only gates the pMin early-stop, so this bounded underestimate of sum is harmless.
+    float cutoff = maxLogit - 17.0f;
     double sum = 0.0;
     for (int id = 0; id < nVocab; id++) {
-      sum += Math.exp(logitsRow.getAtIndex(JAVA_FLOAT, id) - maxLogit);
+      float l = logitsRow.getAtIndex(JAVA_FLOAT, id);
+      if (l > cutoff) {
+        sum += Math.exp(l - maxLogit);
+      }
     }
     probOut[0] = (float) (1.0 / sum); // exp(maxLogit-maxLogit)=1, so the top prob is 1/sum
     return argmax;
