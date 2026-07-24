@@ -460,6 +460,165 @@ class StateEvaluationTest {
     assertThat(close.emitTokens()).isEqualTo(2);
   }
 
+  /* ----- Harmony-style chained channels (gpt-oss) ----- */
+
+  private static final String ANALYSIS_OPEN = "<|channel|>analysis<|message|>";
+  private static final String FINAL_FOLD =
+    "<|end|><|start|>assistant<|channel|>final<|message|>";
+  private static final String TOOL_OPEN =
+    "<|end|><|start|>assistant<|channel|>commentary to=functions.";
+  private static final String TOOL_CLOSE = "<|call|>";
+
+  private static StateEvaluation harmony() {
+    return tokenAware(
+      new StateBounds(REASONING, ANALYSIS_OPEN, FINAL_FOLD),
+      new StateBounds(TOOLS, TOOL_OPEN, TOOL_CLOSE)
+    );
+  }
+
+  @Test
+  void harmony_analysis_to_final_via_folded_close() {
+    var eval = harmony();
+
+    assertThat(eval.evaluateToken(ANSWER, 1, ANALYSIS_OPEN).state()).isEqualTo(
+      REASONING
+    );
+    assertThat(
+      eval.evaluateToken(REASONING, 2, "thinking...").state()
+    ).isEqualTo(REASONING);
+
+    // Folded close spelled over several pieces sharing a prefix with the tool open.
+    assertThat(
+      eval.evaluateToken(REASONING, 3, "<|end|>").emitTokens()
+    ).isZero();
+    assertThat(
+      eval.evaluateToken(REASONING, 4, "<|start|>").emitTokens()
+    ).isZero();
+    assertThat(
+      eval.evaluateToken(REASONING, 5, "assistant").emitTokens()
+    ).isZero();
+    assertThat(
+      eval.evaluateToken(REASONING, 6, "<|channel|>").emitTokens()
+    ).isZero();
+    // "final" disambiguates towards the close; still buffering.
+    assertThat(eval.evaluateToken(REASONING, 7, "final").emitTokens()).isZero();
+    var closed = eval.evaluateToken(REASONING, 8, "<|message|>");
+    assertThat(closed.state()).isEqualTo(ANSWER);
+    assertThat(closed.emit()).isEmpty();
+    assertThat(closed.emitTokens()).isEqualTo(6);
+
+    assertThat(eval.evaluateToken(ANSWER, 9, "London.").state()).isEqualTo(
+      ANSWER
+    );
+  }
+
+  @Test
+  void harmony_analysis_chains_directly_into_tool_call() {
+    var eval = harmony();
+
+    eval.evaluateToken(ANSWER, 1, ANALYSIS_OPEN);
+    eval.evaluateToken(REASONING, 2, "need the weather tool");
+
+    // Cross-transition: the tool OPEN matches while in REASONING (implicit close).
+    assertThat(
+      eval
+        .evaluateToken(REASONING, 3, "<|end|><|start|>assistant<|channel|>")
+        .emitTokens()
+    ).isZero();
+    var cross = eval.evaluateToken(
+      REASONING,
+      4,
+      "commentary to=functions.get_weather"
+    );
+    assertThat(cross.state()).isEqualTo(TOOLS);
+    // Marker suppressed; boundary-spanning remainder (the function name) lands post-flip.
+    assertThat(cross.emit()).isEqualTo("get_weather");
+    assertThat(cross.emitTokens()).isEqualTo(2);
+
+    assertThat(
+      eval.evaluateToken(TOOLS, 5, " {\"city\":\"Paris\"}").state()
+    ).isEqualTo(TOOLS);
+
+    // Tool close, then final text streams as ANSWER.
+    var toolClosed = eval.evaluateToken(TOOLS, 6, TOOL_CLOSE);
+    assertThat(toolClosed.state()).isEqualTo(ANSWER);
+    assertThat(toolClosed.emit()).isEmpty();
+    assertThat(eval.evaluateToken(ANSWER, 7, "It is sunny.").state()).isEqualTo(
+      ANSWER
+    );
+  }
+
+  @Test
+  void harmony_tool_chains_into_analysis_then_final() {
+    var eval = harmony();
+
+    // Straight into a tool call from ANSWER.
+    var open = eval.evaluateToken(ANSWER, 1, TOOL_OPEN + "get_capital");
+    assertThat(open.state()).isEqualTo(TOOLS);
+    assertThat(open.emit()).isEqualTo("get_capital");
+
+    // Cross-transition TOOLS → REASONING on the analysis open.
+    var cross = eval.evaluateToken(TOOLS, 2, ANALYSIS_OPEN);
+    assertThat(cross.state()).isEqualTo(REASONING);
+    assertThat(cross.emit()).isEmpty();
+    assertThat(cross.emitTokens()).isEqualTo(1);
+
+    assertThat(eval.evaluateToken(REASONING, 3, "got it").state()).isEqualTo(
+      REASONING
+    );
+
+    // Folded close (fused in one piece, with remainder) ends reasoning into ANSWER.
+    var closed = eval.evaluateToken(REASONING, 4, FINAL_FOLD + "Paris");
+    assertThat(closed.state()).isEqualTo(ANSWER);
+    assertThat(closed.emit()).isEqualTo("Paris");
+    assertThat(closed.emitTokens()).isEqualTo(1);
+  }
+
+  @Test
+  void shared_prefix_longest_match_prefers_longer_candidate() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<r>", "<|end|>"),
+      new StateBounds(TOOLS, "<|end|><|tool|>", "<|call|>")
+    );
+
+    eval.evaluateToken(ANSWER, 1, "<r>");
+    // The fused piece covers BOTH the reasoning close "<|end|>" and the tool open
+    // "<|end|><|tool|>" — the longest candidate wins, transitioning directly to TOOLS.
+    var cross = eval.evaluateToken(REASONING, 2, "<|end|><|tool|>{");
+    assertThat(cross.state()).isEqualTo(TOOLS);
+    assertThat(cross.emit()).isEqualTo("{");
+    assertThat(cross.emitTokens()).isEqualTo(1);
+  }
+
+  @Test
+  void cross_transition_marks_reasoning_occurred() {
+    var eval = harmony();
+
+    eval.evaluateToken(ANSWER, 1, ANALYSIS_OPEN);
+    eval.evaluateToken(REASONING, 2, TOOL_OPEN + "f");
+    eval.evaluateToken(TOOLS, 3, TOOL_CLOSE);
+
+    // Reasoning implicitly closed by the cross-transition: it must not re-enter.
+    var reOpen = eval.evaluateToken(ANSWER, 4, ANALYSIS_OPEN);
+    assertThat(reOpen.state()).isEqualTo(ANSWER);
+    assertThat(reOpen.emit()).isEqualTo(ANALYSIS_OPEN);
+  }
+
+  @Test
+  void single_state_config_ignores_cross_transitions() {
+    var eval = tokenAware(new StateBounds(REASONING, "<think>", "</think>"));
+
+    eval.evaluateToken(ANSWER, 1, "<think>");
+    // With only one state configured there are no cross candidates: unrelated tag-like
+    // text streams through REASONING untouched, close still works — exactly as before.
+    var inner = eval.evaluateToken(REASONING, 2, "<tool_call>");
+    assertThat(inner.state()).isEqualTo(REASONING);
+    assertThat(inner.emit()).isEqualTo("<tool_call>");
+    assertThat(eval.evaluateToken(REASONING, 3, "</think>").state()).isEqualTo(
+      ANSWER
+    );
+  }
+
   /* ----- input-side: prompt ending inside an unfinished span ----- */
 
   @Test

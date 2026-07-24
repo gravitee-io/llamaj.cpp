@@ -154,29 +154,17 @@ public class StateEvaluation
       ? piece
       : pending.toString() + piece;
 
-    // Confirmation candidate: the accumulated text fully covers a marker (possibly with a
-    // boundary-spanning remainder). Prefer the longest such marker.
+    // Candidate set — channels CHAIN rather than nest (Harmony-style): in ANY state the
+    // candidates are (a) the current state's close marker (→ ANSWER) and (b) the OPEN
+    // markers of the OTHER states (→ that state directly, the current span implicitly
+    // closing). Longest-match-wins across all candidates, since markers may share prefixes
+    // (e.g. both Harmony continuations start with "<|end|><|start|>assistant<|channel|>").
     String bestMarker = null;
     GenerationState bestTarget = null;
     boolean anyPrefix = false;
 
-    if (currentState == GenerationState.ANSWER) {
-      for (Entry<GenerationState, StateBounds> e : states.entrySet()) {
-        StateBounds bounds = e.getValue();
-        if (stateAlreadyOccurred(bounds) || isNullOrBlank(bounds)) {
-          continue;
-        }
-        String marker = bounds.start();
-        if (accumulated.startsWith(marker)) {
-          if (bestMarker == null || marker.length() > bestMarker.length()) {
-            bestMarker = marker;
-            bestTarget = bounds.state();
-          }
-        } else if (marker.startsWith(accumulated)) {
-          anyPrefix = true;
-        }
-      }
-    } else {
+    // (a) the current state's close marker
+    if (currentState != GenerationState.ANSWER) {
       String marker = states.get(currentState).end();
       if (marker != null && !marker.isBlank()) {
         if (accumulated.startsWith(marker)) {
@@ -185,6 +173,27 @@ public class StateEvaluation
         } else if (marker.startsWith(accumulated)) {
           anyPrefix = true;
         }
+      }
+    }
+
+    // (b) the other states' open markers (cross-transitions when not in ANSWER)
+    for (Entry<GenerationState, StateBounds> e : states.entrySet()) {
+      StateBounds bounds = e.getValue();
+      if (
+        bounds.state() == currentState ||
+        stateAlreadyOccurred(bounds) ||
+        isNullOrBlank(bounds)
+      ) {
+        continue;
+      }
+      String marker = bounds.start();
+      if (accumulated.startsWith(marker)) {
+        if (bestMarker == null || marker.length() > bestMarker.length()) {
+          bestMarker = marker;
+          bestTarget = bounds.state();
+        }
+      } else if (marker.startsWith(accumulated)) {
+        anyPrefix = true;
       }
     }
 
