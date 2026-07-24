@@ -66,7 +66,7 @@ public final class NgramSpeculativeDecoding extends SpeculativeDecoding {
     }
     state.appendHistory(v.extra());
 
-    commit(state, v, m, newNPast);
+    commit(state, v, drafted, m, newNPast);
     return out;
   }
 }

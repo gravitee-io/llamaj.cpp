@@ -52,6 +52,10 @@ public final class DefaultLlamaIterator
     if (currentState.isSpeculative()) {
       return speculativeBatch();
     }
+    if (currentState.isFinished()) {
+      // A previous step finished generation but emitted a final flushed marker prefix.
+      return false;
+    }
     var arena = currentState.getArena();
     var context = currentState.getContext();
     var sampler = currentState.getSampler();
@@ -92,8 +96,9 @@ public final class DefaultLlamaIterator
       return false;
     }
 
-    // After single token: increment nPast
+    // After single token: increment nPast — the decoded token's KV row is now resident.
     currentState.incrementNPast();
+    currentState.getTokenHistory().append(currentState.getNewTokenId());
 
     int newToken = sampler.sample(context);
     String tokenPiece = decodeTokenPiece(currentState, newToken);
@@ -101,19 +106,32 @@ public final class DefaultLlamaIterator
     // Collect logprobs before processing (logits are invalidated after next decode).
     Logprobs logprobs = collectLogprobs(currentState, newToken, -1);
 
-    // Process the sampled token using shared helper method
-    processSampledToken(currentState, tokenPiece);
-
     if (isEog(newToken)) {
-      incrementTokenCount(-1);
       batch.free();
+      currentState.setFinished(true);
+      // Generation ended while a multi-token marker prefix may still be buffered — flush it
+      // to the current channel as one final emission instead of dropping it.
+      var flush = currentState
+        .getStateEvaluation()
+        .flushPending(currentState.getGenerationState());
+      if (flush.emitTokens() > 0) {
+        incrementTokenCount(flush.emitTokens());
+        currentState.setPiece(flush.emit());
+        currentState.setPieceTokens(flush.emitTokens());
+        currentState.setLogprobs(null);
+        return true;
+      }
       return false;
     }
+
+    // Process the sampled token using shared helper method (token-sequence aware)
+    var emission = processSampledToken(currentState, newToken, tokenPiece);
 
     batch.free();
 
     currentState.setNewTokenId(newToken);
-    currentState.setPiece(tokenPiece);
+    currentState.setPiece(emission.emit());
+    currentState.setPieceTokens(emission.emitTokens());
     currentState.setLogprobs(logprobs);
 
     feedPromptMemory(tokenPiece);
@@ -143,19 +161,32 @@ public final class DefaultLlamaIterator
         if (currentState.isNgram()) {
           currentState.seedNgramHistory();
         }
-        pending.add(
-          new LlamaOutput(
-            currentState.getPiece(),
-            1,
-            currentState.getLogprobs()
-          )
-        );
+        if (
+          currentState.getPiece() != null && !currentState.getPiece().isEmpty()
+        ) {
+          pending.add(
+            new LlamaOutput(
+              currentState.getPiece(),
+              currentState.getPieceTokens(),
+              currentState.getLogprobs()
+            )
+          );
+        }
       } else {
         currentState.setFinished(true);
       }
-      return !pending.isEmpty();
+      if (!pending.isEmpty()) {
+        return true;
+      }
+      // fall through: the first token was buffered as a marker prefix — run rounds until
+      // something is emitted or generation finishes.
     }
-    pending.addAll(speculativeRound(currentState));
+    // A round may emit nothing while a multi-token marker prefix is being buffered; keep
+    // going until something is emitted or the state finishes (each round commits >= 1 token,
+    // so this terminates).
+    while (pending.isEmpty() && !currentState.isFinished()) {
+      pending.addAll(speculativeRound(currentState));
+    }
     return !pending.isEmpty();
   }
 
@@ -166,7 +197,7 @@ public final class DefaultLlamaIterator
     }
     return new LlamaOutput(
       currentState.getPiece(),
-      1,
+      currentState.getPieceTokens(),
       currentState.getLogprobs()
     );
   }
@@ -182,9 +213,11 @@ public final class DefaultLlamaIterator
     if (currentState.isSpeculative()) {
       currentState.freeSpeculativeScratch();
     }
-    currentState
-      .getContext()
-      .getMemory()
-      .seqRm(currentState.getSequenceId(), -1, -1);
+    if (!currentState.isRetainKv()) {
+      currentState
+        .getContext()
+        .getMemory()
+        .seqRm(currentState.getSequenceId(), -1, -1);
+    }
   }
 }

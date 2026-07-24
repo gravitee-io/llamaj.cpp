@@ -131,37 +131,94 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     } else {
       int totalTokens = state.getTokenized().size();
       int batchSize = Math.max(1, context.nBatch());
-      int offset = 0;
-      while (offset < totalTokens) {
-        int chunkSize = Math.min(batchSize, totalTokens - offset);
-        LlamaBatch promptBatch = new LlamaBatch(arena, chunkSize, 0, 1);
+      // KV prefix reuse: the first `start` prompt tokens' KV rows are already resident for this
+      // sequence (start == 0 for a cold prompt). Wipe everything from `start` on so behavior is
+      // self-contained regardless of whether the caller cleaned the sequence, then decode only
+      // the suffix at absolute positions.
+      int start = state.getReusePrefixTokens();
+      if (!context.getMemory().seqRm(state.getSequenceId(), start, -1)) {
+        // Recurrent/hybrid models (SSM, gated-deltanet attention) cannot rewind their state to
+        // an arbitrary position — partial seq_rm is rejected natively. Fall back to a cold
+        // prefill: full wipe, no reuse. Correctness over speed; callers see reuse == 0.
+        context.getMemory().seqRm(state.getSequenceId(), -1, -1);
+        start = 0;
+        state.clearReusePrefixTokens();
+      }
+      // MTP keeps embeddings enabled on the target context (the head seed is the target's
+      // post-norm hidden). With embeddings on, llama.cpp forces EVERY batch token to be an
+      // output row ("embeddings required but some input tokens were not marked as outputs ->
+      // overriding"), turning the prefill into an O(prompt) lm_head + embedding extraction
+      // instead of O(1). Only the LAST prompt token's hidden is ever needed (the MTP seed),
+      // so decode the bulk of the prompt with embeddings temporarily off and the final token
+      // in its own single-token batch with embeddings restored — a single output row, no
+      // native override.
+      boolean mtpEmbeddings = state.isMtp();
+      int bulkEnd = mtpEmbeddings ? totalTokens - 1 : totalTokens;
+      if (mtpEmbeddings) {
+        context.setEmbeddings(false);
+      }
+      try {
+        int offset = start;
+        while (offset < bulkEnd) {
+          int chunkSize = Math.min(batchSize, bulkEnd - offset);
+          LlamaBatch promptBatch = new LlamaBatch(arena, chunkSize, 0, 1);
 
-        // Add tokens to the batch for the current chunk.
-        for (int i = 0; i < chunkSize; i++) {
-          int tokenId = state
-            .getTokenized()
-            .data()
-            .getAtIndex(JAVA_INT, offset + i);
-          // We only need the logits for the very last token of the prompt to sample the next one.
-          boolean logits = (offset + i) == totalTokens - 1;
-          promptBatch.add(
-            tokenId,
-            offset + i,
-            java.util.List.of(state.getSequenceId()),
-            logits
-          );
-        }
+          // Add tokens to the batch for the current chunk.
+          for (int i = 0; i < chunkSize; i++) {
+            int tokenId = state
+              .getTokenized()
+              .data()
+              .getAtIndex(JAVA_INT, offset + i);
+            // We only need the logits for the very last token of the prompt to sample the
+            // next one (on the MTP path that token is decoded separately below).
+            boolean logits = (offset + i) == totalTokens - 1;
+            promptBatch.add(
+              tokenId,
+              offset + i,
+              java.util.List.of(state.getSequenceId()),
+              logits
+            );
+          }
 
-        // Decode the batch of prompt tokens.
-        if (promptBatch.decode(context) != 0) {
+          // Decode the batch of prompt tokens.
+          if (promptBatch.decode(context) != 0) {
+            promptBatch.free();
+            throw new LlamaException(
+              "Failed to decode prompt for sequence " + state.getSequenceId()
+            );
+          }
+
           promptBatch.free();
+          offset += chunkSize;
+        }
+      } finally {
+        if (mtpEmbeddings) {
+          // Restore for the final prompt token (seed extraction) and the verify rounds.
+          context.setEmbeddings(true);
+        }
+      }
+
+      if (mtpEmbeddings && totalTokens > start) {
+        // Final prompt token: its logits sample the first token and its embedding row seeds
+        // the MTP head. A 1-token batch with logits=true satisfies output_all — no override.
+        int lastToken = state
+          .getTokenized()
+          .data()
+          .getAtIndex(JAVA_INT, totalTokens - 1);
+        LlamaBatch lastBatch = new LlamaBatch(arena, 1, 0, 1);
+        lastBatch.add(
+          lastToken,
+          totalTokens - 1,
+          java.util.List.of(state.getSequenceId()),
+          true
+        );
+        if (lastBatch.decode(context) != 0) {
+          lastBatch.free();
           throw new LlamaException(
             "Failed to decode prompt for sequence " + state.getSequenceId()
           );
         }
-
-        promptBatch.free();
-        offset += chunkSize;
+        lastBatch.free();
       }
 
       // After processing the entire prompt, update the past token count (n_past).
@@ -175,24 +232,21 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     // Collect logprobs if requested.
     Logprobs logprobs = collectLogprobs(state, newToken, -1);
 
-    // Update state evaluation based on the first token.
-    GenerationState newState = state
+    // Update state evaluation based on the first token (token-sequence aware: the emitted
+    // text may be empty while a multi-token marker prefix is buffered).
+    var emission = state
       .getStateEvaluation()
-      .evaluate(
-        new io.gravitee.llama.cpp.modules.StateEvaluation.Context(
-          state.getGenerationState(),
-          tokenPiece
-        )
-      );
-    state.setGenerationState(newState);
+      .evaluateToken(state.getGenerationState(), newToken, tokenPiece);
+    state.setGenerationState(emission.state());
 
-    // Track the consumption of the first token.
+    // Track the consumption of the first token (resolved tokens only; buffered marker-prefix
+    // tokens are tracked when the marker is confirmed or refuted).
     state
       .getTokenTracking()
       .consume(
         new io.gravitee.llama.cpp.modules.TokenTracking.Context(
           state.getGenerationState(),
-          1
+          emission.emitTokens()
         )
       );
 
@@ -200,7 +254,8 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     if (!tokenizer.isEog(newToken)) {
       // If not finished, set the new token and piece for the next iteration.
       state.setNewTokenId(newToken);
-      state.setPiece(tokenPiece);
+      state.setPiece(emission.emit());
+      state.setPieceTokens(emission.emitTokens());
       state.setLogprobs(logprobs);
     } else {
       // If finished, set the stop reason.
@@ -210,44 +265,46 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
 
   /**
    * Processes a sampled token for a given state.
-   * Updates state evaluation, checks for tool calls, and tracks tokens.
+   * Updates state evaluation (token-sequence aware), checks for tool calls, and tracks tokens.
    *
    * @param state The conversation state to update
+   * @param tokenId The sampled token id
    * @param tokenPiece The token piece that was sampled
+   * @return the emission for this step: text to emit (may be empty while a multi-token marker
+   *         prefix is buffered, or cover several buffered pieces on resolution) and the number
+   *         of generated tokens it covers
    */
-  protected void processSampledToken(
+  protected io.gravitee.llama.cpp.modules.StateEvaluation.Emission processSampledToken(
     ConversationState state,
+    int tokenId,
     String tokenPiece
   ) {
     // Update state evaluation
     GenerationState previousState = state.getGenerationState();
-    GenerationState newState = state
+    var emission = state
       .getStateEvaluation()
-      .evaluate(
-        new io.gravitee.llama.cpp.modules.StateEvaluation.Context(
-          previousState,
-          tokenPiece
-        )
-      );
-    state.setGenerationState(newState);
+      .evaluateToken(previousState, tokenId, tokenPiece);
+    state.setGenerationState(emission.state());
 
     // Mark tool call as finished once we leave the tools section
     if (
       previousState == GenerationState.TOOLS &&
-      newState == GenerationState.ANSWER
+      emission.state() == GenerationState.ANSWER
     ) {
       state.setFinishReason(FinishReason.TOOL_CALL);
     }
 
-    // Track tokens
+    // Track tokens (resolved tokens only; buffered marker-prefix tokens are tracked in the
+    // state they resolve to)
     state
       .getTokenTracking()
       .consume(
         new io.gravitee.llama.cpp.modules.TokenTracking.Context(
           state.getGenerationState(),
-          1
+          emission.emitTokens()
         )
       );
+    return emission;
   }
 
   /**
@@ -427,10 +484,12 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
         state.setFinishReason(STOP);
       }
       state.setFinished(true);
+      flushPendingMarker(state, out);
       return false;
     }
     String piece = decodeTokenPiece(state, token);
-    processSampledToken(state, piece); // updates generation state + token tracking
+    // updates generation state + token tracking; may buffer or resolve marker pieces
+    var emission = processSampledToken(state, token, piece);
     // Mirror the autoregressive iterator: the token that reaches the quota is counted but
     // NOT emitted (the AR path stops via hasNotReachedQuota() after incrementing). Drop it
     // here too, otherwise speculative emits one extra token at the boundary.
@@ -440,8 +499,45 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
       state.setFinished(true);
       return false;
     }
-    out.add(new LlamaOutput(piece, 1, state.getSequenceId()));
+    // Buffered marker prefixes emit nothing, and confirmed marker text is suppressed
+    // (empty emit with emitTokens > 0 — counted, never streamed).
+    if (!emission.emit().isEmpty()) {
+      out.add(
+        new LlamaOutput(
+          emission.emit(),
+          emission.emitTokens(),
+          state.getSequenceId()
+        )
+      );
+    }
     return true;
+  }
+
+  /**
+   * Emits (and tracks) any buffered marker-prefix pieces when generation ends while a
+   * multi-token marker was still unconfirmed — the buffered text belongs to the current
+   * channel and must not be dropped.
+   */
+  protected void flushPendingMarker(
+    ConversationState state,
+    List<LlamaOutput> out
+  ) {
+    var flush = state
+      .getStateEvaluation()
+      .flushPending(state.getGenerationState());
+    if (flush.emitTokens() > 0) {
+      state
+        .getTokenTracking()
+        .consume(
+          new io.gravitee.llama.cpp.modules.TokenTracking.Context(
+            state.getGenerationState(),
+            flush.emitTokens()
+          )
+        );
+      out.add(
+        new LlamaOutput(flush.emit(), flush.emitTokens(), state.getSequenceId())
+      );
+    }
   }
 
   /**
@@ -453,7 +549,7 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     if (currentState.isSpeculative()) {
       currentState.freeSpeculativeScratch();
     }
-    if (currentState.getFinishReason() != null) {
+    if (currentState.getFinishReason() != null && !currentState.isRetainKv()) {
       currentState
         .getContext()
         .getMemory()

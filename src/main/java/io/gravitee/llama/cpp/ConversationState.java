@@ -25,6 +25,7 @@ import io.gravitee.llama.cpp.draft.NgramIndex;
 import io.gravitee.llama.cpp.modules.PromptMemory;
 import io.gravitee.llama.cpp.modules.StateEvaluation;
 import io.gravitee.llama.cpp.modules.StopString;
+import io.gravitee.llama.cpp.modules.TokenHistory;
 import io.gravitee.llama.cpp.modules.TokenTracking;
 import io.gravitee.llama.cpp.speculative.*;
 import io.gravitee.llama.cpp.utils.Utf8Decoder;
@@ -48,6 +49,21 @@ public class ConversationState {
   private final int sequenceId;
   private int nPast = 0;
   private String promptText;
+
+  // KV prefix reuse: how many leading prompt tokens' KV rows are reused from a previous
+  // generation on this sequence (processPrompt then only decodes the suffix), and whether the
+  // sequence's KV should be retained (not wiped) when this state finishes / is cleaned up.
+  private int reusePrefixTokens = 0;
+  private boolean retainKv = false;
+  // Whether the requested prefix reuse was actually honored by the memory backend. Set to
+  // false when processPrompt's partial seq_rm is rejected (recurrent/hybrid models whose
+  // rollback-snapshot window n_rs_seq cannot cover the required rewind) and a cold full
+  // prefill is performed instead.
+  private boolean prefixReuseHonored = true;
+
+  // Committed-token history: token ids whose KV rows are resident, positions [0, nPast).
+  // history.size() == nPast at all stable points (see TokenHistory).
+  private final TokenHistory tokenHistory = new TokenHistory();
 
   // Tokenization
   private TokenizerResponse tokenized;
@@ -101,6 +117,9 @@ public class ConversationState {
   // Iteration state (used by iterator)
   Integer newTokenId;
   String piece;
+  // Number of generated tokens the current `piece` covers: 1 normally, 0 while a multi-token
+  // marker prefix is buffered (empty piece), N when a buffered marker resolves.
+  int pieceTokens = 1;
   Logprobs logprobs;
 
   private ConversationState(
@@ -171,7 +190,50 @@ public class ConversationState {
    * @return This state for chaining
    */
   public ConversationState initialize(String prompt) {
+    return initialize(prompt, 0);
+  }
+
+  /**
+   * Initializes this conversation with a prompt, reusing the KV rows of the first
+   * {@code reusePrefixTokens} prompt tokens already resident for this sequence (from a previous
+   * generation retained via {@link #setRetainKv(boolean)} / {@code removeState(id, true)}).
+   * {@code processPrompt} then wipes the sequence's KV from {@code reusePrefixTokens} on and
+   * decodes only the prompt suffix at absolute positions.
+   *
+   * <p>{@code reusePrefixTokens} must be within {@code [0, tokenized.size()]}; a value equal to
+   * the full prompt length is clamped to {@code size - 1}: the last prompt token must be
+   * re-decoded to produce logits — its KV row gets trimmed and rewritten identically.
+   *
+   * <p>The committed-token history restarts as the FULL new tokenized prompt (all of it becomes
+   * KV-resident once prefill completes).
+   *
+   * @param prompt            The prompt text
+   * @param reusePrefixTokens Number of leading prompt tokens whose KV rows are reused
+   * @return This state for chaining
+   */
+  public ConversationState initialize(String prompt, int reusePrefixTokens) {
     this.tokenized = tokenizer.tokenize(arena, prompt);
+    int size = tokenized.size();
+    if (reusePrefixTokens < 0 || reusePrefixTokens > size) {
+      throw new LlamaException(
+        "reusePrefixTokens (" +
+          reusePrefixTokens +
+          ") must be within [0, " +
+          size +
+          "] (the tokenized prompt length)"
+      );
+    }
+    if (reusePrefixTokens == size && size > 0) {
+      // Clamp: the last prompt token is always re-decoded to produce logits.
+      reusePrefixTokens = size - 1;
+    }
+    this.reusePrefixTokens = reusePrefixTokens;
+    this.prefixReuseHonored = true;
+    int[] promptTokens = new int[size];
+    for (int i = 0; i < size; i++) {
+      promptTokens[i] = tokenized.data().getAtIndex(JAVA_INT, i);
+    }
+    this.tokenHistory.initialize(promptTokens);
     this.promptText = prompt;
     this.tokenTracking.initialize(tokenized.size());
     this.stateEvaluation.initialize(new StateEvaluation.Config(stateBounds));
@@ -179,6 +241,7 @@ public class ConversationState {
     this.finishReason = null;
     this.newTokenId = null;
     this.piece = null;
+    this.pieceTokens = 1;
     this.logprobs = null;
     this.nPast = 0;
     this.decoder.reset();
@@ -636,6 +699,64 @@ public class ConversationState {
     this.nPast++;
   }
 
+  /** Leading prompt tokens whose KV rows are reused by this initialization (see initialize). */
+  public int getReusePrefixTokens() {
+    return reusePrefixTokens;
+  }
+
+  /**
+   * Resets the reuse offset to 0. Called by the prefill when the memory backend rejects a
+   * partial trim (recurrent/hybrid models) and a cold full prefill is performed instead, so
+   * observers see the reuse that actually happened.
+   */
+  public void clearReusePrefixTokens() {
+    this.reusePrefixTokens = 0;
+    this.prefixReuseHonored = false;
+  }
+
+  /**
+   * Whether the prefix reuse requested via {@link #initialize(String, int)} was actually honored
+   * by the prefill. {@code false} means the memory backend rejected the partial trim — attention
+   * models never reject it, but recurrent/hybrid models (SSM, gated-deltanet: e.g. qwen3next,
+   * qwen3.5/3.6) can only rewind their recurrent state within the per-token snapshot window
+   * ({@code n_rs_seq}); a rewind farther back than that forces a cold full prefill and this
+   * returns {@code false}. Callers advertising prefix reuse (cross-request KV caches) should
+   * check this after prompt processing rather than trusting the requested reuse count.
+   */
+  public boolean isPrefixReuseHonored() {
+    return prefixReuseHonored;
+  }
+
+  /**
+   * When {@code true}, this sequence's KV cache is retained (not wiped) when the state finishes
+   * naturally or is cleaned up by its iterator — enabling a later
+   * {@code initialize(prompt, reusePrefixTokens)} on the same sequence id to reuse the resident
+   * prefix. Explicit {@code BatchIterator.removeState(id, false)}, {@code stop()} and
+   * decode-error teardown always wipe regardless.
+   */
+  public ConversationState setRetainKv(boolean retainKv) {
+    this.retainKv = retainKv;
+    return this;
+  }
+
+  public boolean isRetainKv() {
+    return retainKv;
+  }
+
+  /**
+   * Snapshot of the committed token ids — the tokens whose KV rows are resident for this
+   * sequence, positions {@code [0, nPast)}. Length {@code == nPast} at all stable points
+   * (text path; the multimodal path does not maintain the history).
+   */
+  public int[] committedTokens() {
+    return tokenHistory.toArray();
+  }
+
+  /** Internal: the committed-token history backing {@link #committedTokens()}. */
+  public TokenHistory getTokenHistory() {
+    return tokenHistory;
+  }
+
   public TokenizerResponse getTokenized() {
     return tokenized;
   }
@@ -707,6 +828,15 @@ public class ConversationState {
 
   public void setPiece(String piece) {
     this.piece = piece;
+  }
+
+  /** Number of generated tokens covered by the current {@link #getPiece() piece}. */
+  public int getPieceTokens() {
+    return pieceTokens;
+  }
+
+  public void setPieceTokens(int pieceTokens) {
+    this.pieceTokens = pieceTokens;
   }
 
   public Logprobs getLogprobs() {

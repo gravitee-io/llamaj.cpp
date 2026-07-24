@@ -177,15 +177,27 @@ public abstract sealed class SpeculativeDecoding
     return out;
   }
 
-  /** Advances the conversation to the accepted boundary and records accept statistics. */
+  /**
+   * Advances the conversation to the accepted boundary and records accept statistics. Also
+   * updates the committed-token history to the tokens whose KV rows survived the rollback:
+   * {@code idLast} (the pre-round newTokenId, decoded at the old nPast) plus the accepted
+   * drafts — keeping {@code history.size() == nPast}.
+   */
   static void commit(
     ConversationState state,
     Verdict v,
-    int drafted,
+    int[] drafted,
+    int nDrafted,
     int newNPast
   ) {
+    var history = state.getTokenHistory();
+    history.truncate(state.getNPast()); // mirror the KV rollback (defensive no-op normally)
+    history.append(state.getNewTokenId()); // idLast — setNewTokenId(extra) happens below
+    for (int i = 0; i < v.matched(); i++) {
+      history.append(drafted[i]);
+    }
     state.setNPast(newNPast);
     state.setNewTokenId(v.extra());
-    state.recordSpeculation(drafted, v.matched());
+    state.recordSpeculation(nDrafted, v.matched());
   }
 }
