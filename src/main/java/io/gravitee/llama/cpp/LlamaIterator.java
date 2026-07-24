@@ -286,10 +286,11 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
       .evaluateToken(previousState, tokenId, tokenPiece);
     state.setGenerationState(emission.state());
 
-    // Mark tool call as finished once we leave the tools section
+    // Mark tool call as finished once we leave the tools section — via its close marker
+    // (→ ANSWER) or a chained cross-transition directly into another state (Harmony-style).
     if (
       previousState == GenerationState.TOOLS &&
-      emission.state() == GenerationState.ANSWER
+      emission.state() != GenerationState.TOOLS
     ) {
       state.setFinishReason(FinishReason.TOOL_CALL);
     }
