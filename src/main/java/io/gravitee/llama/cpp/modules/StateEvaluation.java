@@ -28,6 +28,24 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
+ * State-machine over generation channels (ANSWER / REASONING / TOOLS) driven by tag markers.
+ *
+ * <p>Two matching entry points:
+ * <ul>
+ *   <li>{@link #evaluate(Context)} — the historical single-piece string-equality matching (a
+ *   marker matches only when one detokenized piece equals it exactly).</li>
+ *   <li>{@link #evaluateToken} — TEXT-based streaming matching, robust to arbitrary
+ *   tokenizations of the same marker text (fused pieces, subword splits, or pieces spanning
+ *   the marker boundary such as {@code "thought\nThe"}). Pieces whose accumulated text is a
+ *   strict prefix of a candidate marker are buffered (emitted as an empty delta) until the
+ *   marker text is fully covered — <b>confirmation</b>: the state flips, the marker text is
+ *   pure syntax and is suppressed (never emitted to any channel; its tokens are counted in
+ *   the post-flip state), and the remainder of a boundary-spanning piece is emitted as the
+ *   first text of the post-flip channel — or until the text diverges from every candidate —
+ *   <b>refutation</b>: the buffered text is emitted in the current channel and the refuting
+ *   piece is re-scanned (it may itself start a marker prefix).</li>
+ * </ul>
+ *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
@@ -37,11 +55,17 @@ public class StateEvaluation
   private Map<GenerationState, StateBounds> states;
   private Map<GenerationState, Boolean> occurredState;
 
+  // Streaming text buffer: while pendingTokens > 0, `pending` holds the last pendingTokens
+  // pieces' text, all of it being a strict prefix of at least one candidate marker.
+  private final StringBuilder pending = new StringBuilder();
+  private int pendingTokens;
+
   @Override
   public boolean isInitialized() {
     return states != null && !states.isEmpty();
   }
 
+  /** Piece-mode evaluation (single-piece equality). Kept for the historical contract. */
   @Override
   public GenerationState evaluate(Context context) {
     return isInitialized()
@@ -55,6 +79,162 @@ public class StateEvaluation
       }
       : GenerationState.ANSWER;
   }
+
+  /**
+   * Text-based streaming evaluation of one generated token.
+   *
+   * <p>Returns the resulting state plus the text to emit for this step: normally the piece
+   * itself ({@code emitTokens == 1}); an empty string while a marker prefix is buffered
+   * ({@code emitTokens == 0}); on confirmation the marker text is suppressed and only the
+   * boundary-spanning remainder (possibly empty) is emitted, with all covered tokens counted
+   * in the post-flip state; on refutation the buffered text (plus this piece, unless it
+   * restarts a marker prefix) is emitted in the current channel.
+   *
+   * @param tokenId the sampled token id (unused by the text matcher; kept for call-site
+   *                symmetry)
+   */
+  public Emission evaluateToken(
+    GenerationState currentState,
+    int tokenId,
+    String piece
+  ) {
+    if (!isInitialized() || currentState == null) {
+      return new Emission(GenerationState.ANSWER, piece, 1);
+    }
+    if (piece == null) {
+      piece = "";
+    }
+    if (pendingTokens == 0 && piece.isEmpty()) {
+      // Nothing buffered and nothing to match (e.g. a partial-UTF-8 piece): plain emit.
+      return new Emission(currentState, piece, 1);
+    }
+    return matchText(currentState, piece, true);
+  }
+
+  /**
+   * Flushes any buffered marker-prefix text (generation ended while a candidate marker was
+   * still unconfirmed). The flushed text belongs to the current channel.
+   */
+  public Emission flushPending(GenerationState currentState) {
+    if (pendingTokens == 0) {
+      return new Emission(currentState, "", 0);
+    }
+    String text = pending.toString();
+    int n = pendingTokens;
+    resetBuffer();
+    return new Emission(currentState, text, n);
+  }
+
+  public boolean hasPending() {
+    return pendingTokens > 0;
+  }
+
+  /* ----- text-based streaming matching ----- */
+
+  /**
+   * Matches the accumulated text (buffer + piece) against the current state's candidate
+   * markers (open markers of not-yet-occurred states in ANSWER; the close marker of the
+   * current state in REASONING/TOOLS). {@code allowRestart} guards the single-level
+   * refutation re-scan.
+   */
+  private Emission matchText(
+    GenerationState currentState,
+    String piece,
+    boolean allowRestart
+  ) {
+    if (currentState != GenerationState.ANSWER) {
+      StateBounds bounds = states.get(currentState);
+      if (stateAlreadyOccurred(bounds)) {
+        // Legacy contract: a state whose close already occurred resolves to ANSWER.
+        return new Emission(GenerationState.ANSWER, piece, 1);
+      }
+    }
+
+    String accumulated = pendingTokens == 0
+      ? piece
+      : pending.toString() + piece;
+
+    // Confirmation candidate: the accumulated text fully covers a marker (possibly with a
+    // boundary-spanning remainder). Prefer the longest such marker.
+    String bestMarker = null;
+    GenerationState bestTarget = null;
+    boolean anyPrefix = false;
+
+    if (currentState == GenerationState.ANSWER) {
+      for (Entry<GenerationState, StateBounds> e : states.entrySet()) {
+        StateBounds bounds = e.getValue();
+        if (stateAlreadyOccurred(bounds) || isNullOrBlank(bounds)) {
+          continue;
+        }
+        String marker = bounds.start();
+        if (accumulated.startsWith(marker)) {
+          if (bestMarker == null || marker.length() > bestMarker.length()) {
+            bestMarker = marker;
+            bestTarget = bounds.state();
+          }
+        } else if (marker.startsWith(accumulated)) {
+          anyPrefix = true;
+        }
+      }
+    } else {
+      String marker = states.get(currentState).end();
+      if (marker != null && !marker.isBlank()) {
+        if (accumulated.startsWith(marker)) {
+          bestMarker = marker;
+          bestTarget = GenerationState.ANSWER;
+        } else if (marker.startsWith(accumulated)) {
+          anyPrefix = true;
+        }
+      }
+    }
+
+    if (bestMarker != null) {
+      // Confirmed: marker text suppressed; the boundary-spanning remainder (if any) is the
+      // first text of the post-flip channel; all covered tokens are counted post-flip.
+      if (currentState != GenerationState.ANSWER) {
+        setAlreadyOccurredIfNecessary(currentState);
+      }
+      String remainder = accumulated.substring(bestMarker.length());
+      int n = pendingTokens + 1;
+      resetBuffer();
+      return new Emission(bestTarget, remainder, n);
+    }
+
+    if (anyPrefix) {
+      // Still a strict prefix of at least one candidate marker: buffer, emit nothing.
+      pending.append(piece);
+      pendingTokens++;
+      return new Emission(currentState, "", 0);
+    }
+
+    if (pendingTokens == 0) {
+      // No buffer, no match: plain content.
+      return new Emission(currentState, piece, 1);
+    }
+
+    // Refutation: the accumulated text diverged from every candidate. Flush the buffered
+    // text to the current channel and re-scan the refuting piece alone (it may itself start
+    // a marker prefix).
+    String flushed = pending.toString();
+    int flushedTokens = pendingTokens;
+    resetBuffer();
+    if (!allowRestart) {
+      return new Emission(currentState, flushed + piece, flushedTokens + 1);
+    }
+    Emission restart = matchText(currentState, piece, false);
+    return new Emission(
+      restart.state(),
+      flushed + restart.emit(),
+      flushedTokens + restart.emitTokens()
+    );
+  }
+
+  private void resetBuffer() {
+    pending.setLength(0);
+    pendingTokens = 0;
+  }
+
+  /* ----- piece-mode internals (unchanged semantics) ----- */
 
   private GenerationState detectEndState(
     GenerationState currentState,
@@ -94,9 +274,14 @@ public class StateEvaluation
 
   /**
    * Resolves the state generation should start in for the given prompt.
-   * Chat templates may pre-fill a state's open tag at the end of the prompt
-   * (e.g. a template ending with {@code <think>}), in which case the model
-   * never emits the tag itself and generation must begin inside that state.
+   *
+   * <p>Chat templates may pre-fill a state's open tag at the end of the prompt (e.g. a template
+   * ending with {@code <think>}), and continuation prompts may end anywhere inside an
+   * unfinished span (open tag present, close tag not yet emitted). In both cases the model
+   * never (re-)emits the open tag itself and generation must begin inside that state, so a
+   * prompt whose LAST open-tag occurrence is not followed by the corresponding close tag seeds
+   * that state. Matching is string-based on the rendered prompt, so it is independent of how
+   * the markers tokenize.
    */
   public GenerationState initialState(String prompt) {
     if (!isInitialized() || prompt == null) {
@@ -107,10 +292,20 @@ public class StateEvaluation
       .values()
       .stream()
       .filter(not(StateEvaluation::isNullOrBlank))
-      .filter(stateBounds -> trimmed.endsWith(stateBounds.start()))
+      .filter(stateBounds -> insideOpenSpan(trimmed, stateBounds))
       .map(StateBounds::state)
       .findFirst()
       .orElse(GenerationState.ANSWER);
+  }
+
+  private static boolean insideOpenSpan(String prompt, StateBounds bounds) {
+    int lastStart = prompt.lastIndexOf(bounds.start());
+    if (lastStart < 0) {
+      return false;
+    }
+    String end = bounds.end();
+    int lastEnd = end == null || end.isBlank() ? -1 : prompt.lastIndexOf(end);
+    return lastStart > lastEnd;
   }
 
   private static boolean isNullOrBlank(StateBounds stateBounds) {
@@ -137,9 +332,18 @@ public class StateEvaluation
     this.occurredState = this.states.keySet()
       .stream()
       .collect(toMap(identity(), __ -> false));
+    resetBuffer();
   }
 
   public record Config(List<StateBounds> states) {}
 
   public record Context(GenerationState currentState, String piece) {}
+
+  /**
+   * Result of evaluating one token: the resulting generation state, the text to emit for this
+   * step, and how many generated tokens it covers (0 while buffering a marker prefix; N when
+   * buffered pieces resolve — marker text itself is always suppressed). Emitted text always
+   * belongs to {@code state}.
+   */
+  public record Emission(GenerationState state, String emit, int emitTokens) {}
 }
