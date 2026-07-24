@@ -33,6 +33,14 @@ class StateEvaluationTest {
     return eval;
   }
 
+  /**
+   * Text-based streaming matching: token ids are irrelevant, only piece text matters.
+   * Same initialization as {@link #of} — evaluateToken is always text-aware.
+   */
+  private static StateEvaluation tokenAware(StateBounds... bounds) {
+    return of(bounds);
+  }
+
   private static GenerationState step(
     StateEvaluation eval,
     GenerationState current,
@@ -160,5 +168,331 @@ class StateEvaluationTest {
     assertThat(step(eval, state, "pondering")).isEqualTo(REASONING);
     assertThat(step(eval, REASONING, "</think>")).isEqualTo(ANSWER);
     assertThat(step(eval, ANSWER, "<think>")).isEqualTo(ANSWER);
+  }
+
+  /* ----- token-sequence matching (evaluateToken) ----- */
+
+  @Test
+  void token_aware_single_token_markers_behave_as_before() {
+    var eval = tokenAware(new StateBounds(REASONING, "<think>", "</think>"));
+
+    var hello = eval.evaluateToken(ANSWER, 5, "Hello");
+    assertThat(hello.state()).isEqualTo(ANSWER);
+    assertThat(hello.emit()).isEqualTo("Hello");
+    assertThat(hello.emitTokens()).isEqualTo(1);
+
+    var open = eval.evaluateToken(ANSWER, 100, "<think>");
+    assertThat(open.state()).isEqualTo(REASONING);
+    assertThat(open.emit()).isEmpty(); // marker text suppressed
+    assertThat(open.emitTokens()).isEqualTo(1);
+
+    var inner = eval.evaluateToken(REASONING, 6, "pondering");
+    assertThat(inner.state()).isEqualTo(REASONING);
+
+    var close = eval.evaluateToken(REASONING, 101, "</think>");
+    assertThat(close.state()).isEqualTo(ANSWER);
+    assertThat(close.emit()).isEmpty(); // marker text suppressed
+
+    // reasoning occurs at most once
+    assertThat(eval.evaluateToken(ANSWER, 100, "<think>").state()).isEqualTo(
+      ANSWER
+    );
+  }
+
+  @Test
+  void token_aware_single_token_marker_matches_by_piece_when_id_differs() {
+    var eval = tokenAware(new StateBounds(REASONING, "<think>", "</think>"));
+
+    // Model emitted a token with a different id whose text equals the marker.
+    var open = eval.evaluateToken(ANSWER, 999, "<think>");
+    assertThat(open.state()).isEqualTo(REASONING);
+  }
+
+  @Test
+  void two_token_open_marker_buffers_then_stamps_reasoning() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    // First marker token: buffered, nothing emitted, still ANSWER.
+    var first = eval.evaluateToken(ANSWER, 200, "<|channel>");
+    assertThat(first.state()).isEqualTo(ANSWER);
+    assertThat(first.emit()).isEmpty();
+    assertThat(first.emitTokens()).isZero();
+    assertThat(eval.hasPending()).isTrue();
+
+    // Second marker token: full sequence confirmed — whole marker emitted in REASONING.
+    var second = eval.evaluateToken(ANSWER, 201, "thought");
+    assertThat(second.state()).isEqualTo(REASONING);
+    // marker text never leaks into any channel; tokens still counted post-flip
+    assertThat(second.emit()).isEmpty();
+    assertThat(second.emitTokens()).isEqualTo(2);
+    assertThat(eval.hasPending()).isFalse();
+
+    // Reasoning content flows in REASONING.
+    assertThat(eval.evaluateToken(REASONING, 7, "hmm").state()).isEqualTo(
+      REASONING
+    );
+
+    // Two-token close marker: buffer then back to ANSWER with the full close text.
+    var closeFirst = eval.evaluateToken(REASONING, 200, "<|channel>");
+    assertThat(closeFirst.state()).isEqualTo(REASONING);
+    assertThat(closeFirst.emitTokens()).isZero();
+    var closeSecond = eval.evaluateToken(REASONING, 202, "end");
+    assertThat(closeSecond.state()).isEqualTo(ANSWER);
+    assertThat(closeSecond.emit()).isEmpty(); // marker text suppressed
+    assertThat(closeSecond.emitTokens()).isEqualTo(2);
+
+    // Reasoning does not re-enter once closed.
+    var reOpen = eval.evaluateToken(ANSWER, 200, "<|channel>");
+    assertThat(reOpen.state()).isEqualTo(ANSWER);
+    assertThat(reOpen.emit()).isEqualTo("<|channel>");
+    assertThat(reOpen.emitTokens()).isEqualTo(1);
+    assertThat(eval.evaluateToken(ANSWER, 201, "thought").state()).isEqualTo(
+      ANSWER
+    );
+  }
+
+  @Test
+  void refuted_prefix_is_emitted_in_current_channel() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    var first = eval.evaluateToken(ANSWER, 200, "<|channel>");
+    assertThat(first.emitTokens()).isZero();
+
+    var refuted = eval.evaluateToken(ANSWER, 42, "Hello");
+    assertThat(refuted.state()).isEqualTo(ANSWER);
+    assertThat(refuted.emit()).isEqualTo("<|channel>Hello");
+    assertThat(refuted.emitTokens()).isEqualTo(2);
+    assertThat(eval.hasPending()).isFalse();
+  }
+
+  @Test
+  void refuting_token_can_itself_restart_a_marker_prefix() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    eval.evaluateToken(ANSWER, 200, "<|channel>");
+    // Same first marker token again: previous prefix refuted (flushed), new prefix buffered.
+    var again = eval.evaluateToken(ANSWER, 200, "<|channel>");
+    assertThat(again.state()).isEqualTo(ANSWER);
+    assertThat(again.emit()).isEqualTo("<|channel>");
+    assertThat(again.emitTokens()).isEqualTo(1);
+    assertThat(eval.hasPending()).isTrue();
+
+    var confirmed = eval.evaluateToken(ANSWER, 201, "thought");
+    assertThat(confirmed.state()).isEqualTo(REASONING);
+    assertThat(confirmed.emit()).isEmpty(); // marker text suppressed
+    assertThat(confirmed.emitTokens()).isEqualTo(2);
+  }
+
+  @Test
+  void flush_pending_returns_buffered_prefix_in_current_channel() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    eval.evaluateToken(ANSWER, 200, "<|channel>");
+    var flush = eval.flushPending(ANSWER);
+    assertThat(flush.state()).isEqualTo(ANSWER);
+    assertThat(flush.emit()).isEqualTo("<|channel>");
+    assertThat(flush.emitTokens()).isEqualTo(1);
+    assertThat(eval.hasPending()).isFalse();
+
+    // Flushing with nothing pending is a no-op.
+    var empty = eval.flushPending(ANSWER);
+    assertThat(empty.emitTokens()).isZero();
+  }
+
+  @Test
+  void two_token_tool_markers_enter_and_exit_tools() {
+    var eval = tokenAware(new StateBounds(TOOLS, "<|tool>call", "<|tool>end"));
+
+    assertThat(
+      eval.evaluateToken(ANSWER, 210, "<|tool>").emitTokens()
+    ).isZero();
+    var open = eval.evaluateToken(ANSWER, 211, "call");
+    assertThat(open.state()).isEqualTo(TOOLS);
+    assertThat(open.emit()).isEmpty(); // marker text suppressed
+
+    assertThat(
+      eval.evaluateToken(TOOLS, 8, "{\"name\":\"x\"}").state()
+    ).isEqualTo(TOOLS);
+
+    assertThat(eval.evaluateToken(TOOLS, 210, "<|tool>").emitTokens()).isZero();
+    var close = eval.evaluateToken(TOOLS, 212, "end");
+    assertThat(close.state()).isEqualTo(ANSWER);
+    assertThat(close.emit()).isEmpty(); // marker text suppressed
+
+    // tools can reoccur
+    eval.evaluateToken(ANSWER, 210, "<|tool>");
+    assertThat(eval.evaluateToken(ANSWER, 211, "call").state()).isEqualTo(
+      TOOLS
+    );
+  }
+
+  @Test
+  void mixed_single_and_multi_token_markers_coexist() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<think>", "</think>"),
+      new StateBounds(TOOLS, "<|tool>call", "<|tool>end")
+    );
+
+    assertThat(eval.evaluateToken(ANSWER, 100, "<think>").state()).isEqualTo(
+      REASONING
+    );
+    assertThat(
+      eval.evaluateToken(REASONING, 101, "</think>").state()
+    ).isEqualTo(ANSWER);
+
+    assertThat(
+      eval.evaluateToken(ANSWER, 210, "<|tool>").emitTokens()
+    ).isZero();
+    assertThat(eval.evaluateToken(ANSWER, 211, "call").state()).isEqualTo(
+      TOOLS
+    );
+  }
+
+  /* ----- tokenization variants of the same marker text ----- */
+
+  @Test
+  void fused_single_piece_marker_confirms() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    // The whole marker arrives as ONE piece.
+    var fused = eval.evaluateToken(ANSWER, 1, "<|channel>thought");
+    assertThat(fused.state()).isEqualTo(REASONING);
+    assertThat(fused.emit()).isEmpty();
+    assertThat(fused.emitTokens()).isEqualTo(1);
+  }
+
+  @Test
+  void boundary_spanning_piece_confirms_and_emits_remainder_post_flip() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    assertThat(
+      eval.evaluateToken(ANSWER, 1, "<|channel>").emitTokens()
+    ).isZero();
+    // Piece completes the marker AND carries trailing text: the remainder is the first
+    // text of the post-flip channel; marker text stays suppressed.
+    var spanning = eval.evaluateToken(ANSWER, 2, "thought\nThe");
+    assertThat(spanning.state()).isEqualTo(REASONING);
+    assertThat(spanning.emit()).isEqualTo("\nThe");
+    assertThat(spanning.emitTokens()).isEqualTo(2);
+  }
+
+  @Test
+  void single_piece_spanning_single_token_marker_splits() {
+    var eval = tokenAware(new StateBounds(REASONING, "<think>", "</think>"));
+
+    var spanning = eval.evaluateToken(ANSWER, 1, "<think>Okay");
+    assertThat(spanning.state()).isEqualTo(REASONING);
+    assertThat(spanning.emit()).isEqualTo("Okay");
+    assertThat(spanning.emitTokens()).isEqualTo(1);
+  }
+
+  @Test
+  void subword_split_marker_confirms_identically() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    // Same marker text, split at a non-token boundary.
+    assertThat(eval.evaluateToken(ANSWER, 1, "<|chan").emitTokens()).isZero();
+    var confirmed = eval.evaluateToken(ANSWER, 2, "nel>thought");
+    assertThat(confirmed.state()).isEqualTo(REASONING);
+    assertThat(confirmed.emit()).isEmpty();
+    assertThat(confirmed.emitTokens()).isEqualTo(2);
+  }
+
+  @Test
+  void three_way_split_marker_confirms() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    assertThat(eval.evaluateToken(ANSWER, 1, "<|ch").emitTokens()).isZero();
+    assertThat(eval.evaluateToken(ANSWER, 2, "annel>th").emitTokens()).isZero();
+    var confirmed = eval.evaluateToken(ANSWER, 3, "ought");
+    assertThat(confirmed.state()).isEqualTo(REASONING);
+    assertThat(confirmed.emit()).isEmpty();
+    assertThat(confirmed.emitTokens()).isEqualTo(3);
+  }
+
+  @Test
+  void text_divergence_refutes_and_flushes_current_channel() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    assertThat(eval.evaluateToken(ANSWER, 1, "<|chan").emitTokens()).isZero();
+    // Diverges from the marker text mid-way.
+    var refuted = eval.evaluateToken(ANSWER, 2, "xyz");
+    assertThat(refuted.state()).isEqualTo(ANSWER);
+    assertThat(refuted.emit()).isEqualTo("<|chanxyz");
+    assertThat(refuted.emitTokens()).isEqualTo(2);
+    assertThat(eval.hasPending()).isFalse();
+  }
+
+  @Test
+  void boundary_spanning_close_marker_returns_remainder_to_answer() {
+    var eval = tokenAware(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    eval.evaluateToken(ANSWER, 1, "<|channel>thought");
+    assertThat(eval.evaluateToken(REASONING, 2, "pondering").state()).isEqualTo(
+      REASONING
+    );
+    assertThat(
+      eval.evaluateToken(REASONING, 3, "<|channel>").emitTokens()
+    ).isZero();
+    var close = eval.evaluateToken(REASONING, 4, "end The answer");
+    assertThat(close.state()).isEqualTo(ANSWER);
+    assertThat(close.emit()).isEqualTo(" The answer");
+    assertThat(close.emitTokens()).isEqualTo(2);
+  }
+
+  /* ----- input-side: prompt ending inside an unfinished span ----- */
+
+  @Test
+  void initial_state_enters_reasoning_when_prompt_ends_inside_open_span() {
+    var eval = of(new StateBounds(REASONING, "<think>", "</think>"));
+
+    assertThat(
+      eval.initialState(
+        "<|im_start|>assistant\n<think>partial reasoning so far"
+      )
+    ).isEqualTo(REASONING);
+  }
+
+  @Test
+  void initial_state_is_answer_when_last_span_is_closed() {
+    var eval = of(new StateBounds(REASONING, "<think>", "</think>"));
+
+    assertThat(eval.initialState("<think>done</think>The answer is")).isEqualTo(
+      ANSWER
+    );
+  }
+
+  @Test
+  void initial_state_detects_multi_token_marker_span_textually() {
+    var eval = of(
+      new StateBounds(REASONING, "<|channel>thought", "<|channel>end")
+    );
+
+    assertThat(
+      eval.initialState("prompt\n<|channel>thought partial")
+    ).isEqualTo(REASONING);
+    assertThat(
+      eval.initialState("prompt\n<|channel>thought done<|channel>end answer")
+    ).isEqualTo(ANSWER);
   }
 }
