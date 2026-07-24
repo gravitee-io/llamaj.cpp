@@ -47,7 +47,10 @@ public final class LlamaTokenizer {
       llama_tokenize(
         vocab.segment,
         promptSegment.data,
-        prompt.length(),
+        // text_len is a BYTE count: the segment is NUL-terminated UTF-8, so its
+        // byte size minus the terminator — NOT prompt.length() (UTF-16 chars),
+        // which silently truncates any prompt containing multi-byte characters.
+        (int) promptSegment.data.byteSize() - 1,
         tokenBuffer,
         nbPromptTokens,
         isFirst,
@@ -70,7 +73,7 @@ public final class LlamaTokenizer {
     int nbPromptTokens = -llama_tokenize(
       vocab.segment,
       promptSegment,
-      prompt.length(),
+      (int) promptSegment.byteSize() - 1,
       MemorySegment.NULL,
       0,
       isFirst,
