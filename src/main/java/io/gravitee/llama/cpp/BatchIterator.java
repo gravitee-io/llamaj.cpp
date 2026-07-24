@@ -150,35 +150,40 @@ public final class BatchIterator
 
     currentOutputs.clear();
 
-    // Prepare states: clean up finished ones, process prompts for new ones, and collect active states.
-    List<ConversationState> activeStates = prepareActiveStates();
+    // A step may emit nothing while every active sequence is buffering a multi-token marker
+    // prefix; keep stepping until something is emitted or no sequences remain (each step
+    // commits >= 1 token per active sequence, so this terminates).
+    while (currentOutputs.isEmpty()) {
+      // Prepare states: clean up finished ones, process prompts for new ones, and collect active states.
+      List<ConversationState> activeStates = prepareActiveStates();
 
-    // If we just emitted the first tokens from prompt processing, return them immediately.
-    // This ensures a responsive start for each conversation.
-    if (!currentOutputs.isEmpty()) {
-      return true;
+      // If we just emitted the first tokens from prompt processing, return them immediately.
+      // This ensures a responsive start for each conversation.
+      if (!currentOutputs.isEmpty()) {
+        return true;
+      }
+
+      // If there are no more active conversations, we are done.
+      if (activeStates.isEmpty()) {
+        return false;
+      }
+
+      // Speculative states verify together in ONE target decode (fused); non-speculative states
+      // use the normal fused single-token batch.
+      List<ConversationState> speculative = new ArrayList<>();
+      List<ConversationState> normal = new ArrayList<>();
+      for (ConversationState state : activeStates) {
+        (state.isSpeculative() ? speculative : normal).add(state);
+      }
+      if (!speculative.isEmpty()) {
+        speculativeFusedStep(speculative);
+      }
+      if (!normal.isEmpty()) {
+        processInBatches(normal);
+      }
     }
 
-    // If there are no more active conversations, we are done.
-    if (activeStates.isEmpty()) {
-      return false;
-    }
-
-    // Speculative states verify together in ONE target decode (fused); non-speculative states
-    // use the normal fused single-token batch.
-    List<ConversationState> speculative = new ArrayList<>();
-    List<ConversationState> normal = new ArrayList<>();
-    for (ConversationState state : activeStates) {
-      (state.isSpeculative() ? speculative : normal).add(state);
-    }
-    if (!speculative.isEmpty()) {
-      speculativeFusedStep(speculative);
-    }
-    if (!normal.isEmpty()) {
-      processInBatches(normal);
-    }
-
-    return !currentOutputs.isEmpty();
+    return true;
   }
 
   /**
@@ -766,6 +771,15 @@ public final class BatchIterator
       s.appendHistory(extra);
     }
 
+    // Committed-token history: the rows surviving the rollback are idLast (still in
+    // s.getNewTokenId() until below) + the accepted drafts — keeps history.size() == nPast.
+    var history = s.getTokenHistory();
+    history.truncate(s.getNPast());
+    history.append(s.getNewTokenId());
+    for (int i = 0; i < matched; i++) {
+      history.append(drafted[i]);
+    }
+
     s.setNPast(newNPast);
     s.setNewTokenId(extra);
     s.recordSpeculation(m, matched);
@@ -845,7 +859,19 @@ public final class BatchIterator
 
       // If the state is new, process its prompt to get the first token.
       if (state.getNewTokenId() == null) {
-        processPromptForState(state);
+        try {
+          processPromptForState(state);
+        } catch (LlamaException e) {
+          // A failed prompt decode is terminal for THIS state. Without this the state would
+          // stay in the map with newTokenId == null and every batch() call would retry the
+          // doomed prefill forever (observed as a hot error loop). Fail the sequence, force
+          // a full KV wipe (its cache is suspect), and keep serving the others.
+          state.setFinishReason(FinishReason.STOP);
+          state.setFinished(true);
+          cleanupState(state, false);
+          it.remove();
+          throw e;
+        }
         // If prompt processing immediately results in a finish condition, clean up.
         if (state.getFinishReason() != null) {
           cleanupState(state);
@@ -856,17 +882,20 @@ public final class BatchIterator
 
       activeStates.add(state);
 
-      // If the first token for this state hasn't been emitted yet, add it to the output queue.
+      // If the first token for this state hasn't been emitted yet, add it to the output queue
+      // (unless it is buffered as a multi-token marker prefix — then there is nothing to emit).
       if (!firstTokenEmitted.get(state.getSequenceId())) {
-        currentOutputs.add(
-          new LlamaOutput(
-            state.getPiece(),
-            1,
-            state.getSequenceId(),
-            null,
-            state.getLogprobs()
-          )
-        );
+        if (state.getPiece() != null && !state.getPiece().isEmpty()) {
+          currentOutputs.add(
+            new LlamaOutput(
+              state.getPiece(),
+              state.getPieceTokens(),
+              state.getSequenceId(),
+              null,
+              state.getLogprobs()
+            )
+          );
+        }
         firstTokenEmitted.put(state.getSequenceId(), true);
       }
     }
@@ -932,6 +961,9 @@ public final class BatchIterator
    * @param state The conversation state to process.
    */
   private void sampleAndProcessNextToken(ConversationState state) {
+    // The token just decoded at position nPast (decodeBatch added state.getNewTokenId()); it
+    // enters the committed history when nPast is incremented below.
+    int decodedToken = state.getNewTokenId();
     int batchPos = seqIdToBatchPos.get(state.getSequenceId());
     int newToken = state.getSampler().sample(context, batchPos);
     String tokenPiece = decodeTokenPiece(state, newToken);
@@ -939,38 +971,48 @@ public final class BatchIterator
     // Collect logprobs before processing (logits are invalidated after next decode).
     Logprobs logprobs = collectLogprobs(state, newToken, batchPos);
 
-    processSampledToken(state, tokenPiece);
-
-    // Check if the generation should continue for this state.
-    if (!shouldContinue(state, newToken)) {
-      if (state.getTokenizer().isEog(newToken)) {
-        // Decrement token count for EOG token, as it's not part of the generated content.
-        state
-          .getTokenTracking()
-          .consume(
-            new io.gravitee.llama.cpp.modules.TokenTracking.Context(
-              state.getGenerationState(),
-              -1
-            )
-          );
+    // End-of-generation: the EOG token is neither processed nor counted, but a buffered
+    // multi-token marker prefix (if any) is flushed to the current channel.
+    if (state.getTokenizer().isEog(newToken)) {
+      if (state.getFinishReason() != FinishReason.TOOL_CALL) {
+        state.setFinishReason(FinishReason.STOP);
       }
+      state.setFinished(true);
+      flushPendingMarker(state, currentOutputs);
       return;
     }
 
-    // Update the state with the new token and add it to the output queue.
+    var emission = processSampledToken(state, newToken, tokenPiece);
+
+    // Check token limit — LENGTH always overrides, even TOOL_CALL
+    int maxTokens = state.getMaxTokens();
+    if (maxTokens != -1 && maxTokens <= state.getAnswerTokens()) {
+      state.setFinishReason(FinishReason.LENGTH);
+      state.setFinished(true);
+      return;
+    }
+
+    // Update the state with the new token and add it to the output queue (nothing is queued
+    // while a multi-token marker prefix is buffered).
     state.setNewTokenId(newToken);
-    state.setPiece(tokenPiece);
+    state.setPiece(emission.emit());
+    state.setPieceTokens(emission.emitTokens());
     state.setLogprobs(logprobs);
     state.incrementNPast();
-    currentOutputs.add(
-      new LlamaOutput(
-        state.getPiece(),
-        1,
-        state.getSequenceId(),
-        null,
-        logprobs
-      )
-    );
+    state.getTokenHistory().append(decodedToken);
+    // Nothing is queued while a marker prefix is buffered, and a confirmed marker's text is
+    // suppressed (empty emit with emitTokens > 0 — counted, never streamed).
+    if (!emission.emit().isEmpty()) {
+      currentOutputs.add(
+        new LlamaOutput(
+          emission.emit(),
+          emission.emitTokens(),
+          state.getSequenceId(),
+          null,
+          logprobs
+        )
+      );
+    }
   }
 
   /**
@@ -981,7 +1023,8 @@ public final class BatchIterator
   private void handleDecodeError(List<ConversationState> batchStates) {
     for (ConversationState state : batchStates) {
       state.setFinishReason(FinishReason.STOP);
-      cleanupState(state);
+      // Decode error: the cache contents are suspect — always full-wipe.
+      cleanupState(state, false);
     }
     seqIdToState.clear();
   }
@@ -994,9 +1037,24 @@ public final class BatchIterator
    * @return true if the sequence was removed, false if not found
    */
   public boolean removeState(int sequenceId) {
+    return removeState(sequenceId, false);
+  }
+
+  /**
+   * Removes a specific conversation state, optionally keeping its KV cache resident for a later
+   * prefix-reuse initialization on the same sequence id.
+   *
+   * <p>{@code keepKv == true} skips the KV wipe; {@code keepKv == false} forces the wipe even
+   * when the state was marked {@link ConversationState#setRetainKv(boolean) retainKv}.
+   *
+   * @param sequenceId The sequence ID to remove
+   * @param keepKv     Whether to keep the sequence's KV cache resident
+   * @return true if the sequence was removed, false if not found
+   */
+  public boolean removeState(int sequenceId, boolean keepKv) {
     ConversationState state = seqIdToState.remove(sequenceId);
     if (state != null) {
-      cleanupState(state);
+      cleanupState(state, keepKv);
       return true;
     }
     return false;
@@ -1025,8 +1083,8 @@ public final class BatchIterator
 
     stopped = true;
 
-    // Clean up all remaining sequences from KV cache
-    seqIdToState.values().forEach(state -> cleanupState(state));
+    // Clean up all remaining sequences from KV cache (teardown: always full-wipe)
+    seqIdToState.values().forEach(state -> cleanupState(state, false));
 
     seqIdToState.clear();
     firstTokenEmitted.clear();
@@ -1094,9 +1152,22 @@ public final class BatchIterator
     free();
   }
 
+  /**
+   * Internal cleanup honoring the state's {@link ConversationState#isRetainKv() retainKv} flag:
+   * natural completion (finished states, immediate prompt finish, onFinished) retains the KV
+   * when the state was marked. Teardown paths that invalidate the cache ({@link #stop()},
+   * decode errors) and explicit {@code removeState(id, false)} force the wipe instead via
+   * {@link #cleanupState(ConversationState, boolean)}.
+   */
   private void cleanupState(ConversationState state) {
+    cleanupState(state, state.isRetainKv());
+  }
+
+  private void cleanupState(ConversationState state, boolean keepKv) {
     int sequenceId = state.getSequenceId();
-    context.getMemory().seqRm(sequenceId, -1, -1);
+    if (!keepKv) {
+      context.getMemory().seqRm(sequenceId, -1, -1);
+    }
     // Free the speculative state's persistent native scratch (idempotent: null-on-free, so the
     // common path of removal-then-stop never double-frees). Non-speculative states have none.
     if (state.isSpeculative()) {

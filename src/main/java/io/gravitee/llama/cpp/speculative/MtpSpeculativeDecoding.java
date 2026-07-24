@@ -37,14 +37,17 @@ public final class MtpSpeculativeDecoding
 
   /**
    * No token replay — the head shares the target's weights and is seeded per round with the
-   * target's post-norm hidden. After {@code processPrompt} the target's single output row
-   * (index 0) is the last prompt token's hidden: the initial seed.
+   * target's post-norm hidden. After {@code processPrompt} the target's single output row is
+   * the last prompt token's hidden: the initial seed. Read via index {@code -1} (last output
+   * row): a positive index maps through {@code output_ids[token_index]}, which only equals the
+   * output row when every batch token requested logits (the verify path) — after a prompt
+   * prefill (full or KV-prefix-reused) only the final prompt token has an output row.
    */
   @Override
   public void prefill(ConversationState state) {
     var mtp = state.getMtpDraft();
     mtp.context().getMemory().seqRm(state.getSequenceId(), -1, -1);
-    mtp.setSeed(state.getContext().getEmbeddingsIth(0));
+    mtp.setSeed(state.getContext().getEmbeddingsIth(-1));
   }
 
   @Override
@@ -94,7 +97,7 @@ public final class MtpSpeculativeDecoding
     mtp.setSeed(newSeed);
 
     List<LlamaOutput> out = emitCommitted(it, state, d.tokens(), v);
-    commit(state, v, d.m(), newNPast);
+    commit(state, v, d.tokens(), d.m(), newNPast);
     return out;
   }
 }

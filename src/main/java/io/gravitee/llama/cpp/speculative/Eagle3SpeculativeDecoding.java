@@ -140,7 +140,7 @@ public final class Eagle3SpeculativeDecoding
     e3.setBoundary(gv[v.matched()]);
 
     List<LlamaOutput> out = emitCommitted(it, state, d.tokens(), v);
-    commit(state, v, d.m(), newNPast);
+    commit(state, v, d.tokens(), d.m(), newNPast);
     return out;
   }
 }

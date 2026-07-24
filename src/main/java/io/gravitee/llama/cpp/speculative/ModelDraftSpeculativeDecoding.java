@@ -165,7 +165,7 @@ public final class ModelDraftSpeculativeDecoding extends SpeculativeDecoding {
     }
 
     List<LlamaOutput> out = emitCommitted(it, state, drafted, v);
-    commit(state, v, m, newNPast);
+    commit(state, v, drafted, m, newNPast);
     return out;
   }
 }

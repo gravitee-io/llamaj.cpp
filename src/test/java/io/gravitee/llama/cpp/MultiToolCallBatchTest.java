@@ -44,9 +44,10 @@ import org.junit.jupiter.api.Test;
  */
 class MultiToolCallBatchTest extends LlamaCppTest {
 
+  // Tool tag markers are engine-suppressed (pure syntax, never streamed), so tool calls
+  // are counted by their JSON payloads in the emitted text.
   private static final Pattern TOOL_CALL_PATTERN = Pattern.compile(
-    "<tool_call>\\s*\\{.*?}\\s*</tool_call>",
-    Pattern.DOTALL
+    "\"name\"\\s*:"
   );
 
   /**
@@ -149,7 +150,13 @@ class MultiToolCallBatchTest extends LlamaCppTest {
     System.out.println(fullOutput);
     System.out.println("=============================");
 
-    // Count <tool_call>...</tool_call> blocks in the output
+    // Tag markers must never leak into the streamed output (any channel).
+    assertThat(fullOutput).doesNotContain("<tool_call>");
+    assertThat(fullOutput).doesNotContain("</tool_call>");
+    assertThat(fullOutput).doesNotContain("<think>");
+    assertThat(fullOutput).doesNotContain("</think>");
+
+    // Count tool-call JSON payloads in the output
     int toolCallCount = 0;
     Matcher matcher = TOOL_CALL_PATTERN.matcher(fullOutput);
     while (matcher.find()) {
