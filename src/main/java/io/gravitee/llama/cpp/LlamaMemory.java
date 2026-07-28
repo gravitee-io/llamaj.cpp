@@ -143,6 +143,76 @@ public class LlamaMemory extends MemorySegmentAware {
   }
 
   /**
+   * Republishes the leading {@code matchedTokens} KV rows of {@code seqIdSrc} onto
+   * {@code seqIdDst}, and returns the prefix length the destination may then reuse — the value to
+   * pass to {@link ConversationState#initialize(String, int)}.
+   *
+   * <p>This is the cross-request prefix cache in one call. A KV cell in llama.cpp carries a
+   * <em>set</em> of sequence ids rather than belonging to one, so the copy adds {@code seqIdDst}
+   * to the cells at positions {@code [0, matchedTokens)} and moves no tensor data: publishing a
+   * 2000-token system prompt to a second conversation costs microseconds and no extra VRAM. The
+   * source may still be generating — cells it shares are not disturbed, and it never rewinds into
+   * its own prompt.
+   *
+   * <p>The two rules this method exists to enforce:
+   * <ul>
+   *   <li>The destination is wiped first. {@code seq_cp} adds rows rather than replacing them, so
+   *       copying onto a sequence that still holds cells would stack one prefix on another.</li>
+   *   <li>The result is clamped to {@code promptTokens - 1}. The final prompt token must always be
+   *       re-decoded to produce the logits its first output token is sampled from, so claiming it
+   *       as reused is never useful. {@code initialize} clamps too, but clamping here keeps the
+   *       rows we copy and the prefill we ask for in agreement.</li>
+   * </ul>
+   *
+   * <p><b>Caller invariant.</b> Whatever tracks which tokens a sequence holds must never advertise
+   * more than is provably resident, or a later copy reads cells that no longer exist. A sequence
+   * being prefilled holds only what was copied onto it; widen the record to
+   * {@link ConversationState#committedTokens()} — exactly positions {@code [0, nPast)} — only once
+   * the prefill has run. Retaining the source's KV is the caller's job too: mark its state
+   * {@link ConversationState#setRetainKv(boolean)} or remove it with {@code keepKv}, otherwise the
+   * rows are wiped when it finishes and the advertised prefix becomes a dangling claim.
+   *
+   * <p>Prefix reuse can still be refused at prefill time by recurrent and hybrid models, which
+   * cannot always rewind far enough for the partial trim; that path falls back to a cold full
+   * prefill and reports {@link ConversationState#isPrefixReuseHonored()} {@code == false}. Correct,
+   * just slower.
+   *
+   * @param seqIdSrc      Sequence holding the prefix
+   * @param seqIdDst      Sequence to publish it onto; its existing rows are discarded
+   * @param matchedTokens Leading tokens the two prompts share
+   * @param promptTokens  Length of the destination's tokenized prompt
+   * @return Prefix tokens the destination may reuse, {@code 0} when nothing was worth copying
+   *
+   * <p>Example — serve a prompt that shares a system prompt with a busy conversation:
+   * <pre>{@code
+   * int shared = commonPrefixLength(donorTokens, promptTokens);
+   * int reuse = memory.copyPrefix(donorSeqId, freeSeqId, shared, promptTokens.length);
+   * ConversationState.create(arena, ctx, tokenizer, sampler, freeSeqId)
+   *   .setRetainKv(true)
+   *   .initialize(prompt, reuse);   // prefills only the suffix
+   * }</pre>
+   */
+  public int copyPrefix(
+    int seqIdSrc,
+    int seqIdDst,
+    int matchedTokens,
+    int promptTokens
+  ) {
+    if (seqIdSrc == seqIdDst) {
+      throw new LlamaException(
+        "copyPrefix source and destination must differ (got " + seqIdSrc + ")"
+      );
+    }
+    int reuse = Math.min(matchedTokens, promptTokens - 1);
+    seqRm(seqIdDst, -1, -1);
+    if (reuse <= 0) {
+      return 0;
+    }
+    seqCp(seqIdSrc, seqIdDst, 0, reuse);
+    return reuse;
+  }
+
+  /**
    * Removes all tokens that do not belong to the specified sequence.
    * @param seqId The sequence ID to keep
    */
