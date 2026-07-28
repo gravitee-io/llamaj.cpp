@@ -87,6 +87,7 @@ LlamaRuntime.llama_backend_free();
 | --- | --- |
 | `setMaxTokens(int n)` | Cap generated answer tokens; `-1` (default) means unlimited (until EOG/context full). Triggers `FinishReason.LENGTH`. |
 | `setStopStrings(List<String> stops)` | Stop as soon as the decoded tail matches any string; triggers `FinishReason.STOP`. |
+| `setEogRamp(float startFraction, float maxBias)` | Budget-aware soft landing: bias end-of-generation as `maxTokens` nears, so the answer finishes a sentence instead of being severed. Off by default. See below. |
 | `setTopLogprobs(int n)` | Attach top-`n` logprobs to each `LlamaOutput` (`0` = off). See the Log Probabilities doc. |
 | `initialize(String prompt)` | Tokenize the prompt and (re)set all generation state — call last. |
 
@@ -96,6 +97,52 @@ LlamaRuntime.llama_backend_free();
 | `EOS` / `STOP` | Model emitted an end-of-generation token or matched a stop string. |
 | `LENGTH` | `maxTokens` reached, or the context window filled. |
 | `TOOL_CALL` | A tool-call section completed (see Reasoning & Tool Calls). |
+
+## Budget-aware EOG ramp (soft landing)
+
+`setMaxTokens(n)` alone is a guillotine: generation runs at full speed until the
+counter trips, then stops mid-word. `setEogRamp(startFraction, maxBias)` turns the
+budget into a pressure instead.
+
+```java
+state.setMaxTokens(250).setEogRamp(0.75f, 100f);
+```
+
+Past `startFraction * maxTokens`, every end-of-generation token's logit is raised
+on a quadratic curve reaching `maxBias` at the cap. The boost is written into the
+logits row immediately before sampling, so it behaves exactly like a `logit_bias`
+sampler at the head of the chain and composes with temperature/top-k/top-p/penalties
+downstream. Below the threshold nothing is written, so most of a run is bit-identical
+to one without the ramp.
+
+**The bias only applies where the text can stop.** After sentence-terminating
+punctuation or a line break; from halfway up the ramp, also after clause punctuation
+(`, ; : — )`); at the cap, anywhere. This gate is not an optimisation — without it the
+ramp does not do what it looks like it does. Biasing every step makes EOG win wherever
+it happens to overtake the next word, which is mid-clause, so the output is severed
+exactly as before, only earlier. Gated, the bias can only take an exit the text had
+already reached.
+
+**Size `maxBias` generously.** Mid-answer, EOG sits far below the running text in raw
+logits — much further than probabilities suggest. Measured on a 20B model, `24` and
+`48` never won a single step (the feature is then silently inert, indistinguishable
+from disabled); `100` lands the ending. Start there.
+
+Effects to expect:
+
+- Completions end **short** of the budget on a finished sentence — `max_tokens`
+  becomes a target rather than a ceiling.
+- The hard cap still applies as a backstop, for answers with no boundary anywhere in
+  the ramp window (one long unbroken sentence, for instance).
+- `FinishReason` is `LENGTH`, not `STOP`, when an EOG is produced while the ramp is
+  active — the budget caused it, and agent loops rely on that to know the answer was
+  cut short.
+- Requires `maxTokens > 0`; with no budget the ramp is inert.
+- Applies under speculative decoding too. Rejection sampling is exact for any target
+  distribution provided the acceptance test and the residual draw see the same one,
+  and both derive from the biased row. Verify rows are biased at their projected
+  budget positions. The draft does not know about the bias, so acceptance dips for
+  the last few tokens — a throughput cost, not a correctness one.
 
 ## Notes
 - Call the fluent setters (`setMaxTokens`, `setStopStrings`, `setTopLogprobs`, ...) *before* `initialize(prompt)`; `initialize` resets generation state (and clears media) and tokenizes the prompt.
