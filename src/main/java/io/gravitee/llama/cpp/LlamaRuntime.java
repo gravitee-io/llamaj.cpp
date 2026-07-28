@@ -1671,6 +1671,23 @@ public final class LlamaRuntime {
     );
   }
 
+  public static boolean kv_unified(MemorySegment segment) {
+    return llama_context_params(
+      "kv_unified",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void kv_unified(MemorySegment segment, boolean kvUnified) {
+    llama_context_params(
+      "kv_unified",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      segment,
+      kvUnified
+    );
+  }
+
   public static int flash_attn_type(MemorySegment segment) {
     return llama_context_params(
       "flash_attn_type",

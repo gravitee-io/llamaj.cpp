@@ -47,8 +47,16 @@ import static io.gravitee.llama.cpp.LlamaRuntime.*;
  */
 public class LlamaMemory extends MemorySegmentAware {
 
+  /**
+   * Whether the owning context shares one KV buffer across sequences. Recorded here because
+   * {@link #copyPrefix} is only legal when it is {@code true}, and violating that aborts the
+   * process rather than throwing.
+   */
+  private final boolean kvUnified;
+
   public LlamaMemory(LlamaContext context) {
     super(llama_get_memory(context.segment));
+    this.kvUnified = context.isKvUnified();
   }
 
   /**
@@ -147,12 +155,21 @@ public class LlamaMemory extends MemorySegmentAware {
    * {@code seqIdDst}, and returns the prefix length the destination may then reuse — the value to
    * pass to {@link ConversationState#initialize(String, int)}.
    *
-   * <p>This is the cross-request prefix cache in one call. A KV cell in llama.cpp carries a
-   * <em>set</em> of sequence ids rather than belonging to one, so the copy adds {@code seqIdDst}
-   * to the cells at positions {@code [0, matchedTokens)} and moves no tensor data: publishing a
-   * 2000-token system prompt to a second conversation costs microseconds and no extra VRAM. The
-   * source may still be generating — cells it shares are not disturbed, and it never rewinds into
-   * its own prompt.
+   * <p>This is the cross-request prefix cache in one call, and it <b>requires a unified KV
+   * cache</b> ({@link LlamaContextParams#kvUnified(boolean)}). Under a unified cache there is a
+   * single stream, so every sequence indexes the same cell pool and a cell carries a <em>set</em>
+   * of sequence ids: the copy adds {@code seqIdDst} to the cells at {@code [0, matchedTokens)} and
+   * moves no tensor data. Publishing a 2000-token system prompt to a second conversation then
+   * costs microseconds and no extra VRAM, and the source may still be generating — cells it shares
+   * are not disturbed, and it never rewinds into its own prompt.
+   *
+   * <p>Without a unified cache each sequence owns its own stream and llama.cpp must physically
+   * copy buffer data, which it supports only for a whole sequence: a partial range trips
+   * {@code GGML_ASSERT(is_full && "seq_cp() is only supported for full KV buffers")}, and a failed
+   * GGML assert calls {@code abort()} — it takes the JVM down with SIGABRT, uncatchably. This
+   * method therefore refuses up front with a {@link LlamaException} rather than letting the process
+   * die. Copying the whole sequence and trimming afterwards is not a workaround: on that path the
+   * copy is real, so it would cost full KV memory and full copy time, defeating the purpose.
    *
    * <p>The two rules this method exists to enforce:
    * <ul>
@@ -201,6 +218,15 @@ public class LlamaMemory extends MemorySegmentAware {
     if (seqIdSrc == seqIdDst) {
       throw new LlamaException(
         "copyPrefix source and destination must differ (got " + seqIdSrc + ")"
+      );
+    }
+    if (!kvUnified) {
+      // Refuse rather than let GGML_ASSERT abort() the JVM on the cross-stream path.
+      throw new LlamaException(
+        "copyPrefix requires a unified KV cache: build the context with " +
+          "LlamaContextParams.kvUnified(true). Without it each sequence owns its own KV stream, " +
+          "llama_memory_seq_cp has to copy buffer data and only supports whole sequences, and a " +
+          "partial range aborts the process instead of failing."
       );
     }
     int reuse = Math.min(matchedTokens, promptTokens - 1);

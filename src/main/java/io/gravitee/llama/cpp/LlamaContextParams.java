@@ -57,6 +57,30 @@ public final class LlamaContextParams extends MemorySegmentAware {
     return this;
   }
 
+  /**
+   * Whether the KV cache is one unified buffer shared by every sequence, rather than one buffer
+   * per sequence. Defaults to {@code false} in llama.cpp.
+   *
+   * <p>This decides whether KV cells can be <em>shared</em> between sequences. Unified means a
+   * single stream ({@code n_stream == 1}), so all sequences index the same cell pool and a cell
+   * carries a set of sequence ids: {@link LlamaMemory#copyPrefix} is then pure metadata, and a
+   * partial range works. Non-unified gives each sequence its own stream, and
+   * {@code llama_memory_seq_cp} must physically copy buffer data — it then supports only whole
+   * sequences and <b>aborts the process</b> on a partial range
+   * ({@code GGML_ASSERT(is_full && "seq_cp() is only supported for full KV buffers")}).
+   *
+   * <p>Enable it for cross-sequence prefix sharing. The trade-off is that a unified cache is a
+   * single pool of {@code n_ctx} cells for all sequences to share, rather than {@code n_ctx} each.
+   */
+  public boolean kvUnified() {
+    return kv_unified(this.segment);
+  }
+
+  public LlamaContextParams kvUnified(boolean kvUnified) {
+    kv_unified(this.segment, kvUnified);
+    return this;
+  }
+
   public int nSeqMax() {
     return n_seq_max(this.segment);
   }
