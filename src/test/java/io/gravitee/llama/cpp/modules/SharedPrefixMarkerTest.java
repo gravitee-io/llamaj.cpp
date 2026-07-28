@@ -51,6 +51,9 @@ class SharedPrefixMarkerTest {
     "<|end|><|start|>assistant<|channel|>final<|message|>";
   private static final String TOOL_OPEN =
     "<|end|><|start|>assistant<|channel|>commentary to=functions.";
+  /** gpt-oss is told to use commentary, but that is a system-prompt request, not a grammar. */
+  private static final String TOOL_OPEN_ANALYSIS =
+    "<|end|><|start|>assistant<|channel|>analysis to=functions.";
   private static final String TOOL_CLOSE = "<|call|>";
 
   /** Mirrors TokenTracking: accumulates emitted tokens per channel. */
@@ -70,7 +73,11 @@ class SharedPrefixMarkerTest {
       new StateEvaluation.Config(
         List.of(
           new StateBounds(GenerationState.REASONING, REASON_OPEN, REASON_CLOSE),
-          new StateBounds(GenerationState.TOOLS, TOOL_OPEN, TOOL_CLOSE)
+          new StateBounds(
+            GenerationState.TOOLS,
+            List.of(TOOL_OPEN, TOOL_OPEN_ANALYSIS),
+            TOOL_CLOSE
+          )
         )
       )
     );
@@ -154,6 +161,32 @@ class SharedPrefixMarkerTest {
     assertThat(run.tokens().get(GenerationState.TOOLS))
       .as("a resolved tool span must be billed to TOOLS")
       .isPositive();
+  }
+
+  /**
+   * The variant that leaked in practice: the model opens the tool call on the ANALYSIS channel
+   * instead of commentary. With only the commentary marker configured the run refutes against
+   * reasoning-close, and the entire call — markers included — is flushed into the reasoning
+   * channel as text; the reasoning never closes.
+   */
+  @Test
+  void a_tool_call_on_the_analysis_channel_is_recognised_too() {
+    var run = drive(
+      tokenize(
+        REASON_OPEN,
+        "Need to inspect the file.",
+        TOOL_OPEN_ANALYSIS,
+        "read_file<|constrain|>json<|message|>{\"path\":\"/tmp/x\"}",
+        TOOL_CLOSE
+      )
+    );
+
+    assertThat(run.tokens().get(GenerationState.TOOLS))
+      .as("the analysis-channel variant must open a tool span")
+      .isPositive();
+    assertThat(run.reasoning())
+      .as("marker text must not leak into reasoning")
+      .doesNotContain("to=functions.");
   }
 
   /** A tool call with no marker prefix ambiguity behaves the same. */

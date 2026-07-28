@@ -113,7 +113,7 @@ class StateEvaluationTest {
 
   @Test
   void null_start_bounds_never_match_a_generated_piece() {
-    var eval = of(new StateBounds(TOOLS, null, "<|eom_id|>"));
+    var eval = of(new StateBounds(TOOLS, (String) null, "<|eom_id|>"));
 
     assertThat(step(eval, ANSWER, "{\"name\"")).isEqualTo(ANSWER);
   }
