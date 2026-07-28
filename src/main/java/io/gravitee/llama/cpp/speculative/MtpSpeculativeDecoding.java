@@ -85,7 +85,7 @@ public final class MtpSpeculativeDecoding
       d.m(),
       seq
     );
-    Verdict v = accept(it, spec, target, d.tokens(), d.snaps(), d.m());
+    Verdict v = accept(it, state, spec, target, d.tokens(), d.snaps(), d.m());
 
     // Next round's seed: the target's hidden at the last ACCEPTED verify row (input position
     // nPast+matched — the position preceding the new idLast). Read before any further decode.

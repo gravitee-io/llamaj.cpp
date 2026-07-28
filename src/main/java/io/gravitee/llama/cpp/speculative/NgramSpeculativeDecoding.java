@@ -51,7 +51,7 @@ public final class NgramSpeculativeDecoding extends SpeculativeDecoding {
 
     decodeVerify(spec.verifyBatch(), target, idLast, nPast, drafted, m, seq);
     // Point-mass draft: snaps == null → q = 1 accept + point-mass residual.
-    Verdict v = accept(it, spec, target, drafted, null, m);
+    Verdict v = accept(it, state, spec, target, drafted, null, m);
 
     // Roll back ONLY the target cache (no draft cache exists).
     int newNPast = nPast + v.matched() + 1;

@@ -518,30 +518,67 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
    *
    * <p>Skipped entirely for speculative states — see {@link ConversationState#setEogRamp}.
    */
+  /**
+   * Applies the budget-aware EOG boost to the logits row this step will sample from, and records
+   * on the state whether it fired. Must run immediately before sampling: {@code
+   * llama_sampler_sample} reads this same native buffer, so writing here is equivalent to a bias
+   * sampler at the head of the chain and composes with top-k/top-p/temperature downstream.
+   */
   protected void applyEogRamp(ConversationState state, int batchPos) {
     state.setEogRampApplied(false);
     if (!state.hasEogRamp()) {
       return;
     }
+    var row = logitsRow(
+      state.getContext(),
+      batchPos,
+      state.getTokenizer().getVocab().nVocab()
+    );
+    if (biasEogRow(state, row, state.getAnswerTokens())) {
+      state.setEogRampApplied(true);
+    }
+  }
+
+  /**
+   * Raises every EOG logit in {@code row} for a projected budget position, returning whether any
+   * bias was applied.
+   *
+   * <p>Split out for speculative verification, which evaluates several future positions in one
+   * decode: row {@code i} of a verify batch is the distribution after {@code i} more tokens, so it
+   * takes {@code used + i} rather than the current count.
+   *
+   * <p>Safe under speculation — and deliberately not skipped. Speculative sampling draws exactly
+   * from the target distribution whatever that distribution is; the requirement is only that the
+   * acceptance test and the residual draw see the SAME target. Both derive from this row, so
+   * biasing it here satisfies that and the round remains exact with respect to the biased target.
+   * The draft has no knowledge of the bias, so it keeps proposing continuations near the cap and
+   * acceptance dips for the last few tokens — a throughput cost, not a correctness one.
+   */
+  public boolean biasEogRow(
+    ConversationState state,
+    MemorySegment row,
+    int used
+  ) {
+    if (!state.hasEogRamp()) {
+      return false;
+    }
     float bias = eogRampBias(
-      state.getAnswerTokens(),
+      used,
       state.getMaxTokens(),
       state.getEogRampStart(),
       state.getEogRampMaxBias()
     );
     if (bias <= 0f) {
-      return;
+      return false;
     }
-    var vocab = state.getTokenizer().getVocab();
-    var row = logitsRow(state.getContext(), batchPos, vocab.nVocab());
-    for (int id : vocab.eogTokens()) {
+    for (int id : state.getTokenizer().getVocab().eogTokens()) {
       row.setAtIndex(
         ValueLayout.JAVA_FLOAT,
         id,
         row.getAtIndex(ValueLayout.JAVA_FLOAT, id) + bias
       );
     }
-    state.setEogRampApplied(true);
+    return true;
   }
 
   public MemorySegment logitsRow(LlamaContext ctx, int idx, int nVocab) {

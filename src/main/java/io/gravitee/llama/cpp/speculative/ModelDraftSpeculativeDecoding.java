@@ -147,7 +147,7 @@ public final class ModelDraftSpeculativeDecoding extends SpeculativeDecoding {
     }
 
     decodeVerify(spec.verifyBatch(), target, idLast, nPast, drafted, m, seq);
-    Verdict v = accept(it, spec, target, drafted, snaps, m);
+    Verdict v = accept(it, state, spec, target, drafted, snaps, m);
 
     // Roll back both caches to the accepted boundary.
     int newNPast = nPast + v.matched() + 1;

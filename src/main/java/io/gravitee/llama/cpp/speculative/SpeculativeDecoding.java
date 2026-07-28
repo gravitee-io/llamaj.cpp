@@ -107,6 +107,26 @@ public abstract sealed class SpeculativeDecoding
   }
 
   /**
+   * Applies the budget EOG ramp to verify row {@code i}, which is the distribution after {@code i}
+   * more tokens. Biasing before the row is read keeps the acceptance test and the residual draw on
+   * the same target, so the round stays an exact sampler of the biased distribution.
+   */
+  private static void biasVerifyRow(
+    LlamaIterator<?> it,
+    ConversationState state,
+    LlamaContext target,
+    int i
+  ) {
+    if (!state.hasEogRamp()) {
+      return;
+    }
+    var row = it.logitsRow(target, i, target.nVocab());
+    if (it.biasEogRow(state, row, state.getAnswerTokens() + i)) {
+      state.setEogRampApplied(true);
+    }
+  }
+
+  /**
    * Accepts drafts against the verify rows: greedy longest-prefix when the config is greedy
    * (lossless), otherwise rejection sampling ({@code min(1, p/q)} accept + residual draw on the
    * first rejection — an exact sampler of the target distribution). {@code snaps == null} means
@@ -114,6 +134,7 @@ public abstract sealed class SpeculativeDecoding
    */
   static Verdict accept(
     LlamaIterator<?> it,
+    ConversationState state,
     Speculation spec,
     LlamaContext target,
     int[] drafted,
@@ -125,6 +146,7 @@ public abstract sealed class SpeculativeDecoding
       int matched = 0;
       int correction = -1;
       for (int i = 0; i < m; i++) {
+        biasVerifyRow(it, state, target, i);
         int t = chain.sample(target, i);
         if (t == drafted[i]) {
           matched++;
@@ -132,6 +154,9 @@ public abstract sealed class SpeculativeDecoding
           correction = t;
           break;
         }
+      }
+      if (matched == m) {
+        biasVerifyRow(it, state, target, m);
       }
       int extra = matched == m ? chain.sample(target, m) : correction;
       return new Verdict(matched, extra);
@@ -141,6 +166,7 @@ public abstract sealed class SpeculativeDecoding
     int matched = 0;
     int extra = -1;
     for (int i = 0; i < m; i++) {
+      biasVerifyRow(it, state, target, i);
       float q = snaps == null ? 1.0f : snaps[i].selectedProbability();
       if (
         spec.acceptTarget(chain, it.logitsRow(target, i, nVocab), drafted[i], q)
@@ -154,6 +180,7 @@ public abstract sealed class SpeculativeDecoding
       }
     }
     if (matched == m) {
+      biasVerifyRow(it, state, target, m);
       extra = spec.targetSelect(chain, it.logitsRow(target, m, nVocab));
     }
     return new Verdict(matched, extra);
