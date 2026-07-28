@@ -113,7 +113,7 @@ public final class Eagle3SpeculativeDecoding
       d.m(),
       seq
     );
-    Verdict v = accept(it, spec, target, d.tokens(), d.snaps(), d.m());
+    Verdict v = accept(it, state, spec, target, d.tokens(), d.snaps(), d.m());
 
     // Encode the verify rows' captured features → g rows (gv[r] = g at target pos nPast+r).
     // Read before any further target decode overwrites the capture buffers.

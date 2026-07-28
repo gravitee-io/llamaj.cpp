@@ -713,6 +713,18 @@ public final class BatchIterator
     int matched = 0;
     int extra = -1;
     for (int i = 0; i < m; i++) {
+      // Row i is the distribution after i more tokens, so the budget ramp is evaluated at that
+      // projected position. Biasing the row before it is read keeps the acceptance test and the
+      // residual draw on the same target, which is what makes the round exact.
+      if (
+        biasEogRow(
+          s,
+          logitsRow(context, base + i, nVocab),
+          s.getAnswerTokens() + i
+        )
+      ) {
+        s.setEogRampApplied(true);
+      }
       if (spec.isGreedy()) {
         int t = chain.sample(context, base + i);
         if (t == drafted[i]) {
@@ -743,6 +755,16 @@ public final class BatchIterator
       }
     }
     if (matched == m) {
+      // Bonus token: every draft was accepted, so this row sits m tokens further along.
+      if (
+        biasEogRow(
+          s,
+          logitsRow(context, base + m, nVocab),
+          s.getAnswerTokens() + m
+        )
+      ) {
+        s.setEogRampApplied(true);
+      }
       extra = spec.isGreedy()
         ? chain.sample(context, base + m)
         : spec.targetSelect(chain, logitsRow(context, base + m, nVocab));
