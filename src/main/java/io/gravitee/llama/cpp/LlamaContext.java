@@ -36,6 +36,7 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   private final int nBatch;
   private final int nUBatch;
   private final int nSeqMax;
+  private final boolean kvUnified;
   private final LlamaMemory memory;
 
   public LlamaContext(
@@ -53,6 +54,9 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     this.nBatch = LlamaRuntime.llama_n_batch(segment);
     this.nUBatch = LlamaRuntime.llama_n_ubatch(segment);
     this.nSeqMax = LlamaRuntime.llama_n_seq_max(segment);
+    // Recorded from the params: there is no native getter, and it decides whether KV cells can be
+    // shared between sequences at all (see LlamaMemory#copyPrefix).
+    this.kvUnified = params.kvUnified();
     this.memory = new LlamaMemory(this);
   }
 
@@ -105,6 +109,15 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
 
   public int nSeqMax() {
     return nSeqMax;
+  }
+
+  /**
+   * Whether this context's KV cache is one unified buffer shared by every sequence. When
+   * {@code false} (llama.cpp's default) each sequence has its own stream and KV cells cannot be
+   * shared — see {@link LlamaContextParams#kvUnified(boolean)}.
+   */
+  public boolean isKvUnified() {
+    return kvUnified;
   }
 
   public int nVocab() {

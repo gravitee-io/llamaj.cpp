@@ -157,8 +157,35 @@ class KvPrefixCopyTest extends LlamaCppTest {
       .nBatch(512)
       .nUBatch(512)
       .nSeqMax(4)
+      // REQUIRED for copyPrefix: one shared cell pool, so cells carry a set of sequence ids and
+      // seq_cp is metadata-only. Without it each sequence owns a stream, seq_cp must copy buffer
+      // data, and a partial range aborts the process.
+      .kvUnified(true)
       .noPerf(false);
     return track(new LlamaContext(arena, model, params));
+  }
+
+  /**
+   * The guard that keeps a misconfiguration from killing the JVM. On a non-unified context
+   * llama.cpp would trip GGML_ASSERT(is_full) inside seq_cp and abort() the process; copyPrefix
+   * must refuse first.
+   */
+  @Test
+  void a_non_unified_context_is_refused_rather_than_aborting() {
+    Path path = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
+    var model = track(new LlamaModel(arena, path, new LlamaModelParams(arena)));
+    var params = new LlamaContextParams(arena)
+      .nCtx(512)
+      .nBatch(256)
+      .nUBatch(256)
+      .nSeqMax(2)
+      .kvUnified(false);
+    var ctx = track(new LlamaContext(arena, model, params));
+
+    assertThat(ctx.isKvUnified()).isFalse();
+    assertThatThrownBy(() -> ctx.getMemory().copyPrefix(0, 1, 4, 10))
+      .isInstanceOf(LlamaException.class)
+      .hasMessageContaining("unified KV cache");
   }
 
   private ConversationState newState(
