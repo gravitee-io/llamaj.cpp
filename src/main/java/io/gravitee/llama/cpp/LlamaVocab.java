@@ -16,6 +16,7 @@
 package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_get_vocab;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_n_vocab;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_token_to_piece;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_bos;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_eos;
@@ -33,12 +34,55 @@ public final class LlamaVocab extends MemorySegmentAware {
 
   private static final int BUFFER_SIZE = 256;
 
+  /** Lazily scanned once; see {@link #eogTokens()}. */
+  private volatile int[] eogTokens;
+
   public LlamaVocab(LlamaModel model) {
     super(llama_model_get_vocab(model.segment));
   }
 
   public boolean isEog(int tokenId) {
     return llama_vocab_is_eog(this.segment, tokenId);
+  }
+
+  public int nVocab() {
+    return llama_n_vocab(this.segment);
+  }
+
+  /**
+   * Every end-of-generation token id in this vocabulary, ascending.
+   *
+   * <p>A vocabulary usually has several — EOS, EOT, and chat-format terminators such as
+   * {@code <|im_end|>}. Callers that treat only EOS as "the" stop token leave the model an
+   * unbiased alternative, which shows up as a weaker effect rather than a failure.
+   *
+   * <p>Scanned once and cached: {@link #isEog(int)} is a native call, and a vocabulary runs to
+   * six figures, so repeating the scan per token would cost more than whatever it is used for.
+   * The result is shared and must not be mutated.
+   */
+  public int[] eogTokens() {
+    int[] cached = eogTokens;
+    if (cached == null) {
+      synchronized (this) {
+        cached = eogTokens;
+        if (cached == null) {
+          int n = nVocab();
+          int[] found = new int[16];
+          int count = 0;
+          for (int id = 0; id < n; id++) {
+            if (isEog(id)) {
+              if (count == found.length) {
+                found = java.util.Arrays.copyOf(found, count * 2);
+              }
+              found[count++] = id;
+            }
+          }
+          cached = java.util.Arrays.copyOf(found, count);
+          eogTokens = cached;
+        }
+      }
+    }
+    return cached;
   }
 
   /**

@@ -965,6 +965,8 @@ public final class BatchIterator
     // enters the committed history when nPast is incremented below.
     int decodedToken = state.getNewTokenId();
     int batchPos = seqIdToBatchPos.get(state.getSequenceId());
+    // Budget-aware EOG boost, written into the logits this sample() is about to read.
+    applyEogRamp(state, batchPos);
     int newToken = state.getSampler().sample(context, batchPos);
     String tokenPiece = decodeTokenPiece(state, newToken);
 
@@ -975,7 +977,10 @@ public final class BatchIterator
     // multi-token marker prefix (if any) is flushed to the current channel.
     if (state.getTokenizer().isEog(newToken)) {
       if (state.getFinishReason() != FinishReason.TOOL_CALL) {
-        state.setFinishReason(FinishReason.STOP);
+        // Budget-driven EOG stays LENGTH: the cap produced it, not the model finishing.
+        state.setFinishReason(
+          state.isEogRampApplied() ? FinishReason.LENGTH : FinishReason.STOP
+        );
       }
       state.setFinished(true);
       flushPendingMarker(state, currentOutputs);

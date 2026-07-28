@@ -82,6 +82,16 @@ public class ConversationState {
 
   // Configuration
   private int maxTokens = -1;
+
+  // Budget-aware EOG bias ("soft landing"): as the token budget runs down, end-of-generation
+  // logits get an increasing boost so the model closes its sentence instead of being severed
+  // mid-word. Disabled by default (startFraction < 0) — enabling it changes the sampled
+  // distribution, so the default path stays bit-identical.
+  private float eogRampStart = -1f;
+  private float eogRampMaxBias = 0f;
+  // Set on the step whose logits were biased, so an EOG produced under pressure is still
+  // reported as LENGTH rather than a natural STOP.
+  private boolean eogRampApplied = false;
   private int topLogprobs = 0;
 
   // Optional speculative decoding: a draft context (separate small model, same vocab) whose
@@ -812,6 +822,54 @@ public class ConversationState {
 
   public int getMaxTokens() {
     return maxTokens;
+  }
+
+  /**
+   * Turns {@link #setMaxTokens(int) maxTokens} from a hard cut into a soft landing: past
+   * {@code startFraction} of the budget, every end-of-generation token's logit is raised by a
+   * quadratic ramp reaching {@code maxBias} nats at the cap, so the model is increasingly likely
+   * to finish its sentence on its own. The hard cap remains as a backstop.
+   *
+   * <p>Costs: completions typically end <em>short</em> of the budget, so {@code maxTokens} becomes
+   * a target rather than a ceiling; and the sampled distribution is no longer the model's own, so
+   * output is not comparable with an unbiased run at the same seed. An EOG produced while the ramp
+   * is active is still reported as {@link FinishReason#LENGTH} — the budget caused it, and callers
+   * (agent loops, OpenAI-compatible clients) rely on that to know the answer was cut short.
+   *
+   * <p>Ignored under speculative decoding: rejection sampling is exact only while draft and target
+   * sample the same distribution, and biasing the target per step would silently break that.
+   *
+   * @param startFraction where the ramp begins, as a fraction of maxTokens (e.g. 0.75); negative
+   *                      disables the ramp
+   * @param maxBias       logit boost in nats at the cap (e.g. 24, which makes EOG effectively
+   *                      certain)
+   */
+  public ConversationState setEogRamp(float startFraction, float maxBias) {
+    this.eogRampStart = startFraction;
+    this.eogRampMaxBias = maxBias;
+    return this;
+  }
+
+  /** Whether a budget-aware EOG ramp is configured (see {@link #setEogRamp(float, float)}). */
+  public boolean hasEogRamp() {
+    return eogRampStart >= 0f && maxTokens > 0;
+  }
+
+  public float getEogRampStart() {
+    return eogRampStart;
+  }
+
+  public float getEogRampMaxBias() {
+    return eogRampMaxBias;
+  }
+
+  /** Marks that this step's logits were biased, so an EOG here is budget-driven, not natural. */
+  public void setEogRampApplied(boolean applied) {
+    this.eogRampApplied = applied;
+  }
+
+  public boolean isEogRampApplied() {
+    return eogRampApplied;
   }
 
   public Integer getNewTokenId() {
