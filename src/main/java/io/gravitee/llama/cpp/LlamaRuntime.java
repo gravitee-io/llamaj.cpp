@@ -23,7 +23,9 @@ import java.lang.foreign.ValueLayout;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -37,6 +39,77 @@ public final class LlamaRuntime {
   private static final String runtime = PlatformResolver.platform().runtime();
   private static final String basePackage =
     "io.gravitee.llama.cpp.%s.".formatted(pkg);
+
+  /**
+   * Resolved jextract methods, keyed by class + name + signature.
+   *
+   * <p>Every native call funnels through {@link #invoke}, and resolving it means a
+   * {@code Class.forName} plus a {@code getMethod} scan that allocates a fresh defensive
+   * {@link Method} copy — on a generated binding class with hundreds of static methods, on every
+   * single call. The per-token path alone does roughly six of these per sequence.
+   *
+   * <p>The cache can never go stale: {@link #basePackage} is resolved once at class initialization
+   * from {@link PlatformResolver}, so a key always maps to the same method. {@code Method} is safe
+   * to share across threads as long as it is not mutated, and nothing here calls
+   * {@code setAccessible}. Size is bounded by the number of distinct bindings — a few hundred.
+   *
+   * <p>Deliberately not {@code MethodHandle}: the cost being removed is the <em>lookup</em>, not the
+   * call. {@code Method.invoke} is intrinsified after warmup, whereas a non-constant handle pulled
+   * from a map cannot be inlined and {@code invokeWithArguments} adds runtime {@code asType}
+   * adaptation — usually slower than cached reflection.
+   */
+  private static final ConcurrentHashMap<MethodKey, Method> METHOD_CACHE =
+    new ConcurrentHashMap<>();
+
+  /** Resolved bindings currently cached. Visible for tests. */
+  static int methodCacheSize() {
+    return METHOD_CACHE.size();
+  }
+
+  /**
+   * Cache key. Not a record: records compare array components by identity, so the
+   * {@code Class<?>[]} signature would never match and every lookup would silently miss.
+   *
+   * <p>Package-private so that equality can be unit-tested without loading native libraries —
+   * a broken {@code equals} here is invisible at runtime, costing only performance.
+   */
+  static final class MethodKey {
+
+    private final String className;
+    private final String methodName;
+    private final Class<?>[] parameterTypes;
+    private final int hash;
+
+    MethodKey(String className, String methodName, Class<?>[] parameterTypes) {
+      this.className = className;
+      this.methodName = methodName;
+      this.parameterTypes = parameterTypes;
+      this.hash =
+        31 * (31 * className.hashCode() + methodName.hashCode()) +
+        Arrays.hashCode(parameterTypes);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof MethodKey other)) {
+        return false;
+      }
+      return (
+        hash == other.hash &&
+        className.equals(other.className) &&
+        methodName.equals(other.methodName) &&
+        Arrays.equals(parameterTypes, other.parameterTypes)
+      );
+    }
+
+    @Override
+    public int hashCode() {
+      return hash;
+    }
+  }
 
   private LlamaRuntime() {}
 
@@ -2784,9 +2857,21 @@ public final class LlamaRuntime {
     Object... args
   ) {
     try {
-      String fullClassName = basePackage + classNameSuffix;
-      Class<?> targetClass = Class.forName(fullClassName);
-      Method method = targetClass.getMethod(methodName, parameterTypes);
+      MethodKey key = new MethodKey(
+        classNameSuffix,
+        methodName,
+        parameterTypes
+      );
+      Method method = METHOD_CACHE.get(key);
+      if (method == null) {
+        // Plain get/put rather than computeIfAbsent: two threads racing a miss resolve the same
+        // method and one harmlessly overwrites the other, and the hit path stays free of the
+        // mapping-function indirection.
+        String fullClassName = basePackage + classNameSuffix;
+        Class<?> targetClass = Class.forName(fullClassName);
+        method = targetClass.getMethod(methodName, parameterTypes);
+        METHOD_CACHE.put(key, method);
+      }
       return (T) method.invoke(null, args); // Invoke static method, so obj is null
     } catch (ClassNotFoundException e) {
       throw new IllegalStateException(
