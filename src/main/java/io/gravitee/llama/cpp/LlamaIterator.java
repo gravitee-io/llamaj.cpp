@@ -476,6 +476,65 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
   }
 
   /** Logit row for batch output {@code idx}, reinterpreted as {@code nVocab} floats. */
+  /** Characters that end a sentence — always a legal place to stop. */
+  private static final String SENTENCE_END = ".!?\u2026\u3002\uFF01\uFF1F";
+
+  /** Characters that end a clause — accepted only once the ramp is past halfway. */
+  private static final String CLAUSE_END = ",;:\u2014\u2013)]}\"'\u201d\u00bb";
+
+  /**
+   * Whether the text is somewhere it can stop.
+   *
+   * <p>The gate is the difference between a landing and an early cut. Measured: a bias applied at
+   * every step makes EOG win wherever it happens to overtake the next word, which is mid-clause
+   * ({@code "As the vapor travels, it"}) — the severed output the budget was supposed to avoid,
+   * only sooner. Restricted to boundaries, the bias can only take an exit the text had already
+   * reached.
+   *
+   * <p>Widening with {@code progress} keeps the early ramp conservative — full stops only — and
+   * accepts clause breaks near the cap, where stopping at a comma still beats stopping mid-word.
+   * At the cap everything is accepted: that is the backstop, and the hard limit would sever the
+   * output at the same place anyway.
+   *
+   * @param lastNonSpace last non-whitespace character emitted, {@code 0} if none
+   * @param endsLine     whether the last emitted piece ended a line
+   * @param progress     position within the ramp, 0 at the soft threshold and 1 at the cap
+   */
+  static boolean atStoppingPoint(
+    char lastNonSpace,
+    boolean endsLine,
+    float progress
+  ) {
+    if (progress >= 1f) {
+      return true;
+    }
+    if (lastNonSpace == 0) {
+      return false;
+    }
+    // A line break is a paragraph or list-item boundary: as good a stop as a full stop, and the
+    // only one available in structured output (tables, bullet lists) that rarely ends sentences.
+    if (endsLine || SENTENCE_END.indexOf(lastNonSpace) >= 0) {
+      return true;
+    }
+    return progress >= 0.5f && CLAUSE_END.indexOf(lastNonSpace) >= 0;
+  }
+
+  /** Position within the ramp: 0 at or below the soft threshold, 1 at or past the cap. */
+  static float eogRampProgress(int used, int maxTokens, float startFraction) {
+    if (maxTokens <= 0 || startFraction < 0f) {
+      return 0f;
+    }
+    if (used >= maxTokens) {
+      return 1f;
+    }
+    float soft = maxTokens * startFraction;
+    float span = maxTokens - soft;
+    if (span <= 0f) {
+      return used >= soft ? 1f : 0f;
+    }
+    return Math.max(0f, Math.min(1f, (used - soft) / span));
+  }
+
   /**
    * The EOG logit boost for a given point in the budget: zero until {@code startFraction} of
    * {@code maxTokens} is spent, then quadratic to {@code maxBias} at the cap.
@@ -510,14 +569,6 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     return maxBias * t * t;
   }
 
-  /**
-   * Applies the budget-aware EOG boost to the logits row this step will sample from, and records
-   * on the state whether it fired. Must run immediately before sampling: {@code
-   * llama_sampler_sample} reads this same native buffer, so writing here is equivalent to a bias
-   * sampler at the head of the chain and composes with top-k/top-p/temperature downstream.
-   *
-   * <p>Skipped entirely for speculative states — see {@link ConversationState#setEogRamp}.
-   */
   /**
    * Applies the budget-aware EOG boost to the logits row this step will sample from, and records
    * on the state whether it fired. Must run immediately before sampling: {@code
@@ -569,6 +620,18 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
       state.getEogRampMaxBias()
     );
     if (bias <= 0f) {
+      return false;
+    }
+    // Only where the text can stop. Under speculation the projected rows share the current
+    // boundary — the future text is unknown — so a verify row may be biased one position early
+    // or late; it costs an accepted token, never correctness.
+    if (
+      !atStoppingPoint(
+        state.getLastNonSpaceChar(),
+        state.isLastEndsLine(),
+        eogRampProgress(used, state.getMaxTokens(), state.getEogRampStart())
+      )
+    ) {
       return false;
     }
     for (int id : state.getTokenizer().getVocab().eogTokens()) {

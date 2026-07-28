@@ -88,6 +88,8 @@ public class ConversationState {
   // mid-word. Disabled by default (startFraction < 0) — enabling it changes the sampled
   // distribution, so the default path stays bit-identical.
   private float eogRampStart = -1f;
+  private char lastNonSpaceChar = 0;
+  private boolean lastEndsLine = false;
   private float eogRampMaxBias = 0f;
   // Set on the step whose logits were biased, so an EOG produced under pressure is still
   // reported as LENGTH rather than a natural STOP.
@@ -851,13 +853,19 @@ public class ConversationState {
    * is active is still reported as {@link FinishReason#LENGTH} — the budget caused it, and callers
    * (agent loops, OpenAI-compatible clients) rely on that to know the answer was cut short.
    *
-   * <p>Ignored under speculative decoding: rejection sampling is exact only while draft and target
-   * sample the same distribution, and biasing the target per step would silently break that.
+   * <p>The boost only applies where the text can actually stop — after sentence-terminating
+   * punctuation or a line break, widened to clause punctuation in the second half of the ramp.
+   * Biasing every step just stops mid-clause a few tokens early, which is the same severed
+   * output arriving sooner; the gate is what turns the budget into a landing.
+   *
+   * <p>Applies under speculative decoding too: rejection sampling is exact for any target
+   * distribution as long as the acceptance test and the residual draw see the same one.
    *
    * @param startFraction where the ramp begins, as a fraction of maxTokens (e.g. 0.75); negative
    *                      disables the ramp
-   * @param maxBias       logit boost in nats at the cap (e.g. 24, which makes EOG effectively
-   *                      certain)
+   * @param maxBias       logit boost in nats at the cap. EOG sits far below the running text in
+   *                      raw logits mid-answer — measured, 24 never wins and 100 does, so size
+   *                      this generously rather than by intuition about probabilities
    */
   public ConversationState setEogRamp(float startFraction, float maxBias) {
     this.eogRampStart = startFraction;
@@ -901,6 +909,29 @@ public class ConversationState {
 
   public void setPiece(String piece) {
     this.piece = piece;
+    // Remember where the text currently stands, for the EOG ramp's boundary gate. Empty pieces
+    // (a buffered marker prefix) must not clear it: nothing was emitted, so the last real
+    // boundary still holds.
+    if (piece != null && !piece.isEmpty()) {
+      lastEndsLine = piece.charAt(piece.length() - 1) == '\n';
+      for (int i = piece.length() - 1; i >= 0; i--) {
+        char c = piece.charAt(i);
+        if (!Character.isWhitespace(c)) {
+          lastNonSpaceChar = c;
+          break;
+        }
+      }
+    }
+  }
+
+  /** Last non-whitespace character emitted, or {@code 0} before any output. */
+  public char getLastNonSpaceChar() {
+    return lastNonSpaceChar;
+  }
+
+  /** Whether the last emitted piece ended a line. */
+  public boolean isLastEndsLine() {
+    return lastEndsLine;
   }
 
   /** Number of generated tokens covered by the current {@link #getPiece() piece}. */
