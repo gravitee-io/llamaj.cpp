@@ -288,9 +288,18 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
 
     // Mark tool call as finished once we leave the tools section — via its close marker
     // (→ ANSWER) or a chained cross-transition directly into another state (Harmony-style).
+    //
+    // Only when something was actually captured in there. With a chained grammar whose markers
+    // share a prefix — Harmony's reasoning-close and tool-open agree for 34 characters
+    // ("<|end|><|start|>assistant<|channel|>") — the shared run buffers, the machine provisionally
+    // enters TOOLS, and the text then resolves to the OTHER marker and transitions straight back
+    // out. That round trip emits no tool tokens, so reporting TOOL_CALL would announce a tool call
+    // the model never made. Downstream that is not a harmless label: a tool_calls finish with an
+    // empty span invites callers to hunt for a call in the plain answer text and manufacture one.
     if (
       previousState == GenerationState.TOOLS &&
-      emission.state() != GenerationState.TOOLS
+      emission.state() != GenerationState.TOOLS &&
+      state.getTokenTracking().getOutputTokenCount(GenerationState.TOOLS) > 0
     ) {
       state.setFinishReason(FinishReason.TOOL_CALL);
     }
