@@ -20,6 +20,7 @@ import static io.gravitee.llama.cpp.LlamaRuntime.llama_n_vocab;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_token_to_piece;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_bos;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_eos;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_get_attr;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_get_text;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_is_eog;
 
@@ -36,6 +37,13 @@ public final class LlamaVocab extends MemorySegmentAware {
 
   /** Lazily scanned once; see {@link #eogTokens()}. */
   private volatile int[] eogTokens;
+
+  /** Lazily scanned once; see {@link #specialTokenTexts()}. */
+  private volatile java.util.List<String> specialTokenTexts;
+
+  /** {@code llama_token_attr} flags that make a token match under {@code parse_special}. */
+  private static final int ATTR_CONTROL = 1 << 3;
+  private static final int ATTR_USER_DEFINED = 1 << 4;
 
   public LlamaVocab(LlamaModel model) {
     super(llama_model_get_vocab(model.segment));
@@ -79,6 +87,48 @@ public final class LlamaVocab extends MemorySegmentAware {
           }
           cached = java.util.Arrays.copyOf(found, count);
           eogTokens = cached;
+        }
+      }
+    }
+    return cached;
+  }
+
+  /**
+   * The literal text of every token this vocabulary would parse as special — the exact strings
+   * that become control tokens when text is tokenized with {@code parse_special} enabled.
+   *
+   * <p>Callers rendering untrusted text into a prompt need this: a chat message containing
+   * {@code <|channel|>} or {@code <start_of_turn>} is otherwise tokenized as the real control
+   * token, letting message content forge conversation structure. Neutralising these strings in
+   * caller-supplied text is what makes {@code parse_special} safe on a whole rendered prompt.
+   *
+   * <p>Longest first, so a caller replacing them in order cannot have a short marker consume part
+   * of a longer one. Scanned once and cached; the result is shared and must not be mutated.
+   */
+  public java.util.List<String> specialTokenTexts() {
+    java.util.List<String> cached = specialTokenTexts;
+    if (cached == null) {
+      synchronized (this) {
+        cached = specialTokenTexts;
+        if (cached == null) {
+          int n = nVocab();
+          var found = new java.util.ArrayList<String>();
+          for (int id = 0; id < n; id++) {
+            int attr = llama_vocab_get_attr(this.segment, id);
+            if ((attr & (ATTR_CONTROL | ATTR_USER_DEFINED)) == 0) {
+              continue;
+            }
+            var ptr = llama_vocab_get_text(this.segment, id);
+            if (ptr != null && ptr.address() != 0) {
+              String text = ptr.getString(0);
+              if (!text.isEmpty()) {
+                found.add(text);
+              }
+            }
+          }
+          found.sort((x, y) -> Integer.compare(y.length(), x.length()));
+          cached = java.util.List.copyOf(found);
+          specialTokenTexts = cached;
         }
       }
     }
