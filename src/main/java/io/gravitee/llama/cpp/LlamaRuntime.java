@@ -1308,6 +1308,20 @@ public final class LlamaRuntime {
     );
   }
 
+  /**
+   * Token attribute bitmask ({@code llama_token_attr}). CONTROL (1&lt;&lt;3) and USER_DEFINED
+   * (1&lt;&lt;4) are the flags that make a token match when text is tokenized with
+   * {@code parse_special}.
+   */
+  public static int llama_vocab_get_attr(MemorySegment vocab, int tokenId) {
+    return llama_h(
+      "llama_vocab_get_attr",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      vocab,
+      tokenId
+    );
+  }
+
   public static int llama_token_to_piece(
     MemorySegment vocab,
     int token,
