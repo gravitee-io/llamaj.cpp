@@ -100,6 +100,9 @@ public final class DefaultLlamaIterator
     currentState.incrementNPast();
     currentState.getTokenHistory().append(currentState.getNewTokenId());
 
+    // Budget-aware EOG boost, written into the logits this sample() is about to read.
+    // -1 is the last output row, which is what sample(context) reads.
+    applyEogRamp(currentState, -1);
     int newToken = sampler.sample(context);
     String tokenPiece = decodeTokenPiece(currentState, newToken);
 

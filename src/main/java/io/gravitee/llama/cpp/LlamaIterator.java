@@ -333,7 +333,11 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
       // Preserve TOOL_CALL — the model produced tool calls and then stopped.
       // Only set STOP if no tool calls were made.
       if (state.getFinishReason() != FinishReason.TOOL_CALL) {
-        state.setFinishReason(FinishReason.STOP);
+        // An EOG sampled while the budget ramp was boosting it is not a natural stop — the cap
+        // caused it. Report LENGTH so callers still see the answer was cut short.
+        state.setFinishReason(
+          state.isEogRampApplied() ? FinishReason.LENGTH : FinishReason.STOP
+        );
       }
       state.setFinished(true);
       return false;
@@ -472,6 +476,74 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
   }
 
   /** Logit row for batch output {@code idx}, reinterpreted as {@code nVocab} floats. */
+  /**
+   * The EOG logit boost for a given point in the budget: zero until {@code startFraction} of
+   * {@code maxTokens} is spent, then quadratic to {@code maxBias} at the cap.
+   *
+   * <p>Quadratic rather than linear so the first tokens past the threshold are barely nudged and
+   * the pressure arrives late — the model keeps its natural phrasing for most of the ramp and only
+   * finds EOG overwhelming at the end. Pure arithmetic, so it is testable without a model.
+   */
+  static float eogRampBias(
+    int used,
+    int maxTokens,
+    float startFraction,
+    float maxBias
+  ) {
+    if (maxTokens <= 0 || startFraction < 0f) {
+      return 0f;
+    }
+    // At or past the cap the bias is full, checked before the threshold test so a degenerate
+    // ramp (startFraction == 1, i.e. soft == maxTokens) still lands on maxBias rather than 0.
+    if (used >= maxTokens) {
+      return maxBias;
+    }
+    float soft = maxTokens * startFraction;
+    if (used <= soft) {
+      return 0f;
+    }
+    float span = maxTokens - soft;
+    if (span <= 0f) {
+      return maxBias;
+    }
+    float t = Math.min(1f, (used - soft) / span);
+    return maxBias * t * t;
+  }
+
+  /**
+   * Applies the budget-aware EOG boost to the logits row this step will sample from, and records
+   * on the state whether it fired. Must run immediately before sampling: {@code
+   * llama_sampler_sample} reads this same native buffer, so writing here is equivalent to a bias
+   * sampler at the head of the chain and composes with top-k/top-p/temperature downstream.
+   *
+   * <p>Skipped entirely for speculative states — see {@link ConversationState#setEogRamp}.
+   */
+  protected void applyEogRamp(ConversationState state, int batchPos) {
+    state.setEogRampApplied(false);
+    if (!state.hasEogRamp()) {
+      return;
+    }
+    float bias = eogRampBias(
+      state.getAnswerTokens(),
+      state.getMaxTokens(),
+      state.getEogRampStart(),
+      state.getEogRampMaxBias()
+    );
+    if (bias <= 0f) {
+      return;
+    }
+    var vocab = state.getTokenizer().getVocab();
+    var row = logitsRow(state.getContext(), batchPos, vocab.nVocab());
+    for (int id : vocab.eogTokens()) {
+      row.setAtIndex(
+        ValueLayout.JAVA_FLOAT,
+        id,
+        row.getAtIndex(ValueLayout.JAVA_FLOAT, id) + bias
+      );
+    }
+    state.setEogRampApplied(true);
+  }
+
   public MemorySegment logitsRow(LlamaContext ctx, int idx, int nVocab) {
     MemorySegment ptr = LlamaRuntime.llama_get_logits_ith(ctx.segment, idx);
     if (ptr == null || ptr.address() == 0) {
