@@ -645,6 +645,21 @@ public class ConversationState {
     return this;
   }
 
+  /**
+   * Configures tool call detection where the channel can be opened more than one way — Harmony
+   * uses both {@code commentary} and {@code analysis}. Each alternative must be complete from the
+   * start of a run; with only one configured, the other leaks into reasoning as raw text.
+   */
+  public ConversationState setToolCall(
+    java.util.List<String> tokenStarts,
+    String tokenEnd
+  ) {
+    this.stateBounds.add(
+      new StateBounds(GenerationState.TOOLS, tokenStarts, tokenEnd)
+    );
+    return this;
+  }
+
   public List<MtmdMedia> getMedia() {
     return media;
   }

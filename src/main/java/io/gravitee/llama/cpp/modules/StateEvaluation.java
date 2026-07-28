@@ -186,14 +186,19 @@ public class StateEvaluation
       ) {
         continue;
       }
-      String marker = bounds.start();
-      if (accumulated.startsWith(marker)) {
-        if (bestMarker == null || marker.length() > bestMarker.length()) {
-          bestMarker = marker;
-          bestTarget = bounds.state();
+      // A channel may have several opening markers (Harmony: commentary and analysis).
+      for (String marker : bounds.starts()) {
+        if (marker == null || marker.isBlank()) {
+          continue;
         }
-      } else if (marker.startsWith(accumulated)) {
-        anyPrefix = true;
+        if (accumulated.startsWith(marker)) {
+          if (bestMarker == null || marker.length() > bestMarker.length()) {
+            bestMarker = marker;
+            bestTarget = bounds.state();
+          }
+        } else if (marker.startsWith(accumulated)) {
+          anyPrefix = true;
+        }
       }
     }
 
@@ -275,7 +280,7 @@ public class StateEvaluation
       .filter(not(e -> this.stateAlreadyOccurred(e.getValue())))
       .map(Entry::getValue)
       .filter(not(StateEvaluation::isNullOrBlank))
-      .filter(stateBounds -> stateBounds.start().equals(piece))
+      .filter(stateBounds -> stateBounds.starts().contains(piece))
       .map(StateBounds::state)
       .findFirst()
       .orElse(GenerationState.ANSWER);
@@ -308,7 +313,13 @@ public class StateEvaluation
   }
 
   private static boolean insideOpenSpan(String prompt, StateBounds bounds) {
-    int lastStart = prompt.lastIndexOf(bounds.start());
+    // Any opening marker may be the unclosed one.
+    int lastStart = -1;
+    for (String marker : bounds.starts()) {
+      if (marker != null && !marker.isBlank()) {
+        lastStart = Math.max(lastStart, prompt.lastIndexOf(marker));
+      }
+    }
     if (lastStart < 0) {
       return false;
     }
@@ -318,7 +329,10 @@ public class StateEvaluation
   }
 
   private static boolean isNullOrBlank(StateBounds stateBounds) {
-    return stateBounds.start() == null || stateBounds.start().isBlank();
+    return stateBounds
+      .starts()
+      .stream()
+      .allMatch(m -> m == null || m.isBlank());
   }
 
   private Boolean stateAlreadyOccurred(StateBounds stateBounds) {

@@ -15,4 +15,38 @@
  */
 package io.gravitee.llama.cpp;
 
-public record StateBounds(GenerationState state, String start, String end) {}
+import java.util.List;
+
+/**
+ * The marker text opening and closing one generation channel.
+ *
+ * <p>{@code starts} is a list because a dialect may open a channel more than one way — Harmony
+ * emits tool calls on both the {@code commentary} and {@code analysis} channels. Configure every
+ * variant: an unmatched one refutes against the close marker and leaks the span as text.
+ *
+ * <p>Markers are matched only at the start of a run, so each alternative must be complete from
+ * that boundary; a shared substring will not match.
+ *
+ * @param state  the channel these bounds delimit
+ * @param starts opening markers; longest match wins
+ * @param end    the closing marker
+ */
+public record StateBounds(
+  GenerationState state,
+  List<String> starts,
+  String end
+) {
+  public StateBounds {
+    starts = starts == null ? List.of() : List.copyOf(starts);
+  }
+
+  /** Single-marker form. */
+  public StateBounds(GenerationState state, String start, String end) {
+    this(state, start == null ? List.of() : List.of(start), end);
+  }
+
+  /** The primary opening marker, or {@code null} if none. */
+  public String start() {
+    return starts.isEmpty() ? null : starts.getFirst();
+  }
+}
