@@ -509,6 +509,136 @@ class SpeculativeDecodingTest extends LlamaCppTest {
   }
 
   @Test
+  void eog_ramp_under_speculation_tracks_the_text_and_finishes_as_length() {
+    // The ramp's boundary gate reads state that only the autoregressive path used to update, so a
+    // speculative run judged stopping points from text generated rounds earlier. Two things must
+    // hold here: the gate sees the text actually produced (so the run ends at a boundary, short of
+    // the cap), and a budget-driven EOG reports LENGTH rather than STOP.
+    Path path = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
+    var model = track(new LlamaModel(arena, path, new LlamaModelParams(arena)));
+    var cp = new LlamaContextParams(arena).nCtx(512).nBatch(512).nUBatch(512);
+    var ctx = track(new LlamaContext(arena, model, cp));
+    var vocab = new LlamaVocab(model);
+
+    var state = ConversationState.create(
+      arena,
+      ctx,
+      new LlamaTokenizer(vocab, ctx),
+      track(new LlamaSampler(arena).greedy())
+    )
+      .setMaxTokens(MAX_TOKENS)
+      .setNgram(SpeculativeConfig.ngramGreedy(4, 2))
+      .setEogRamp(0.5f, 100f)
+      .initialize(PROMPT);
+
+    String text = new DefaultLlamaIterator(state)
+      .stream()
+      .map(LlamaOutput::content)
+      .reduce("", (a, b) -> a + b);
+
+    System.out.println(
+      "spec+ramp: " +
+        text +
+        " (finish=" +
+        state.getFinishReason() +
+        ", tokens=" +
+        state.getAnswerTokens() +
+        ")"
+    );
+    // The boundary state must reflect the LAST emitted text — that is the regression: it used to
+    // be frozen at whatever preceded the first speculative round. Comparable only below the cap,
+    // where every counted token was also streamed.
+    if (!text.isBlank() && state.getAnswerTokens() < MAX_TOKENS) {
+      String trimmed = text.stripTrailing();
+      assertThat(state.getLastNonSpaceChar()).isEqualTo(
+        trimmed.charAt(trimmed.length() - 1)
+      );
+    }
+    assertThat(state.getFinishReason()).isIn(
+      FinishReason.LENGTH,
+      FinishReason.STOP
+    );
+    // An EOG produced while the ramp was active is budget-driven, so it must not report STOP.
+    if (state.getAnswerTokens() < MAX_TOKENS) {
+      assertThat(state.getFinishReason()).isEqualTo(FinishReason.LENGTH);
+    }
+  }
+
+  @Test
+  void eog_ramp_under_fused_batch_speculation_tracks_each_sequence() {
+    // BatchIterator.acceptSequence is a SECOND implementation of the verify/bias loop, and it is
+    // the one the batch engine (i.e. the server) actually runs. Its per-row bias tracking and the
+    // boundary state have to hold per sequence — a shared or sticky flag would leak one
+    // sequence's budget pressure onto another's finish reason.
+    Path path = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
+    var model = track(new LlamaModel(arena, path, new LlamaModelParams(arena)));
+    var cp = new LlamaContextParams(arena)
+      .nCtx(512)
+      .nBatch(512)
+      .nUBatch(512)
+      .nSeqMax(2);
+    var batchCtx = track(new LlamaContext(arena, model, cp));
+    var vocab = new LlamaVocab(model);
+
+    String[] prompts = { "The capital of France is", "Water boils at" };
+    var states = new ConversationState[2];
+    var texts = new StringBuilder[] {
+      new StringBuilder(),
+      new StringBuilder(),
+    };
+
+    var batchIt = new BatchIterator(arena, batchCtx);
+    try {
+      for (int i = 0; i < 2; i++) {
+        states[i] = ConversationState.create(
+          arena,
+          batchCtx,
+          new LlamaTokenizer(vocab, batchCtx),
+          track(new LlamaSampler(arena).greedy()),
+          i
+        )
+          .setMaxTokens(MAX_TOKENS)
+          .setNgram(SpeculativeConfig.ngramGreedy(4, 2))
+          .setEogRamp(0.5f, 100f)
+          .initialize(prompts[i]);
+        batchIt.addState(states[i]);
+      }
+      batchIt.stream().forEach(o -> texts[o.sequenceId()].append(o.content()));
+    } finally {
+      batchIt.close();
+    }
+
+    for (int i = 0; i < 2; i++) {
+      String text = texts[i].toString();
+      System.out.println(
+        "seq" +
+          i +
+          ": " +
+          text +
+          " (finish=" +
+          states[i].getFinishReason() +
+          ", tokens=" +
+          states[i].getAnswerTokens() +
+          ")"
+      );
+      // Only comparable below the cap: the token that REACHES the budget is counted (and lands in
+      // the KV cache, so it legitimately advances the boundary state) but is never streamed —
+      // mirroring the autoregressive path, which stops after incrementing.
+      if (!text.isBlank() && states[i].getAnswerTokens() < MAX_TOKENS) {
+        String trimmed = text.stripTrailing();
+        assertThat(states[i].getLastNonSpaceChar())
+          .as("seq %d boundary state follows its own text", i)
+          .isEqualTo(trimmed.charAt(trimmed.length() - 1));
+      }
+      if (states[i].getAnswerTokens() < MAX_TOKENS) {
+        assertThat(states[i].getFinishReason())
+          .as("seq %d ended early under the ramp", i)
+          .isEqualTo(FinishReason.LENGTH);
+      }
+    }
+  }
+
+  @Test
   void fused_batch_ngram_matches_per_sequence_greedy() {
     Path path = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
     var model = track(new LlamaModel(arena, path, new LlamaModelParams(arena)));
@@ -598,5 +728,64 @@ class SpeculativeDecodingTest extends LlamaCppTest {
     );
     assertThat(text).isNotBlank();
     assertThat(state.acceptRate()).isBetween(0.0, 1.0);
+  }
+
+  @Test
+  void eog_ramp_under_stochastic_speculation() {
+    // The stochastic branch of accept() is a separate code path from the greedy one: acceptance
+    // goes through acceptTarget/residual rather than a plain argmax comparison, and each reads the
+    // biased row. Exactness only holds while the accept test and the residual draw see the SAME
+    // target, so the bias must be applied before either touches the row — this is the path where
+    // getting that wrong would silently skew the distribution instead of failing.
+    Path path = getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD);
+    var model = track(new LlamaModel(arena, path, new LlamaModelParams(arena)));
+    var cp = new LlamaContextParams(arena).nCtx(512).nBatch(512).nUBatch(512);
+    var ctx = track(new LlamaContext(arena, model, cp));
+    var vocab = new LlamaVocab(model);
+
+    var state = ConversationState.create(
+      arena,
+      ctx,
+      new LlamaTokenizer(vocab, ctx),
+      // A real sampler chain: the ramp writes into the logits row this chain then reads, so the
+      // bias has to survive temperature/top-k/top-p rather than being applied after selection.
+      track(
+        new LlamaSampler(arena)
+          .topK(40)
+          .topP(0.95f, 1)
+          .temperature(0.8f)
+          .seed(42)
+      )
+    )
+      .setMaxTokens(MAX_TOKENS)
+      .setNgram(SpeculativeConfig.ngram(4, 2, 0.8f, 40, 0.95f, 42))
+      .setEogRamp(0.5f, 100f)
+      .initialize(PROMPT);
+
+    String text = new DefaultLlamaIterator(state)
+      .stream()
+      .map(LlamaOutput::content)
+      .reduce("", (a, b) -> a + b);
+
+    System.out.println(
+      "stochastic+ramp: " +
+        text +
+        " (finish=" +
+        state.getFinishReason() +
+        ", tokens=" +
+        state.getAnswerTokens() +
+        ", accept=" +
+        state.acceptRate() +
+        ")"
+    );
+    assertThat(text).isNotBlank();
+    assertThat(state.acceptRate()).isBetween(0.0, 1.0);
+    if (state.getAnswerTokens() < MAX_TOKENS) {
+      String trimmed = text.stripTrailing();
+      assertThat(state.getLastNonSpaceChar()).isEqualTo(
+        trimmed.charAt(trimmed.length() - 1)
+      );
+      assertThat(state.getFinishReason()).isEqualTo(FinishReason.LENGTH);
+    }
   }
 }

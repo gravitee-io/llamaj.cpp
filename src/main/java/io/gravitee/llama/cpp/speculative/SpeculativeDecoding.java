@@ -84,7 +84,17 @@ public abstract sealed class SpeculativeDecoding
   /* -------------------------------- shared mechanics -------------------------------- */
 
   /** Accepted-prefix length + the correction (partial accept) or bonus (full accept) token. */
-  record Verdict(int matched, int extra) {}
+  /**
+   * @param matched     accepted draft tokens
+   * @param extra       the correction or bonus token
+   * @param rowBiased   per emitted position, whether the EOG ramp biased the row it came from;
+   *                    index i is draft token i, index {@code matched} is {@code extra}
+   */
+  record Verdict(int matched, int extra, boolean[] rowBiased) {
+    boolean biasedAt(int index) {
+      return rowBiased != null && index < rowBiased.length && rowBiased[index];
+    }
+  }
 
   /** One batched target decode of {@code [idLast, drafted[0..m-1]]} with logits on every row. */
   static void decodeVerify(
@@ -111,19 +121,32 @@ public abstract sealed class SpeculativeDecoding
    * more tokens. Biasing before the row is read keeps the acceptance test and the residual draw on
    * the same target, so the round stays an exact sampler of the biased distribution.
    */
-  private static void biasVerifyRow(
+  /**
+   * Biases verify row {@code i} at its projected budget position, returning whether it did.
+   *
+   * <p>The answer is kept per row rather than as a flag on the state: a round biases several
+   * positions, and a sticky flag would attribute an EOG drawn from an unbiased row to budget
+   * pressure just because an earlier row in the same round was biased.
+   */
+  private static boolean biasVerifyRow(
     LlamaIterator<?> it,
     ConversationState state,
     LlamaContext target,
+    int[] drafted,
     int i
   ) {
     if (!state.hasEogRamp()) {
-      return;
+      return false;
     }
     var row = it.logitsRow(target, i, target.nVocab());
-    if (it.biasEogRow(state, row, state.getAnswerTokens() + i)) {
-      state.setEogRampApplied(true);
-    }
+    // Row i is only reached if drafts 0..i-1 were accepted, so their text is where the gate must
+    // be judged — not the text from before the round.
+    return it.biasEogRow(
+      state,
+      row,
+      state.getAnswerTokens() + i,
+      it.projectBoundary(state, drafted, i)
+    );
   }
 
   /**
@@ -142,11 +165,13 @@ public abstract sealed class SpeculativeDecoding
     int m
   ) {
     LlamaSampler chain = spec.chain();
+    // One slot per emittable position: the m draft rows plus the correction/bonus row.
+    boolean[] rowBiased = new boolean[m + 1];
     if (spec.isGreedy()) {
       int matched = 0;
       int correction = -1;
       for (int i = 0; i < m; i++) {
-        biasVerifyRow(it, state, target, i);
+        rowBiased[i] = biasVerifyRow(it, state, target, drafted, i);
         int t = chain.sample(target, i);
         if (t == drafted[i]) {
           matched++;
@@ -155,18 +180,22 @@ public abstract sealed class SpeculativeDecoding
           break;
         }
       }
+      int extra;
       if (matched == m) {
-        biasVerifyRow(it, state, target, m);
+        rowBiased[m] = biasVerifyRow(it, state, target, drafted, m);
+        extra = chain.sample(target, m);
+      } else {
+        // The correction came from row `matched` — already recorded by the loop before it broke.
+        extra = correction;
       }
-      int extra = matched == m ? chain.sample(target, m) : correction;
-      return new Verdict(matched, extra);
+      return new Verdict(matched, extra, rowBiased);
     }
 
     int nVocab = target.nVocab();
     int matched = 0;
     int extra = -1;
     for (int i = 0; i < m; i++) {
-      biasVerifyRow(it, state, target, i);
+      rowBiased[i] = biasVerifyRow(it, state, target, drafted, i);
       float q = snaps == null ? 1.0f : snaps[i].selectedProbability();
       if (
         spec.acceptTarget(chain, it.logitsRow(target, i, nVocab), drafted[i], q)
@@ -180,10 +209,10 @@ public abstract sealed class SpeculativeDecoding
       }
     }
     if (matched == m) {
-      biasVerifyRow(it, state, target, m);
+      rowBiased[m] = biasVerifyRow(it, state, target, drafted, m);
       extra = spec.targetSelect(chain, it.logitsRow(target, m, nVocab));
     }
-    return new Verdict(matched, extra);
+    return new Verdict(matched, extra, rowBiased);
   }
 
   /** Emits the accepted drafts then the extra token (stops early on EOG/quota). */
@@ -196,10 +225,10 @@ public abstract sealed class SpeculativeDecoding
     List<LlamaOutput> out = new ArrayList<>();
     boolean cont = true;
     for (int i = 0; i < v.matched() && cont; i++) {
-      cont = it.emitSpeculative(state, drafted[i], out);
+      cont = it.emitSpeculative(state, drafted[i], out, v.biasedAt(i));
     }
     if (cont) {
-      it.emitSpeculative(state, v.extra(), out);
+      it.emitSpeculative(state, v.extra(), out, v.biasedAt(v.matched()));
     }
     return out;
   }
