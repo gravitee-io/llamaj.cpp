@@ -123,10 +123,12 @@ it happens to overtake the next word, which is mid-clause, so the output is seve
 exactly as before, only earlier. Gated, the bias can only take an exit the text had
 already reached.
 
-**Size `maxBias` generously.** Mid-answer, EOG sits far below the running text in raw
-logits — much further than probabilities suggest. Measured on a 20B model, `24` and
-`48` never won a single step (the feature is then silently inert, indistinguishable
-from disabled); `100` lands the ending. Start there.
+**`maxBias` sets how early it lands.** Mid-answer, EOG sits far below the running text
+in raw logits — much further than probabilities suggest — so a small boost is simply
+inert, and an inert ramp is indistinguishable from a disabled one. Measured on a
+35B-A3B model at a 200-token budget: `12` never won a step (ran to the cap, severed),
+`24` landed at 191, `100` landed at 169. Larger means more margin, not a different
+ending; `100` is a sane default.
 
 Effects to expect:
 

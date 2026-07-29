@@ -712,19 +712,19 @@ public final class BatchIterator
 
     int matched = 0;
     int extra = -1;
+    // Per-position record of which rows the ramp biased. A flag on the state would be sticky for
+    // the whole round and would blame the budget for an EOG drawn from an unbiased row.
+    boolean[] rowBiased = new boolean[m + 1];
     for (int i = 0; i < m; i++) {
       // Row i is the distribution after i more tokens, so the budget ramp is evaluated at that
       // projected position. Biasing the row before it is read keeps the acceptance test and the
       // residual draw on the same target, which is what makes the round exact.
-      if (
-        biasEogRow(
-          s,
-          logitsRow(context, base + i, nVocab),
-          s.getAnswerTokens() + i
-        )
-      ) {
-        s.setEogRampApplied(true);
-      }
+      rowBiased[i] = biasEogRow(
+        s,
+        logitsRow(context, base + i, nVocab),
+        s.getAnswerTokens() + i,
+        projectBoundary(s, drafted, i)
+      );
       if (spec.isGreedy()) {
         int t = chain.sample(context, base + i);
         if (t == drafted[i]) {
@@ -756,15 +756,12 @@ public final class BatchIterator
     }
     if (matched == m) {
       // Bonus token: every draft was accepted, so this row sits m tokens further along.
-      if (
-        biasEogRow(
-          s,
-          logitsRow(context, base + m, nVocab),
-          s.getAnswerTokens() + m
-        )
-      ) {
-        s.setEogRampApplied(true);
-      }
+      rowBiased[m] = biasEogRow(
+        s,
+        logitsRow(context, base + m, nVocab),
+        s.getAnswerTokens() + m,
+        projectBoundary(s, drafted, m)
+      );
       extra = spec.isGreedy()
         ? chain.sample(context, base + m)
         : spec.targetSelect(chain, logitsRow(context, base + m, nVocab));
@@ -779,10 +776,10 @@ public final class BatchIterator
 
     boolean cont = true;
     for (int i = 0; i < matched && cont; i++) {
-      cont = emitSpeculative(s, drafted[i], currentOutputs);
+      cont = emitSpeculative(s, drafted[i], currentOutputs, rowBiased[i]);
     }
     if (cont) {
-      emitSpeculative(s, extra, currentOutputs);
+      emitSpeculative(s, extra, currentOutputs, rowBiased[matched]);
     }
 
     // Append the committed tokens to the n-gram history (keeps histLen == newNPast + 1).

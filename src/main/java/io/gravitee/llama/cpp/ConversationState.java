@@ -863,9 +863,10 @@ public class ConversationState {
    *
    * @param startFraction where the ramp begins, as a fraction of maxTokens (e.g. 0.75); negative
    *                      disables the ramp
-   * @param maxBias       logit boost in nats at the cap. EOG sits far below the running text in
-   *                      raw logits mid-answer — measured, 24 never wins and 100 does, so size
-   *                      this generously rather than by intuition about probabilities
+   * @param maxBias       logit boost in nats at the cap, i.e. how much margin the landing gets.
+   *                      EOG sits far below the running text in raw logits mid-answer, so a small
+   *                      boost is inert — measured at a 200-token budget, 12 never won, 24 landed
+   *                      at 191, 100 at 169. Size it by intuition about logits, not probabilities
    */
   public ConversationState setEogRamp(float startFraction, float maxBias) {
     this.eogRampStart = startFraction;

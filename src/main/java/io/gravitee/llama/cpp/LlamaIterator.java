@@ -591,6 +591,56 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
   }
 
   /**
+   * Where the text will stand after {@code count} drafted tokens are appended.
+   *
+   * @param lastNonSpace last non-whitespace character at that point
+   * @param endsLine     whether the text ends a line at that point
+   */
+  public record TextBoundary(char lastNonSpace, boolean endsLine) {}
+
+  /**
+   * Projects the stopping-point boundary forward over drafted tokens.
+   *
+   * <p>A speculative round biases every verify row before a single token is emitted, so the gate
+   * would otherwise judge row {@code i} using text from before the round — stale by up to
+   * {@code nDraft} tokens. Measured effect: the ramp never landed under speculation at all, because
+   * the gate opened where the text was mid-word and stayed shut where a sentence had just ended.
+   * The drafted tokens are already known here, and row {@code i} is only ever used if drafts
+   * {@code 0..i-1} were accepted, so folding their text in is exact for every row that matters.
+   *
+   * <p>Decodes the raw piece bytes rather than the state's streaming decoder, which must not be
+   * advanced out of band. A piece split mid-codepoint yields a replacement character — non-space,
+   * so it reads as "not a boundary", which errs toward leaving the model's phrasing alone.
+   */
+  public TextBoundary projectBoundary(
+    ConversationState state,
+    int[] drafted,
+    int count
+  ) {
+    char lastNonSpace = state.getLastNonSpaceChar();
+    boolean endsLine = state.isLastEndsLine();
+    for (int i = 0; i < count; i++) {
+      byte[] bytes = state.getTokenizer().tokenToPiece(drafted[i]);
+      if (bytes == null || bytes.length == 0) {
+        continue;
+      }
+      String piece = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+      if (piece.isEmpty()) {
+        continue;
+      }
+      endsLine = piece.charAt(piece.length() - 1) == '\n';
+      for (int j = piece.length() - 1; j >= 0; j--) {
+        char c = piece.charAt(j);
+        if (!Character.isWhitespace(c)) {
+          lastNonSpace = c;
+          break;
+        }
+      }
+    }
+    return new TextBoundary(lastNonSpace, endsLine);
+  }
+
+  /**
    * Raises every EOG logit in {@code row} for a projected budget position, returning whether any
    * bias was applied.
    *
@@ -610,6 +660,21 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     MemorySegment row,
     int used
   ) {
+    return biasEogRow(
+      state,
+      row,
+      used,
+      new TextBoundary(state.getLastNonSpaceChar(), state.isLastEndsLine())
+    );
+  }
+
+  /** As above, judging the gate at an explicitly projected boundary. */
+  public boolean biasEogRow(
+    ConversationState state,
+    MemorySegment row,
+    int used,
+    TextBoundary boundary
+  ) {
     if (!state.hasEogRamp()) {
       return false;
     }
@@ -627,8 +692,8 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     // or late; it costs an accepted token, never correctness.
     if (
       !atStoppingPoint(
-        state.getLastNonSpaceChar(),
-        state.isLastEndsLine(),
+        boundary.lastNonSpace(),
+        boundary.endsLine(),
         eogRampProgress(used, state.getMaxTokens(), state.getEogRampStart())
       )
     ) {
@@ -661,9 +726,23 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     int token,
     List<LlamaOutput> out
   ) {
+    return emitSpeculative(state, token, out, false);
+  }
+
+  /**
+   * @param rowBiased whether the EOG ramp biased the logits row this token was drawn from. Per
+   *                  row, not per round: a round biases several projected positions, and only the
+   *                  row that actually produced the token says anything about why it appeared.
+   */
+  public boolean emitSpeculative(
+    ConversationState state,
+    int token,
+    List<LlamaOutput> out,
+    boolean rowBiased
+  ) {
     if (state.getTokenizer().isEog(token)) {
       if (state.getFinishReason() != TOOL_CALL) {
-        state.setFinishReason(STOP);
+        state.setFinishReason(rowBiased ? LENGTH : STOP);
       }
       state.setFinished(true);
       flushPendingMarker(state, out);
@@ -672,6 +751,10 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     String piece = decodeTokenPiece(state, token);
     // updates generation state + token tracking; may buffer or resolve marker pieces
     var emission = processSampledToken(state, token, piece);
+    // Advance the stopping-point state exactly as the autoregressive path does. Without this the
+    // ramp's boundary gate reads punctuation from before the round and opens at the wrong
+    // positions — so whether the ramp works at all would depend on speculation being enabled.
+    state.setPiece(emission.emit());
     // Mirror the autoregressive iterator: the token that reaches the quota is counted but
     // NOT emitted (the AR path stops via hasNotReachedQuota() after incrementing). Drop it
     // here too, otherwise speculative emits one extra token at the boundary.
