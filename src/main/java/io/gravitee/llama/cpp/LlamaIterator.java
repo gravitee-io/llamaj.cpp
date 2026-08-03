@@ -790,12 +790,17 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     var flush = state
       .getStateEvaluation()
       .flushPending(state.getGenerationState());
+    // A flush can now close a span: when generation stops on a marker that is also the
+    // prefix of a longer alternative (<|call|> ending an agent turn), the held match is
+    // settled here. Adopt the emitted channel so the turn is not reported as still inside
+    // the tool call, and so its tokens are attributed to the right one.
+    state.setGenerationState(flush.state());
     if (flush.emitTokens() > 0) {
       state
         .getTokenTracking()
         .consume(
           new io.gravitee.llama.cpp.modules.TokenTracking.Context(
-            state.getGenerationState(),
+            flush.state(),
             flush.emitTokens()
           )
         );

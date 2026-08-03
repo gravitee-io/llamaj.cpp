@@ -117,6 +117,9 @@ public final class DefaultLlamaIterator
       var flush = currentState
         .getStateEvaluation()
         .flushPending(currentState.getGenerationState());
+      // Flushing can settle a held marker and therefore change channel — see
+      // LlamaIterator#flushPendingMarker.
+      currentState.setGenerationState(flush.state());
       if (flush.emitTokens() > 0) {
         incrementTokenCount(flush.emitTokens());
         currentState.setPiece(flush.emit());

@@ -662,6 +662,42 @@ public class ConversationState {
     return this;
   }
 
+  /**
+   * Configures reasoning detection where the channel can be left more than one way.
+   *
+   * <p>Harmony needs this: reasoning ends into the final channel via
+   * {@code <|end|><|start|>assistant<|channel|>final<|message|>} when the model answers
+   * directly, but the run before the final channel is terminated by {@code <|call|>} when a
+   * tool call intervenes. One marker covers one path and leaks the other's header as text.
+   */
+  public ConversationState setReasoning(
+    java.util.List<String> tokenStarts,
+    java.util.List<String> tokenEnds
+  ) {
+    this.stateBounds.add(
+      new StateBounds(GenerationState.REASONING, tokenStarts, tokenEnds)
+    );
+    return this;
+  }
+
+  /**
+   * Configures tool call detection where the channel can be left more than one way.
+   *
+   * <p>{@code <|call|>} ends a tool call, but when the model continues into an answer the
+   * final-channel header follows immediately and belongs to the marker — otherwise it is
+   * stranded in the answer. Listing both lets the longer win when it arrives and the shorter
+   * settle the span when generation stops at the call, which is the normal agent flow.
+   */
+  public ConversationState setToolCall(
+    java.util.List<String> tokenStarts,
+    java.util.List<String> tokenEnds
+  ) {
+    this.stateBounds.add(
+      new StateBounds(GenerationState.TOOLS, tokenStarts, tokenEnds)
+    );
+    return this;
+  }
+
   public List<MtmdMedia> getMedia() {
     return media;
   }
