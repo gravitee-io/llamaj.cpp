@@ -787,14 +787,26 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
     ConversationState state,
     List<LlamaOutput> out
   ) {
-    var flush = state
-      .getStateEvaluation()
-      .flushPending(state.getGenerationState());
+    var previousState = state.getGenerationState();
+    var flush = state.getStateEvaluation().flushPending(previousState);
     // A flush can now close a span: when generation stops on a marker that is also the
     // prefix of a longer alternative (<|call|> ending an agent turn), the held match is
     // settled here. Adopt the emitted channel so the turn is not reported as still inside
     // the tool call, and so its tokens are attributed to the right one.
     state.setGenerationState(flush.state());
+
+    // A turn that ENDS in the tool channel is a tool call, whether its close marker
+    // settled here or never arrived at all. processSampledToken only stamps TOOL_CALL on a
+    // transition it sees mid-stream, so an agent turn whose <|call|> IS the EOS token
+    // finished as STOP and the span was rendered to the user as content instead of being
+    // extracted and run. Same empty-span guard as the mid-stream path: a provisional entry
+    // into TOOLS that resolves straight back out captured nothing.
+    if (
+      previousState == GenerationState.TOOLS &&
+      state.getTokenTracking().getOutputTokenCount(GenerationState.TOOLS) > 0
+    ) {
+      state.setFinishReason(FinishReason.TOOL_CALL);
+    }
     if (flush.emitTokens() > 0) {
       state
         .getTokenTracking()

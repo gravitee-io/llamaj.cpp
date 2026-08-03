@@ -114,12 +114,22 @@ public final class DefaultLlamaIterator
       currentState.setFinished(true);
       // Generation ended while a multi-token marker prefix may still be buffered — flush it
       // to the current channel as one final emission instead of dropping it.
-      var flush = currentState
-        .getStateEvaluation()
-        .flushPending(currentState.getGenerationState());
+      var previousState = currentState.getGenerationState();
+      var flush = currentState.getStateEvaluation().flushPending(previousState);
       // Flushing can settle a held marker and therefore change channel — see
       // LlamaIterator#flushPendingMarker.
       currentState.setGenerationState(flush.state());
+      // ...and a turn that ends in the tool channel is a tool call — see the same
+      // stamp in LlamaIterator#flushPendingMarker for why, and for the empty-span guard.
+      if (
+        previousState == GenerationState.TOOLS &&
+        currentState
+          .getTokenTracking()
+          .getOutputTokenCount(GenerationState.TOOLS) >
+        0
+      ) {
+        currentState.setFinishReason(FinishReason.TOOL_CALL);
+      }
       if (flush.emitTokens() > 0) {
         incrementTokenCount(flush.emitTokens());
         currentState.setPiece(flush.emit());

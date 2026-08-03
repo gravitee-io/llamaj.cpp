@@ -187,9 +187,17 @@ public class StateEvaluation
     GenerationState bestTarget = null;
     boolean anyPrefix = false;
 
-    // (a) the current state's close marker
-    if (currentState != GenerationState.ANSWER) {
-      for (String marker : states.get(currentState).ends()) {
+    // (a) close markers.
+    //
+    // In ANSWER these are EVERY state's closes, not none. A close marker reaching the
+    // answer channel is stray syntax by definition — the span it would have ended is not
+    // open — and models do emit them there: after a tool call, generation restarts fresh
+    // in ANSWER and Harmony still prefixes its reply with the final-channel header, so
+    // without this the header is unmatchable and lands in the user's content as
+    // "<|channel|>final<|message|>DONE". Matching only suppresses; the state is already
+    // ANSWER, so nothing else changes.
+    for (StateBounds bounds : closeCandidates(currentState)) {
+      for (String marker : bounds.ends()) {
         if (marker == null || marker.isBlank()) {
           continue;
         }
@@ -294,6 +302,18 @@ public class StateEvaluation
       flushed + restart.emit(),
       flushedTokens + restart.emitTokens()
     );
+  }
+
+  /**
+   * The states whose close markers are candidates right now: the current state when
+   * inside a span, every configured state when in ANSWER — where a close marker can
+   * only be leftover syntax.
+   */
+  private List<StateBounds> closeCandidates(GenerationState currentState) {
+    if (currentState != GenerationState.ANSWER) {
+      return List.of(states.get(currentState));
+    }
+    return List.copyOf(states.values());
   }
 
   private void resetBuffer() {

@@ -20,6 +20,8 @@ import static io.gravitee.llama.cpp.LlamaRuntime.*;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
+import java.lang.foreign.ValueLayout;
+import java.util.List;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -97,6 +99,76 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
     llama_sampler_chain_add(
       this.segment,
       llama_sampler_init_grammar(vocab.segment, grammarSegment, rootSegment)
+    );
+    return this;
+  }
+
+  /**
+   * Adds a LAZY grammar: the constraint arms only once one of {@code triggerPatterns}
+   * matches the generated text, and then applies from that match onward.
+   *
+   * <p>This is what makes constrained tool calls possible without breaking ordinary
+   * replies. {@link #grammar} forces the WHOLE response to match, so a model asked to
+   * chat would have to answer in JSON. With a trigger — for Harmony, the tool-call
+   * header — prose stays free and only the arguments are constrained, which is the
+   * llama.cpp counterpart of vLLM's structural tags.
+   *
+   * <p>The grammar is fed content starting at the pattern's first capture group, so a
+   * pattern normally wraps the payload it wants to constrain, e.g.
+   * {@code "<\\|channel\\|>commentary to=functions\\.\\w+<\\|constrain\\|>json<\\|message\\|>(.*)"}.
+   *
+   * @param vocab           the model vocabulary
+   * @param grammar         GBNF grammar text
+   * @param root            the grammar's root rule
+   * @param triggerPatterns regexes that arm the grammar; empty means never
+   * @param triggerTokens   token ids that arm the grammar; may be empty
+   */
+  public LlamaSampler grammarLazy(
+    LlamaVocab vocab,
+    String grammar,
+    String root,
+    List<String> triggerPatterns,
+    List<Integer> triggerTokens
+  ) {
+    var grammarSegment = allocator.allocateFrom(grammar);
+    var rootSegment = allocator.allocateFrom(root);
+
+    // const char** — an array of pointers, each to its own NUL-terminated string.
+    var patterns = triggerPatterns == null
+      ? List.<String>of()
+      : triggerPatterns;
+    MemorySegment patternArray = allocator.allocate(
+      ValueLayout.ADDRESS,
+      Math.max(patterns.size(), 1)
+    );
+    for (int i = 0; i < patterns.size(); i++) {
+      patternArray.setAtIndex(
+        ValueLayout.ADDRESS,
+        i,
+        allocator.allocateFrom(patterns.get(i))
+      );
+    }
+
+    var tokens = triggerTokens == null ? List.<Integer>of() : triggerTokens;
+    MemorySegment tokenArray = allocator.allocate(
+      ValueLayout.JAVA_INT,
+      Math.max(tokens.size(), 1)
+    );
+    for (int i = 0; i < tokens.size(); i++) {
+      tokenArray.setAtIndex(ValueLayout.JAVA_INT, i, tokens.get(i));
+    }
+
+    llama_sampler_chain_add(
+      this.segment,
+      llama_sampler_init_grammar_lazy_patterns(
+        vocab.segment,
+        grammarSegment,
+        rootSegment,
+        patternArray,
+        patterns.size(),
+        tokenArray,
+        tokens.size()
+      )
     );
     return this;
   }
