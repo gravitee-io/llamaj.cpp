@@ -243,14 +243,23 @@ class StateEvaluationTest {
     assertThat(closeSecond.emit()).isEmpty(); // marker text suppressed
     assertThat(closeSecond.emitTokens()).isEqualTo(2);
 
-    // Reasoning does not re-enter once closed.
+    // Reasoning does not re-enter once closed. The open marker is no longer a
+    // candidate, but "<|channel>" is still a prefix of the CLOSE marker, which is
+    // a candidate in ANSWER too — stray close markers are suppressed there, since
+    // a model that has just returned from a tool call still emits its channel
+    // header. So this buffers for one token rather than emitting immediately...
     var reOpen = eval.evaluateToken(ANSWER, 200, "<|channel>");
     assertThat(reOpen.state()).isEqualTo(ANSWER);
-    assertThat(reOpen.emit()).isEqualTo("<|channel>");
-    assertThat(reOpen.emitTokens()).isEqualTo(1);
-    assertThat(eval.evaluateToken(ANSWER, 201, "thought").state()).isEqualTo(
-      ANSWER
-    );
+    assertThat(reOpen.emit()).isEmpty();
+    assertThat(reOpen.emitTokens()).isZero();
+
+    // ...and "thought" refutes the close marker, so the buffered text is released
+    // into ANSWER with it. Delayed by one token, never lost, never re-entering
+    // REASONING.
+    var refuted = eval.evaluateToken(ANSWER, 201, "thought");
+    assertThat(refuted.state()).isEqualTo(ANSWER);
+    assertThat(refuted.emit()).isEqualTo("<|channel>thought");
+    assertThat(refuted.emitTokens()).isEqualTo(2);
   }
 
   @Test

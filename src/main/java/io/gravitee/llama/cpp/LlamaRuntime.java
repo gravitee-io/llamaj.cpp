@@ -1480,6 +1480,43 @@ public final class LlamaRuntime {
     );
   }
 
+  /**
+   * Lazy grammar sampler: the grammar stays dormant until one of
+   * {@code trigger_patterns} matches from the start of the generated output, or one of
+   * {@code trigger_tokens} is sampled. Constrained regions inside otherwise free text —
+   * a tool call in the middle of prose — need this; the eager
+   * {@link #llama_sampler_init_grammar} would force the whole response to match.
+   */
+  public static MemorySegment llama_sampler_init_grammar_lazy_patterns(
+    MemorySegment vocab,
+    MemorySegment grammar,
+    MemorySegment root,
+    MemorySegment triggerPatterns,
+    long numTriggerPatterns,
+    MemorySegment triggerTokens,
+    long numTriggerTokens
+  ) {
+    return llama_h(
+      "llama_sampler_init_grammar_lazy_patterns",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        long.class,
+        MEM_SEG_CLASS,
+        long.class,
+      },
+      vocab,
+      grammar,
+      root,
+      triggerPatterns,
+      numTriggerPatterns,
+      triggerTokens,
+      numTriggerTokens
+    );
+  }
+
   public static MemorySegment llama_sampler_init_penalties(
     int penaltyLastN,
     float penaltyRepeat,
