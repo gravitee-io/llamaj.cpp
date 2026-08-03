@@ -34,15 +34,37 @@ import java.util.List;
 public record StateBounds(
   GenerationState state,
   List<String> starts,
-  String end
+  List<String> ends
 ) {
   public StateBounds {
     starts = starts == null ? List.of() : List.copyOf(starts);
+    ends = ends == null ? List.of() : List.copyOf(ends);
   }
 
   /** Single-marker form. */
   public StateBounds(GenerationState state, String start, String end) {
-    this(state, start == null ? List.of() : List.of(start), end);
+    this(
+      state,
+      start == null ? List.of() : List.of(start),
+      end == null ? List.of() : List.of(end)
+    );
+  }
+
+  /** Many openings, one closing. */
+  public StateBounds(GenerationState state, List<String> starts, String end) {
+    this(state, starts, end == null ? List.of() : List.of(end));
+  }
+
+  /**
+   * The primary closing marker, or {@code null} if none.
+   *
+   * <p>A channel may be left more than one way — Harmony reaches the final
+   * channel after {@code <|end|>} when the model answers directly and after
+   * {@code <|call|>} when a tool call intervened — so callers that must consider
+   * every exit use {@link #ends()}.
+   */
+  public String end() {
+    return ends.isEmpty() ? null : ends.getFirst();
   }
 
   /** The primary opening marker, or {@code null} if none. */
