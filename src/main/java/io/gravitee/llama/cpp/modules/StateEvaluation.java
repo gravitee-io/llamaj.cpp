@@ -215,8 +215,14 @@ public class StateEvaluation
     // (b) the other states' open markers (cross-transitions when not in ANSWER)
     for (Entry<GenerationState, StateBounds> e : states.entrySet()) {
       StateBounds bounds = e.getValue();
+      // A channel's OWN openers count while inside it, when it repeats. Models
+      // re-announce the channel they are already in — Harmony emits a second
+      // <|channel|>analysis<|message|> mid-thought — and skipping it leaves the
+      // header in the reasoning text as raw protocol. The transition is a no-op;
+      // the point is that the marker is recognised, and therefore suppressed.
+      boolean ownChannel = bounds.state() == currentState;
       if (
-        bounds.state() == currentState ||
+        (ownChannel && !bounds.repeatable()) ||
         stateAlreadyOccurred(bounds) ||
         isNullOrBlank(bounds)
       ) {
@@ -344,8 +350,9 @@ public class StateEvaluation
   }
 
   private void setAlreadyOccurredIfNecessary(GenerationState currentState) {
-    boolean isTools = !TOOLS.equals(currentState);
-    this.occurredState.put(currentState, isTools);
+    var bounds = states.get(currentState);
+    boolean closesForGood = bounds == null || !bounds.repeatable();
+    this.occurredState.put(currentState, closesForGood);
   }
 
   private GenerationState detectNewState(String piece) {
@@ -419,7 +426,7 @@ public class StateEvaluation
       return true;
     }
 
-    if (TOOLS.equals(stateBounds.state())) {
+    if (stateBounds.repeatable()) {
       return false;
     }
 

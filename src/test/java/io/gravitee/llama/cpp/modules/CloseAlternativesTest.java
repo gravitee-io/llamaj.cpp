@@ -248,4 +248,113 @@ class CloseAlternativesTest {
     assertThat(reasoning.toString()).isEqualTo("body");
     assertThat(answer.toString()).isEqualTo("tail");
   }
+
+  @Test
+  void a_repeatable_channel_can_be_re_entered_in_one_generation() {
+    // Harmony chains channels: analysis, back to final, then commentary — all in
+    // ONE generation. Non-repeatable, the second opening stops matching and its
+    // header reaches the caller as raw text ("<|channel|>commentary<|message|>Now
+    // step 2..."), with the prose billed as answer.
+    var eval = new StateEvaluation();
+    eval.initialize(
+      new StateEvaluation.Config(
+        List.of(
+          new StateBounds(
+            GenerationState.REASONING,
+            List.of(
+              "<|channel|>analysis<|message|>",
+              "<|channel|>commentary<|message|>"
+            ),
+            List.of("<|channel|>final<|message|>"),
+            true
+          )
+        )
+      )
+    );
+
+    assertThat(
+      eval
+        .evaluateToken(
+          GenerationState.ANSWER,
+          1,
+          "<|channel|>analysis<|message|>"
+        )
+        .state()
+    ).isEqualTo(GenerationState.REASONING);
+    assertThat(
+      eval
+        .evaluateToken(
+          GenerationState.REASONING,
+          2,
+          "<|channel|>final<|message|>"
+        )
+        .state()
+    ).isEqualTo(GenerationState.ANSWER);
+
+    var reopened = eval.evaluateToken(
+      GenerationState.ANSWER,
+      3,
+      "<|channel|>commentary<|message|>"
+    );
+
+    assertThat(reopened.state()).isEqualTo(GenerationState.REASONING);
+    assertThat(reopened.emit()).isEmpty();
+  }
+
+  @Test
+  void a_non_repeatable_channel_still_occurs_once() {
+    // The guard this preserves: a model that types "<think>" in its answer must
+    // not re-open reasoning after the real block closed.
+    var eval = new StateEvaluation();
+    eval.initialize(
+      new StateEvaluation.Config(
+        List.of(
+          new StateBounds(GenerationState.REASONING, "<think>", "</think>")
+        )
+      )
+    );
+
+    eval.evaluateToken(GenerationState.ANSWER, 1, "<think>");
+    eval.evaluateToken(GenerationState.REASONING, 2, "</think>");
+    var second = eval.evaluateToken(GenerationState.ANSWER, 3, "<think>");
+
+    assertThat(second.state()).isEqualTo(GenerationState.ANSWER);
+    assertThat(second.emit()).isEqualTo("<think>");
+  }
+
+  @Test
+  void a_repeatable_channel_absorbs_its_own_opener_while_inside_it() {
+    // Models re-announce the channel they are already in: Harmony emits a second
+    // <|channel|>analysis<|message|> mid-thought. A state's own openers used to be
+    // skipped as candidates, so that header stayed in the reasoning text as raw
+    // protocol.
+    var eval = new StateEvaluation();
+    eval.initialize(
+      new StateEvaluation.Config(
+        List.of(
+          new StateBounds(
+            GenerationState.REASONING,
+            List.of("<|channel|>analysis<|message|>"),
+            List.of("<|channel|>final<|message|>"),
+            true
+          )
+        )
+      )
+    );
+
+    eval.evaluateToken(
+      GenerationState.ANSWER,
+      1,
+      "<|channel|>analysis<|message|>"
+    );
+    eval.evaluateToken(GenerationState.REASONING, 2, "thinking... ");
+    var again = eval.evaluateToken(
+      GenerationState.REASONING,
+      3,
+      "<|channel|>analysis<|message|>"
+    );
+
+    assertThat(again.state()).isEqualTo(GenerationState.REASONING);
+    assertThat(again.emit()).isEmpty();
+  }
 }
