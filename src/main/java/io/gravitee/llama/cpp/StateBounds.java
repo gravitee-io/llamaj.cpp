@@ -34,11 +34,34 @@ import java.util.List;
 public record StateBounds(
   GenerationState state,
   List<String> starts,
-  List<String> ends
+  List<String> ends,
+  boolean repeatable
 ) {
   public StateBounds {
     starts = starts == null ? List.of() : List.copyOf(starts);
     ends = ends == null ? List.of() : List.copyOf(ends);
+  }
+
+  /**
+   * Whether this channel may be entered again after it closes.
+   *
+   * <p>A single {@code <think>…</think>} block per generation is a property of
+   * ChatML, not of reasoning: Harmony CHAINS channels, so one generation can run
+   * analysis, return to the final channel, and then open commentary — and a
+   * channel that cannot re-open stops matching, leaving its header to reach the
+   * caller as raw text. TOOLS has always been re-entrant for the same reason
+   * (models emit several calls); this makes the exemption configurable instead
+   * of hard-coded to one enum constant.
+   *
+   * <p>Defaults preserve the historical behaviour: TOOLS repeats, everything
+   * else occurs at most once.
+   */
+  public StateBounds(
+    GenerationState state,
+    List<String> starts,
+    List<String> ends
+  ) {
+    this(state, starts, ends, GenerationState.TOOLS.equals(state));
   }
 
   /** Single-marker form. */
@@ -48,6 +71,16 @@ public record StateBounds(
       start == null ? List.of() : List.of(start),
       end == null ? List.of() : List.of(end)
     );
+  }
+
+  /** Many openings and closings, with explicit re-entry. */
+  public StateBounds(
+    GenerationState state,
+    List<String> starts,
+    String end,
+    boolean repeatable
+  ) {
+    this(state, starts, end == null ? List.of() : List.of(end), repeatable);
   }
 
   /** Many openings, one closing. */

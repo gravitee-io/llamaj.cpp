@@ -688,6 +688,30 @@ public class ConversationState {
    * stranded in the answer. Listing both lets the longer win when it arrives and the shorter
    * settle the span when generation stops at the call, which is the normal agent flow.
    */
+  /**
+   * Configures reasoning detection for a dialect that re-enters the channel.
+   *
+   * <p>Harmony chains channels rather than wrapping one span: a generation can run
+   * analysis, return to the final channel, and then open commentary. Left
+   * non-repeatable, the second opening never matches and its header reaches the
+   * caller as raw text — and its tokens are billed as answer.
+   */
+  public ConversationState setReasoning(
+    java.util.List<String> tokenStarts,
+    java.util.List<String> tokenEnds,
+    boolean repeatable
+  ) {
+    this.stateBounds.add(
+      new StateBounds(
+        GenerationState.REASONING,
+        tokenStarts,
+        tokenEnds,
+        repeatable
+      )
+    );
+    return this;
+  }
+
   public ConversationState setToolCall(
     java.util.List<String> tokenStarts,
     java.util.List<String> tokenEnds

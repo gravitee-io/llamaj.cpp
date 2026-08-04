@@ -79,7 +79,8 @@ LlamaRuntime.llama_backend_free();
 | `minP(float p, int minKeep)` | Drop tokens below `p` × top-token prob (at least `minKeep`). |
 | `mirostat(int seed, float tau, float eta)` | Mirostat v2 adaptive-perplexity sampling. |
 | `penalties(int lastN, float repeat, float freq, float present)` | Repetition / frequency / presence penalties over the last `lastN` tokens. |
-| `grammar(LlamaVocab vocab, String grammar, String root)` | Constrain output to a GBNF grammar. |
+| `grammar(LlamaVocab vocab, String grammar, String root)` | Constrain **all** output to a GBNF grammar. |
+| `grammarLazy(LlamaVocab vocab, String grammar, String root, List<String> triggerPatterns, List<Integer> triggerTokens)` | Arm the grammar only once a trigger matches, and apply it from the pattern's **first capture group** onward. This is what makes a constrained region inside free text possible — constraining tool-call arguments with `grammar()` would force the model to answer in JSON even when it is only talking. Patterns are matched from the start of the generated output, so they normally read `^[\s\S]*?<escaped marker>([\s\S]*)`. |
 | `seed(int seed)` | Append the final distribution sampler with a fixed RNG seed (reproducible). |
 
 ### Generation limits (`ConversationState`, fluent)

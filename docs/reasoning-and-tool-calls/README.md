@@ -7,9 +7,9 @@ Many models interleave their output: a chain-of-thought block (e.g. `<think>…<
 
 ## Key types
 - `GenerationState` — enum of the section the model is currently emitting: `ANSWER`, `REASONING`, `TOOLS`.
-- `StateBounds` — record `(GenerationState state, String start, String end)` pairing a section with its delimiter strings.
-- `ConversationState` — owns the generation; `setReasoning(start, end)` / `setToolCall(start, end)` register the delimiters before `initialize(prompt)`.
-- `FinishReason` — terminal reason; `TOOL_CALL` (label `"tool_calls"`) is reported when output ends inside a tool-call block, alongside `EOS` / `STOP` / `LENGTH`.
+- `StateBounds` — record `(GenerationState state, List<String> starts, List<String> ends, boolean repeatable)` pairing a section with its delimiters and its re-entry rule. **Both ends take a list**: a channel can be entered and left more than one way. Single-marker constructors are kept.
+- `ConversationState` — owns the generation; `setReasoning(...)` / `setToolCall(...)` register the delimiters before `initialize(prompt)`, each in single-marker, many-opens, or many-opens/many-closes form.
+- `FinishReason` — terminal reason; `TOOL_CALL` (label `"tool_calls"`) is reported when output leaves **or ends inside** a tool-call block, alongside `EOS` / `STOP` / `LENGTH`.
 - `DefaultLlamaIterator` — drives token-by-token generation; `getGenerationState()` on the state reflects the active section as you stream.
 
 ## Usage
@@ -72,7 +72,11 @@ it.stream().forEach(chunk -> {
 | Method | Section | Effect |
 | --- | --- | --- |
 | `setReasoning(String start, String end)` | `REASONING` | Registers a `StateBounds(REASONING, start, end)`; tokens between the delimiters count toward `getReasoningTokens()`. |
-| `setToolCall(String start, String end)` | `TOOLS` | Registers a `StateBounds(TOOLS, start, end)`; tokens between the delimiters count toward `getToolsTokens()`; ending here yields `FinishReason.TOOL_CALL`. |
+| `setReasoning(List<String> starts, List<String> ends)` | `REASONING` | Same, with alternatives on either end. Harmony reaches its final channel after `<\|end\|>` when answering directly and after `<\|call\|>` when a tool call intervened — configure both, or the unmatched one leaks. |
+| `setToolCall(String start, String end)` | `TOOLS` | Registers a `StateBounds(TOOLS, start, end)`; tokens between the delimiters count toward `getToolsTokens()`; leaving or ending here yields `FinishReason.TOOL_CALL`. |
+| `setToolCall(List<String> starts, String end)` | `TOOLS` | Several opening markers, one close — a dialect may open the tool channel more than one way (Harmony: commentary and analysis). |
+| `setToolCall(List<String> starts, List<String> ends)` | `TOOLS` | Alternatives on both ends. |
+| `setReasoning(List<String> starts, List<String> ends, boolean repeatable)` | `REASONING` | Same, plus whether the channel may be entered AGAIN after it closes. |
 | `getReasoningTokens()` / `getToolsTokens()` / `getAnswerTokens()` | — | Per-section output token counts; `getInputTokens()` and `getTotalTokenCount()` cover the prompt and grand total. |
 
 | `GenerationState` | Meaning |
@@ -84,6 +88,20 @@ it.stream().forEach(chunk -> {
 ## Notes
 - Configure `setReasoning` / `setToolCall` **before** `initialize(prompt)` — `initialize` resets generation state (and re-reads the registered `StateBounds`). Both methods are chainable and return the same `ConversationState`.
 - The delimiter strings must match what the model actually emits (driven by its chat template / system prompt). The tool-call test, for example, instructs the model via the system prompt to wrap calls in `<tool_call>…</tool_call>` and then registers those exact delimiters.
+- **Delimiters are syntax, not content — they are suppressed.** The emission for a confirmed marker is empty, and its tokens are billed to the channel it opened, so a caller streaming `emit()` never has to strip them.
+- **A marker split across tokens is buffered, not leaked.** Text that is a strict prefix of a candidate is withheld (empty emission) until the marker completes or the text diverges; on divergence the buffered text is released into the current channel, in order, and the divergent piece is re-scanned. Generation that stops mid-marker flushes the fragment rather than dropping it, so no token is lost. The cost is one token of latency on text that merely *starts* like a marker.
+- **Markers match at the start of a run, longest first.** A marker only matches where a run begins — after the previous one resolved, or at the start of generation. A variant that is not configured never matches: it refutes, and the whole header lands in the current channel as visible text. Shortening a marker to a shared substring is not a substitute, because the run boundary is the full header.
+- **A close marker arriving in `ANSWER` is suppressed too.** No span is open for it to close, so it can only be stray syntax — and models emit it: after a tool call the next turn starts fresh in `ANSWER` and dialects like Harmony still prefix the reply with their final-channel header. List that bare header among the closes, or it reaches the caller as `<|channel|>final<|message|>DONE`.
+- **A turn that ends inside the tool channel reports `TOOL_CALL`.** When the close marker is itself an EOS token (Harmony's `<|call|>`) generation halts on it, so no transition is ever observed mid-stream; without this the turn looks like a plain stop and downstream renders the span as prose instead of executing it. An empty span never counts — a provisional entry that resolves straight back out captured nothing to call.
+- **A channel occurs once unless it declares otherwise.** `repeatable` defaults to
+  `true` for `TOOLS` (models emit several calls) and `false` elsewhere — the ChatML
+  rule, and what stops a literal `<think>` in an answer from re-opening reasoning.
+  Harmony breaks that assumption: one generation can run analysis, return to the
+  final channel, then open a commentary preamble. A channel that cannot re-open
+  stops matching, so the second header reaches the caller as raw text and its
+  tokens are counted as answer. Pass `repeatable = true` for such dialects.
+- **Channels chain rather than nest.** In any state the candidates are the current state's closes and the *other* states' opens, so a tool call opening straight out of a reasoning span closes it implicitly.
+- **A prompt can seed the starting state.** `initialState(prompt)` begins generation inside a span the prompt left open — a chat template ending in `<think>`, or a continuation — because the model never re-emits that opening marker.
 - These delimiters are not appended to the prompt; they are pure output classifiers. Detection works on the decoded text stream, so multi-token delimiters are handled.
 - `getAnswerTokens()` always reflects the `ANSWER` section even when reasoning/tool calls are configured; the three section counts plus the input count sum to `getTotalTokenCount()`.
 - `FinishReason.TOOL_CALL` is a marker that generation stopped inside a tool call; the natural terminal reasons remain `EOS`, `STOP`, and `LENGTH`. `isFinished()` distinguishes a real stop (EOG/length) from a marker set while generation could otherwise continue.
