@@ -114,8 +114,10 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
    * llama.cpp counterpart of vLLM's structural tags.
    *
    * <p>The grammar is fed content starting at the pattern's first capture group, so a
-   * pattern normally wraps the payload it wants to constrain, e.g.
-   * {@code "<\\|channel\\|>commentary to=functions\\.\\w+<\\|constrain\\|>json<\\|message\\|>(.*)"}.
+   * pattern wraps the payload it wants to constrain. Patterns are matched from the start
+   * of the generated output, so any prose before the trigger must be consumed by the
+   * pattern itself, e.g.
+   * {@code "^[\\s\\S]*?<\\|channel\\|>commentary to=functions\\.\\w+<\\|constrain\\|>json<\\|message\\|>([\\s\\S]*)"}.
    *
    * @param vocab           the model vocabulary
    * @param grammar         GBNF grammar text

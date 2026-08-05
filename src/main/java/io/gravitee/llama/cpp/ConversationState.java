@@ -653,7 +653,7 @@ public class ConversationState {
    * start of a run; with only one configured, the other leaks into reasoning as raw text.
    */
   public ConversationState setToolCall(
-    java.util.List<String> tokenStarts,
+    List<String> tokenStarts,
     String tokenEnd
   ) {
     this.stateBounds.add(
@@ -671,8 +671,8 @@ public class ConversationState {
    * tool call intervenes. One marker covers one path and leaks the other's header as text.
    */
   public ConversationState setReasoning(
-    java.util.List<String> tokenStarts,
-    java.util.List<String> tokenEnds
+    List<String> tokenStarts,
+    List<String> tokenEnds
   ) {
     this.stateBounds.add(
       new StateBounds(GenerationState.REASONING, tokenStarts, tokenEnds)
@@ -680,14 +680,6 @@ public class ConversationState {
     return this;
   }
 
-  /**
-   * Configures tool call detection where the channel can be left more than one way.
-   *
-   * <p>{@code <|call|>} ends a tool call, but when the model continues into an answer the
-   * final-channel header follows immediately and belongs to the marker — otherwise it is
-   * stranded in the answer. Listing both lets the longer win when it arrives and the shorter
-   * settle the span when generation stops at the call, which is the normal agent flow.
-   */
   /**
    * Configures reasoning detection for a dialect that re-enters the channel.
    *
@@ -697,8 +689,8 @@ public class ConversationState {
    * caller as raw text — and its tokens are billed as answer.
    */
   public ConversationState setReasoning(
-    java.util.List<String> tokenStarts,
-    java.util.List<String> tokenEnds,
+    List<String> tokenStarts,
+    List<String> tokenEnds,
     boolean repeatable
   ) {
     this.stateBounds.add(
@@ -712,9 +704,17 @@ public class ConversationState {
     return this;
   }
 
+  /**
+   * Configures tool call detection where the channel can be left more than one way.
+   *
+   * <p>{@code <|call|>} ends a tool call, but when the model continues into an answer the
+   * final-channel header follows immediately and belongs to the marker — otherwise it is
+   * stranded in the answer. Listing both lets the longer win when it arrives and the shorter
+   * settle the span when generation stops at the call, which is the normal agent flow.
+   */
   public ConversationState setToolCall(
-    java.util.List<String> tokenStarts,
-    java.util.List<String> tokenEnds
+    List<String> tokenStarts,
+    List<String> tokenEnds
   ) {
     this.stateBounds.add(
       new StateBounds(GenerationState.TOOLS, tokenStarts, tokenEnds)
