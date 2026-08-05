@@ -20,6 +20,10 @@ import java.util.List;
 /**
  * The marker text opening and closing one generation channel.
  *
+ * <p>{@code ends} is a list for the same reason: a channel may be left more than one
+ * way — Harmony's tool run ends on {@code <|call|>} alone when generation stops there,
+ * or on the longer final-channel header when the model continues into an answer.
+ *
  * <p>{@code starts} is a list because a dialect may open a channel more than one way — Harmony
  * emits tool calls on both the {@code commentary} and {@code analysis} channels. Configure every
  * variant: an unmatched one refutes against the close marker and leaks the span as text.
@@ -27,9 +31,10 @@ import java.util.List;
  * <p>Markers are matched only at the start of a run, so each alternative must be complete from
  * that boundary; a shared substring will not match.
  *
- * @param state  the channel these bounds delimit
- * @param starts opening markers; longest match wins
- * @param end    the closing marker
+ * @param state      the channel these bounds delimit
+ * @param starts     opening markers; longest match wins
+ * @param ends       closing markers; longest match wins
+ * @param repeatable whether the channel may be entered again after it closes
  */
 public record StateBounds(
   GenerationState state,

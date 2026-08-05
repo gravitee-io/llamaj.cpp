@@ -323,6 +323,47 @@ class CloseAlternativesTest {
   }
 
   @Test
+  void a_close_marker_arriving_in_the_answer_is_suppressed_not_leaked() {
+    // Deliberate: a close marker in ANSWER is protocol, never content. Letting it
+    // through would let generated output poison the conversation template — a
+    // "</think>" re-fed as content becomes live syntax on the next turn. The
+    // marker is deleted; the surrounding prose survives and stays in ANSWER.
+    var eval = new StateEvaluation();
+    eval.initialize(
+      new StateEvaluation.Config(
+        List.of(
+          new StateBounds(GenerationState.REASONING, "<think>", "</think>")
+        )
+      )
+    );
+
+    var answer = new StringBuilder();
+    GenerationState state = GenerationState.ANSWER;
+    for (String piece : List.of("Wrap it in ", "</think>", " like so.")) {
+      var emission = eval.evaluateToken(state, 0, piece);
+      state = emission.state();
+      append(
+        new StringBuilder(),
+        new StringBuilder(),
+        answer,
+        state,
+        emission.emit()
+      );
+    }
+    var flushed = eval.flushPending(state);
+    append(
+      new StringBuilder(),
+      new StringBuilder(),
+      answer,
+      flushed.state(),
+      flushed.emit()
+    );
+
+    assertThat(answer.toString()).isEqualTo("Wrap it in  like so.");
+    assertThat(flushed.state()).isEqualTo(GenerationState.ANSWER);
+  }
+
+  @Test
   void a_repeatable_channel_absorbs_its_own_opener_while_inside_it() {
     // Models re-announce the channel they are already in: Harmony emits a second
     // <|channel|>analysis<|message|> mid-thought. A state's own openers used to be
