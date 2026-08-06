@@ -242,10 +242,10 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   /**
    * Collects log-probability information for the token at batch output index {@code batchIdx}.
    *
-   * <p>Reads the raw logit vector produced by the last {@code decode()} call, applies
-   * a numerically stable softmax to obtain probabilities, then returns the top-N entries
-   * sorted by descending log-probability.  The sampled token ({@code sampledTokenId}) is
-   * always included even if it did not make the top-N cut.
+   * <p>Reads the raw logit vector produced by the last {@code decode()} call and derives
+   * exact log-probabilities via a numerically stable log-sum-exp, then returns the top-N
+   * entries sorted by descending log-probability.  The sampled token
+   * ({@code sampledTokenId}) is always included even if it did not make the top-N cut.
    *
    * <p>The caller must ensure the token at {@code batchIdx} was added to the batch with
    * {@code logits=true}, otherwise the returned segment will be NULL and this method
@@ -277,56 +277,53 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
       .reinterpret(nVocab * ValueLayout.JAVA_FLOAT.byteSize())
       .toArray(ValueLayout.JAVA_FLOAT);
 
-    // Numerically-stable softmax: subtract max before exp to avoid overflow.
+    // logprob(i) = logits[i] - logZ with logZ = max + log(sum(exp(logits - max))),
+    // so exact log-probabilities need only the max and the log-sum-exp — no
+    // vocab-sized probability array. The top-N candidates are selected on the raw
+    // logits in the same pass (softmax is monotonic), kept in a small
+    // descending insertion buffer: candidates below its minimum are rejected in
+    // O(1), so the pass is ~O(nVocab) for the small N used in practice.
     float max = logits[0];
     for (float v : logits) {
       if (v > max) max = v;
     }
-    double[] probs = new double[nVocab];
+
+    int limit = Math.min(topN, nVocab);
+    int[] topIdx = new int[limit];
+    int topCount = 0;
     double sum = 0.0;
     for (int i = 0; i < nVocab; i++) {
-      probs[i] = Math.exp(logits[i] - max);
-      sum += probs[i];
-    }
-    for (int i = 0; i < nVocab; i++) {
-      probs[i] /= sum;
-    }
-
-    // Build top-N list using a simple partial sort (insertion into a small list).
-    int limit = Math.min(topN, nVocab);
-    // We always include the chosen token, so we need at least 1 slot.
-    List<int[]> top = new ArrayList<>(limit + 1); // int[]{tokenId, rank} – rank unused; sorted inline
-    // We'll store indices and sort by descending prob.
-    // For efficiency we do a partial selection sort only up to `limit` elements.
-    boolean[] visited = new boolean[nVocab];
-    List<TokenLogprob> topList = new ArrayList<>(limit);
-    for (int rank = 0; rank < limit; rank++) {
-      int best = -1;
-      for (int i = 0; i < nVocab; i++) {
-        if (!visited[i] && (best == -1 || probs[i] > probs[best])) {
-          best = i;
-        }
+      sum += Math.exp(logits[i] - max);
+      if (topCount == limit && logits[i] <= logits[topIdx[limit - 1]]) {
+        continue;
       }
-      visited[best] = true;
-      topList.add(buildTokenLogprob(vocab, best, probs[best]));
+      int pos = topCount < limit ? topCount : limit - 1;
+      while (pos > 0 && logits[i] > logits[topIdx[pos - 1]]) {
+        topIdx[pos] = topIdx[pos - 1];
+        pos--;
+      }
+      topIdx[pos] = i;
+      if (topCount < limit) topCount++;
+    }
+    double logZ = max + Math.log(sum);
+
+    List<TokenLogprob> topList = new ArrayList<>(topCount + 1);
+    boolean chosenPresent = false;
+    for (int rank = 0; rank < topCount; rank++) {
+      int id = topIdx[rank];
+      chosenPresent |= id == sampledTokenId;
+      topList.add(buildTokenLogprob(vocab, id, logits[id] - logZ));
     }
 
-    // Ensure the chosen token is always in the list.
-    boolean chosenPresent = topList
-      .stream()
-      .anyMatch(t -> t.tokenId() == sampledTokenId);
-    if (!chosenPresent) {
-      topList.add(
-        buildTokenLogprob(vocab, sampledTokenId, probs[sampledTokenId])
-      );
-    }
-
-    // The chosen token entry.
+    // The chosen token entry — always included even below the top-N cut.
     TokenLogprob chosen = buildTokenLogprob(
       vocab,
       sampledTokenId,
-      probs[sampledTokenId]
+      logits[sampledTokenId] - logZ
     );
+    if (!chosenPresent) {
+      topList.add(chosen);
+    }
 
     return new Logprobs(chosen, List.copyOf(topList));
   }
@@ -334,15 +331,12 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   private TokenLogprob buildTokenLogprob(
     LlamaVocab vocab,
     int tokenId,
-    double probability
+    double logprob
   ) {
     byte[] rawBytes = vocab.tokenToPiece(tokenId);
     String piece = rawBytes.length == 0
       ? ""
       : new String(rawBytes, StandardCharsets.UTF_8);
-    double logprob = probability > 0.0
-      ? Math.log(probability)
-      : Double.NEGATIVE_INFINITY;
 
     List<Integer> byteList = new ArrayList<>(rawBytes.length);
     for (byte b : rawBytes) {
