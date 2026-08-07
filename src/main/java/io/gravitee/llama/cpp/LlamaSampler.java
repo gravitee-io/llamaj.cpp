@@ -176,6 +176,7 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
   }
 
   public LlamaSampler penalties(
+    LlamaVocab vocab,
     int penaltyLastN,
     float penaltyRepeat,
     float penaltyFreq,
@@ -184,6 +185,7 @@ public final class LlamaSampler extends MemorySegmentAware implements Freeable {
     llama_sampler_chain_add(
       this.segment,
       llama_sampler_init_penalties(
+        vocab.nVocab(),
         penaltyLastN,
         penaltyRepeat,
         penaltyFreq,

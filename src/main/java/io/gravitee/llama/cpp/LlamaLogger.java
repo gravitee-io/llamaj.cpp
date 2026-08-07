@@ -57,6 +57,11 @@ public final class LlamaLogger extends ArenaAware {
         arena
       );
       llama_log_set(callbackSegment, MemorySegment.NULL);
+      // mtmd/clip has its own logger state since b10276; route it through the
+      // same callback so multimodal logs honor the configured level
+      mtmd_log_set(callbackSegment, MemorySegment.NULL);
+      // ggml backend logs (Metal alloc/free, sched, etc.) are a third channel
+      ggml_log_set(callbackSegment, MemorySegment.NULL);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
