@@ -173,6 +173,12 @@ public class MtmdContext extends MemorySegmentAware implements Freeable {
       arena
     );
     LlamaRuntime.mtmd_input_text_set_text(nativeMtmdInputText, textSegment);
+    // b10276+: mtmd_input_text carries an explicit length; without it the
+    // native side reads an empty string and finds no media markers
+    LlamaRuntime.mtmd_input_text_set_text_len(
+      nativeMtmdInputText,
+      textSegment.byteSize() - 1
+    );
     LlamaRuntime.mtmd_input_text_set_add_special(
       nativeMtmdInputText,
       addSpecial

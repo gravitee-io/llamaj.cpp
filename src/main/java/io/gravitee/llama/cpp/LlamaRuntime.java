@@ -342,6 +342,24 @@ public final class LlamaRuntime {
     );
   }
 
+  public static void ggml_log_set(MemorySegment m1, MemorySegment m2) {
+    llama_h(
+      "ggml_log_set",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      m1,
+      m2
+    );
+  }
+
+  public static void mtmd_log_set(MemorySegment m1, MemorySegment m2) {
+    llama_h(
+      "mtmd_log_set",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      m1,
+      m2
+    );
+  }
+
   /* Model Parameters */
   public static MemorySegment llama_model_default_params(Arena arena) {
     return llama_h(
@@ -473,38 +491,51 @@ public final class LlamaRuntime {
     );
   }
 
-  public static boolean use_mmap(MemorySegment segment) {
+  // llama.cpp b10276 merged use_mmap/use_mlock into the llama_load_mode enum,
+  // a bitmask: LLAMA_LOAD_MODE_MMAP = 1, LLAMA_LOAD_MODE_MLOCK = 2
+  private static final int LOAD_MODE_MMAP = 1;
+  private static final int LOAD_MODE_MLOCK = 2;
+
+  private static int load_mode(MemorySegment segment) {
     return llama_model_params(
-      "use_mmap",
+      "load_mode",
       new Class<?>[] { MEM_SEG_CLASS },
       segment
     );
+  }
+
+  private static void load_mode(MemorySegment segment, int loadMode) {
+    llama_model_params(
+      "load_mode",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      loadMode
+    );
+  }
+
+  private static void setLoadModeBit(
+    MemorySegment segment,
+    int bit,
+    boolean enabled
+  ) {
+    int mode = load_mode(segment);
+    load_mode(segment, enabled ? (mode | bit) : (mode & ~bit));
+  }
+
+  public static boolean use_mmap(MemorySegment segment) {
+    return (load_mode(segment) & LOAD_MODE_MMAP) != 0;
   }
 
   public static void use_mmap(MemorySegment segment, boolean useMmap) {
-    llama_model_params(
-      "use_mmap",
-      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
-      segment,
-      useMmap
-    );
+    setLoadModeBit(segment, LOAD_MODE_MMAP, useMmap);
   }
 
   public static boolean use_mlock(MemorySegment segment) {
-    return llama_model_params(
-      "use_mlock",
-      new Class<?>[] { MEM_SEG_CLASS },
-      segment
-    );
+    return (load_mode(segment) & LOAD_MODE_MLOCK) != 0;
   }
 
   public static void use_mlock(MemorySegment segment, boolean useMlock) {
-    llama_model_params(
-      "use_mlock",
-      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
-      segment,
-      useMlock
-    );
+    setLoadModeBit(segment, LOAD_MODE_MLOCK, useMlock);
   }
 
   public static boolean check_tensors(MemorySegment segment) {
@@ -729,6 +760,18 @@ public final class LlamaRuntime {
       new Class[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
       mtmdInputText,
       text
+    );
+  }
+
+  public static void mtmd_input_text_set_text_len(
+    MemorySegment mtmdInputText,
+    long textLen
+  ) {
+    mtmd_input_text(
+      "text_len",
+      new Class[] { MEM_SEG_CLASS, long.class },
+      mtmdInputText,
+      textLen
     );
   }
 
@@ -1518,6 +1561,7 @@ public final class LlamaRuntime {
   }
 
   public static MemorySegment llama_sampler_init_penalties(
+    int nVocab,
     int penaltyLastN,
     float penaltyRepeat,
     float penaltyFreq,
@@ -1525,7 +1569,14 @@ public final class LlamaRuntime {
   ) {
     return llama_h(
       "llama_sampler_init_penalties",
-      new Class<?>[] { int.class, float.class, float.class, float.class },
+      new Class<?>[] {
+        int.class,
+        int.class,
+        float.class,
+        float.class,
+        float.class,
+      },
+      nVocab,
       penaltyLastN,
       penaltyRepeat,
       penaltyFreq,

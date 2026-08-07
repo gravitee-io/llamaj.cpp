@@ -116,7 +116,7 @@ class TunedLlamaIteratorTest extends LlamaCppTest {
       .minP(0.05f, 40)
       .mirostat(SEED, 3, 0.1f)
       .grammar(vocab, ENGLISH_GRAMMAR, "root")
-      .penalties(10, 1.2f, 0.3f, 0.0f);
+      .penalties(vocab, 10, 1.2f, 0.3f, 0.0f);
     track(sampler);
 
     var prompt = getPrompt(

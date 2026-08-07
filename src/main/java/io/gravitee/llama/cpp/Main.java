@@ -600,21 +600,45 @@ public class Main {
       case CLASSIC_CHAT -> new LlamaSampler(ARENA)
         .temperature(temperature)
         .topP(topP, topPWindow)
-        .penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent)
+        .penalties(
+          vocab,
+          penaltyLastN,
+          penaltyRepeat,
+          penaltyFreq,
+          penaltyPresent
+        )
         .seed(seed);
       case FOCUSED -> new LlamaSampler(ARENA)
         .temperature(temperature)
         .topK(topK)
-        .penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent)
+        .penalties(
+          vocab,
+          penaltyLastN,
+          penaltyRepeat,
+          penaltyFreq,
+          penaltyPresent
+        )
         .seed(seed);
       case BALANCED -> new LlamaSampler(ARENA)
         .temperature(temperature)
         .minP(minP, minPWindow)
-        .penalties(penaltyLastN, penaltyRepeat, penaltyFreq, penaltyPresent)
+        .penalties(
+          vocab,
+          penaltyLastN,
+          penaltyRepeat,
+          penaltyFreq,
+          penaltyPresent
+        )
         .seed(seed);
       case ADAPTIVE -> new LlamaSampler(ARENA)
         .mirostat(seed, mirostatTau, mirostatEta)
-        .penalties(context.nCtx(), penaltyRepeat, penaltyFreq, penaltyPresent)
+        .penalties(
+          vocab,
+          context.nCtx(),
+          penaltyRepeat,
+          penaltyFreq,
+          penaltyPresent
+        )
         .seed(seed);
       case CONSTRAINED -> new LlamaSampler(ARENA)
         .topP(topP, topPWindow)
