@@ -66,4 +66,33 @@ class LlamaModelParamsTest extends LlamaCppTest {
       assertThat(modelParams.checkTensors()).isTrue();
     }
   }
+
+  @Test
+  void should_treat_native_load_mode_auto_as_mmap() {
+    // llama.cpp v0.4.0 defaults load_mode to LLAMA_LOAD_MODE_AUTO (-1), which the
+    // loader resolves to mmap. Toggling bits must never produce an invalid enum.
+    try (Arena arena = Arena.ofConfined()) {
+      var params = new LlamaModelParams(arena);
+      assertThat(params.useMmap()).isTrue();
+      assertThat(params.useMlock()).isFalse();
+
+      params.useMlock(true);
+      assertThat(params.useMmap()).isTrue();
+      assertThat(params.useMlock()).isTrue();
+
+      params.useMlock(false).useMmap(false);
+      assertThat(params.useMmap()).isFalse();
+      assertThat(params.useMlock()).isFalse();
+    }
+  }
+
+  @Test
+  void should_expose_lazy_mode() {
+    try (Arena arena = Arena.ofConfined()) {
+      var params = new LlamaModelParams(arena);
+      assertThat(params.lazyMode()).isEqualTo(LlamaLazyMode.AUTO);
+      params.lazyMode(LlamaLazyMode.OFF);
+      assertThat(params.lazyMode()).isEqualTo(LlamaLazyMode.OFF);
+    }
+  }
 }

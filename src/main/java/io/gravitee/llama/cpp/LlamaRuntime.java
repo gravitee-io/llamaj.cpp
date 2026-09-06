@@ -373,6 +373,12 @@ public final class LlamaRuntime {
     return llama_h("llama_max_devices", new Class<?>[] {});
   }
 
+  /** The loaded llama.cpp library version string (v0.4.0+), e.g. {@code "0.4.0"}. */
+  public static String llama_version() {
+    MemorySegment version = llama_h("llama_version", new Class<?>[] {});
+    return version.reinterpret(Long.MAX_VALUE).getString(0);
+  }
+
   public static int n_gpu_layers(MemorySegment segment) {
     return llama_model_params(
       "n_gpu_layers",
@@ -492,7 +498,12 @@ public final class LlamaRuntime {
   }
 
   // llama.cpp b10276 merged use_mmap/use_mlock into the llama_load_mode enum,
-  // a bitmask: LLAMA_LOAD_MODE_MMAP = 1, LLAMA_LOAD_MODE_MLOCK = 2
+  // a bitmask: LLAMA_LOAD_MODE_MMAP = 1, LLAMA_LOAD_MODE_MLOCK = 2.
+  // v0.4.0 made the default LLAMA_LOAD_MODE_AUTO = -1, which upstream resolves to
+  // mmap (llama-model-loader.cpp). Bit-twiddling -1 yields an invalid enum value
+  // that GGML_ABORTs in llama_load_mode_name(), so AUTO is normalised to MMAP
+  // before any bit is read or written.
+  private static final int LOAD_MODE_AUTO = -1;
   private static final int LOAD_MODE_MMAP = 1;
   private static final int LOAD_MODE_MLOCK = 2;
 
@@ -513,17 +524,22 @@ public final class LlamaRuntime {
     );
   }
 
+  private static int effectiveLoadMode(MemorySegment segment) {
+    int mode = load_mode(segment);
+    return mode == LOAD_MODE_AUTO ? LOAD_MODE_MMAP : mode;
+  }
+
   private static void setLoadModeBit(
     MemorySegment segment,
     int bit,
     boolean enabled
   ) {
-    int mode = load_mode(segment);
+    int mode = effectiveLoadMode(segment);
     load_mode(segment, enabled ? (mode | bit) : (mode & ~bit));
   }
 
   public static boolean use_mmap(MemorySegment segment) {
-    return (load_mode(segment) & LOAD_MODE_MMAP) != 0;
+    return (effectiveLoadMode(segment) & LOAD_MODE_MMAP) != 0;
   }
 
   public static void use_mmap(MemorySegment segment, boolean useMmap) {
@@ -531,7 +547,25 @@ public final class LlamaRuntime {
   }
 
   public static boolean use_mlock(MemorySegment segment) {
-    return (load_mode(segment) & LOAD_MODE_MLOCK) != 0;
+    return (effectiveLoadMode(segment) & LOAD_MODE_MLOCK) != 0;
+  }
+
+  // v0.4.0+: on-demand tensor reading (llama_lazy_mode): OFF = 0, AUTO = 1, ON = 2
+  public static int lazy_mode(MemorySegment segment) {
+    return llama_model_params(
+      "lazy_mode",
+      new Class<?>[] { MEM_SEG_CLASS },
+      segment
+    );
+  }
+
+  public static void lazy_mode(MemorySegment segment, int lazyMode) {
+    llama_model_params(
+      "lazy_mode",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      segment,
+      lazyMode
+    );
   }
 
   public static void use_mlock(MemorySegment segment, boolean useMlock) {
@@ -907,6 +941,9 @@ public final class LlamaRuntime {
     long len,
     boolean placeholder
   ) {
+    // v0.4.0+: the helper takes a by-value mtmd_helper_init_opt (video decode
+    // options); we only decode single image/audio files, so the defaults apply.
+    MemorySegment opt = mtmd_helper_init_opt_default(allocator);
     return llama_h(
       "mtmd_helper_bitmap_init_from_buf",
       new Class<?>[] {
@@ -915,12 +952,25 @@ public final class LlamaRuntime {
         MEM_SEG_CLASS,
         long.class,
         boolean.class,
+        MEM_SEG_CLASS,
       },
       allocator,
       mtmdContext,
       buf,
       len,
-      placeholder
+      placeholder,
+      opt
+    );
+  }
+
+  /** Default {@code mtmd_helper_init_opt} (struct by value) for the bitmap helpers. */
+  public static MemorySegment mtmd_helper_init_opt_default(
+    SegmentAllocator allocator
+  ) {
+    return llama_h(
+      "mtmd_helper_init_opt_default",
+      new Class<?>[] { SegmentAllocator.class },
+      allocator
     );
   }
 

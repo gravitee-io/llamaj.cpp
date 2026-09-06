@@ -91,16 +91,29 @@ case "$PLATFORM" in
   *) echo "❌ Unsupported platform: $PLATFORM"; exit 1 ;;
 esac
 
+# Semver releases (v0.4.0+) ship no binaries of their own: the release carries a
+# single nightly-tag.txt asset naming the nightly (bNNNN) tag whose archives were
+# promoted. Resolve it so the download URL points at the tag that has the archives.
+RELEASE_TAG="$VERSION"
+if [[ "$VERSION" == v* ]]; then
+  RELEASE_TAG="$(curl -k -fsSL "https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/nightly-tag.txt" | tr -d '[:space:]')"
+  if [[ -z "$RELEASE_TAG" ]]; then
+    echo "❌ Could not resolve nightly-tag.txt for llama.cpp $VERSION"
+    exit 1
+  fi
+  echo "🔎 llama.cpp $VERSION binaries are published under nightly tag $RELEASE_TAG"
+fi
+
 # Construct the download URL using the mapped OS and PLATFORM
 # Try tar.gz first (new format), fallback to zip for older releases
-ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.tar.gz"
-DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
+ARCHIVE_NAME="llama-${RELEASE_TAG}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.tar.gz"
+DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${RELEASE_TAG}/${ARCHIVE_NAME}"
 
 # Check if tar.gz exists, otherwise fallback to zip
 if ! curl -k -L --head --fail "$DOWNLOAD_URL" 2>/dev/null; then
   echo "⚠️  tar.gz not found, falling back to zip format"
-  ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.zip"
-  DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
+  ARCHIVE_NAME="llama-${RELEASE_TAG}-bin-${OS_DOWNLOAD}-${PLATFORM_DOWNLOAD}.zip"
+  DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${RELEASE_TAG}/${ARCHIVE_NAME}"
   USE_ZIP=true
 else
   USE_ZIP=false

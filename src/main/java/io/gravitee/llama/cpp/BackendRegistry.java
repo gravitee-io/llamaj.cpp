@@ -171,7 +171,7 @@ public final class BackendRegistry {
    * They must be passed explicitly to {@link LlamaModelParams#devices(Arena, List)}
    * for the model to use them.
    * <p>
-   * <b>Important:</b> The remote rpc-server must be the same llama.cpp version (b7943)
+   * <b>Important:</b> The remote rpc-server must be the same llama.cpp version (v0.4.0)
    * as the client library. A version mismatch will crash the process (the native RPC
    * client calls abort() on protocol errors).
    * <p>
@@ -239,12 +239,22 @@ public final class BackendRegistry {
    * @param endpoint The RPC server endpoint in "host:port" format.
    * @param device   The device index on the remote server (usually 0).
    * @return An {@link RpcDeviceMemory} record with free and total memory in bytes.
+   * @throws IllegalStateException if the endpoint does not accept a TCP connection.
+   *         Since llama.cpp v0.4.0 the native RPC client aborts the whole process on a
+   *         failed connection, so the endpoint is probed from Java first.
    */
   public static RpcDeviceMemory queryRpcMemory(
     Arena arena,
     String endpoint,
     int device
   ) {
+    if (
+      !RpcMemoryQuery.isReachable(endpoint, RpcMemoryQuery.PROBE_TIMEOUT_MS)
+    ) {
+      throw new IllegalStateException(
+        "RPC endpoint " + endpoint + " is unreachable"
+      );
+    }
     long[] memory = LlamaRuntime.ggml_backend_rpc_get_device_memory(
       arena,
       endpoint,

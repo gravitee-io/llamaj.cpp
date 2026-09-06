@@ -15,7 +15,10 @@
  */
 package io.gravitee.llama.cpp;
 
+import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,12 +40,53 @@ import java.util.Set;
  * <p>On any failure (network error, native lib not loaded, etc.) returns
  * {@code null} (never throws).
  *
+ * <p>Since llama.cpp v0.4.0 the RPC client {@code GGML_ABORT}s the whole process
+ * when it cannot connect to an endpoint ({@code rpc_dispatcher::start}), so every
+ * endpoint is TCP-probed from Java first and unreachable ones are treated as a
+ * failed query instead of reaching native code.
+ *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
 public final class RpcMemoryQuery {
 
+  /** Connect timeout for the pre-flight TCP probe of each endpoint. */
+  static final int PROBE_TIMEOUT_MS = 1000;
+
   private RpcMemoryQuery() {}
+
+  /**
+   * Checks whether a TCP connection to {@code host:port} can be opened within
+   * {@code timeoutMs}. Used to keep unreachable endpoints away from the native
+   * RPC client, which aborts the process on connection failure (llama.cpp v0.4.0+).
+   *
+   * @param endpoint "host:port" (IPv6 hosts may be bracketed, e.g. "[::1]:50052")
+   * @param timeoutMs connect timeout in milliseconds
+   * @return {@code true} if the endpoint accepted a TCP connection
+   */
+  static boolean isReachable(String endpoint, int timeoutMs) {
+    if (endpoint == null) return false;
+    String trimmed = endpoint.trim();
+    int sep = trimmed.lastIndexOf(':');
+    if (sep <= 0 || sep == trimmed.length() - 1) return false;
+    String host = trimmed.substring(0, sep);
+    if (host.startsWith("[") && host.endsWith("]")) {
+      host = host.substring(1, host.length() - 1);
+    }
+    int port;
+    try {
+      port = Integer.parseInt(trimmed.substring(sep + 1));
+    } catch (NumberFormatException e) {
+      return false;
+    }
+    if (port < 1 || port > 65535) return false;
+    try (Socket socket = new Socket()) {
+      socket.connect(new InetSocketAddress(host, port), timeoutMs);
+      return true;
+    } catch (IOException | IllegalArgumentException e) {
+      return false;
+    }
+  }
 
   /**
    * Queries GPU memory on all given RPC endpoints and returns aggregated info.
@@ -80,6 +124,11 @@ public final class RpcMemoryQuery {
 
     long totalBytes = 0;
     long totalFreeBytes = 0;
+
+    // Probe before touching native code: an unreachable endpoint would abort the JVM.
+    for (String endpoint : unique) {
+      if (!isReachable(endpoint, PROBE_TIMEOUT_MS)) return null;
+    }
 
     try (Arena arena = Arena.ofConfined()) {
       for (String endpoint : unique) {

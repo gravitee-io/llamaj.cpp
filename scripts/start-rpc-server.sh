@@ -28,11 +28,11 @@
 #   ./scripts/start-rpc-server.sh -p 50053                 # custom port
 #   ./scripts/start-rpc-server.sh -H 127.0.0.1 -p 50052   # bind to localhost only
 #   ./scripts/start-rpc-server.sh -d CPU                   # use CPU device only
-#   ./scripts/start-rpc-server.sh -v b8000                 # custom llama.cpp version
+#   ./scripts/start-rpc-server.sh -v v0.4.0                # custom llama.cpp version (vX.Y.Z or bNNNN)
 
 set -euo pipefail
 
-VERSION="b7943"
+VERSION="v0.4.0"
 HOST="0.0.0.0"
 PORT="50052"
 DEVICE=""
@@ -84,8 +84,19 @@ RPC_BINARY="$INSTALL_DIR/rpc-server"
 
 # ---- Download if not already cached ----
 if [ ! -x "$RPC_BINARY" ]; then
-  ARCHIVE_NAME="llama-${VERSION}-bin-${OS_DOWNLOAD}-${ARCH_DOWNLOAD}.tar.gz"
-  DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/${ARCHIVE_NAME}"
+  # Semver releases (v0.4.0+) carry no binaries; their nightly-tag.txt names the
+  # bNNNN tag that holds the archives (same resolution as download-native-libraries.sh).
+  RELEASE_TAG="$VERSION"
+  if [[ "$VERSION" == v* ]]; then
+    RELEASE_TAG="$(curl -fsSL "https://github.com/ggml-org/llama.cpp/releases/download/${VERSION}/nightly-tag.txt" | tr -d '[:space:]')"
+    if [ -z "$RELEASE_TAG" ]; then
+      echo "Could not resolve nightly-tag.txt for llama.cpp ${VERSION}"; exit 1
+    fi
+    echo "llama.cpp ${VERSION} binaries are published under nightly tag ${RELEASE_TAG}"
+  fi
+
+  ARCHIVE_NAME="llama-${RELEASE_TAG}-bin-${OS_DOWNLOAD}-${ARCH_DOWNLOAD}.tar.gz"
+  DOWNLOAD_URL="https://github.com/ggml-org/llama.cpp/releases/download/${RELEASE_TAG}/${ARCHIVE_NAME}"
 
   echo "Downloading llama.cpp ${VERSION} rpc-server (${OS_DOWNLOAD}/${ARCH_DOWNLOAD})..."
   echo "  ${DOWNLOAD_URL}"

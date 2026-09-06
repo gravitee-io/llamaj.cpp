@@ -15,7 +15,7 @@ llamaj.cpp ships pre-built bindings and native libraries for **macOS `aarch64`**
 ## Usage
 
 ### Shipped platforms — one Maven command
-The `macosx-aarch64` / `linux-x86_64` profiles download the right `jextract`, download the matching pre-built llama.cpp release (pinned by the `llama.cpp.version` property, currently `b9673`), run `jextract`, post-process, format, and install the artifact:
+The `macosx-aarch64` / `linux-x86_64` profiles download the right `jextract`, download the matching pre-built llama.cpp release (pinned by the `llama.cpp.version` property, currently `v0.4.0`), run `jextract`, post-process, format, and install the artifact. Semver tags (`vX.Y.Z`) carry no binaries themselves; the download script reads the release's `nightly-tag.txt` to find the `bNNNN` tag that holds the archives:
 
 ```bash
 # macOS (Apple Silicon)
