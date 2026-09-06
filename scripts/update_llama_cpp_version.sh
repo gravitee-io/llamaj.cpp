@@ -24,6 +24,7 @@ PROJECT_DIR="$HOME_DIR/llamaj.cpp"
 POM_FILE="$PROJECT_DIR/pom.xml"
 CIRCLECI_CONFIG="$PROJECT_DIR/.circleci/config.yml"
 README_FILE="$PROJECT_DIR/README.md"
+CUSTOM_BUILDS_DOC="$PROJECT_DIR/docs/custom-builds/README.md"
 
 # --- Clone llama.cpp repo ---
 echo "Cloning llama.cpp into $CLONE_DIR..."
@@ -32,12 +33,24 @@ git clone --single-branch "$REPO_URL" "$CLONE_DIR"
 # --- Get latest llama.cpp version ---
 echo "Fetching latest llama.cpp version from GitHub..."
 cd "$CLONE_DIR"
-NEW_LLAMA_CPP_VERSION=$(gh release list --limit 1 --json tagName | jq -r '.[0].tagName')
+# llama.cpp publishes semver releases (vX.Y.Z) alongside bNNNN nightlies; track the
+# newest semver release only.
+NEW_LLAMA_CPP_VERSION=$(gh release list --limit 100 --json tagName | jq -r '[.[] | select(.tagName | startswith("v"))][0].tagName')
+if [[ -z "$NEW_LLAMA_CPP_VERSION" || "$NEW_LLAMA_CPP_VERSION" == "null" ]]; then
+  echo "No semver llama.cpp release found" >&2
+  exit 1
+fi
 
 # --- Get current version from project ---
 cd "$PROJECT_DIR"
 echo "Detecting current llama.cpp version in project..."
-OLD_LLAMA_CPP_VERSION=$(grep -oP '<llama.cpp.version>\K(b[0-9]+)(?=</llama.cpp.version>)' "$POM_FILE")
+OLD_LLAMA_CPP_VERSION=$(grep -oP '<llama.cpp.version>\K(v[0-9.]+|b[0-9]+)(?=</llama.cpp.version>)' "$POM_FILE")
+# Escape dots so the sed patterns below match the literal version string.
+OLD_ESCAPED="${OLD_LLAMA_CPP_VERSION//./\\.}"
+if [[ "$OLD_LLAMA_CPP_VERSION" == "$NEW_LLAMA_CPP_VERSION" ]]; then
+  echo "Already on llama.cpp $NEW_LLAMA_CPP_VERSION, nothing to do."
+  exit 0
+fi
 
 # --- Create a branch for the update ---
 branch_name="chore/llama.cpp-$OLD_LLAMA_CPP_VERSION-to-$NEW_LLAMA_CPP_VERSION"
@@ -46,10 +59,11 @@ git checkout -b "$branch_name"
 
 # --- Update version in files ---
 echo "Updating versions from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION..."
-sed -i'' -E "s/$OLD_LLAMA_CPP_VERSION/$NEW_LLAMA_CPP_VERSION/g" "$POM_FILE"
-sed -i'' -E "s/$OLD_LLAMA_CPP_VERSION/$NEW_LLAMA_CPP_VERSION/g" "$CIRCLECI_CONFIG"
-# README badge + attribution reference the pinned llama.cpp tag (e.g. b9673).
-sed -i'' -E "s/$OLD_LLAMA_CPP_VERSION/$NEW_LLAMA_CPP_VERSION/g" "$README_FILE"
+sed -i'' -E "s/$OLD_ESCAPED/$NEW_LLAMA_CPP_VERSION/g" "$POM_FILE"
+sed -i'' -E "s/$OLD_ESCAPED/$NEW_LLAMA_CPP_VERSION/g" "$CIRCLECI_CONFIG"
+# README badge + attribution and the custom-builds doc reference the pinned llama.cpp tag (e.g. v0.4.0).
+sed -i'' -E "s/$OLD_ESCAPED/$NEW_LLAMA_CPP_VERSION/g" "$README_FILE"
+sed -i'' -E "s/$OLD_ESCAPED/$NEW_LLAMA_CPP_VERSION/g" "$CUSTOM_BUILDS_DOC"
 
 # --- Refresh the bundled llama.cpp license ---
 # Keep licenses/LICENSE-llama-cpp in sync with the version we ship
@@ -60,7 +74,7 @@ cp "$CLONE_DIR/LICENSE" "$LICENSE_DEST"
 
 # --- Commit and push changes ---
 echo "Committing and pushing changes..."
-git add "$POM_FILE" "$CIRCLECI_CONFIG" "$README_FILE" "$LICENSE_DEST"
+git add "$POM_FILE" "$CIRCLECI_CONFIG" "$README_FILE" "$CUSTOM_BUILDS_DOC" "$LICENSE_DEST"
 
 TITLE="feat(deps): update llama.cpp from $OLD_LLAMA_CPP_VERSION to $NEW_LLAMA_CPP_VERSION"
 git commit -m "$TITLE"

@@ -139,6 +139,15 @@ public final class LlamaModelParams extends MemorySegmentAware {
     return this;
   }
 
+  public LlamaLazyMode lazyMode() {
+    return LlamaLazyMode.fromValue(LlamaRuntime.lazy_mode(segment));
+  }
+
+  public LlamaModelParams lazyMode(LlamaLazyMode lazyMode) {
+    LlamaRuntime.lazy_mode(segment, lazyMode.getValue());
+    return this;
+  }
+
   public boolean checkTensors() {
     return LlamaRuntime.check_tensors(segment);
   }

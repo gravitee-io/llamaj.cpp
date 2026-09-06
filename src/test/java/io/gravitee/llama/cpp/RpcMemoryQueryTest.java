@@ -18,6 +18,9 @@ package io.gravitee.llama.cpp;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.gravitee.llama.cpp.RpcMemoryQuery.RpcMemoryInfo;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -101,14 +104,46 @@ class RpcMemoryQueryTest {
     @Test
     @DisplayName("unreachable endpoint returns null (never throws)")
     void unreachable_endpoint() {
-      // This will fail at the native call level — should return null gracefully
+      // llama.cpp v0.4.0+ aborts the process when the RPC client cannot connect,
+      // so the Java-side probe must short-circuit before the native call.
       RpcMemoryInfo result = RpcMemoryQuery.queryAll(List.of("127.0.0.1:1"));
-      // Either null (native call fails) or a result (extremely unlikely)
-      // The key assertion: no exception thrown
-      assertThat(result).satisfiesAnyOf(
-        r -> assertThat(r).isNull(),
-        r -> assertThat(r).isNotNull()
-      );
+      assertThat(result).isNull();
+    }
+  }
+
+  @Nested
+  @DisplayName("isReachable TCP probe")
+  class IsReachable {
+
+    @Test
+    @DisplayName("closed port is unreachable")
+    void closed_port() {
+      assertThat(RpcMemoryQuery.isReachable("127.0.0.1:1", 500)).isFalse();
+    }
+
+    @Test
+    @DisplayName("listening port is reachable")
+    void listening_port() throws IOException {
+      try (
+        ServerSocket server = new ServerSocket(
+          0,
+          1,
+          InetAddress.getLoopbackAddress()
+        )
+      ) {
+        String endpoint = "127.0.0.1:" + server.getLocalPort();
+        assertThat(RpcMemoryQuery.isReachable(endpoint, 500)).isTrue();
+      }
+    }
+
+    @Test
+    @DisplayName("malformed endpoints are unreachable")
+    void malformed() {
+      assertThat(RpcMemoryQuery.isReachable(null, 100)).isFalse();
+      assertThat(RpcMemoryQuery.isReachable("no-port", 100)).isFalse();
+      assertThat(RpcMemoryQuery.isReachable("host:", 100)).isFalse();
+      assertThat(RpcMemoryQuery.isReachable("host:abc", 100)).isFalse();
+      assertThat(RpcMemoryQuery.isReachable("host:70000", 100)).isFalse();
     }
   }
 }
