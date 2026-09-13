@@ -617,6 +617,27 @@ public final class LlamaRuntime {
     );
   }
 
+  public static int llama_set_adapters_lora(
+    MemorySegment ctx,
+    MemorySegment adapters,
+    long nAdapters,
+    MemorySegment scales
+  ) {
+    return llama_h(
+      "llama_set_adapters_lora",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        long.class,
+        MEM_SEG_CLASS,
+      },
+      ctx,
+      adapters,
+      nAdapters,
+      scales
+    );
+  }
+
   /* Multimodal (mtmd) functions */
 
   public static MemorySegment mtmd_init_from_file(
