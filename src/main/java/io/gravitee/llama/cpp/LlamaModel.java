@@ -57,9 +57,18 @@ public final class LlamaModel extends MemorySegmentAware implements Freeable {
     return arena.allocateFrom(modelPath.toAbsolutePath().toString());
   }
 
+  /**
+   * Loads a LoRA adapter for this model. Loading alone does not change inference: the adapter
+   * must be attached to each context with {@link LlamaContext#setLoraAdapter(LlamaLoraAdapter, float)}.
+   */
   public LlamaModel initLoraAdapter(Arena arena, Path loraPath) {
     this.loraAdapter = new LlamaLoraAdapter(arena, this, loraPath);
     return this;
+  }
+
+  /** The adapter loaded by {@link #initLoraAdapter(Arena, Path)}, or {@code null}. */
+  public LlamaLoraAdapter loraAdapter() {
+    return loraAdapter;
   }
 
   /**

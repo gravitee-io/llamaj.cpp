@@ -33,6 +33,9 @@ public final class LlamaLoraAdapter
     this(
       llama_adapter_lora_init(model.segment, getPathAsString(arena, loraPath))
     );
+    if (segment == null || segment.address() == 0) {
+      throw new LlamaException("Failed to load LoRA adapter: " + loraPath);
+    }
   }
 
   public LlamaLoraAdapter(MemorySegment segment) {

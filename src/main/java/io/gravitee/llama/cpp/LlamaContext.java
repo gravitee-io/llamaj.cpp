@@ -138,6 +138,38 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     return memory;
   }
 
+  /**
+   * Attaches a LoRA adapter to this context at the given scale, replacing any attached adapters.
+   * A loaded adapter has no effect until it is attached to the context that decodes.
+   *
+   * @param adapter the adapter, loaded for this context's model; {@code null} detaches all
+   * @param scale   the adapter strength, {@code 1.0f} as trained
+   */
+  public void setLoraAdapter(LlamaLoraAdapter adapter, float scale) {
+    checkNotFreed();
+    int rc;
+    try (Arena tmp = Arena.ofConfined()) {
+      if (adapter == null) {
+        rc = llama_set_adapters_lora(
+          segment,
+          MemorySegment.NULL,
+          0,
+          MemorySegment.NULL
+        );
+      } else {
+        rc = llama_set_adapters_lora(
+          segment,
+          tmp.allocateFrom(ValueLayout.ADDRESS, adapter.segment),
+          1,
+          tmp.allocateFrom(ValueLayout.JAVA_FLOAT, scale)
+        );
+      }
+    }
+    if (rc != 0) {
+      throw new LlamaException("Failed to set LoRA adapter on context: " + rc);
+    }
+  }
+
   public int decode(LlamaBatch batch) {
     checkNotFreed();
     return llama_decode(segment, batch.segment);
