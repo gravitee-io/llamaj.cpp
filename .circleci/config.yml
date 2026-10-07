@@ -290,7 +290,7 @@ commands:
               conventional-changelog-conventionalcommits \
       - run:
           name: Tag release version
-          command: bash -x $HOME_DIR/llamaj.cpp/scripts/release_tag.sh
+          command: bash $HOME_DIR/llamaj.cpp/scripts/release_tag.sh
       - persist_to_workspace:
           root: "/home/circleci/"
           paths: ["llamaj.cpp"]
@@ -343,7 +343,7 @@ commands:
 
             cd $HOME_DIR/llamaj.cpp/
             mvn deploy -DskipTests -Dskip.validation --no-transfer-progress -s .gravitee.azure.settings.xml \
-              -DaltDeploymentRepository=azure-artifacts-gravitee::https://pkgs.dev.azure.com/graviteeio/packages/_packaging/gravitee/maven/v1
+              -DaltDeploymentRepository=azure-artifacts-gravitee::default::https://pkgs.dev.azure.com/graviteeio/packages/_packaging/gravitee/maven/v1
 
   prepare-gpg:
     description: Prepare GPG command
