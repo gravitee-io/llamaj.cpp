@@ -405,6 +405,7 @@
                                 <exclude>README.md</exclude>
                                 <exclude>SECURITY.md</exclude>
                                 <exclude>.gravitee.settings.xml</exclude>
+                                <exclude>.gravitee.azure.settings.xml</exclude>
                                 <exclude>.jextract/**</exclude>
                                 <exclude>scripts/ci-models.txt</exclude>
                             </excludes>

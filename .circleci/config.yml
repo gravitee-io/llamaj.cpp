@@ -318,6 +318,32 @@ commands:
             cd $HOME_DIR/llamaj.cpp/
             mvn -s .gravitee.settings.xml -B -P gio-artifactory-release,gio-release deploy -DskipTests=true
 
+  maven_deploy_azure:
+    steps:
+      - attach_workspace:
+          at: .
+      - keeper/install
+      - run:
+          name: Maven Deploy
+          command: |
+            CLIENT_ID=$(ksm secret notation keeper://UryantA7MvZe8fkWwcUt8g/field/login)
+            CLIENT_SECRET=$(ksm secret notation keeper://UryantA7MvZe8fkWwcUt8g/field/password)
+            TENANT=$(ksm secret notation keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant)
+
+            # The service principal's token lives one hour, so fetch it in the job that uses it.
+            # --data-urlencode, not -d: Entra secrets often contain + & = that -d would mangle.
+            AZURE_ARTIFACTS_PAT=$(curl -sS --fail-with-body --max-time 30 -X POST \
+              "https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token" \
+              --data-urlencode "client_id=${CLIENT_ID}" \
+              --data-urlencode "client_secret=${CLIENT_SECRET}" \
+              --data-urlencode "scope=499b84ac-1321-427f-aa17-267ca6975798/.default" \
+              --data-urlencode "grant_type=client_credentials" | jq -r .access_token)
+            export AZURE_ARTIFACTS_PAT
+
+            cd $HOME_DIR/llamaj.cpp/
+            mvn deploy -DskipTests -Dskip.validation --no-transfer-progress -s .gravitee.azure.settings.xml \
+              -DaltDeploymentRepository=azure-artifacts-gravitee::https://pkgs.dev.azure.com/graviteeio/packages/_packaging/gravitee/maven/v1
+
   prepare-gpg:
     description: Prepare GPG command
     steps:
@@ -339,12 +365,18 @@ jobs:
       - keeper/env-export:
           secret-url: keeper://7CgijuGiFDSLynRJt1Dm9w/custom_field/xml
           var-name: MAVEN_SETTINGS
+      - keeper/env-export:
+          secret-url: keeper://7CgijuGiFDSLynRJt1Dm9w/custom_field/xml_azure
+          var-name: MAVEN_AZURE_SETTINGS
       - run:
-          command: echo $MAVEN_SETTINGS > .gravitee.settings.xml
+          command: |
+            echo $MAVEN_SETTINGS > .gravitee.settings.xml
+            echo $MAVEN_AZURE_SETTINGS > .gravitee.azure.settings.xml
       - persist_to_workspace:
           root: .
           paths:
             - .gravitee.settings.xml
+            - .gravitee.azure.settings.xml
 
   build_and_test_macos:
     executor: macos-executor
@@ -468,6 +500,18 @@ jobs:
       - install_dependencies_jextract
       - maven_deploy_artifactory
 
+  maven_deploy_azure:
+    executor: ubuntu_linux_x86_64
+    environment:
+      HOME_DIR: "/home/circleci/"
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+    steps:
+      - install_dependencies
+      - install_java_dependencies
+      - install_dependencies_jextract
+      - maven_deploy_azure
+
 parameters:
   gio_action:
     type: enum
@@ -549,6 +593,12 @@ workflows:
             - cicd-orchestrator
       - maven_deploy_artifactory:
           name: Maven Deploy on Artifactory
+          requires:
+            - Release Tag
+          context:
+            - cicd-orchestrator
+      - maven_deploy_azure:
+          name: Maven Deploy on Azure Artifacts
           requires:
             - Release Tag
           context:
