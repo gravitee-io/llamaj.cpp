@@ -18,6 +18,11 @@
 
 ## Installation
 
+> [!IMPORTANT]
+> Llamaj.cpp is no longer published to Maven Central, and we are working on a new way to distribute it. In the meantime, [build it from source](#build-from-source): `install` puts the artifact in your local Maven repository, where the dependency below resolves.
+>
+> To run models rather than embed the library, try [Gravitee Singularitee](https://github.com/gravitee-io/gravitee-singularitee) locally: an inference server that uses Llamaj.cpp as its default engine and sets up with a single `./install.sh` (see its [Getting started](https://github.com/gravitee-io/gravitee-singularitee/blob/main/docs/getting-started/README.md)).
+
 ```xml
 <dependency>
     <groupId>io.gravitee.llama.cpp</groupId>
