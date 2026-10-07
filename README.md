@@ -5,7 +5,7 @@
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/gravitee-io/llamaj.cpp/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/gravitee-io/llamaj.cpp/tree/main)
 [![Community Forum](https://img.shields.io/badge/Gravitee-Community%20Forum-white?logo=githubdiscussion&logoColor=white)](https://community.gravitee.io?utm_source=readme)
 
-[![llama.cpp](https://img.shields.io/badge/llama.cpp-v0.4.0-blue.svg)](https://github.com/ggml-org/llama.cpp/releases/tag/v0.4.0)
+[![llama.cpp](https://img.shields.io/badge/llama.cpp-v0.6.0-blue.svg)](https://github.com/ggml-org/llama.cpp/releases/tag/v0.6.0)
 [![llama.cpp license](https://img.shields.io/badge/llama.cpp%20license-MIT-green.svg)](./licenses/LICENSE-llama-cpp)
 
 **Llamaj.cpp** is a Java and JVM port of [llama.cpp](https://github.com/ggml-org/llama.cpp) using jextract, enabling local large language model (LLM) inference through the native foreign function & memory API. It natively supports macOS M-series and Linux x86_64 with GPU acceleration; other platforms (Windows, ARM, CUDA, …) can be added through [custom builds](./docs/custom-builds/README.md).
@@ -17,6 +17,11 @@
 - macOS M-series / Linux x86_64 (other platforms via [custom builds](./docs/custom-builds/README.md))
 
 ## Installation
+
+> [!IMPORTANT]
+> Llamaj.cpp is no longer published to Maven Central, and we are working on a new way to distribute it. In the meantime, [build it from source](#build-from-source): `install` puts the artifact in your local Maven repository, where the dependency below resolves.
+>
+> To run models rather than embed the library, try [Gravitee Singularitee](https://github.com/gravitee-io/gravitee-singularitee) locally: an inference server that uses Llamaj.cpp as its default engine and sets up with a single `./install.sh` (see its [Getting started](https://github.com/gravitee-io/gravitee-singularitee/blob/main/docs/getting-started/README.md)).
 
 ```xml
 <dependency>
