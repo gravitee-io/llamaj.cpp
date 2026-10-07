@@ -202,8 +202,8 @@ commands:
               export LD_LIBRARY_PATH="/root/.llama.cpp:$LD_LIBRARY_PATH"
             fi
 
-            mvn -s /tmp/.gravitee.settings.xml clean generate-sources -P<< parameters.os >>-<< parameters.platform >>
-            mvn -s /tmp/.gravitee.settings.xml install
+            mvn -s /tmp/.gravitee.azure.settings.xml clean generate-sources -P<< parameters.os >>-<< parameters.platform >>
+            mvn -s /tmp/.gravitee.azure.settings.xml install
 
   get_llama_cpp:
     parameters:
@@ -238,7 +238,7 @@ commands:
           name: Generate sources
           command: |
             cd $HOME_DIR/llamaj.cpp
-            cp /tmp/.gravitee.settings.xml .
+            cp /tmp/.gravitee.azure.settings.xml .
 
             OS=<< parameters.os >>
             PLATFORM=<< parameters.platform >>
@@ -251,7 +251,7 @@ commands:
               source $BASH_ENV
             fi
 
-            mvn -s .gravitee.settings.xml clean generate-sources -P$OS-$PLATFORM
+            mvn -s .gravitee.azure.settings.xml clean generate-sources -P$OS-$PLATFORM
       - when:
           condition:
             and:
@@ -316,7 +316,7 @@ commands:
           name: Maven Deploy
           command: |
             cd $HOME_DIR/llamaj.cpp/
-            mvn -s .gravitee.settings.xml -B -P gio-artifactory-release,gio-release deploy -DskipTests=true
+            mvn -s .gravitee.azure.settings.xml -B -P gio-artifactory-release,gio-release deploy -DskipTests=true
 
   maven_deploy_azure:
     steps:
@@ -363,19 +363,13 @@ jobs:
     resource_class: small
     steps:
       - keeper/env-export:
-          secret-url: keeper://7CgijuGiFDSLynRJt1Dm9w/custom_field/xml
-          var-name: MAVEN_SETTINGS
-      - keeper/env-export:
           secret-url: keeper://7CgijuGiFDSLynRJt1Dm9w/custom_field/xml_azure
           var-name: MAVEN_AZURE_SETTINGS
       - run:
-          command: |
-            echo $MAVEN_SETTINGS > .gravitee.settings.xml
-            echo $MAVEN_AZURE_SETTINGS > .gravitee.azure.settings.xml
+          command: echo $MAVEN_AZURE_SETTINGS > .gravitee.azure.settings.xml
       - persist_to_workspace:
           root: .
           paths:
-            - .gravitee.settings.xml
             - .gravitee.azure.settings.xml
 
   build_and_test_macos:
