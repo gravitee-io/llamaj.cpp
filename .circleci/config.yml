@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   gh: circleci/github-cli@2.7.2
-  keeper: gravitee-io/keeper@0.7.0
+  keeper: gravitee-io/keeper@0.7.2
 
 executors:
   macos-executor:
@@ -362,11 +362,12 @@ jobs:
       - image: "cimg/base:stable"
     resource_class: small
     steps:
-      - keeper/env-export:
-          secret-url: keeper://7CgijuGiFDSLynRJt1Dm9w/custom_field/xml_azure
-          var-name: MAVEN_AZURE_SETTINGS
+      - keeper/install
       - run:
-          command: echo $MAVEN_AZURE_SETTINGS > .gravitee.azure.settings.xml
+          name: Write Maven settings
+          # Straight to the file: env-export's unquoted heredoc expands the ${env.*} placeholders
+          # the settings hold, which fails with a bad substitution and prints them into the log.
+          command: ksm secret notation keeper://7CgijuGiFDSLynRJt1Dm9w/custom_field/xml_azure > .gravitee.azure.settings.xml
       - persist_to_workspace:
           root: .
           paths:
