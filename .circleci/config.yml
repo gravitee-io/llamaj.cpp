@@ -322,6 +322,7 @@ commands:
     steps:
       - attach_workspace:
           at: .
+      - prepare-gpg
       - keeper/install
       - run:
           name: Maven Deploy
