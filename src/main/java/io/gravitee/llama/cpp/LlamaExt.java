@@ -15,12 +15,15 @@
  */
 package io.gravitee.llama.cpp;
 
+import static io.gravitee.llama.cpp.cxx.CxxParam.BATCH_EXT;
 import static io.gravitee.llama.cpp.cxx.CxxParam.BOOL;
 import static io.gravitee.llama.cpp.cxx.CxxParam.CONST_MODEL;
 import static io.gravitee.llama.cpp.cxx.CxxParam.CTX;
+import static io.gravitee.llama.cpp.cxx.CxxParam.DECISION_ORDER;
 import static io.gravitee.llama.cpp.cxx.CxxParam.INT32;
 import static io.gravitee.llama.cpp.cxx.CxxParam.UINT32;
 import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_BOOLEAN;
 import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
@@ -32,7 +35,8 @@ import java.util.List;
 
 /**
  * Binding for llama.cpp's <b>staging</b> API ({@code src/llama-ext.h}): MTP "nextn"
- * self-speculation and EAGLE3 layer-input extraction.
+ * self-speculation, EAGLE3 layer-input extraction, and the decision order read by a joint
+ * decision head (clef).
  *
  * <p>The staging header is not inside an {@code extern "C"} block, so these functions are
  * exported from {@code libllama} under <b>C++-mangled</b> names (Itanium ABI — identical on
@@ -104,6 +108,15 @@ public final class LlamaExt {
     CONST_MODEL
   );
 
+  // Joint decision head (clef) group.
+  static final CxxFunction BATCH_EXT_SET_DECISION_ORDER = CxxFunction.of(
+    "llama_batch_ext_set_decision_order",
+    JAVA_BOOLEAN,
+    BATCH_EXT,
+    INT32,
+    DECISION_ORDER
+  );
+
   static final List<CxxFunction> MTP_GROUP = List.of(
     SET_EMBEDDINGS_NEXTN,
     GET_EMBEDDINGS_NEXTN_ITH,
@@ -115,6 +128,10 @@ public final class LlamaExt {
     GET_EMBEDDINGS_NEXTN,
     MODEL_TARGET_LAYER_IDS,
     MODEL_TARGET_LAYER_IDS_N
+  );
+
+  static final List<CxxFunction> DECISION_GROUP = List.of(
+    BATCH_EXT_SET_DECISION_ORDER
   );
 
   /* ---------------------------------- public API ---------------------------------- */
@@ -141,6 +158,35 @@ public final class LlamaExt {
   /** Per-symbol resolution report for the EAGLE3 staging group. */
   public static String eagle3ResolutionReport() {
     return CxxFunctions.report(EAGLE3_GROUP);
+  }
+
+  /** True if the decision-order staging symbol (clef) resolved against the loaded {@code libllama}. */
+  public static boolean decisionAvailable() {
+    return CxxFunctions.allResolve(DECISION_GROUP);
+  }
+
+  /** Per-symbol resolution report for the decision staging group. */
+  public static String decisionResolutionReport() {
+    return CxxFunctions.report(DECISION_GROUP);
+  }
+
+  /**
+   * Tag entry {@code idx} of an extended batch with the {@code llama_decision_order} a joint
+   * decision head reads ({@link DecisionOrder#nativeValue()}).
+   *
+   * @return false if the index is out of the batch
+   */
+  public static boolean setDecisionOrder(
+    MemorySegment batchExt,
+    int idx,
+    DecisionOrder order
+  ) {
+    return (boolean) CxxFunctions.call(
+      BATCH_EXT_SET_DECISION_ORDER,
+      batchExt,
+      idx,
+      order.nativeValue()
+    );
   }
 
   /**

@@ -59,6 +59,11 @@ class LlamaExtSymbolsTest {
     assertThat(LlamaExt.MODEL_TARGET_LAYER_IDS_N.symbol()).isEqualTo(
       "_Z30llama_model_target_layer_ids_nPK11llama_model"
     );
+
+    // Joint decision head (clef) — verified against a clang++ build of the llama-ext.h declaration.
+    assertThat(LlamaExt.BATCH_EXT_SET_DECISION_ORDER.symbol()).isEqualTo(
+      "_Z34llama_batch_ext_set_decision_orderP15llama_batch_exti20llama_decision_order"
+    );
   }
 
   @Test
@@ -76,5 +81,9 @@ class LlamaExtSymbolsTest {
       .contains("llama_get_embeddings_layer_inp")
       .contains("llama_get_embeddings_nextn")
       .contains("llama_model_target_layer_ids");
+
+    assertThat(LlamaExt.decisionResolutionReport()).contains(
+      "llama_batch_ext_set_decision_order"
+    );
   }
 }

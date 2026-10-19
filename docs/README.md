@@ -23,6 +23,7 @@ One folder per capability, one page each. Start with **[Getting Started](./getti
 | --- | --- |
 | [Embeddings](./embeddings/README.md) | Turn text into dense vectors with `LlamaEmbedder` over an embedding-mode context. |
 | [Reranking](./reranking/README.md) | Score documents against a query with `LlamaReranker` (BERT cross-encoders and Qwen3-style rerankers). |
+| [Decision Models](./decision-models/README.md) | Detect native decision models and read one raw score per option with `LlamaDecider` (openjev, lev, nimble, kev, laya, clef). |
 | [Multimodal (Vision & Audio)](./multimodal/README.md) | Attach images and audio to a prompt via `MtmdContext` (mmproj/clip projector). |
 
 ### Advanced generation

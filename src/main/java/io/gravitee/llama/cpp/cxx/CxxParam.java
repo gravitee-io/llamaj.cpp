@@ -37,6 +37,10 @@ public enum CxxParam {
   CTX("P13llama_context", ADDRESS),
   /** {@code const llama_model*} */
   CONST_MODEL("PK11llama_model", ADDRESS),
+  /** {@code llama_batch_ext*} */
+  BATCH_EXT("P15llama_batch_ext", ADDRESS),
+  /** {@code enum llama_decision_order} (unscoped enum, passed as int) */
+  DECISION_ORDER("20llama_decision_order", JAVA_INT),
   /** {@code bool} */
   BOOL("b", JAVA_BOOLEAN),
   /** {@code int32_t} */

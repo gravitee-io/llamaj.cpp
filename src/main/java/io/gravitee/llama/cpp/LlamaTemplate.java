@@ -33,6 +33,21 @@ public final class LlamaTemplate extends MemorySegmentAware {
   }
 
   /**
+   * A named template of the model ({@code tokenizer.chat_template.<name>}), e.g. {@code "tool_use"}
+   * or the {@code "systemone"} prompt of a decision model. {@link #templateString()} returns
+   * {@code null} if the model has no template of that name.
+   *
+   * @param arena      Used to allocate the name C string
+   * @param llamaModel The model
+   * @param name       The template name
+   */
+  public LlamaTemplate(Arena arena, LlamaModel llamaModel, String name) {
+    super(
+      llama_model_chat_template(llamaModel.segment, arena.allocateFrom(name))
+    );
+  }
+
+  /**
    * Returns the raw Jinja2 chat template string from the model.
    * Returns {@code null} if the model has no chat template.
    */

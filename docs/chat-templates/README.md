@@ -6,7 +6,7 @@
 Instruction-tuned GGUF models ship with a chat template (e.g. Qwen3's `<|im_start|>` / `<|im_end|>` markers) that defines how `system`, `user`, and `assistant` turns are formatted. `LlamaTemplate` reads that template from the model and applies it to a `LlamaChatMessages` list, returning the formatted prompt string you then tokenize and feed to a `LlamaContext`. Use it whenever you generate from a chat/instruct model so the prompt matches what the model was trained on.
 
 ## Key types
-- `LlamaTemplate` — wraps the model's chat template; `applyTemplate(...)` formats messages, `templateString()` returns the raw Jinja2 template.
+- `LlamaTemplate` — wraps the model's chat template; `applyTemplate(...)` formats messages, `templateString()` returns the raw Jinja2 template. `new LlamaTemplate(arena, model, name)` loads a named template instead (e.g. `"tool_use"`, or the `"systemone"` prompt of a [decision model](../decision-models/README.md)); `templateString()` is `null` if the model has none.
 - `LlamaChatMessage` — one message, built from an `Arena`/allocator, a `Role`, and a `String` content.
 - `LlamaChatMessages` — an ordered, contiguous native array of `LlamaChatMessage` passed to `applyTemplate`.
 - `Role` — enum of the supported roles: `SYSTEM`, `USER`, `ASSISTANT`.

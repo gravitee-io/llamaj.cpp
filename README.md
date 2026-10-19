@@ -2,7 +2,6 @@
 
 [![llamaj.cpp](https://img.shields.io/github/v/release/gravitee-io/llamaj.cpp?label=llamaj.cpp&color=orange&sort=semver)](https://github.com/gravitee-io/llamaj.cpp/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE.txt)
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/gravitee-io/llamaj.cpp/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/gravitee-io/llamaj.cpp/tree/main)
 [![Community Forum](https://img.shields.io/badge/Gravitee-Community%20Forum-white?logo=githubdiscussion&logoColor=white)](https://community.gravitee.io?utm_source=readme)
 
 [![llama.cpp](https://img.shields.io/badge/llama.cpp-v0.6.0-blue.svg)](https://github.com/ggml-org/llama.cpp/releases/tag/v0.6.0)
@@ -50,6 +49,7 @@ Full documentation lives in **[`docs/`](./docs/README.md)** — one page per cap
 ### Retrieval & multimodal
 - **[Embeddings](./docs/embeddings/README.md)** — dense vectors with `LlamaEmbedder`.
 - **[Reranking](./docs/reranking/README.md)** — score documents against a query with `LlamaReranker`.
+- **[Decision Models](./docs/decision-models/README.md)**: raw per-option scores from native decision models with `LlamaDecider`.
 - **[Multimodal (Vision & Audio)](./docs/multimodal/README.md)** — attach images and audio via `MtmdContext`.
 
 ### Advanced generation

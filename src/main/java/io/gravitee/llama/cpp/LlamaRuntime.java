@@ -2197,6 +2197,91 @@ public final class LlamaRuntime {
     return llama_h("llama_vocab_eos", new Class<?>[] { MEM_SEG_CLASS }, vocab);
   }
 
+  public static int llama_vocab_sep(MemorySegment vocab) {
+    return llama_h("llama_vocab_sep", new Class<?>[] { MEM_SEG_CLASS }, vocab);
+  }
+
+  public static int llama_vocab_mask(MemorySegment vocab) {
+    return llama_h("llama_vocab_mask", new Class<?>[] { MEM_SEG_CLASS }, vocab);
+  }
+
+  /* Extended batch (llama_batch_ext) */
+
+  /** A new extended batch sized for the context, or NULL on error. */
+  public static MemorySegment llama_batch_ext_init(MemorySegment ctx) {
+    return llama_h(
+      "llama_batch_ext_init",
+      new Class<?>[] { MEM_SEG_CLASS },
+      ctx
+    );
+  }
+
+  public static void llama_batch_ext_free(MemorySegment batch) {
+    llama_h("llama_batch_ext_free", new Class<?>[] { MEM_SEG_CLASS }, batch);
+  }
+
+  /** Adds a token to the batch; returns its batch index, or a negative error code. */
+  public static int llama_batch_ext_add_token(
+    MemorySegment batch,
+    int seqId,
+    int token
+  ) {
+    return llama_h(
+      "llama_batch_ext_add_token",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class },
+      batch,
+      seqId,
+      token
+    );
+  }
+
+  /** Sets the position of entry {@code idx}; {@code pos} points to one llama_pos per dimension. */
+  public static boolean llama_batch_ext_set_pos(
+    MemorySegment batch,
+    int idx,
+    MemorySegment pos
+  ) {
+    return llama_h(
+      "llama_batch_ext_set_pos",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, MEM_SEG_CLASS },
+      batch,
+      idx,
+      pos
+    );
+  }
+
+  public static boolean llama_batch_ext_set_output_embd(
+    MemorySegment batch,
+    int idx,
+    boolean value
+  ) {
+    return llama_h(
+      "llama_batch_ext_set_output_embd",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, boolean.class },
+      batch,
+      idx,
+      value
+    );
+  }
+
+  /** {@code llama_process_type}: {@code LLAMA_PROCESS_TYPE_DECODE}. */
+  public static final int LLAMA_PROCESS_TYPE_DECODE = 1;
+
+  /** Evaluates an extended batch; return values are the same as llama_decode(). */
+  public static int llama_process(
+    MemorySegment ctx,
+    int type,
+    MemorySegment batch
+  ) {
+    return llama_h(
+      "llama_process",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, MEM_SEG_CLASS },
+      ctx,
+      type,
+      batch
+    );
+  }
+
   public static MemorySegment llama_vocab_get_text(
     MemorySegment vocab,
     int token
