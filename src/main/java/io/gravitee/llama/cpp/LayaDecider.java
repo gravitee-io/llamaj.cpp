@@ -52,9 +52,14 @@ public final class LayaDecider extends LlamaDecider {
       if (markerToken < 0 || sepToken < 0) {
         throw new LlamaException("decision model has no mask or sep token");
       }
-      var arch = model.metaVal(arena, "general.architecture");
       this.maxHeadTokens = Optional.ofNullable(
-        model.metaVal(arena, arch + ".decision.max_head_tokens")
+        withScratch(scratch ->
+          model.metaVal(
+            scratch,
+            model.metaVal(scratch, "general.architecture") +
+              ".decision.max_head_tokens"
+          )
+        )
       )
         .flatMap(LayaDecider::parsePositive)
         .orElseThrow(() ->
@@ -68,7 +73,7 @@ public final class LayaDecider extends LlamaDecider {
   /**
    * Creates the decider of a laya model.
    *
-   * @param arena   Arena used for the context params and metadata strings
+   * @param arena   Arena that owns the decider's context
    * @param model   Pre-loaded model (not freed on {@link #close()})
    * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
    * @throws LlamaException if the model is not a laya model
@@ -78,7 +83,7 @@ public final class LayaDecider extends LlamaDecider {
     LlamaModel model,
     Options options
   ) {
-    requireFamily(arena, model, Set.of(DecisionType.LAYA));
+    requireFamily(model, Set.of(DecisionType.LAYA));
     return new LayaDecider(arena, model, options);
   }
 

@@ -48,7 +48,7 @@ public final class ClefDecider extends LlamaDecider {
   /**
    * Creates the decider of a clef model.
    *
-   * @param arena   Arena used for the context params and metadata strings
+   * @param arena   Arena that owns the decider's context
    * @param model   Pre-loaded model (not freed on {@link #close()})
    * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
    * @throws LlamaException if the model is not a clef model
@@ -58,7 +58,7 @@ public final class ClefDecider extends LlamaDecider {
     LlamaModel model,
     Options options
   ) {
-    requireFamily(arena, model, Set.of(DecisionType.CLEF));
+    requireFamily(model, Set.of(DecisionType.CLEF));
     return new ClefDecider(arena, model, options);
   }
 

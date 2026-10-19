@@ -37,7 +37,9 @@ public final class KevDecider extends LlamaDecider {
   private KevDecider(Arena arena, LlamaModel model, Options options) {
     super(arena, model, DecisionType.KEV, embeddingParams(arena, options));
     try {
-      int[] box = tokenize(arena, "<|" + "box_end|>", true);
+      int[] box = withScratch(scratch ->
+        tokenize(scratch, "<|" + "box_end|>", true)
+      );
       if (box.length != 1) {
         throw new LlamaException("decision model has no <|box_end|> token");
       }
@@ -50,7 +52,7 @@ public final class KevDecider extends LlamaDecider {
   /**
    * Creates the decider of a kev model.
    *
-   * @param arena   Arena used for the context params and metadata strings
+   * @param arena   Arena that owns the decider's context
    * @param model   Pre-loaded model (not freed on {@link #close()})
    * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
    * @throws LlamaException if the model is not a kev model
@@ -60,7 +62,7 @@ public final class KevDecider extends LlamaDecider {
     LlamaModel model,
     Options options
   ) {
-    requireFamily(arena, model, Set.of(DecisionType.KEV));
+    requireFamily(model, Set.of(DecisionType.KEV));
     return new KevDecider(arena, model, options);
   }
 

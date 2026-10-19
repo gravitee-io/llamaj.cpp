@@ -50,7 +50,6 @@ import org.junit.jupiter.api.Test;
  */
 class LlamaDeciderTest extends LlamaCppTest {
 
-  // Split so prettier-java does not lex "|>" as a token.
   private static final String IM_START = "<|" + "im_start|>";
   private static final String IM_END = "<|" + "im_end|>";
 
@@ -111,7 +110,6 @@ class LlamaDeciderTest extends LlamaCppTest {
         .extracting(LabelDecider.Label::code)
         .containsExactlyElementsOf(codes);
 
-      // The label is one token right after a {"sentiment": " prefill.
       var prompt = chat(
         "Classify the sentiment as positive, negative or neutral.",
         "The delivery was late and the box was crushed.",
@@ -123,8 +121,115 @@ class LlamaDeciderTest extends LlamaCppTest {
       assertThat(scores.get(0)).hasSize(3);
       assertThat(scores.get(1)).hasSize(2);
       assertFinite(scores.get(0));
-      // Fewer options read the same leading labels.
       assertThat(scores.get(1)[0]).isCloseTo(scores.get(0)[0], offset(0.05f));
+    }
+  }
+
+  @Test
+  void custom_shared_prefix_scores_match_isolated_scores() {
+    var model = track(
+      new LlamaModel(
+        arena,
+        getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD),
+        new LlamaModelParams(arena)
+      )
+    );
+    String prefill = "{\"sentiment\": \"";
+    List<String> codes = List.of("positive", "negative", "neutral");
+    List<TextPrompt> prompts = Stream.of(
+      "The delivery was late and the box was crushed.",
+      "Fantastic quality, I love it and would buy it again.",
+      "The parcel arrived on Tuesday.",
+      "Terrible support, they never answered my emails."
+    )
+      .map(review ->
+        TextPrompt.of(
+          chat(
+            "Classify the sentiment as positive, negative or neutral.",
+            review,
+            prefill
+          ),
+          codes.size()
+        )
+      )
+      .toList();
+
+    var defaults = LlamaDecider.Options.defaults();
+    List<float[]> oneGroup = scoreCustom(
+      model,
+      defaults,
+      prefill,
+      codes,
+      prompts
+    );
+    List<float[]> twoGroups = scoreCustom(
+      model,
+      defaults.withNSeqMax(3),
+      prefill,
+      codes,
+      prompts
+    );
+    List<float[]> isolated = scoreCustom(
+      model,
+      defaults.withNSeqMax(1),
+      prefill,
+      codes,
+      prompts
+    );
+
+    IntStream.range(0, prompts.size()).forEach(i -> {
+      assertSameDecision(
+        oneGroup.get(i),
+        isolated.get(i),
+        "one group, prompt %d".formatted(i)
+      );
+      assertSameDecision(
+        twoGroups.get(i),
+        isolated.get(i),
+        "two groups, prompt %d".formatted(i)
+      );
+    });
+    assertThat(isolated.get(0)[1]).isGreaterThan(isolated.get(0)[0]);
+    assertThat(isolated.get(1)[0]).isGreaterThan(isolated.get(1)[1]);
+    assertThat(isolated.get(3)[1]).isGreaterThan(isolated.get(3)[0]);
+  }
+
+  @Test
+  void custom_codes_resolve_in_context_like_standalone_on_a_bpe_vocab() {
+    var model = track(
+      new LlamaModel(
+        arena,
+        getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD),
+        new LlamaModelParams(arena)
+      )
+    );
+    var options = LlamaDecider.Options.defaults();
+    List<String> codes = List.of("positive", "negative", "neutral");
+    try (
+      var standalone = LabelDecider.custom(arena, model, options, codes);
+      var inContext = LabelDecider.custom(
+        arena,
+        model,
+        options,
+        "{\"sentiment\": \"",
+        codes
+      )
+    ) {
+      assertThat(inContext.labels()).isEqualTo(standalone.labels());
+    }
+  }
+
+  private List<float[]> scoreCustom(
+    LlamaModel model,
+    LlamaDecider.Options options,
+    String context,
+    List<String> codes,
+    List<TextPrompt> prompts
+  ) {
+    try (
+      var decider = LabelDecider.custom(arena, model, options, context, codes)
+    ) {
+      return decider.scoreAll(prompts);
     }
   }
 
@@ -266,7 +371,6 @@ class LlamaDeciderTest extends LlamaCppTest {
       TextPrompt.of(prompt("Requested field: \"size\""), 2)
     );
 
-    // LlamaDecider is not MemorySegmentAware, so track() would not free it: close it explicitly.
     List<float[]> withSharing;
     try (
       var shared = LabelDecider.create(
@@ -351,7 +455,6 @@ class LlamaDeciderTest extends LlamaCppTest {
         LlamaDecider.Options.defaults()
       )
     ) {
-      // [question] [sep] ([marker] option)* [sep] state [sep]
       int[] sep = { decider.sepToken() };
       int[] mask = { decider.markerToken() };
       int[] tokens = Stream.of(
@@ -423,7 +526,6 @@ class LlamaDeciderTest extends LlamaCppTest {
     DecisionType.NIMBLE
   );
 
-  /** Loads LLAMAJ_DECISION_MODEL, skipping the test unless it is set and of one of the families. */
   private LlamaModel decisionModel(Set<DecisionType> families) {
     var path = System.getenv("LLAMAJ_DECISION_MODEL");
     assumeTrue(
@@ -441,6 +543,42 @@ class LlamaDeciderTest extends LlamaCppTest {
     return model;
   }
 
+  private static void assertSameDecision(
+    float[] actual,
+    float[] expected,
+    String description
+  ) {
+    assertThat(argmax(actual))
+      .as("%s: choice", description)
+      .isEqualTo(argmax(expected));
+    assertThat(logSoftmax(actual))
+      .as("%s: log-probabilities", description)
+      .containsExactly(logSoftmax(expected), offset(0.5));
+  }
+
+  private static int argmax(float[] scores) {
+    return IntStream.range(0, scores.length)
+      .reduce((a, b) -> scores[b] > scores[a] ? b : a)
+      .orElseThrow();
+  }
+
+  private static double[] logSoftmax(float[] scores) {
+    double max = IntStream.range(0, scores.length)
+      .mapToDouble(i -> scores[i])
+      .max()
+      .orElseThrow();
+    double logSum =
+      max +
+      Math.log(
+        IntStream.range(0, scores.length)
+          .mapToDouble(i -> Math.exp(scores[i] - max))
+          .sum()
+      );
+    return IntStream.range(0, scores.length)
+      .mapToDouble(i -> scores[i] - logSum)
+      .toArray();
+  }
+
   private static void assertFinite(float[] scores) {
     IntStream.range(0, scores.length).forEach(i ->
       assertThat(Float.isFinite(scores[i])).as("score %d", i).isTrue()
@@ -455,7 +593,6 @@ class LlamaDeciderTest extends LlamaCppTest {
     );
   }
 
-  /** A ChatML exchange with thinking disabled, the assistant turn prefilled. */
   private static String chat(String system, String user, String prefill) {
     return String.join(
       "\n",

@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -91,14 +92,13 @@ public abstract sealed class LlamaDecider
     this.model = model;
     this.type = type;
     this.vocab = new LlamaVocab(model);
+    // Metadata strings are scratch: only the context lives in the caller's arena.
     this.temperatures = Collections.unmodifiableMap(
-      readTemperatures(arena, model)
+      withScratch(scratch -> readTemperatures(scratch, model))
     );
-    this.template = new LlamaTemplate(
-      arena,
-      model,
-      "systemone"
-    ).templateString();
+    this.template = withScratch(scratch ->
+      new LlamaTemplate(scratch, model, "systemone").templateString()
+    );
     this.context = new LlamaContext(arena, model, params);
   }
 
@@ -107,7 +107,7 @@ public abstract sealed class LlamaDecider
    * ({@link LabelDecider#create}, {@link KevDecider#create}, {@link LayaDecider#create},
    * {@link ClefDecider#create}).
    *
-   * @param arena   Arena used for the context params and metadata strings
+   * @param arena   Arena that owns the decider's context
    * @param model   Pre-loaded model (not freed on {@link #close()})
    * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
    * @throws LlamaException if the model is not a decision model, or of an unknown family
@@ -117,7 +117,7 @@ public abstract sealed class LlamaDecider
     LlamaModel model,
     Options options
   ) {
-    return switch (familyOf(arena, model)) {
+    return switch (familyOf(model)) {
       case OPENJEV, LEV, NIMBLE -> LabelDecider.create(arena, model, options);
       case KEV -> KevDecider.create(arena, model, options);
       case LAYA -> LayaDecider.create(arena, model, options);
@@ -224,21 +224,31 @@ public abstract sealed class LlamaDecider
   }
 
   /** The model's decision family, read from its metadata. */
-  static DecisionType familyOf(Arena arena, LlamaModel model) {
-    return DecisionType.of(arena, model).orElseThrow(() ->
-      new LlamaException(
-        "not a decision model: no <arch>.decision.type metadata"
-      )
+  static DecisionType familyOf(LlamaModel model) {
+    return withScratch(scratch -> DecisionType.of(scratch, model)).orElseThrow(
+      () ->
+        new LlamaException(
+          "not a decision model: no <arch>.decision.type metadata"
+        )
     );
+  }
+
+  /**
+   * Runs {@code work} with a confined arena closed right after, for allocations that must not
+   * outlive a call (metadata strings, tokenizer buffers) in the caller's arena.
+   */
+  static <T> T withScratch(Function<Arena, T> work) {
+    try (var scratch = Arena.ofConfined()) {
+      return work.apply(scratch);
+    }
   }
 
   /** The model's decision family, which must be one of {@code allowed}. */
   static DecisionType requireFamily(
-    Arena arena,
     LlamaModel model,
     Set<DecisionType> allowed
   ) {
-    var type = familyOf(arena, model);
+    var type = familyOf(model);
     if (!allowed.contains(type)) {
       throw new LlamaException(
         "the model is a %s decision model, not one of %s".formatted(

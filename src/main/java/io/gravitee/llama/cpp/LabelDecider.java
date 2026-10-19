@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -78,7 +79,7 @@ public final class LabelDecider extends LlamaDecider {
   ) {
     super(arena, model, type, params(arena, options));
     try {
-      this.labels = familyLabels(arena, type);
+      this.labels = withScratch(scratch -> familyLabels(scratch, type));
     } catch (RuntimeException e) {
       throw failConstruction(e);
     }
@@ -88,11 +89,14 @@ public final class LabelDecider extends LlamaDecider {
     Arena arena,
     LlamaModel model,
     Options options,
+    String context,
     List<String> codes
   ) {
     super(arena, model, DecisionType.CUSTOM, params(arena, options));
     try {
-      this.labels = customLabels(arena, codes);
+      this.labels = withScratch(scratch ->
+        customLabels(scratch, context, codes)
+      );
     } catch (RuntimeException e) {
       throw failConstruction(e);
     }
@@ -101,7 +105,7 @@ public final class LabelDecider extends LlamaDecider {
   /**
    * Creates the decider of an openjev, lev or nimble model.
    *
-   * @param arena   Arena used for the context params and metadata strings
+   * @param arena   Arena that owns the decider's context
    * @param model   Pre-loaded model (not freed on {@link #close()})
    * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
    * @throws LlamaException if the model is not of one of these families
@@ -112,7 +116,6 @@ public final class LabelDecider extends LlamaDecider {
     Options options
   ) {
     var type = requireFamily(
-      arena,
       model,
       EnumSet.of(DecisionType.OPENJEV, DecisionType.LEV, DecisionType.NIMBLE)
     );
@@ -123,9 +126,15 @@ public final class LabelDecider extends LlamaDecider {
    * Turns any causal model into a decision model scored on caller-chosen label tokens: option
    * {@code i} scores the logit of {@code codes.get(i)} at the last prompt token. The prompt must end
    * where the code is the next token — e.g. {@code Answer: (} for {@code "A"}, or a
-   * {@code {"sentiment": "} prefill for {@code "positive"}.
+   * <code>&#123;"sentiment": "</code> prefill for {@code "positive"}.
+   * <p>
+   * Each code is tokenized on its own. That matches the token the model predicts on BPE vocabs
+   * (Qwen, Llama 3, Gemma); on SentencePiece vocabs with {@code add_space_prefix} (Llama 2,
+   * Mistral) a standalone {@code "A"} becomes {@code "▁A"}, a different token. Use
+   * {@link #custom(Arena, LlamaModel, Options, String, List)} there, which resolves each code where
+   * the prompt ends.
    *
-   * @param arena   Arena used for the context params
+   * @param arena   Arena that owns the decider's context
    * @param model   Pre-loaded model (not freed on {@link #close()}); it needs no decision metadata
    * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
    * @param codes   The label text of each option, in option order; each must be one distinct token
@@ -137,7 +146,32 @@ public final class LabelDecider extends LlamaDecider {
     Options options,
     List<String> codes
   ) {
-    return new LabelDecider(arena, model, options, codes);
+    return new LabelDecider(arena, model, options, null, codes);
+  }
+
+  /**
+   * Same as {@link #custom(Arena, LlamaModel, Options, List)}, with each code resolved where the
+   * prompt ends: the code's token is the one {@code context + code} adds after the tokens of
+   * {@code context}. Pass the tail of the rendered prompt (e.g. {@code "Answer: ("} or
+   * <code>&#123;"sentiment": "</code>); this is the reliable form on every vocab type.
+   *
+   * @param arena   Arena that owns the decider's context
+   * @param model   Pre-loaded model (not freed on {@link #close()}); it needs no decision metadata
+   * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
+   * @param context The text the prompts end with, tokenized with special-token parsing
+   * @param codes   The label text of each option, in option order
+   * @throws LlamaException if a code does not add exactly one token after {@code context}, or two
+   *                        codes share a token
+   */
+  public static LabelDecider custom(
+    Arena arena,
+    LlamaModel model,
+    Options options,
+    String context,
+    List<String> codes
+  ) {
+    Objects.requireNonNull(context, "context");
+    return new LabelDecider(arena, model, options, context, codes);
   }
 
   private static LlamaContextParams params(Arena arena, Options options) {
@@ -330,13 +364,24 @@ public final class LabelDecider extends LlamaDecider {
     batch.clear();
   }
 
-  private List<Label> customLabels(Arena arena, List<String> codes) {
+  private List<Label> customLabels(
+    Arena arena,
+    String context,
+    List<String> codes
+  ) {
     if (codes.isEmpty()) {
       throw new LlamaException("a custom decider needs at least one code");
     }
     var labels = codes
       .stream()
-      .map(code -> new Label(code, singleToken(arena, code)))
+      .map(code ->
+        new Label(
+          code,
+          context == null
+            ? singleToken(arena, code)
+            : tokenAfter(arena, context, code)
+        )
+      )
       .toList();
     var seen = new HashSet<Integer>();
     labels
@@ -377,6 +422,25 @@ public final class LabelDecider extends LlamaDecider {
         "not a label family: %s".formatted(type)
       );
     };
+  }
+
+  /** The one token {@code context + code} adds after the tokens of {@code context}. */
+  private int tokenAfter(Arena arena, String context, String code) {
+    int[] before = tokenize(arena, context, true);
+    int[] after = tokenize(arena, context + code, true);
+    if (
+      after.length != before.length + 1 ||
+      Arrays.mismatch(before, after) != before.length
+    ) {
+      throw new LlamaException(
+        "code '%s' does not add exactly one token after the context (%d -> %d tokens)".formatted(
+          code,
+          before.length,
+          after.length
+        )
+      );
+    }
+    return after[before.length];
   }
 
   private int singleToken(Arena arena, String code) {

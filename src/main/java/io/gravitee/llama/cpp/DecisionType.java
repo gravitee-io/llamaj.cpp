@@ -20,8 +20,8 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * The family of a native decision model: a classifier that answers typed questions
- * ({@link DecisionQuestion}) about some input in one forward pass, without generating tokens.
+ * The family of a native decision model: a classifier that scores the options of a rendered prompt
+ * ({@link DecisionPrompt}) in one forward pass, without generating tokens.
  * <p>
  * A GGUF declares it with the {@code <arch>.decision.type} metadata key; a model without that key
  * is an ordinary model. Each family reads its scores differently (mirrors llama.cpp's
@@ -34,7 +34,9 @@ import java.util.Optional;
  *   <li>{@link #LAYA} — score of one marker token per option, read from the embeddings output</li>
  *   <li>{@link #CLEF} — a joint head that decides all the questions of a request in one prompt</li>
  * </ul>
- * {@link LlamaDecider} currently runs {@link #NIMBLE} only.
+ * Each family has its decider: {@link LabelDecider} (openjev, lev, nimble, and {@link #CUSTOM}),
+ * {@link KevDecider}, {@link LayaDecider} and {@link ClefDecider}; {@link LlamaDecider#create}
+ * picks it from the metadata.
  *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team

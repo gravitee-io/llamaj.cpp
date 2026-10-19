@@ -15,7 +15,7 @@ Rendering the template and turning scores into answers are left to the caller, t
 | Family | Factory | Prompt | Score of an option |
 | --- | --- | --- | --- |
 | `openjev`, `lev`, `nimble` | `LabelDecider.create(...)` | `TextPrompt` | logit of its label token at the last prompt token |
-| any model (`CUSTOM`) | `LabelDecider.custom(..., codes)` | `TextPrompt` | logit of its caller-chosen code token at the last prompt token |
+| any model (`CUSTOM`) | `LabelDecider.custom(..., context, codes)` | `TextPrompt` | logit of its caller-chosen code token at the last prompt token |
 | `kev` | `KevDecider.create(...)` | `TextPrompt` with `nOptions` markers | dot product of the last token's hidden state with the hidden state at its `<\|box_end\|>` marker |
 | `laya` | `LayaDecider.create(...)` | `LayaPrompt` (tokens, `QuestionType`) | the question type's column of the hidden state at its mask-token marker |
 | `clef` | `ClefDecider.create(...)` | `ClefPrompt` (tokens, a `DecisionOrder` per token) | joint head output for its `DecisionOrder.OPTION` span |
@@ -76,22 +76,30 @@ For a laya prompt, build `[cls] question [sep] ([mask] option)* [sep] state [sep
 `maxHeadTokens()`, from `LayaDecider.markerToken()` and `sepToken()`.
 
 ### Any model as a decision model
-`LabelDecider.custom(arena, model, options, codes)` scores **any** causal model on caller-chosen
-label tokens. The model needs no decision metadata, and `type()` is `CUSTOM`. The prompt must end
-where a code is the next token, and each code must be one distinct token there (construction
-checks both, tokenizing the code on its own):
+`LabelDecider.custom(...)` scores **any** causal model on caller-chosen label tokens. The model
+needs no decision metadata, and `type()` is `CUSTOM`. The prompt must end where a code is the next
+token, and each code must be one distinct token there. Give the decider the text the prompts end
+with, and it resolves each code in that context:
 
 ```java
 // A model that answers {"sentiment": "<positive|negative|neutral>"}: prefill up to the label.
+String prefill = "{\"sentiment\": \"";
 try (var decider = LabelDecider.custom(arena, model, LlamaDecider.Options.defaults(),
-        List.of("positive", "negative", "neutral"))) {
+        prefill, List.of("positive", "negative", "neutral"))) {
     decider.context().setLoraAdapter(model.loraAdapter(), 1.0f); // optional LoRA
-    float[] sentiment = decider.score(TextPrompt.of(renderedChat + "{\"sentiment\": \"", 3));
+    float[] sentiment = decider.score(TextPrompt.of(renderedChat + prefill, 3));
 }
 ```
 
-Pick codes for how the prompt ends: `Answer: (` → `"A"`, `"B"`…; `Answer:` → `" Positive"` (with the
-leading space); a JSON prefill → the bare word. Avoid a prompt ending in a space.
+Each code's token is the one `context + code` adds after the tokens of `context`; construction
+fails if a code adds more than one token there, or if two codes share a token.
+`custom(arena, model, options, codes)`, without the context, tokenizes each code on its own. That
+is the same token on BPE vocabs (Qwen, Llama 3, Gemma), but on SentencePiece vocabs with
+`add_space_prefix` (Llama 2, Mistral) a standalone `"A"` becomes `"▁A"`, which is not what the
+model predicts after `Answer: (`. Prefer the context form.
+
+Pick codes for how the prompt ends: `Answer: (` → `"A"`, `"B"`…; a JSON prefill → the bare word.
+Avoid a prompt ending in a space.
 
 ## Configuration
 | Option | Default | Effect |
