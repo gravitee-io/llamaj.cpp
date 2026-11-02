@@ -38,6 +38,7 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   private final int nSeqMax;
   private final boolean kvUnified;
   private final LlamaMemory memory;
+  private final StateCheckpoints stateCheckpoints;
 
   public LlamaContext(
     Arena arena,
@@ -58,6 +59,10 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     // shared between sequences at all (see LlamaMemory#copyPrefix).
     this.kvUnified = params.kvUnified();
     this.memory = new LlamaMemory(this);
+    this.stateCheckpoints = new StateCheckpoints(
+      this,
+      model.hasRecurrentState()
+    );
   }
 
   /**
@@ -139,8 +144,19 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   }
 
   /**
+   * The per-sequence recurrent-state checkpoints that let prefix reuse work on recurrent and
+   * hybrid models. Configure them with {@link StateCheckpoints#setMaxPerSequence(int)} and
+   * {@link StateCheckpoints#setInterval(int)}; on attention-only models they are never taken.
+   */
+  public StateCheckpoints stateCheckpoints() {
+    checkNotFreed();
+    return stateCheckpoints;
+  }
+
+  /**
    * Attaches a LoRA adapter to this context at the given scale, replacing any attached adapters.
-   * A loaded adapter has no effect until it is attached to the context that decodes.
+   * A loaded adapter has no effect until it is attached to the context that decodes. Clears the
+   * context's {@link #stateCheckpoints() state checkpoints}, taken under the previous adapters.
    *
    * @param adapter the adapter, loaded for this context's model; {@code null} detaches all
    * @param scale   the adapter strength, {@code 1.0f} as trained
@@ -168,6 +184,7 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     if (rc != 0) {
       throw new LlamaException("Failed to set LoRA adapter on context: " + rc);
     }
+    stateCheckpoints.clear();
   }
 
   public int decode(LlamaBatch batch) {
@@ -407,6 +424,7 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   @Override
   public void free() {
     checkNotFreed();
+    stateCheckpoints.free();
     markFreed();
     llama_free(this);
   }

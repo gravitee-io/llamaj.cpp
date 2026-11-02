@@ -1352,6 +1352,34 @@ public final class LlamaRuntime {
   }
 
   /**
+   * Whether the model is purely recurrent.
+   *
+   * @param model A MemorySegment handle to the loaded llama_model.
+   * @return {@code true} for a recurrent architecture.
+   */
+  public static boolean llama_model_is_recurrent(MemorySegment model) {
+    return llama_h(
+      "llama_model_is_recurrent",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  /**
+   * Whether the model mixes attention and recurrent layers.
+   *
+   * @param model A MemorySegment handle to the loaded llama_model.
+   * @return {@code true} for a hybrid architecture.
+   */
+  public static boolean llama_model_is_hybrid(MemorySegment model) {
+    return llama_h(
+      "llama_model_is_hybrid",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  /**
    * Returns the number of attention heads in the model.
    *
    * @param model A MemorySegment handle to the loaded llama_model.
@@ -2138,6 +2166,97 @@ public final class LlamaRuntime {
       seqId,
       p0,
       p1
+    );
+  }
+
+  /**
+   * Size in bytes of the serialized state of one sequence.
+   *
+   * @param ctx   A MemorySegment handle to the llama_context.
+   * @param seqId The sequence id.
+   * @param flags {@code llama_state_seq_flags}, e.g. {@code LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY}.
+   * @return The size in bytes, {@code 0} on failure.
+   */
+  public static long llama_state_seq_get_size_ext(
+    MemorySegment ctx,
+    int seqId,
+    int flags
+  ) {
+    return llama_h(
+      "llama_state_seq_get_size_ext",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class },
+      ctx,
+      seqId,
+      flags
+    );
+  }
+
+  /**
+   * Serializes the state of one sequence into {@code dst}.
+   *
+   * @param ctx   A MemorySegment handle to the llama_context.
+   * @param dst   Destination buffer of at least {@code size} bytes.
+   * @param size  Capacity of {@code dst}.
+   * @param seqId The sequence id.
+   * @param flags {@code llama_state_seq_flags}.
+   * @return Bytes written, {@code 0} on failure.
+   */
+  public static long llama_state_seq_get_data_ext(
+    MemorySegment ctx,
+    MemorySegment dst,
+    long size,
+    int seqId,
+    int flags
+  ) {
+    return llama_h(
+      "llama_state_seq_get_data_ext",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        long.class,
+        int.class,
+        int.class,
+      },
+      ctx,
+      dst,
+      size,
+      seqId,
+      flags
+    );
+  }
+
+  /**
+   * Restores the state of one sequence from a buffer filled by
+   * {@link #llama_state_seq_get_data_ext}.
+   *
+   * @param ctx       A MemorySegment handle to the llama_context.
+   * @param src       Source buffer.
+   * @param size      Size of {@code src}.
+   * @param destSeqId The sequence id to restore into.
+   * @param flags     {@code llama_state_seq_flags}, the same as when the state was saved.
+   * @return Bytes read, {@code 0} on failure.
+   */
+  public static long llama_state_seq_set_data_ext(
+    MemorySegment ctx,
+    MemorySegment src,
+    long size,
+    int destSeqId,
+    int flags
+  ) {
+    return llama_h(
+      "llama_state_seq_set_data_ext",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        long.class,
+        int.class,
+        int.class,
+      },
+      ctx,
+      src,
+      size,
+      destSeqId,
+      flags
     );
   }
 

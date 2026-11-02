@@ -135,15 +135,33 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
       // sequence (start == 0 for a cold prompt). Wipe everything from `start` on so behavior is
       // self-contained regardless of whether the caller cleaned the sequence, then decode only
       // the suffix at absolute positions.
+      int seqId = state.getSequenceId();
+      var memory = context.getMemory();
+      var checkpoints = context.stateCheckpoints();
+      boolean checkpointing = checkpoints.isEnabled();
+      int[] promptTokens = checkpointing
+        ? state
+          .getTokenized()
+          .data()
+          .asSlice(0, totalTokens * JAVA_INT.byteSize())
+          .toArray(JAVA_INT)
+        : null;
       int start = state.getReusePrefixTokens();
-      if (!context.getMemory().seqRm(state.getSequenceId(), start, -1)) {
-        // Recurrent/hybrid models (SSM, gated-deltanet attention) cannot rewind their state to
-        // an arbitrary position — partial seq_rm is rejected natively. Fall back to a cold
-        // prefill: full wipe, no reuse. Correctness over speed; callers see reuse == 0.
-        context.getMemory().seqRm(state.getSequenceId(), -1, -1);
-        start = 0;
-        state.clearReusePrefixTokens();
+      if (!memory.seqRm(seqId, start, -1)) {
+        // Recurrent/hybrid models can only rewind their recurrent state within n_rs_seq, so the
+        // partial seq_rm was rejected and nothing was trimmed. Resume from the longest state
+        // checkpoint at or before `start` that matches this prompt (restored, attention trimmed
+        // to it); without one, or on any native failure, fall back to a cold full prefill.
+        int restored = checkpointing
+          ? checkpoints.restore(seqId, promptTokens, start)
+          : 0;
+        if (restored == 0) {
+          memory.seqRm(seqId, -1, -1);
+        }
+        start = restored;
       }
+      state.markPrefixReused(start);
+      int interval = checkpointing ? checkpoints.interval() : 0;
       // MTP keeps embeddings enabled on the target context (the head seed is the target's
       // post-norm hidden). With embeddings on, llama.cpp forces EVERY batch token to be an
       // output row ("embeddings required but some input tokens were not marked as outputs ->
@@ -161,6 +179,12 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
         int offset = start;
         while (offset < bulkEnd) {
           int chunkSize = Math.min(batchSize, bulkEnd - offset);
+          if (interval > 0) {
+            chunkSize = Math.min(
+              chunkSize,
+              (offset / interval + 1) * interval - offset
+            );
+          }
           LlamaBatch promptBatch = new LlamaBatch(arena, chunkSize, 0, 1);
 
           // Add tokens to the batch for the current chunk.
@@ -190,6 +214,9 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
 
           promptBatch.free();
           offset += chunkSize;
+          if (interval > 0 && offset % interval == 0 && offset < totalTokens) {
+            checkpoints.capture(seqId, promptTokens, offset);
+          }
         }
       } finally {
         if (mtpEmbeddings) {
@@ -219,6 +246,10 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
           );
         }
         lastBatch.free();
+      }
+
+      if (checkpointing) {
+        checkpoints.capture(seqId, promptTokens, totalTokens);
       }
 
       // After processing the entire prompt, update the past token count (n_past).
