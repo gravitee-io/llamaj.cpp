@@ -7,7 +7,7 @@ orbs:
 executors:
   macos-executor:
     macos:
-      xcode: 26.3.0
+      xcode: "26.6"
     resource_class: m4pro.medium
 
   ubuntu_linux_x86_64:
