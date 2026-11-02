@@ -1072,6 +1072,27 @@ public final class LlamaRuntime {
   }
 
   /**
+   * Sets the CPU threads of an existing context, from its next decode on.
+   *
+   * @param ctx           The llama context segment
+   * @param nThreads      Threads used to decode a single token
+   * @param nThreadsBatch Threads used to decode a batch of more than one token
+   */
+  public static void llama_set_n_threads(
+    MemorySegment ctx,
+    int nThreads,
+    int nThreadsBatch
+  ) {
+    llama_h(
+      "llama_set_n_threads",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, int.class },
+      ctx,
+      nThreads,
+      nThreadsBatch
+    );
+  }
+
+  /**
    * Returns the active pooling type for the given context.
    * The C function returns the raw {@code llama_pooling_type} enum value (starting at -1),
    * which is mapped back to the Java {@link PoolingType} enum using the same +1 offset
@@ -2029,6 +2050,20 @@ public final class LlamaRuntime {
    */
   public static int llama_n_ctx(MemorySegment ctx) {
     return llama_h("llama_n_ctx", new Class<?>[] { MEM_SEG_CLASS }, ctx);
+  }
+
+  /** Returns the threads used to decode a single token. */
+  public static int llama_n_threads(MemorySegment ctx) {
+    return llama_h("llama_n_threads", new Class<?>[] { MEM_SEG_CLASS }, ctx);
+  }
+
+  /** Returns the threads used to decode a batch of more than one token. */
+  public static int llama_n_threads_batch(MemorySegment ctx) {
+    return llama_h(
+      "llama_n_threads_batch",
+      new Class<?>[] { MEM_SEG_CLASS },
+      ctx
+    );
   }
 
   /** Returns the effective logical batch size. */

@@ -187,6 +187,33 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
     llama_set_embeddings(segment, embeddings);
   }
 
+  /** The threads used to decode a single token. */
+  public int nThreads() {
+    checkNotFreed();
+    return llama_n_threads(segment);
+  }
+
+  /** The threads used to decode a batch of more than one token. */
+  public int nThreadsBatch() {
+    checkNotFreed();
+    return llama_n_threads_batch(segment);
+  }
+
+  /**
+   * Sets the CPU threads of this context, from its next decode on.
+   * <p>
+   * Equivalent to {@link LlamaContextParams#nThreads(int)} and
+   * {@link LlamaContextParams#nThreadsBatch(int)}, for contexts created by a component that does
+   * not expose its params, such as a {@link LlamaDecider}.
+   *
+   * @param nThreads      Threads used to decode a single token
+   * @param nThreadsBatch Threads used to decode a batch of more than one token
+   */
+  public void setThreads(int nThreads, int nThreadsBatch) {
+    checkNotFreed();
+    llama_set_n_threads(segment, nThreads, nThreadsBatch);
+  }
+
   /**
    * Returns the pooled embedding vector for the given sequence.
    * <p>
