@@ -26,8 +26,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Per-sequence snapshots of the recurrent state of a hybrid or recurrent model, so prefix reuse
@@ -43,18 +41,23 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>A checkpoint holds only the recurrent and sliding-window part of the state
  * ({@code LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY}): its size is fixed by the model (it does not grow
- * with the conversation) and is logged with the first checkpoint taken for a model. The attention
+ * with the conversation) and is logged with the first checkpoint taken by a context. The attention
  * rows of {@code [0, p)} are those the caller declared resident through
  * {@link ConversationState#initialize(String, int)}; a checkpoint is used only when its token ids
  * equal the new prompt's first {@code p} tokens and {@code p} does not exceed that declared prefix.
  *
- * <p>Checkpoints are taken by the text prefill:
+ * <p>Checkpoints are taken by the text prefill of states that {@link
+ * ConversationState#setRetainKv(boolean) retain their KV}, the only sequences a later turn can
+ * resume:
  * <ul>
- *   <li>after the last prompt token, before the first sampled token, which is the position the
- *       next turn of an agent loop most often shares (its prompt is this prompt followed by the
- *       re-rendered reply and new messages);</li>
+ *   <li>one token before the end of the prompt, a position shared both by the next turn of an
+ *       agent loop (its prompt is this prompt followed by the re-rendered reply and new messages)
+ *       and by an identical resend, whose reuse {@link ConversationState#initialize(String, int)}
+ *       caps at the prompt length minus one;</li>
  *   <li>every {@link #interval()} prompt tokens during long prefills, when an interval is set.</li>
  * </ul>
+ * Wiping a sequence at the end of a state that does not retain its KV also frees its
+ * checkpoints.
  * Each sequence keeps at most {@link #maxPerSequence()} checkpoints and evicts the least recently
  * used one. Memory is bounded by {@code maxPerSequence * checkpoint size * sequences}, all of it
  * off-heap and released by {@link #clear(int)}, {@link #setMaxPerSequence(int)} or when the
@@ -78,8 +81,6 @@ public final class StateCheckpoints implements Freeable {
     StateCheckpoints.class.getName()
   );
 
-  private static final Set<Long> LOGGED_MODELS = ConcurrentHashMap.newKeySet();
-
   private final LlamaContext context;
   private final boolean supported;
   private final Map<Integer, Deque<StateCheckpoint>> bySequence =
@@ -88,6 +89,7 @@ public final class StateCheckpoints implements Freeable {
   private int interval = 0;
   private boolean onDevice = false;
   private boolean freed = false;
+  private boolean sizeLogged = false;
 
   StateCheckpoints(LlamaContext context, boolean supported) {
     this.context = context;
@@ -134,7 +136,7 @@ public final class StateCheckpoints implements Freeable {
 
   /**
    * Takes an extra checkpoint every {@code interval} prompt tokens during a prefill, on top of the
-   * one after the last prompt token. Useful when prompts diverge inside the previous prompt rather
+   * one near the end of the prompt. Useful when prompts diverge inside the previous prompt rather
    * than after it; each checkpoint counts toward {@link #maxPerSequence()}.
    *
    * @param interval {@code >= 0}, {@code 0} (default) disables
@@ -353,9 +355,10 @@ public final class StateCheckpoints implements Freeable {
   }
 
   private void logSizeOnce(int seqId) {
-    if (!LOGGED_MODELS.add(context.getModel().segment.address())) {
+    if (sizeLogged) {
       return;
     }
+    sizeLogged = true;
     long bytes = llama_state_seq_get_size_ext(
       context.getMemorySegment(),
       seqId,

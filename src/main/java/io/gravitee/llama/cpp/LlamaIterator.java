@@ -139,6 +139,7 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
       var memory = context.getMemory();
       var checkpoints = context.stateCheckpoints();
       boolean checkpointing = checkpoints.isEnabled();
+      boolean capturing = checkpointing && state.isRetainKv();
       int[] promptTokens = checkpointing
         ? state
           .getTokenized()
@@ -161,7 +162,7 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
         start = restored;
       }
       state.markPrefixReused(start);
-      int interval = checkpointing ? checkpoints.interval() : 0;
+      int interval = capturing ? checkpoints.interval() : 0;
       // MTP keeps embeddings enabled on the target context (the head seed is the target's
       // post-norm hidden). With embeddings on, llama.cpp forces EVERY batch token to be an
       // output row ("embeddings required but some input tokens were not marked as outputs ->
@@ -171,7 +172,8 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
       // in its own single-token batch with embeddings restored — a single output row, no
       // native override.
       boolean mtpEmbeddings = state.isMtp();
-      int bulkEnd = mtpEmbeddings ? totalTokens - 1 : totalTokens;
+      boolean splitLast = mtpEmbeddings || capturing;
+      int bulkEnd = splitLast ? totalTokens - 1 : totalTokens;
       if (mtpEmbeddings) {
         context.setEmbeddings(false);
       }
@@ -194,7 +196,7 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
               .data()
               .getAtIndex(JAVA_INT, offset + i);
             // We only need the logits for the very last token of the prompt to sample the
-            // next one (on the MTP path that token is decoded separately below).
+            // next one (on the MTP and checkpoint paths that token is decoded separately below).
             boolean logits = (offset + i) == totalTokens - 1;
             promptBatch.add(
               tokenId,
@@ -214,7 +216,7 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
 
           promptBatch.free();
           offset += chunkSize;
-          if (interval > 0 && offset % interval == 0 && offset < totalTokens) {
+          if (interval > 0 && offset % interval == 0 && offset < bulkEnd) {
             checkpoints.capture(seqId, promptTokens, offset);
           }
         }
@@ -225,9 +227,13 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
         }
       }
 
-      if (mtpEmbeddings && totalTokens > start) {
-        // Final prompt token: its logits sample the first token and its embedding row seeds
-        // the MTP head. A 1-token batch with logits=true satisfies output_all — no override.
+      if (capturing) {
+        checkpoints.capture(seqId, promptTokens, bulkEnd);
+      }
+
+      if (splitLast && totalTokens > start) {
+        // Final prompt token: its logits sample the first token and, with MTP, its embedding row
+        // seeds the MTP head. A 1-token batch with logits=true satisfies output_all — no override.
         int lastToken = state
           .getTokenized()
           .data()
@@ -246,10 +252,6 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
           );
         }
         lastBatch.free();
-      }
-
-      if (checkpointing) {
-        checkpoints.capture(seqId, promptTokens, totalTokens);
       }
 
       // After processing the entire prompt, update the past token count (n_past).
@@ -863,10 +865,9 @@ public abstract class LlamaIterator<T> implements Iterator<T> {
       currentState.freeSpeculativeScratch();
     }
     if (currentState.getFinishReason() != null && !currentState.isRetainKv()) {
-      currentState
-        .getContext()
-        .getMemory()
-        .seqRm(currentState.getSequenceId(), -1, -1);
+      var context = currentState.getContext();
+      context.getMemory().seqRm(currentState.getSequenceId(), -1, -1);
+      context.stateCheckpoints().clear(currentState.getSequenceId());
     }
   }
 

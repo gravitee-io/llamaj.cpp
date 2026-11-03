@@ -1191,6 +1191,7 @@ public final class BatchIterator
     int sequenceId = state.getSequenceId();
     if (!keepKv) {
       context.getMemory().seqRm(sequenceId, -1, -1);
+      context.stateCheckpoints().clear(sequenceId);
     }
     // Free the speculative state's persistent native scratch (idempotent: null-on-free, so the
     // common path of removal-then-stop never double-frees). Non-speculative states have none.

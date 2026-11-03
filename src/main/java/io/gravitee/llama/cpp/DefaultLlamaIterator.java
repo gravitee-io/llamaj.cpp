@@ -230,10 +230,9 @@ public final class DefaultLlamaIterator
       currentState.freeSpeculativeScratch();
     }
     if (!currentState.isRetainKv()) {
-      currentState
-        .getContext()
-        .getMemory()
-        .seqRm(currentState.getSequenceId(), -1, -1);
+      var context = currentState.getContext();
+      context.getMemory().seqRm(currentState.getSequenceId(), -1, -1);
+      context.stateCheckpoints().clear(currentState.getSequenceId());
     }
   }
 }

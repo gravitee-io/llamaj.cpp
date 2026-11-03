@@ -814,23 +814,15 @@ public class ConversationState {
   }
 
   /**
-   * Resets the reuse offset to 0 and marks the requested reuse as not honored, as after a cold
-   * full prefill.
-   */
-  public void clearReusePrefixTokens() {
-    markPrefixReused(0);
-    this.prefixReuseHonored = false;
-  }
-
-  /**
    * Whether the whole prefix reuse requested via {@link #initialize(String, int)} was honored by
    * the prefill. Attention models always honor it. Recurrent and hybrid models can only trim
    * their recurrent state back within the per-token snapshot window
    * ({@link LlamaContextParams#nRsSeq(int)}); for a divergence farther back the prefill restores
    * the longest matching {@link StateCheckpoints state checkpoint} at or before the requested
-   * prefix and decodes from there, or, when none matches, falls back to a cold full prefill. In
-   * both cases this returns {@code false}, and {@link #getReusedPrefixTokens()} tells how much was
-   * actually reused ({@code p}, or {@code 0} for the cold prefill). Multimodal prompts do not use
+   * prefix and decodes from there, or, when none matches, falls back to a cold full prefill. This
+   * returns {@code true} only when that checkpoint sits exactly at the requested prefix;
+   * {@link #getReusedPrefixTokens()} tells how much was actually reused ({@code p}, or {@code 0}
+   * for the cold prefill). Multimodal prompts do not use
    * checkpoints. Callers advertising prefix reuse should check this, or report
    * {@link #getReusedPrefixTokens()}, after prompt processing rather than trusting the requested
    * count.

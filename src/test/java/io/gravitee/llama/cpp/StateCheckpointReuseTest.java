@@ -73,7 +73,7 @@ class StateCheckpointReuseTest extends LlamaCppTest {
 
     var first = run(newState(ctx, tokenizer).initialize(turn1));
     assertThat(ctx.stateCheckpoints().positions(0)).containsExactly(
-      tokens1.length
+      tokens1.length - 1
     );
     assertThat(ctx.stateCheckpoints().byteSize()).isPositive();
 
@@ -84,16 +84,48 @@ class StateCheckpointReuseTest extends LlamaCppTest {
     var warm = newState(ctx, tokenizer).initialize(turn2, requested);
     long decoded = prefill(ctx, warm);
 
-    assertThat(warm.getReusedPrefixTokens()).isEqualTo(tokens1.length);
-    assertThat(warm.isPrefixReuseHonored()).isEqualTo(
-      requested == tokens1.length
-    );
-    assertThat(decoded).isEqualTo(tokens2.length - tokens1.length);
+    assertThat(warm.getReusedPrefixTokens()).isEqualTo(tokens1.length - 1);
+    assertThat(warm.isPrefixReuseHonored()).isFalse();
+    assertThat(decoded).isEqualTo(tokens2.length - tokens1.length + 1);
     assertThat(warm.committedTokens()).isEqualTo(cold(model, turn2));
     assertThat(ctx.stateCheckpoints().positions(0)).containsExactly(
-      tokens1.length,
-      tokens2.length
+      tokens1.length - 1,
+      tokens2.length - 1
     );
+  }
+
+  @Test
+  void identical_resend_resumes_one_token_before_the_prompt_end() {
+    var model = load(HYBRID_MODEL_PATH, HYBRID_MODEL_TO_DOWNLOAD);
+    var ctx = context(model);
+    var tokenizer = tokenizer(ctx);
+
+    String prompt = facts(0, 20);
+    int[] tokens = tokensOf(tokenizer, prompt);
+    var first = run(newState(ctx, tokenizer).initialize(prompt));
+    assertThat(first.getNPast()).isGreaterThan(tokens.length);
+
+    var retry = newState(ctx, tokenizer).initialize(prompt, tokens.length);
+    long decoded = prefill(ctx, retry);
+
+    assertThat(retry.getReusedPrefixTokens()).isEqualTo(tokens.length - 1);
+    assertThat(retry.isPrefixReuseHonored()).isTrue();
+    assertThat(decoded).isEqualTo(1);
+    assertThat(retry.committedTokens()).isEqualTo(first.committedTokens());
+  }
+
+  @Test
+  void states_that_do_not_retain_kv_take_no_checkpoint_and_free_the_sequence_ones() {
+    var model = load(HYBRID_MODEL_PATH, HYBRID_MODEL_TO_DOWNLOAD);
+    var ctx = context(model);
+    var tokenizer = tokenizer(ctx);
+
+    run(newState(ctx, tokenizer).initialize(facts(0, 20)));
+    assertThat(ctx.stateCheckpoints().size(0)).isEqualTo(1);
+
+    run(newState(ctx, tokenizer).setRetainKv(false).initialize(facts(0, 10)));
+    assertThat(ctx.stateCheckpoints().size(0)).isZero();
+    assertThat(ctx.stateCheckpoints().byteSize()).isZero();
   }
 
   @Test
@@ -106,10 +138,14 @@ class StateCheckpointReuseTest extends LlamaCppTest {
     String turn1 = facts(0, 30);
     int[] tokens1 = tokensOf(tokenizer, turn1);
     var first = run(newState(ctx, tokenizer).initialize(turn1));
-    var expected = IntStream.iterate(64, p -> p < tokens1.length, p -> p + 64)
+    var expected = IntStream.iterate(
+      64,
+      p -> p < tokens1.length - 1,
+      p -> p + 64
+    )
       .boxed()
       .collect(Collectors.toList());
-    expected.add(tokens1.length);
+    expected.add(tokens1.length - 1);
     assertThat(ctx.stateCheckpoints().positions(0)).isEqualTo(expected);
 
     String turn2 = facts(0, 12) + notes(0, 10);
@@ -141,7 +177,7 @@ class StateCheckpointReuseTest extends LlamaCppTest {
 
     var first = run(newState(ctx, tokenizer).initialize(turn1));
     assertThat(ctx.stateCheckpoints().positions(0)).containsExactly(
-      tokens1.length
+      tokens1.length - 1
     );
     assertThat(ctx.stateCheckpoints().byteSize()).isLessThan(64 * 1024);
 
@@ -150,11 +186,11 @@ class StateCheckpointReuseTest extends LlamaCppTest {
     var warm = newState(ctx, tokenizer).initialize(turn2, requested);
     long decoded = prefill(ctx, warm);
 
-    assertThat(warm.getReusedPrefixTokens()).isEqualTo(tokens1.length);
-    assertThat(decoded).isEqualTo(tokens2.length - tokens1.length);
+    assertThat(warm.getReusedPrefixTokens()).isEqualTo(tokens1.length - 1);
+    assertThat(decoded).isEqualTo(tokens2.length - tokens1.length + 1);
     assertThat(warm.committedTokens()).isEqualTo(cold(model, turn2));
     assertThat(ctx.stateCheckpoints().positions(0)).containsExactly(
-      tokens2.length
+      tokens2.length - 1
     );
 
     String turn3 = turn2 + facts(20, 30);
@@ -164,8 +200,8 @@ class StateCheckpointReuseTest extends LlamaCppTest {
     var third = newState(ctx, tokenizer).initialize(turn3, requested3);
     long decoded3 = prefill(ctx, third);
 
-    assertThat(third.getReusedPrefixTokens()).isEqualTo(tokens2.length);
-    assertThat(decoded3).isEqualTo(tokens3.length - tokens2.length);
+    assertThat(third.getReusedPrefixTokens()).isEqualTo(tokens2.length - 1);
+    assertThat(decoded3).isEqualTo(tokens3.length - tokens2.length + 1);
     assertThat(third.committedTokens()).isEqualTo(cold(model, turn3));
   }
 
@@ -224,7 +260,7 @@ class StateCheckpointReuseTest extends LlamaCppTest {
       .map(n -> {
         String prompt = facts(0, n);
         run(newState(ctx, tokenizer).initialize(prompt));
-        return tokensOf(tokenizer, prompt).length;
+        return tokensOf(tokenizer, prompt).length - 1;
       })
       .toArray();
     assertThat(ctx.stateCheckpoints().positions(0)).containsExactly(
