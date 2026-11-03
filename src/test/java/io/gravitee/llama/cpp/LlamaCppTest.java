@@ -78,6 +78,10 @@ abstract class LlamaCppTest {
     "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf";
 
   static final String MODEL_PATH = "models/model.gguf";
+
+  static final String HYBRID_MODEL_TO_DOWNLOAD =
+    "https://huggingface.co/ggml-org/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-Q8_0.gguf";
+  static final String HYBRID_MODEL_PATH = "models/hybrid.gguf";
   static final String REASONING_MODEL_PATH = "models/reasoning.gguf";
 
   static final String SYSTEM = """

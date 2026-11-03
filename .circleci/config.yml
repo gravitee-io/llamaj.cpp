@@ -7,7 +7,7 @@ orbs:
 executors:
   macos-executor:
     macos:
-      xcode: 26.3.0
+      xcode: "26.6"
     resource_class: m4pro.medium
 
   ubuntu_linux_x86_64:
@@ -165,7 +165,7 @@ commands:
       # scripts/ci-models.txt changes so the cache is invalidated.
       - restore_cache:
           keys:
-            - models-v1-<< parameters.os >>
+            - models-v2-<< parameters.os >>
       - run:
           name: Download models (parallel, cache-filling)
           command: |
@@ -173,7 +173,7 @@ commands:
               bash "$HOME_DIR/llamaj.cpp/scripts/download_ci_models.sh"
       - save_cache:
           # No-op when the key already exists (warm cache).
-          key: models-v1-<< parameters.os >>
+          key: models-v2-<< parameters.os >>
           paths:
             - << parameters.models-dir >>
 

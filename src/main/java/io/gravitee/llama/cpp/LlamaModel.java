@@ -95,6 +95,32 @@ public final class LlamaModel extends MemorySegmentAware implements Freeable {
   }
 
   /**
+   * Whether the model is purely recurrent: its sequence state is a fixed-size recurrent state
+   * rather than per-token KV rows.
+   */
+  public boolean isRecurrent() {
+    checkNotFreed();
+    return LlamaRuntime.llama_model_is_recurrent(segment);
+  }
+
+  /**
+   * Whether the model mixes attention and recurrent layers.
+   */
+  public boolean isHybrid() {
+    checkNotFreed();
+    return LlamaRuntime.llama_model_is_hybrid(segment);
+  }
+
+  /**
+   * Whether the model keeps a recurrent state that cannot be trimmed to an arbitrary position:
+   * {@link #isRecurrent()} or {@link #isHybrid()}. Prefix reuse on such models goes through
+   * {@link StateCheckpoints}.
+   */
+  public boolean hasRecurrentState() {
+    return isRecurrent() || isHybrid();
+  }
+
+  /**
    * Returns the number of classifier output classes.
    * When {@link PoolingType#RANK} is active and this returns {@code 1}, the model is
    * a reranker (single relevance score per sequence). When {@code > 1}, the model

@@ -54,11 +54,9 @@ public class ConversationState {
   // generation on this sequence (processPrompt then only decodes the suffix), and whether the
   // sequence's KV should be retained (not wiped) when this state finishes / is cleaned up.
   private int reusePrefixTokens = 0;
+  private int requestedPrefixTokens = 0;
+  private int reusedPrefixTokens = 0;
   private boolean retainKv = false;
-  // Whether the requested prefix reuse was actually honored by the memory backend. Set to
-  // false when processPrompt's partial seq_rm is rejected (recurrent/hybrid models whose
-  // rollback-snapshot window n_rs_seq cannot cover the required rewind) and a cold full
-  // prefill is performed instead.
   private boolean prefixReuseHonored = true;
 
   // Committed-token history: token ids whose KV rows are resident, positions [0, nPast).
@@ -240,6 +238,8 @@ public class ConversationState {
       reusePrefixTokens = size - 1;
     }
     this.reusePrefixTokens = reusePrefixTokens;
+    this.requestedPrefixTokens = reusePrefixTokens;
+    this.reusedPrefixTokens = 0;
     this.prefixReuseHonored = true;
     int[] promptTokens = new int[size];
     for (int i = 0; i < size; i++) {
@@ -786,29 +786,46 @@ public class ConversationState {
     this.nPast++;
   }
 
-  /** Leading prompt tokens whose KV rows are reused by this initialization (see initialize). */
+  /**
+   * Leading prompt tokens the prefill starts after: the reuse requested via
+   * {@link #initialize(String, int)} until the prompt is processed, then the prefix actually
+   * reused (see {@link #getReusedPrefixTokens()}).
+   */
   public int getReusePrefixTokens() {
     return reusePrefixTokens;
   }
 
   /**
-   * Resets the reuse offset to 0. Called by the prefill when the memory backend rejects a
-   * partial trim (recurrent/hybrid models) and a cold full prefill is performed instead, so
-   * observers see the reuse that actually happened.
+   * Leading prompt tokens whose state was actually reused by the last prefill, {@code 0} before
+   * the prompt is processed. Equal to the requested reuse when it was
+   * {@link #isPrefixReuseHonored() honored}; on recurrent and hybrid models it can be the position
+   * {@code p} of a restored {@link StateCheckpoints state checkpoint} (the prefill then decoded
+   * {@code prompt length - p} tokens), or {@code 0} after a cold full prefill. This is the number
+   * to report as reused, rather than the requested one.
    */
-  public void clearReusePrefixTokens() {
-    this.reusePrefixTokens = 0;
-    this.prefixReuseHonored = false;
+  public int getReusedPrefixTokens() {
+    return reusedPrefixTokens;
+  }
+
+  void markPrefixReused(int reused) {
+    this.reusePrefixTokens = reused;
+    this.reusedPrefixTokens = reused;
+    this.prefixReuseHonored = reused == requestedPrefixTokens;
   }
 
   /**
-   * Whether the prefix reuse requested via {@link #initialize(String, int)} was actually honored
-   * by the prefill. {@code false} means the memory backend rejected the partial trim — attention
-   * models never reject it, but recurrent/hybrid models (SSM, gated-deltanet: e.g. qwen3next,
-   * qwen3.5/3.6) can only rewind their recurrent state within the per-token snapshot window
-   * ({@code n_rs_seq}); a rewind farther back than that forces a cold full prefill and this
-   * returns {@code false}. Callers advertising prefix reuse (cross-request KV caches) should
-   * check this after prompt processing rather than trusting the requested reuse count.
+   * Whether the whole prefix reuse requested via {@link #initialize(String, int)} was honored by
+   * the prefill. Attention models always honor it. Recurrent and hybrid models can only trim
+   * their recurrent state back within the per-token snapshot window
+   * ({@link LlamaContextParams#nRsSeq(int)}); for a divergence farther back the prefill restores
+   * the longest matching {@link StateCheckpoints state checkpoint} at or before the requested
+   * prefix and decodes from there, or, when none matches, falls back to a cold full prefill. This
+   * returns {@code true} only when that checkpoint sits exactly at the requested prefix;
+   * {@link #getReusedPrefixTokens()} tells how much was actually reused ({@code p}, or {@code 0}
+   * for the cold prefill). Multimodal prompts do not use
+   * checkpoints. Callers advertising prefix reuse should check this, or report
+   * {@link #getReusedPrefixTokens()}, after prompt processing rather than trusting the requested
+   * count.
    */
   public boolean isPrefixReuseHonored() {
     return prefixReuseHonored;

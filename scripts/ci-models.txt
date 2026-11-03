@@ -14,3 +14,4 @@ ggml-org/bge-m3-Q8_0-GGUF bge-m3-q8_0.gguf models/bge-m3.gguf
 n24q02m/Qwen3-Reranker-0.6B-GGUF qwen3-reranker-0.6b-q4-k-m.gguf models/reranker.gguf
 gpustack/jina-reranker-v1-tiny-en-GGUF jina-reranker-v1-tiny-en-Q4_K_M.gguf models/jina-reranker.gguf
 Qwen/Qwen3-1.7B-GGUF Qwen3-1.7B-Q8_0.gguf models/spec-target.gguf
+ggml-org/Qwen3.5-0.8B-GGUF Qwen3.5-0.8B-Q8_0.gguf models/hybrid.gguf
