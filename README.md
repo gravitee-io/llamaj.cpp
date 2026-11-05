@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE.txt)
 [![Community Forum](https://img.shields.io/badge/Gravitee-Community%20Forum-white?logo=githubdiscussion&logoColor=white)](https://community.gravitee.io?utm_source=readme)
 
-[![llama.cpp](https://img.shields.io/badge/llama.cpp-v0.6.0-blue.svg)](https://github.com/ggml-org/llama.cpp/releases/tag/v0.6.0)
+[![llama.cpp](https://img.shields.io/badge/llama.cpp-v0.9.0-blue.svg)](https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0)
 [![llama.cpp license](https://img.shields.io/badge/llama.cpp%20license-MIT-green.svg)](./licenses/LICENSE-llama-cpp)
 
 **Llamaj.cpp** is a Java and JVM port of [llama.cpp](https://github.com/ggml-org/llama.cpp) using jextract, enabling local large language model (LLM) inference through the native foreign function & memory API. It natively supports macOS M-series and Linux x86_64 with GPU acceleration; other platforms (Windows, ARM, CUDA, …) can be added through [custom builds](./docs/custom-builds/README.md).
