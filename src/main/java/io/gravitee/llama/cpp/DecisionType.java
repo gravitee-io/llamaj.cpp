@@ -33,10 +33,18 @@ import java.util.Optional;
  *   <li>{@link #NIMBLE} — same as openjev, the prompt lists all the questions of the request</li>
  *   <li>{@link #LAYA} — score of one marker token per option, read from the embeddings output</li>
  *   <li>{@link #CLEF} — a joint head that decides all the questions of a request in one prompt</li>
+ *   <li>{@link #PPLX_DECIDER} — same as openjev, label codes of 1 or 2 letters</li>
+ *   <li>{@link #VLLM_DECISION2} — a joint head over one question per prompt, the options marked
+ *       in the batch</li>
+ *   <li>{@link #VLLM_D3} — same as pplx-decider, with non-causal attention</li>
+ *   <li>{@link #GRANITE_SWITCH} — same as pplx-decider, run by an adapter built into the model</li>
+ *   <li>{@link #H2O_LIGHTNING} — same as openjev, the label texts read from the GGUF</li>
+ *   <li>{@link #MINICPM_OCR_JEV} — one score per class, the pooled output of the last token</li>
  * </ul>
- * Each family has its decider: {@link LabelDecider} (openjev, lev, nimble, and {@link #CUSTOM}),
- * {@link KevDecider}, {@link LayaDecider} and {@link ClefDecider}; {@link LlamaDecider#create}
- * picks it from the metadata.
+ * Each family has its decider: {@link LabelDecider} (openjev, lev, nimble, pplx-decider, vllm-d3,
+ * granite-switch, h2o-lightning, and {@link #CUSTOM}), {@link KevDecider}, {@link LayaDecider},
+ * {@link ClefDecider} (clef, vllm-decision2) and {@link PooledDecider} (openbmb-minicpm-ocr-jev);
+ * {@link LlamaDecider#create} picks it from the metadata.
  *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
@@ -48,6 +56,12 @@ public enum DecisionType {
   NIMBLE("nimble"),
   LAYA("laya"),
   CLEF("clef"),
+  PPLX_DECIDER("pplx-decider"),
+  VLLM_DECISION2("vllm-decision2"),
+  VLLM_D3("vllm-d3"),
+  GRANITE_SWITCH("granite-switch"),
+  H2O_LIGHTNING("h2o-lightning"),
+  MINICPM_OCR_JEV("openbmb-minicpm-ocr-jev"),
   /**
    * Any causal model scored on caller-chosen label tokens ({@link LabelDecider#custom}); never read
    * from GGUF metadata.

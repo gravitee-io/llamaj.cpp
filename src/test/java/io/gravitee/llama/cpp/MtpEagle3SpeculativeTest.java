@@ -71,6 +71,12 @@ class MtpEagle3SpeculativeTest extends LlamaCppTest {
     assertThat(LlamaExt.eagle3Available())
       .as(LlamaExt.eagle3ResolutionReport())
       .isTrue();
+    assertThat(LlamaExt.decisionAvailable())
+      .as(LlamaExt.decisionResolutionReport())
+      .isTrue();
+    assertThat(LlamaExt.decisionLabelsAvailable())
+      .as(LlamaExt.decisionLabelsResolutionReport())
+      .isTrue();
   }
 
   @Test

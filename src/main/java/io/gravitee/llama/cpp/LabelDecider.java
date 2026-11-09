@@ -25,20 +25,29 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
  * Decider for the label-token families ({@link DecisionType#OPENJEV}, {@link DecisionType#LEV},
- * {@link DecisionType#NIMBLE}, see {@link #create}) and for any causal model with caller-chosen
- * codes ({@link DecisionType#CUSTOM}, see {@link #custom}): the score of option {@code i} is the
- * logit of {@code labels().get(i)} at the last prompt token. Prompts are {@link TextPrompt}s.
+ * {@link DecisionType#NIMBLE}, {@link DecisionType#PPLX_DECIDER}, {@link DecisionType#VLLM_D3},
+ * {@link DecisionType#GRANITE_SWITCH}, {@link DecisionType#H2O_LIGHTNING}, see {@link #create})
+ * and for any causal model with caller-chosen codes ({@link DecisionType#CUSTOM}, see
+ * {@link #custom}): the score of option {@code i} is the logit of {@code labels().get(i)} at the
+ * last prompt token. Prompts are {@link TextPrompt}s, or {@link MediaPrompt}s for a decider created
+ * with an {@link MtmdContext}.
  *
  * <h2>Shared prefix</h2>
  * The prompts of one {@link #score} call usually differ only near their end (a nimble prompt lists
  * every question and names the asked one last). Their common prefix is decoded once in sequence 0,
  * copied to sequences {@code 1..nSeqMax-1} with {@link LlamaMemory#seqCp}, and only the tails are
  * decoded, packed into shared batches.
+ *
+ * <h2>Non-causal models</h2>
+ * A model whose attention reads the prompt both ways ({@link #causal()} is false) has no prefix to
+ * share: each prompt is decoded on its own, in one ubatch, so it must fit in one batch. Such a model
+ * takes text prompts only.
  *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
@@ -49,6 +58,16 @@ public final class LabelDecider extends LlamaDecider {
   private static final int MAX_LABELS = 255;
 
   private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  private static final Set<DecisionType> FAMILIES = EnumSet.of(
+    DecisionType.OPENJEV,
+    DecisionType.LEV,
+    DecisionType.NIMBLE,
+    DecisionType.PPLX_DECIDER,
+    DecisionType.VLLM_D3,
+    DecisionType.GRANITE_SWITCH,
+    DecisionType.H2O_LIGHTNING
+  );
 
   /**
    * A label: the code written in the prompt for an option, and the single token whose logit scores
@@ -75,9 +94,10 @@ public final class LabelDecider extends LlamaDecider {
     Arena arena,
     LlamaModel model,
     DecisionType type,
+    MtmdContext mtmd,
     Options options
   ) {
-    super(arena, model, type, params(arena, options));
+    super(arena, model, type, params(arena, options, isCausal(model)), mtmd);
     try {
       this.labels = withScratch(scratch -> familyLabels(scratch, type));
     } catch (RuntimeException e) {
@@ -88,11 +108,18 @@ public final class LabelDecider extends LlamaDecider {
   private LabelDecider(
     Arena arena,
     LlamaModel model,
+    MtmdContext mtmd,
     Options options,
     String context,
     List<String> codes
   ) {
-    super(arena, model, DecisionType.CUSTOM, params(arena, options));
+    super(
+      arena,
+      model,
+      DecisionType.CUSTOM,
+      params(arena, options, isCausal(model)),
+      mtmd
+    );
     try {
       this.labels = withScratch(scratch ->
         customLabels(scratch, context, codes)
@@ -103,7 +130,8 @@ public final class LabelDecider extends LlamaDecider {
   }
 
   /**
-   * Creates the decider of an openjev, lev or nimble model.
+   * Creates the decider of an openjev, lev, nimble, pplx-decider, vllm-d3, granite-switch or
+   * h2o-lightning model, for text prompts.
    *
    * @param arena   Arena that owns the decider's context
    * @param model   Pre-loaded model (not freed on {@link #close()})
@@ -115,11 +143,27 @@ public final class LabelDecider extends LlamaDecider {
     LlamaModel model,
     Options options
   ) {
-    var type = requireFamily(
-      model,
-      EnumSet.of(DecisionType.OPENJEV, DecisionType.LEV, DecisionType.NIMBLE)
-    );
-    return new LabelDecider(arena, model, type, options);
+    return create(arena, model, null, options);
+  }
+
+  /**
+   * Same as {@link #create(Arena, LlamaModel, Options)}, with the multimodal context that
+   * {@link MediaPrompt}s are tokenized and evaluated with.
+   *
+   * @param arena   Arena that owns the decider's context
+   * @param model   Pre-loaded model (not freed on {@link #close()})
+   * @param mtmd    The model's multimodal context (caller-owned), or {@code null} for text only
+   * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
+   * @throws LlamaException if the model is not of one of these families
+   */
+  public static LabelDecider create(
+    Arena arena,
+    LlamaModel model,
+    MtmdContext mtmd,
+    Options options
+  ) {
+    var type = requireFamily(model, FAMILIES);
+    return new LabelDecider(arena, model, type, mtmd, options);
   }
 
   /**
@@ -146,7 +190,7 @@ public final class LabelDecider extends LlamaDecider {
     Options options,
     List<String> codes
   ) {
-    return new LabelDecider(arena, model, options, null, codes);
+    return new LabelDecider(arena, model, null, options, null, codes);
   }
 
   /**
@@ -170,11 +214,47 @@ public final class LabelDecider extends LlamaDecider {
     String context,
     List<String> codes
   ) {
-    Objects.requireNonNull(context, "context");
-    return new LabelDecider(arena, model, options, context, codes);
+    return custom(arena, model, null, options, context, codes);
   }
 
-  private static LlamaContextParams params(Arena arena, Options options) {
+  /**
+   * Same as {@link #custom(Arena, LlamaModel, Options, String, List)}, with the multimodal context
+   * that {@link MediaPrompt}s are tokenized and evaluated with.
+   *
+   * @param arena   Arena that owns the decider's context
+   * @param model   Pre-loaded model (not freed on {@link #close()}); it needs no decision metadata
+   * @param mtmd    The model's multimodal context (caller-owned), or {@code null} for text only
+   * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
+   * @param context The text the prompts end with, tokenized with special-token parsing
+   * @param codes   The label text of each option, in option order
+   * @throws LlamaException if a code does not add exactly one token after {@code context}, or two
+   *                        codes share a token
+   */
+  public static LabelDecider custom(
+    Arena arena,
+    LlamaModel model,
+    MtmdContext mtmd,
+    Options options,
+    String context,
+    List<String> codes
+  ) {
+    Objects.requireNonNull(context, "context");
+    return new LabelDecider(arena, model, mtmd, options, context, codes);
+  }
+
+  private static LlamaContextParams params(
+    Arena arena,
+    Options options,
+    boolean causal
+  ) {
+    if (!causal) {
+      int nBatch = options.nBatch() != null ? options.nBatch() : 2048;
+      return new LlamaContextParams(arena)
+        .nCtx(options.nCtx() != null ? options.nCtx() : 8192)
+        .nBatch(nBatch)
+        .nUBatch(nBatch)
+        .nSeqMax(1);
+    }
     // A unified KV cache lets every sequence see the shared prefix cells without copying data,
     // and gives each sequence the whole nCtx instead of nCtx / nSeqMax.
     var params = new LlamaContextParams(arena)
@@ -190,8 +270,10 @@ public final class LabelDecider extends LlamaDecider {
    * {@code labels().get(i)}):
    * <ul>
    *   <li>openjev: {@code A..Z a..z}, all single tokens</li>
-   *   <li>lev, nimble: {@code A..Z} then {@code AA..ZZ}, only the codes that are a single token,
-   *       at most 255</li>
+   *   <li>lev, nimble, pplx-decider, vllm-d3, granite-switch: {@code A..Z} then {@code AA..ZZ},
+   *       only the codes that are a single token, at most 255</li>
+   *   <li>h2o-lightning: the label texts of the GGUF ({@code <arch>.decision.labels}), each a
+   *       single distinct token</li>
    *   <li>custom: the codes given to {@link #custom}</li>
    * </ul>
    */
@@ -202,7 +284,23 @@ public final class LabelDecider extends LlamaDecider {
 
   @Override
   public List<float[]> score(List<? extends DecisionPrompt> prompts) {
-    return scoreAll(requireKind(prompts, TextPrompt.class));
+    if (prompts.stream().allMatch(TextPrompt.class::isInstance)) {
+      return scoreAll(requireKind(prompts, TextPrompt.class));
+    }
+    return prompts
+      .stream()
+      .map(prompt ->
+        switch (prompt) {
+          case TextPrompt text -> scoreAll(List.of(text)).getFirst();
+          case MediaPrompt media -> scoreMedia(List.of(media)).getFirst();
+          default -> throw new LlamaException(
+            "this decider takes TextPrompt or MediaPrompt, not %s".formatted(
+              prompt.getClass().getSimpleName()
+            )
+          );
+        }
+      )
+      .toList();
   }
 
   /**
@@ -216,18 +314,9 @@ public final class LabelDecider extends LlamaDecider {
     if (prompts.isEmpty()) {
       return List.of();
     }
-    prompts
-      .stream()
-      .filter(prompt -> prompt.nOptions() > labels.size())
-      .findFirst()
-      .ifPresent(prompt -> {
-        throw new LlamaException(
-          "too many options (%d), this model supports at most %d".formatted(
-            prompt.nOptions(),
-            labels.size()
-          )
-        );
-      });
+    checkOptions(
+      prompts.stream().mapToInt(TextPrompt::nOptions).max().orElseThrow()
+    );
 
     int maxOptions = prompts
       .stream()
@@ -248,10 +337,58 @@ public final class LabelDecider extends LlamaDecider {
       .toList();
   }
 
+  /**
+   * Scores each media prompt, one forward pass each (no prefix sharing). The decider must have been
+   * created with an {@link MtmdContext}, and the model must be causal.
+   *
+   * @param prompts The prompts
+   * @return One {@code float[prompt.nOptions()]} of raw scores per prompt, in input order
+   */
+  public List<float[]> scoreMedia(List<MediaPrompt> prompts) {
+    checkNotFreed();
+    return prompts
+      .stream()
+      .map(prompt -> {
+        checkOptions(prompt.nOptions());
+        decodeMedia(prompt);
+        float[] row = logitsRow(-1);
+        float[] scores = new float[prompt.nOptions()];
+        IntStream.range(0, scores.length).forEach(i ->
+          scores[i] = row[labels.get(i).token()]
+        );
+        return scores;
+      })
+      .toList();
+  }
+
+  private void checkOptions(int nOptions) {
+    if (nOptions > labels.size()) {
+      throw new LlamaException(
+        "too many options (%d), this model supports at most %d".formatted(
+          nOptions,
+          labels.size()
+        )
+      );
+    }
+  }
+
+  private float[] logitsRow(int row) {
+    var logits = llama_get_logits_ith(context.segment, row);
+    if (logits == null || logits.address() == 0) {
+      throw new LlamaException("failed to get logits");
+    }
+    return logits
+      .reinterpret(vocab.nVocab() * JAVA_FLOAT.byteSize())
+      .toArray(JAVA_FLOAT);
+  }
+
   /** The logits of {@code tokens} at the last token of each prompt. */
   private float[][] scoreTokens(List<int[]> prompts, int[] tokens) {
     int n = prompts.size();
     float[][] results = new float[n][];
+    if (!causal) {
+      prompts.forEach(prompt -> checkFitsOneBatch(prompt.length));
+    }
     int[] first = prompts.getFirst();
     // Shared prefix, leaving each prompt at least one token of its own to read logits from.
     int shared = prompts
@@ -267,7 +404,7 @@ public final class LabelDecider extends LlamaDecider {
     try (var local = Arena.ofConfined()) {
       var batch = new LlamaBatch(local, context.nBatch(), 0, 1);
       try {
-        if (n == 1 || shared == 0 || nGroup < 1) {
+        if (n == 1 || shared == 0 || nGroup < 1 || !causal) {
           // No sharing: one prompt at a time in sequence 0.
           IntStream.range(0, n).forEach(i -> {
             memory.clear();
@@ -403,8 +540,9 @@ public final class LabelDecider extends LlamaDecider {
         .mapToObj(Character::toString)
         .map(code -> new Label(code, singleToken(arena, code)))
         .toList();
+      case H2O_LIGHTNING -> modelLabels(arena);
       // A..Z then AA..ZZ, only the codes that are a single token
-      case LEV, NIMBLE -> Stream.concat(
+      case LEV, NIMBLE, PPLX_DECIDER, VLLM_D3, GRANITE_SWITCH -> Stream.concat(
         LETTERS.chars().mapToObj(Character::toString),
         LETTERS.chars()
           .mapToObj(Character::toString)
@@ -422,6 +560,35 @@ public final class LabelDecider extends LlamaDecider {
         "not a label family: %s".formatted(type)
       );
     };
+  }
+
+  private List<Label> modelLabels(Arena arena) {
+    if (!LlamaExt.decisionLabelsAvailable()) {
+      throw new LlamaException(
+        "reading the decision labels needs llama_model_decision_label:%n%s".formatted(
+          LlamaExt.decisionLabelsResolutionReport()
+        )
+      );
+    }
+    var codes = LlamaExt.decisionLabels(model);
+    if (codes.isEmpty()) {
+      throw new LlamaException("decision model has no labels");
+    }
+    var seen = new HashSet<Integer>();
+    return codes
+      .stream()
+      .map(code -> {
+        int[] tokens = tokenize(arena, code, false);
+        if (tokens.length != 1 || !seen.add(tokens[0])) {
+          throw new LlamaException(
+            "decision label \"%s\" is not a single distinct token".formatted(
+              code
+            )
+          );
+        }
+        return new Label(code, tokens[0]);
+      })
+      .toList();
   }
 
   /** The one token {@code context + code} adds after the tokens of {@code context}. */

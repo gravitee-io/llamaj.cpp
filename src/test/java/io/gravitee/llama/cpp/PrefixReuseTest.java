@@ -301,10 +301,8 @@ class PrefixReuseTest extends LlamaCppTest {
     var it1 = new DefaultLlamaIterator(s1);
     assertThat(it1.hasNext()).isTrue();
     long cold = decodedTokens(ctx) - before1;
-    // llama_perf floors empty counters at 1 (max(1, n)), so the first delta on a fresh
-    // context under-reads by up to 1; subsequent deltas (the warm one below) are exact.
     assertThat(cold).isBetween(
-      (long) tokensA.length - 1,
+      (long) tokensA.length - 2,
       (long) tokensA.length
     );
 

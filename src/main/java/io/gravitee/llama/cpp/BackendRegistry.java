@@ -101,6 +101,32 @@ public final class BackendRegistry {
   }
 
   /**
+   * The buffer type of the CPU device, for {@link LlamaModelParams.TensorOverride}s that keep
+   * tensors in host memory.
+   *
+   * @throws LlamaException if no CPU backend is loaded
+   */
+  public static MemorySegment cpuBufferType() {
+    MemorySegment dev = LlamaRuntime.ggml_backend_dev_by_type(0);
+    if (dev == null || dev.equals(MemorySegment.NULL)) {
+      throw new LlamaException("no CPU backend device is loaded");
+    }
+    return LlamaRuntime.ggml_backend_dev_buffer_type(dev);
+  }
+
+  /** The default buffer type of a device from {@link #listDevices()}. */
+  public static MemorySegment bufferType(GgmlDeviceInfo device) {
+    return LlamaRuntime.ggml_backend_dev_buffer_type(
+      LlamaRuntime.ggml_backend_dev_get(device.index())
+    );
+  }
+
+  /** The name of a buffer type, such as {@code CPU} or {@code Metal}. */
+  public static String bufferTypeName(MemorySegment bufferType) {
+    return LlamaRuntime.ggml_backend_buft_name(bufferType);
+  }
+
+  /**
    * Returns the raw device handles for all devices whose backend name is "RPC".
    * These handles can be passed to {@link LlamaModelParams#devices(java.lang.foreign.Arena, List)}
    * to restrict offloading to only RPC devices.

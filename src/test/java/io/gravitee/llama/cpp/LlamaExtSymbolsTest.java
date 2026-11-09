@@ -64,6 +64,10 @@ class LlamaExtSymbolsTest {
     assertThat(LlamaExt.BATCH_EXT_SET_DECISION_ORDER.symbol()).isEqualTo(
       "_Z34llama_batch_ext_set_decision_orderP15llama_batch_exti20llama_decision_order"
     );
+
+    assertThat(LlamaExt.MODEL_DECISION_LABEL.symbol()).isEqualTo(
+      "_Z26llama_model_decision_labelPK11llama_modelj"
+    );
   }
 
   @Test
@@ -84,6 +88,9 @@ class LlamaExtSymbolsTest {
 
     assertThat(LlamaExt.decisionResolutionReport()).contains(
       "llama_batch_ext_set_decision_order"
+    );
+    assertThat(LlamaExt.decisionLabelsResolutionReport()).contains(
+      "llama_model_decision_label"
     );
   }
 }

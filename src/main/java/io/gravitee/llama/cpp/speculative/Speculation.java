@@ -206,6 +206,41 @@ public final class Speculation {
     return snapshot(draftBuf, chain, logitsRow);
   }
 
+  /**
+   * Draws one of a draft's candidate tokens from {@code softmax(scores / temperature)} and returns
+   * that distribution as the draft snapshot, for drafts that score a short candidate list rather
+   * than the whole vocabulary.
+   */
+  public Snapshot draftCandidates(int[] ids, float[] scores) {
+    float temperature = config.temperature() > 0.0f
+      ? config.temperature()
+      : 1.0f;
+    float max = Float.NEGATIVE_INFINITY;
+    for (float s : scores) {
+      max = Math.max(max, s);
+    }
+    float[] probs = new float[scores.length];
+    double sum = 0.0;
+    for (int i = 0; i < scores.length; i++) {
+      probs[i] = (float) Math.exp((scores[i] - max) / temperature);
+      sum += probs[i];
+    }
+    for (int i = 0; i < probs.length; i++) {
+      probs[i] = (float) (probs[i] / sum);
+    }
+    double u = rng.nextDouble();
+    double acc = 0.0;
+    int selected = probs.length - 1;
+    for (int i = 0; i < probs.length; i++) {
+      acc += probs[i];
+      if (u < acc) {
+        selected = i;
+        break;
+      }
+    }
+    return new Snapshot(ids.clone(), probs, ids[selected], probs[selected]);
+  }
+
   /** Selected token only — applies the chain to the target buffer and returns its choice. */
   public int targetSelect(LlamaSampler chain, MemorySegment logitsRow) {
     return select(targetBuf, chain, logitsRow);

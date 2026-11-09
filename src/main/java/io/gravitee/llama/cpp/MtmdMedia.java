@@ -24,6 +24,7 @@ import java.lang.foreign.MemorySegment;
  * Implementing classes:
  * - {@link MtmdImage} for image media
  * - {@link MtmdAudio} for audio media
+ * - {@link MtmdVideo} for video media
  */
 public interface MtmdMedia extends Freeable {
   /**
