@@ -19,6 +19,7 @@ import static io.gravitee.llama.cpp.GenerationState.ANSWER;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 import io.gravitee.llama.cpp.LlamaTokenizer.TokenizerResponse;
+import io.gravitee.llama.cpp.draft.DFlashDraft;
 import io.gravitee.llama.cpp.draft.Eagle3Draft;
 import io.gravitee.llama.cpp.draft.MtpDraft;
 import io.gravitee.llama.cpp.draft.NgramIndex;
@@ -118,6 +119,7 @@ public class ConversationState {
   // MTP self-speculation (setMtp) / EAGLE3 head drafting (setEagle3) proposal state.
   private MtpDraft mtpDraft;
   private Eagle3Draft eagle3Draft;
+  private DFlashDraft dflashDraft;
 
   // The speculative flavour attached by setDraft/setNgram/setMtp/setEagle3 (stateless singleton).
   private SpeculativeDecoding speculativeDecoding;
@@ -445,6 +447,94 @@ public class ConversationState {
     return this;
   }
 
+  /**
+   * Enables block-diffusion speculative decoding: a draft model that holds the target's layer
+   * features in its KV cache proposes a whole block of tokens in one forward pass. Works with dense
+   * targets. Plain DFlash drafts, DSpark drafts (Markov head, optional confidence head), DFlash2
+   * drafts (candidate selector) and LiliCorr drafts (correction head) are told apart from the GGUF
+   * ({@link DFlashDraft.Kind}). Requires the staging layer-input API
+   * ({@link LlamaExt#eagle3Available()}), plus the nextn API ({@link LlamaExt#available()}) for the
+   * drafts that read it, a draft context created with {@code ctxOther(target)} (the draft reads the
+   * target's token embeddings and output head) and a shared vocab. The decoded part of each prompt
+   * must fit in one target batch.
+   * <p>
+   * Greedy configs are lossless; sampling configs use rejection sampling. N-gram configs are
+   * rejected. The draft size is capped at the model's block size ({@link DFlashDraft#maxDraft()}).
+   * With a {@code pMin}, a DSpark draft with a confidence head stops at the first draft predicted
+   * below it.
+   *
+   * @param dflashContext A context over the DFlash draft model, linked to this state's context
+   *                      ({@code ctxOther}); caller-owned
+   * @param dflashModel   The DFlash draft model (for its target layers and block size)
+   * @param config        Speculative decoding configuration ({@code ngram} must be 0)
+   */
+  public ConversationState setDFlash(
+    LlamaContext dflashContext,
+    LlamaModel dflashModel,
+    SpeculativeConfig config
+  ) {
+    if (config.isNgram()) {
+      throw new LlamaException(
+        "setDFlash requires a model-draft config (ngram == 0)"
+      );
+    }
+    if (!LlamaExt.eagle3Available()) {
+      throw new LlamaException(
+        "DFlash requires the staging layer-input API in the loaded libllama:\n" +
+          LlamaExt.eagle3ResolutionReport()
+      );
+    }
+    String arch = dflashModel.metaVal(arena, "general.architecture");
+    if (!"dflash".equals(arch)) {
+      throw new LlamaException(
+        "Not a DFlash draft model: architecture is " + arch
+      );
+    }
+    int[] layerIds = LlamaExt.targetLayerIds(dflashModel);
+    if (layerIds.length == 0) {
+      throw new LlamaException("DFlash draft model has no target layers");
+    }
+    if (dflashContext.nVocab() != context.nVocab()) {
+      throw new LlamaException(
+        "DFlash draft vocab (" +
+          dflashContext.nVocab() +
+          ") differs from target (" +
+          context.nVocab() +
+          ") — the draft must be converted against this target model"
+      );
+    }
+    if (
+      LlamaExt.getCtxOther(dflashContext).address() !=
+      context.getMemorySegment().address()
+    ) {
+      throw new LlamaException(
+        "The DFlash context must be created with ctxOther(target)"
+      );
+    }
+    int maskToken = LlamaRuntime.llama_vocab_mask(
+      new LlamaVocab(dflashModel).segment
+    );
+    if (maskToken < 0) {
+      throw new LlamaException("DFlash draft model has no mask token");
+    }
+    var draft = new DFlashDraft(
+      arena,
+      dflashContext,
+      dflashModel,
+      layerIds,
+      context.getModel().nEmbd(),
+      maskToken
+    );
+    for (int id : layerIds) {
+      LlamaExt.setEmbeddingsLayerInp(context, id, true);
+    }
+    this.speculativeConfig = config;
+    this.speculation = new Speculation(arena, context.nVocab(), config);
+    this.dflashDraft = draft;
+    this.speculativeDecoding = DFlashSpeculativeDecoding.INSTANCE;
+    return this;
+  }
+
   public boolean hasDraft() {
     return draftContext != null;
   }
@@ -477,6 +567,15 @@ public class ConversationState {
     return eagle3Draft;
   }
 
+  /** Whether DFlash block drafting is enabled. */
+  public boolean isDFlash() {
+    return dflashDraft != null;
+  }
+
+  public DFlashDraft getDFlashDraft() {
+    return dflashDraft;
+  }
+
   /** Frees all speculative persistent native scratch (idempotent; safe when none is set). */
   public void freeSpeculativeScratch() {
     if (speculation != null) {
@@ -487,6 +586,9 @@ public class ConversationState {
     }
     if (eagle3Draft != null) {
       eagle3Draft.free();
+    }
+    if (dflashDraft != null) {
+      dflashDraft.free();
     }
   }
 

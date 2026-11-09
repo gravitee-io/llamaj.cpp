@@ -17,6 +17,10 @@ package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_PATH;
 import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_TO_DOWNLOAD;
+import static io.gravitee.llama.cpp.LlamaCppTest.MODEL_VL_PATH;
+import static io.gravitee.llama.cpp.LlamaCppTest.VL_MMPROJ;
+import static io.gravitee.llama.cpp.LlamaCppTest.VL_MMPROJ_PATH;
+import static io.gravitee.llama.cpp.LlamaCppTest.VL_TEXT;
 import static io.gravitee.llama.cpp.LlamaCppTest.getModelPath;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,6 +36,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -44,6 +49,7 @@ import org.junit.jupiter.api.Test;
  * <p>
  * The decision-model cases run only when {@code LLAMAJ_DECISION_MODEL} points at a decision GGUF
  * (converted with llama.cpp's converter); each case also skips unless the model is of its family.
+ * The media cases of a decision model also need {@code LLAMAJ_DECISION_MMPROJ}, its projector.
  *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
@@ -308,10 +314,29 @@ class LlamaDeciderTest extends LlamaCppTest {
 
   @Test
   void decision_type_parses_known_names() {
-    assertThat(DecisionType.fromMetaName("nimble")).isEqualTo(
-      DecisionType.NIMBLE
+    assertThat(
+      Arrays.stream(DecisionType.values())
+        .map(DecisionType::metaName)
+        .filter(Objects::nonNull)
+    ).containsExactly(
+      "openjev",
+      "lev",
+      "kev",
+      "nimble",
+      "laya",
+      "clef",
+      "pplx-decider",
+      "vllm-decision2",
+      "vllm-d3",
+      "granite-switch",
+      "h2o-lightning",
+      "openbmb-minicpm-ocr-jev"
     );
-    assertThat(DecisionType.fromMetaName("clef")).isEqualTo(DecisionType.CLEF);
+    Arrays.stream(DecisionType.values())
+      .filter(type -> type != DecisionType.CUSTOM)
+      .forEach(type ->
+        assertThat(DecisionType.fromMetaName(type.metaName())).isEqualTo(type)
+      );
     assertThatThrownBy(() -> DecisionType.fromMetaName("future"))
       .isInstanceOf(LlamaException.class)
       .hasMessageContaining("future");
@@ -340,6 +365,135 @@ class LlamaDeciderTest extends LlamaCppTest {
     assertThatThrownBy(() ->
       new ClefPrompt(new int[] { 1, 2 }, new DecisionOrder[] { Q, N })
     ).isInstanceOf(IllegalArgumentException.class);
+
+    assertThatThrownBy(() -> MediaPrompt.of(null, List.of(), 1)).isInstanceOf(
+      NullPointerException.class
+    );
+    assertThatThrownBy(() -> MediaPrompt.of("x", null, 1)).isInstanceOf(
+      NullPointerException.class
+    );
+    assertThatThrownBy(() -> MediaPrompt.of("x", List.of(), 0)).isInstanceOf(
+      IllegalArgumentException.class
+    );
+    assertThatThrownBy(() ->
+      MediaPrompt.of("x", List.of(), 1).media().add(null)
+    ).isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  @Test
+  void score_biases_are_keyed_by_level_count() {
+    String prefix = "arch.decision.score_bias.";
+    var biases = LlamaDecider.parseScoreBiases(
+      prefix,
+      Map.of(
+        prefix + "3.0",
+        "0.5",
+        prefix + "3.2",
+        "-1.25",
+        prefix + "2.1",
+        "2",
+        "arch.decision.temperature.choice",
+        "1.0"
+      )
+    );
+    assertThat(biases).containsOnlyKeys(2, 3);
+    assertThat(biases.get(3)).containsExactly(0.5f, 0f, -1.25f);
+    assertThat(biases.get(2)).containsExactly(0f, 2f);
+
+    Stream.of(
+      prefix + "3.3",
+      prefix + "1.0",
+      prefix + "3",
+      prefix + "x.0"
+    ).forEach(key ->
+      assertThatThrownBy(() ->
+        LlamaDecider.parseScoreBiases(prefix, Map.of(key, "1"))
+      )
+        .isInstanceOf(LlamaException.class)
+        .hasMessageContaining(key)
+    );
+    assertThatThrownBy(() ->
+      LlamaDecider.parseScoreBiases(prefix, Map.of(prefix + "2.0", "high"))
+    ).isInstanceOf(LlamaException.class);
+  }
+
+  @Test
+  void media_prompt_needs_a_multimodal_context() {
+    var model = track(
+      new LlamaModel(
+        arena,
+        getModelPath(MODEL_PATH, MODEL_TO_DOWNLOAD),
+        new LlamaModelParams(arena)
+      )
+    );
+    try (
+      var decider = LabelDecider.custom(
+        arena,
+        model,
+        LlamaDecider.Options.defaults(),
+        List.of("positive", "negative")
+      )
+    ) {
+      assertThat(decider.causal()).isTrue();
+      assertThat(decider.scoreBiases()).isEmpty();
+      assertThatThrownBy(() -> decider.score(MediaPrompt.of("x", List.of(), 2)))
+        .isInstanceOf(LlamaException.class)
+        .hasMessageContaining("MtmdContext");
+    }
+  }
+
+  @Test
+  void custom_decider_scores_a_media_prompt() throws Exception {
+    var model = track(
+      new LlamaModel(
+        arena,
+        getModelPath(MODEL_VL_PATH, VL_TEXT),
+        new LlamaModelParams(arena)
+      )
+    );
+    var mtmd = track(
+      new MtmdContext(
+        arena,
+        model,
+        getModelPath(VL_MMPROJ_PATH, VL_MMPROJ).toAbsolutePath(),
+        new MtmdContextParams(arena).useGpu(true)
+      )
+    );
+    var image = MtmdImage.fromFile(
+      arena,
+      Path.of(getClass().getClassLoader().getResource("man.jpg").toURI())
+    );
+    String prefill = "Answer:";
+    try (
+      var decider = LabelDecider.custom(
+        arena,
+        model,
+        mtmd,
+        LlamaDecider.Options.defaults(),
+        prefill,
+        List.of(" yes", " no")
+      )
+    ) {
+      String prompt = String.join(
+        "\n",
+        IM_START + "system\nAnswer yes or no." + IM_END,
+        IM_START +
+          "user\n" +
+          mtmd.marker() +
+          "\nIs the person wearing glasses?" +
+          IM_END,
+        IM_START + "assistant\n" + prefill
+      );
+      List<float[]> scores = decider.score(
+        List.of(MediaPrompt.of(prompt, List.of(image), 2))
+      );
+      assertThat(scores).hasSize(1);
+      assertThat(scores.getFirst()).hasSize(2);
+      assertFinite(scores.getFirst());
+      assertThat(scores.getFirst()[0]).isGreaterThan(scores.getFirst()[1]);
+    } finally {
+      image.free();
+    }
   }
 
   @Test
@@ -353,10 +507,19 @@ class LlamaDeciderTest extends LlamaCppTest {
       )
     ) {
       Class<?> expected = switch (decider.type()) {
-        case OPENJEV, LEV, NIMBLE, CUSTOM -> LabelDecider.class;
+        case
+          OPENJEV,
+          LEV,
+          NIMBLE,
+          PPLX_DECIDER,
+          VLLM_D3,
+          GRANITE_SWITCH,
+          H2O_LIGHTNING,
+          CUSTOM -> LabelDecider.class;
         case KEV -> KevDecider.class;
         case LAYA -> LayaDecider.class;
-        case CLEF -> ClefDecider.class;
+        case CLEF, VLLM_DECISION2 -> ClefDecider.class;
+        case MINICPM_OCR_JEV -> PooledDecider.class;
       };
       assertThat(decider).isInstanceOf(expected);
     }
@@ -380,7 +543,7 @@ class LlamaDeciderTest extends LlamaCppTest {
       )
     ) {
       assertThat(shared.labels()).isNotEmpty();
-      assertThat(shared.labels().get(0).code()).isEqualTo("A");
+      assertThat(shared.labels().get(0).code().strip()).isEqualTo("A");
       withSharing = shared.score(prompts);
     }
 
@@ -488,7 +651,7 @@ class LlamaDeciderTest extends LlamaCppTest {
     try (
       var decider = LlamaDecider.create(
         arena,
-        decisionModel(Set.of(DecisionType.CLEF)),
+        decisionModel(Set.of(DecisionType.CLEF, DecisionType.VLLM_DECISION2)),
         LlamaDecider.Options.defaults()
       )
     ) {
@@ -517,13 +680,117 @@ class LlamaDeciderTest extends LlamaCppTest {
 
       float[] scores = decider.score(new ClefPrompt(tokens, order));
       assertThat(scores).hasSize(2);
+      decider.scoreBiases().forEach((n, bias) -> assertThat(bias).hasSize(n));
+    }
+  }
+
+  @Test
+  void non_causal_label_model_decodes_each_prompt_in_one_batch() {
+    try (
+      var decider = LabelDecider.create(
+        arena,
+        decisionModel(Set.of(DecisionType.VLLM_D3)),
+        LlamaDecider.Options.defaults().withNBatch(64)
+      )
+    ) {
+      assertThat(decider.causal()).isFalse();
+      float[] scores = decider.score(TextPrompt.of("A small red apple.", 2));
+      assertThat(scores).hasSize(2);
+      assertFinite(scores);
+      assertThatThrownBy(() ->
+        decider.score(TextPrompt.of("apple ".repeat(200), 2))
+      )
+        .isInstanceOf(LlamaException.class)
+        .hasMessageContaining("one batch");
+    }
+  }
+
+  @Test
+  void model_labels_are_read_from_the_gguf() {
+    assumeTrue(
+      LlamaExt.decisionLabelsAvailable(),
+      LlamaExt.decisionLabelsResolutionReport()
+    );
+    LlamaModel model = decisionModel(Set.of(DecisionType.H2O_LIGHTNING));
+    try (
+      var decider = LabelDecider.create(
+        arena,
+        model,
+        LlamaDecider.Options.defaults()
+      )
+    ) {
+      assertThat(decider.labels())
+        .extracting(LabelDecider.Label::code)
+        .containsExactlyElementsOf(LlamaExt.decisionLabels(model));
+    }
+  }
+
+  @Test
+  void pooled_decider_scores_one_value_per_class() {
+    try (
+      var decider = PooledDecider.create(
+        arena,
+        decisionModel(Set.of(DecisionType.MINICPM_OCR_JEV)),
+        LlamaDecider.Options.defaults()
+      )
+    ) {
+      int n = decider.classes().size();
+      float[] scores = decider.score(TextPrompt.of("A small red apple.", n));
+      assertThat(scores).hasSize(n);
+      assertFinite(scores);
+      assertThatThrownBy(() -> decider.score(TextPrompt.of("x", n + 1)))
+        .isInstanceOf(LlamaException.class)
+        .hasMessageContaining("classes");
+    }
+  }
+
+  @Test
+  void pooled_decider_scores_a_media_prompt() throws Exception {
+    var mmproj = System.getenv("LLAMAJ_DECISION_MMPROJ");
+    assumeTrue(
+      mmproj != null && Files.exists(Path.of(mmproj)),
+      "LLAMAJ_DECISION_MMPROJ not set"
+    );
+    LlamaModel model = decisionModel(Set.of(DecisionType.MINICPM_OCR_JEV));
+    var mtmd = track(
+      new MtmdContext(
+        arena,
+        model,
+        Path.of(mmproj).toAbsolutePath(),
+        new MtmdContextParams(arena).useGpu(true)
+      )
+    );
+    var image = MtmdImage.fromFile(
+      arena,
+      Path.of(getClass().getClassLoader().getResource("man.jpg").toURI())
+    );
+    try (
+      var decider = PooledDecider.create(
+        arena,
+        model,
+        mtmd,
+        LlamaDecider.Options.defaults()
+      )
+    ) {
+      int n = decider.classes().size();
+      float[] scores = decider.score(
+        MediaPrompt.of(mtmd.marker() + "\nA man.", List.of(image), n)
+      );
+      assertThat(scores).hasSize(n);
+      assertFinite(scores);
+    } finally {
+      image.free();
     }
   }
 
   private static final Set<DecisionType> LABEL_TYPES = EnumSet.of(
     DecisionType.OPENJEV,
     DecisionType.LEV,
-    DecisionType.NIMBLE
+    DecisionType.NIMBLE,
+    DecisionType.PPLX_DECIDER,
+    DecisionType.VLLM_D3,
+    DecisionType.GRANITE_SWITCH,
+    DecisionType.H2O_LIGHTNING
   );
 
   private LlamaModel decisionModel(Set<DecisionType> families) {

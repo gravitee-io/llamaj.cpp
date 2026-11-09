@@ -30,6 +30,8 @@ import java.util.List;
  */
 public class MtmdContext extends MemorySegmentAware implements Freeable {
 
+  private final LlamaModel model;
+
   public MtmdContext(
     Arena arena,
     LlamaModel llamaModel,
@@ -43,6 +45,28 @@ public class MtmdContext extends MemorySegmentAware implements Freeable {
         mtmdContextParams.segment
       )
     );
+    this.model = llamaModel;
+  }
+
+  /** What the model and this projector can read and produce. */
+  public MtmdCapabilities capabilities() {
+    try (var local = Arena.ofConfined()) {
+      MemorySegment cap = LlamaRuntime.mtmd_helper_get_capabilities(
+        local,
+        model.segment,
+        segment
+      );
+      return new MtmdCapabilities(
+        LlamaRuntime.mtmd_helper_cap_field(cap, "chat"),
+        LlamaRuntime.mtmd_helper_cap_field(cap, "vision"),
+        LlamaRuntime.mtmd_helper_cap_field(cap, "audio"),
+        LlamaRuntime.mtmd_helper_cap_field(cap, "video"),
+        LlamaRuntime.mtmd_helper_cap_field(cap, "audio_stream"),
+        LlamaRuntime.mtmd_helper_cap_field(cap, "text_gen"),
+        LlamaRuntime.mtmd_helper_cap_field(cap, "audio_gen"),
+        LlamaRuntime.mtmd_helper_cap_field(cap, "audio_gen_spk_ref")
+      );
+    }
   }
 
   private static MemorySegment getMmprojPath(Arena arena, Path mmprojFilePath) {
@@ -61,6 +85,11 @@ public class MtmdContext extends MemorySegmentAware implements Freeable {
 
   public boolean supportsAudio() {
     return mtmd_support_audio(segment);
+  }
+
+  /** The text that stands for one image or audio item in a prompt. */
+  public String marker() {
+    return LlamaRuntime.mtmd_get_marker(segment);
   }
 
   public int getAudioSampleRate() {
@@ -151,9 +180,20 @@ public class MtmdContext extends MemorySegmentAware implements Freeable {
       false
     );
     MemorySegment bitmap = wrapper.get(ValueLayout.ADDRESS, 0);
+    MemorySegment video = wrapper.get(
+      ValueLayout.ADDRESS,
+      ValueLayout.ADDRESS.byteSize()
+    );
     if (bitmap == null || bitmap.address() == 0) {
       throw new LlamaException(
         "Failed to create bitmap from file bytes (unsupported format or corrupt data)"
+      );
+    }
+    if (video != null && video.address() != 0) {
+      LlamaRuntime.mtmd_bitmap_free(bitmap);
+      LlamaRuntime.mtmd_helper_video_free(video);
+      throw new LlamaException(
+        "the bytes are a video, load them with MtmdVideo"
       );
     }
     return bitmap;

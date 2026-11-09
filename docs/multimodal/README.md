@@ -1,18 +1,20 @@
-# Multimodal (Vision & Audio)
+# Multimodal (Vision, Video & Audio)
 
-> Feed images and audio to a vision/audio-capable model by pairing the main LLM with an mmproj (clip) projector through `MtmdContext`.
+> Feed images, video and audio to a vision/audio-capable model by pairing the main LLM with an mmproj (clip) projector through `MtmdContext`.
 
 ## Overview
 Multimodal support lets you attach images (JPEG, PNG, GIF, BMP, WebP, TIFF) and audio (WAV) to a prompt so a vision/audio model can reason over them. Media is decoded into native `mtmd_bitmap` handles, attached to a `ConversationState` via `setMedia`, and tokenized/encoded by a `MtmdContext` that wraps the model's separate **mmproj** (clip/projector) GGUF. You drive generation with the same `DefaultLlamaIterator` as text, but constructed with the `MtmdContext`. Use it whenever your model ships a companion mmproj file and you need to pass non-text inputs.
 
 ## Key types
-- `MtmdContext` — wraps the native `mtmd_context`; loads the mmproj projector and exposes `supportsVision()`, `supportsAudio()`, `getAudioSampleRate()`. Required for any multimodal generation.
+- `MtmdContext` — wraps the native `mtmd_context`; loads the mmproj projector and exposes `supportsVision()`, `supportsAudio()`, `getAudioSampleRate()`, `marker()` (the media marker) and `capabilities()`. Required for any multimodal generation.
+- `MtmdCapabilities` — what the model and projector read and produce: `chat`, `vision`, `audio`, `video`, `audioStream`, `textGeneration`, `audioGeneration`, `audioGenerationVoice`.
 - `MtmdContextParams` — fluent config for the context (`useGpu`, `mediaMarker`, `nThreads`, `printTimings`, `flashAttnType`, image token bounds).
 - `MtmdMedia` — common `Freeable` interface for media items; backs each media marker in the prompt.
 - `MtmdImage` — image media; factories `fromFile`, `fromBytes`, `fromBufferedImage`, `fromBytesNative`.
 - `MtmdAudio` — audio media; factories `fromFile`, `fromBytes`, `fromSamples` (all take a target sample rate).
+- `MtmdVideo` — video media read as frames with timestamp text between them; factories `fromFile`, `fromBytes` (take the `MtmdContext` and `MtmdVideo.Options`: `fpsTarget`, `ffmpegBinDir`, `timestampIntervalMs`, `noSoundtrack`); `info()` gives width, height, fps and frame count.
 - `MtmdMediaFactory` — auto-detects and loads media via built-in handlers (`from`, `fromFile`).
-- `MediaHandler<T>` / `ImageHandler` / `AudioHandler` — pluggable loaders; image is the fallback, audio matches WAV by extension/magic bytes.
+- `MediaHandler<T>` / `VideoHandler` / `ImageHandler` / `AudioHandler` — pluggable loaders; video matches by extension (mp4, m4v, mov, mkv, webm, avi), audio matches WAV by extension/magic bytes, image is the fallback.
 - `AudioLoader` / `AudioFormat` — Java Sound decoding + resampling and WAV/MP3/FLAC detection.
 - `ConversationState.setMedia(List<MtmdMedia>)` — attaches loaded media to the prompt (one item per media marker).
 
@@ -64,6 +66,21 @@ sampler.free();
 llamaModel.free();
 ```
 
+### Video
+A video stands for one media marker, like an image. Its frames are decoded with ffmpeg while the
+prompt is tokenized:
+
+```java
+if (mtmdContext.capabilities().video()) {
+    var video = MtmdVideo.fromFile(arena, mtmdContext, Path.of("clip.mp4"),
+        MtmdVideo.Options.defaults().withFpsTarget(2));
+    var state = ConversationState.create(arena, llamaContext, tokenizer, sampler)
+      .initialize("USER: What happens in this video?\n<IMG>\nASSISTANT:")
+      .setMedia(List.of(video));
+    // ... iterate, then video.free()
+}
+```
+
 ## Options
 `MtmdContextParams` (fluent setters return `this`):
 
@@ -86,7 +103,9 @@ llamaModel.free();
 - Images are decoded to RGB via `ImageIO`; `fromBytesNative` instead uses the native stb_image decoder for byte-for-byte parity with the reference llama.cpp server.
 - Each `MtmdImage`/`MtmdAudio`/`MtmdContext` is `Freeable` — call `free()` (or track them in tests) so native `mtmd_bitmap`/context memory is released before JVM exit. Allocate with an `Arena` you control.
 - Check capabilities before loading: `mtmdContext.supportsVision()` / `supportsAudio()`; `AudioHandler` throws if the model lacks audio support.
-- `MtmdMediaFactory.from(arena, input, mtmdContext)` auto-selects a handler (audio first, image fallback) for `Path` or `byte[]` inputs; supply custom `MediaHandler`s for other sources.
+- `MtmdMediaFactory.from(arena, input, mtmdContext)` auto-selects a handler (video, then audio, image fallback) for `Path` or `byte[]` inputs; supply custom `MediaHandler`s for other sources.
+- Video needs `ffmpeg` and `ffprobe` on the `PATH` (or `Options.ffmpegBinDir`) and a llama.cpp build with video support: check `capabilities().video()`. A video is tokenized once; load it again for another prompt. `fromBytesNative` and `bitmapInitFromBuf` reject video bytes — use `MtmdVideo`.
+- To generate speech rather than read it, see [Speech Generation](../speech-generation/README.md).
 
 ## See also
 - [Getting Started](../getting-started/README.md) — model/context/arena setup this builds on.
