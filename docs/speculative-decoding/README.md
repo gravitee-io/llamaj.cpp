@@ -3,7 +3,7 @@
 > Speed up generation by having a cheap drafter propose several tokens that the target model verifies in a single pass, with byte-for-byte identical output.
 
 ## Overview
-Speculative decoding accelerates token generation without changing the result: a cheap *drafter* proposes up to `nDraft` tokens per round and the target model verifies them all in one decode, committing the run of tokens it agrees with. Four drafter flavours are available:
+Speculative decoding accelerates token generation without changing the result: a cheap *drafter* proposes up to `nDraft` tokens per round and the target model verifies them all in one decode, committing the run of tokens it agrees with. Five drafter flavours are available:
 
 | Flavour | Setter | Drafter | Needs |
 | --- | --- | --- | --- |
@@ -11,14 +11,15 @@ Speculative decoding accelerates token generation without changing the result: a
 | **N-gram / prompt-lookup** | `setNgram` | the generation history itself (no model, no forward pass) | nothing |
 | **MTP self-speculation** | `setMtp` | the target model's own multi-token-prediction head | a model with `n_layer_nextn > 0` (e.g. Qwen3.6-MoE) |
 | **EAGLE3** | `setEagle3` | a tiny trained head consuming the target's intermediate hidden states | a target-specific `eagle3`-arch head GGUF |
+| **DFlash** | `setDFlash` | a block-diffusion draft model that drafts a whole block in one forward pass from the target's layer features (plain DFlash, DSpark, DFlash2 or LiliCorr) | a target-specific `dflash`-arch draft GGUF |
 
-Greedy configs are *lossless* (identical to plain greedy decoding); sampling configs use rejection sampling and stay an *exact* draw of the target distribution. Use it when you have spare compute and want lower latency — especially with repetitive output (code, JSON, RAG) for the n-gram path. MTP/EAGLE3 bind llama.cpp's *staging* nextn API (C++-mangled symbols, capability-probed at runtime via `LlamaExt`).
+Greedy configs are *lossless* (identical to plain greedy decoding); sampling configs use rejection sampling and stay an *exact* draw of the target distribution. Use it when you have spare compute and want lower latency — especially with repetitive output (code, JSON, RAG) for the n-gram path. MTP/EAGLE3/DFlash bind llama.cpp's *staging* nextn and layer-input API (C++-mangled symbols, capability-probed at runtime via `LlamaExt`).
 
 ## Key types
 - `SpeculativeConfig` — immutable record holding the draft window, sampling knobs, adaptive early-stop, and n-gram window; built via factories, withers, or a builder.
 - `ConversationState` — per-conversation state; `setDraft(...)` / `setNgram(...)` enable speculation, `isSpeculative()` / `isNgram()` query it, `acceptRate()` reports accepted/drafted.
 - `io.gravitee.llama.cpp.speculative` (internal) — `SpeculativeDecoding`, the abstract flavour base (verify/accept/emit mechanics) with one subclass per flavour (`ModelDraftSpeculativeDecoding`, `NgramSpeculativeDecoding`, `MtpSpeculativeDecoding`, `Eagle3SpeculativeDecoding`), attached to the state by its setter; and `Speculation`, the sampling math (draft snapshots, rejection-sampling accept test, residual draws — the per-position distribution is computed natively).
-- `io.gravitee.llama.cpp.draft` (internal) — the draft sources: `NgramIndex`, `MtpDraft`, `Eagle3Draft` (the latter two behind `HiddenStateDraft`).
+- `io.gravitee.llama.cpp.draft` (internal) — the draft sources: `NgramIndex`, `MtpDraft`, `Eagle3Draft` (the latter two behind `HiddenStateDraft`) and `DFlashDraft`.
 
 ## Usage
 ```java
@@ -101,6 +102,46 @@ Both setters validate capability up front (staging symbols present, head declare
 layers, shared vocab) and throw `LlamaException` with a per-symbol report otherwise. The prompt
 must fit in one target batch for EAGLE3 (layer capture covers only the last decode).
 
+### Block drafting (DFlash, DSpark, DFlash2, LiliCorr)
+A block-diffusion draft (GGUF arch `dflash`, converted against your exact target) keeps the
+target's layer features in its KV cache and denoises `[last token, mask × nDraft]` in one pass, so
+a whole block costs one draft decode. It borrows the target's token embeddings and output head, so
+its context must be linked to the target with `ctxOther`:
+
+```java
+var draftModel = new LlamaModel(arena, Path.of("dflash-draft.gguf"), new LlamaModelParams(arena));
+var draftCtx = new LlamaContext(arena, draftModel, new LlamaContextParams(arena)
+    .nCtx(targetCtx.nCtx()).nBatch(512).nUBatch(512)
+    .nOutputsMax(16)                        // >= nDraft + 1: every block position is an output
+    .ctxOther(targetCtx));
+state.setDFlash(draftCtx, draftModel, SpeculativeConfig.greedy(8));
+```
+
+`setDFlash` reads the kind of draft from the GGUF (`state.getDFlashDraft().kind()`):
+
+| Kind | Told apart by | How a block turns into drafts |
+| --- | --- | --- |
+| `DFLASH` | none of the keys below | draft `i` is the argmax of block row `i + 1` |
+| `DSPARK` | `dflash.sample_from_anchor` / `dflash.has_confidence_head` | a Markov head chains the rows in the graph; the first draft comes from the anchor row, so a block drafts up to `dflash.block_size` tokens. With a `pMin`, the confidence head stops the block at the first draft predicted below it |
+| `DFLASH2` | `dflash.selector_top_k` | a candidate selector scores the top-k candidates of each row given the previous draft; sampled rounds draw from that distribution |
+| `LILICORR` | `lilicorr.candidate_topk` | a correction head scores the top-k candidates of each row from the last committed token's state; drafts are walked greedily, and sampled rounds verify them as certain tokens |
+
+`nDraft` is capped at the model's block size (`DFlashDraft.maxDraft()`). The decoded part of each
+prompt must fit in one target batch.
+
+With `BatchIterator`, sequences that share a draft context decode their blocks in one draft pass
+(all of the group's largest `nDraft`, so DSpark's Markov head sees equal-length blocks) and verify
+in the fused target decode. Size the draft context for the group: `nSeqMax` covering the sequence
+ids, `nUBatch` holding every block at once, and `nOutputsMax >= nSeqMax * (nDraft + 1)`.
+
+Drafts published in the vLLM speculators layout (flat `config.json` with
+`aux_hidden_state_layer_ids` and `transformer_layer_config`) convert once their config is
+rewritten to the nested `dflash_config` layout `convert_hf_to_gguf.py` reads: merge
+`transformer_layer_config` into the top level, set `is_causal` to the opposite of
+`sliding_window_non_causal`, and put `block_size`,
+`mask_token_id`, `target_layer_ids` (each `aux_hidden_state_layer_ids` entry minus one) and the
+variant's own keys (`conv_*`/`selector_*`, or `lilicorr_*`) under `dflash_config`.
+
 ## From the CLI
 `Main` (the bundled CLI) exposes speculation through flags — no code required:
 
@@ -110,11 +151,12 @@ must fit in one target batch for EAGLE3 (layer capture covers only the last deco
 | `--ngram <window>` | N-gram prompt-lookup drafting with this window; no draft model (default window 2). |
 | `--mtp` | MTP (nextn) self-speculation using the target model's own MTP head; requires `n_layer_nextn > 0`. |
 | `--eagle3 <path>` | EAGLE3 head GGUF (arch `eagle3`, trained for this target). |
+| `--dflash <path>` | Block-diffusion draft GGUF (arch `dflash`: DFlash, DSpark, DFlash2 or LiliCorr, converted for this target). |
 | `--n_draft <k>` | Max tokens drafted/proposed per round (default 4). |
 | `--p_min <p>` | Adaptive early-stop: stop drafting once the draft's top-token probability drops below `p` (not `--ngram`; `0` = disabled). Distinct from `--min_p` (min-p sampling). |
 | `--draft_min <n>` | Min tokens to draft before `--p_min` applies (default 1; clamped to `[1, n_draft]`). |
 
-The four flavours are mutually exclusive — pick exactly one.
+The five flavours are mutually exclusive — pick exactly one.
 
 `--strategy DETERMINISTIC` selects the lossless greedy path; any temperature strategy (`CLASSIC_CHAT`/`FOCUSED`/`BALANCED`) makes speculation an exact memoryless sampler (temperature/top-k/top-p only). `CONSTRAINED`/`ADAPTIVE` and `--mmproj` are rejected up front (grammar/mirostat aren't memoryless; multimodal is unsupported).
 
@@ -150,9 +192,9 @@ Helpers: `isGreedy()` (`temperature <= 0`), `isAdaptive()` (`pMin > 0` and model
 - `setNgram` requires an n-gram config (`config.isNgram()`, i.e. `ngram >= 1`); calling it with a model-draft config throws. A missing n-gram match simply degrades the round to a single target decode — never wrong output.
 - **Lossless / exact regardless of draft quality:** the target verifies every proposed token and always commits at least one. A weaker draft only lowers `acceptRate()`, it never changes which tokens are emitted. `acceptRate()` is `0.0` until something is drafted.
 - **Adaptive early stop** (`pMin > 0`) changes only *how many* tokens are speculated per round, not *which* are emitted, so it preserves greedy losslessness and sampling exactness.
-- All four flavours work with both `DefaultLlamaIterator` (single sequence) and `BatchIterator` (fused multi-sequence). For the fused path, size the target context so `nBatch >= sum(nDraft + 1)` across sequences.
+- Every flavour works with both `DefaultLlamaIterator` (single sequence) and `BatchIterator` (fused multi-sequence). For the fused path, size the target context so `nBatch >= sum(nDraft + 1)` across sequences.
 - **Fused MTP/EAGLE3**: sequences sharing a head context draft in lockstep — each chain step is one batched dual *(token, hidden)* decode across sequences (this also amortizes the per-draft dispatch cost that dominates small-graph decodes), they verify in the shared fused target decode, and each sequence then advances its own seed (MTP: the target's hidden at its last accepted verify row) or boundary (EAGLE3: per-sequence slice of the layer capture, encoded and re-synced) from its slice of the verify buffers. Size the **head context** for the batch: `nSeqMax` matching the target's and `nOutputsMax >= nSeqMax` (the bundled CLI does this; if you build the MTP context yourself, see the usage snippet above).
-- **Staging-API dependency:** MTP/EAGLE3 resolve C++-mangled symbols from the bundled llama.cpp at runtime (`LlamaExt.available()` / `eagle3Available()`). A llama.cpp version bump can invalidate them; the setters then fail fast with a per-symbol resolution report rather than mis-calling a changed ABI.
+- **Staging-API dependency:** MTP/EAGLE3/DFlash resolve C++-mangled symbols from the bundled llama.cpp at runtime (`LlamaExt.available()` / `eagle3Available()`). A llama.cpp version bump can invalidate them; the setters then fail fast with a per-symbol resolution report rather than mis-calling a changed ABI.
 - **Resources/lifecycle:** the `Speculation` allocates persistent native scratch (sampler chain + draft/verify batches) on the state's `Arena`, freed once on teardown. Close the iterator (try-with-resources) when abandoning a stream so the scratch is freed and the sequence cleared; the contexts stay reusable afterward.
 
 ## Benchmarks (July 2026, Apple M4 Max)

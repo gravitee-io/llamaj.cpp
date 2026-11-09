@@ -228,4 +228,36 @@ public final class LlamaContextParams extends MemorySegmentAware {
     llama_context_params("n_outputs_max", SEG_INT, this.segment, nOutputsMax);
     return this;
   }
+
+  /** Device cache size in bytes for the mixture-of-experts weights kept in host memory. */
+  public long moeCacheSize() {
+    return llama_context_params(
+      "moe_cache_size",
+      new Class<?>[] { MemorySegment.class },
+      this.segment
+    );
+  }
+
+  /**
+   * Sets the device cache, in bytes, for the expert weights of a mixture-of-experts model that
+   * {@link LlamaModelParams#cpuMoe} keeps in host memory: the experts a decode selects are copied
+   * into the cache and reused while they stay hot. With several devices the budget is split among
+   * them like the layers. {@code 0} (the default) disables it. Experimental in llama.cpp.
+   *
+   * <p>Only layers whose experts all sit in plain host buffers are cached: load the model with
+   * {@link LlamaModelParams#useExtraBufferTypes(boolean) useExtraBufferTypes(false)}, since
+   * repacked CPU weights are not. Creating the context fails for a model without experts.
+   */
+  public LlamaContextParams moeCacheSize(long bytes) {
+    if (bytes < 0) {
+      throw new IllegalArgumentException("moeCacheSize must be >= 0");
+    }
+    llama_context_params(
+      "moe_cache_size",
+      new Class<?>[] { MemorySegment.class, long.class },
+      this.segment,
+      bytes
+    );
+    return this;
+  }
 }

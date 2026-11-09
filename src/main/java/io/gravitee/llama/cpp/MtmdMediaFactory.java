@@ -44,6 +44,7 @@ public class MtmdMediaFactory {
 
   @SuppressWarnings("rawtypes")
   private static final List<MediaHandler> DEFAULT_HANDLERS = List.of(
+    new VideoHandler(),
     new AudioHandler(),
     new ImageHandler()
   );

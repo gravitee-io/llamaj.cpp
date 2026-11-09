@@ -14,7 +14,7 @@ One folder per capability, one page each. Start with **[Getting Started](./getti
 | Capability | What it does |
 | --- | --- |
 | [Parallel Conversations](./parallel-conversations/README.md) | Decode many conversations through one shared context with `BatchIterator`, isolated by sequence id. |
-| [Speculative Decoding](./speculative-decoding/README.md) | Draft→verify→accept speedup via a draft model or n-gram prompt-lookup; greedy (lossless) or sampling (exact). |
+| [Speculative Decoding](./speculative-decoding/README.md) | Draft→verify→accept speedup via a draft model, n-gram prompt-lookup, MTP, EAGLE3 or block drafts (DFlash, DSpark, DFlash2, LiliCorr); greedy (lossless) or sampling (exact). |
 | [Distributed Inference (RPC)](./distributed-inference/README.md) | Offload layers and KV-cache to remote `rpc-server` backends across machines. |
 | [Quantized KV Cache](./quantized-kv-cache/README.md) | Shrink KV-cache memory by quantizing the K/V cache `ggml_type` (flash attention for a quantized V cache). |
 
@@ -23,8 +23,10 @@ One folder per capability, one page each. Start with **[Getting Started](./getti
 | --- | --- |
 | [Embeddings](./embeddings/README.md) | Turn text into dense vectors with `LlamaEmbedder` over an embedding-mode context. |
 | [Reranking](./reranking/README.md) | Score documents against a query with `LlamaReranker` (BERT cross-encoders and Qwen3-style rerankers). |
-| [Decision Models](./decision-models/README.md) | Detect native decision models and read one raw score per option with `LlamaDecider` (openjev, lev, nimble, kev, laya, clef). |
-| [Multimodal (Vision & Audio)](./multimodal/README.md) | Attach images and audio to a prompt via `MtmdContext` (mmproj/clip projector). |
+| [Decision Models](./decision-models/README.md) | Detect native decision models and read one raw score per option with `LlamaDecider` (openjev, lev, nimble, kev, laya, clef, pplx-decider, vllm-decision2, vllm-d3, granite-switch, h2o-lightning, openbmb-minicpm-ocr-jev), with image and audio prompts. |
+| [Multimodal (Vision, Video & Audio)](./multimodal/README.md) | Attach images, video and audio to a prompt via `MtmdContext` (mmproj/clip projector). |
+| [Speech Generation](./speech-generation/README.md) | Turn text into speech with `LlamaSpeaker` over a speech model and its audio-generation projector, whole or streamed. |
+| [Realtime Transcription](./transcription/README.md) | Transcribe audio as it arrives with `LlamaTranscriber` over a streaming speech-to-text model. |
 
 ### Advanced generation
 | Capability | What it does |
@@ -35,6 +37,6 @@ One folder per capability, one page each. Start with **[Getting Started](./getti
 ### Operations
 | Capability | What it does |
 | --- | --- |
-| [Devices & Memory](./device-and-memory/README.md) | Enumerate backends/devices, query CPU/GPU/RPC memory, read model dims, and read performance metrics. |
+| [Devices & Memory](./device-and-memory/README.md) | Enumerate backends/devices, query CPU/GPU/RPC memory, place weights (tensor overrides, MoE expert cache), read model dims, and read performance metrics. |
 | [Logging](./logging/README.md) | Install a custom log callback over llama.cpp/ggml and filter by level. |
 | [Custom Builds & Platform Support](./custom-builds/README.md) | Build llama.cpp and regenerate the jextract FFM bindings for other platforms (Windows, ARM, CUDA, …). |

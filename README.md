@@ -42,7 +42,7 @@ Full documentation lives in **[`docs/`](./docs/README.md)** — one page per cap
 
 ### Scale & serve
 - **[Parallel Conversations](./docs/parallel-conversations/README.md)** — decode many conversations through one shared context with `BatchIterator`.
-- **[Speculative Decoding](./docs/speculative-decoding/README.md)** — draft→verify→accept speedup (draft model or n-gram), greedy (lossless) or sampling (exact).
+- **[Speculative Decoding](./docs/speculative-decoding/README.md)** — draft→verify→accept speedup (draft model, n-gram, MTP, EAGLE3, or block drafts: DFlash, DSpark, DFlash2, LiliCorr), greedy (lossless) or sampling (exact).
 - **[Distributed Inference (RPC)](./docs/distributed-inference/README.md)** — offload layers/KV-cache to remote `rpc-server` backends.
 - **[Quantized KV Cache](./docs/quantized-kv-cache/README.md)** — shrink KV-cache memory by quantizing the K/V cache type.
 
@@ -50,14 +50,16 @@ Full documentation lives in **[`docs/`](./docs/README.md)** — one page per cap
 - **[Embeddings](./docs/embeddings/README.md)** — dense vectors with `LlamaEmbedder`.
 - **[Reranking](./docs/reranking/README.md)** — score documents against a query with `LlamaReranker`.
 - **[Decision Models](./docs/decision-models/README.md)**: raw per-option scores from native decision models with `LlamaDecider`.
-- **[Multimodal (Vision & Audio)](./docs/multimodal/README.md)** — attach images and audio via `MtmdContext`.
+- **[Multimodal (Vision, Video & Audio)](./docs/multimodal/README.md)** — attach images, video and audio via `MtmdContext`.
+- **[Speech Generation](./docs/speech-generation/README.md)** — text to speech with `LlamaSpeaker`, whole or streamed.
+- **[Realtime Transcription](./docs/transcription/README.md)** — transcribe audio as it arrives with `LlamaTranscriber`.
 
 ### Advanced generation
 - **[Reasoning & Tool Calls](./docs/reasoning-and-tool-calls/README.md)** — tag reasoning / answer / tool-call sections during generation.
 - **[LoRA Adapters](./docs/lora-adapters/README.md)** — load and attach a GGUF LoRA adapter.
 
 ### Operations
-- **[Devices & Memory](./docs/device-and-memory/README.md)** — enumerate backends/devices, query memory, read model dims and performance metrics.
+- **[Devices & Memory](./docs/device-and-memory/README.md)** — enumerate backends/devices, query memory, place weights (tensor overrides, MoE expert cache), read model dims and performance metrics.
 - **[Logging](./docs/logging/README.md)** — custom log callback and level filtering.
 - **[Custom Builds & Platform Support](./docs/custom-builds/README.md)** — build llama.cpp and regenerate the jextract bindings for other platforms.
 

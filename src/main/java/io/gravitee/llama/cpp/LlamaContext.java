@@ -311,7 +311,9 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
       llama_perf_context_t_eval_ms(perfData),
       llama_perf_context_n_p_eval(perfData),
       llama_perf_context_n_eval(perfData),
-      llama_perf_context_n_reused(perfData)
+      llama_perf_context_n_reused(perfData),
+      llama_perf_context_n_reallocs_same(perfData),
+      llama_perf_context_n_reallocs_diff(perfData)
     );
   }
 

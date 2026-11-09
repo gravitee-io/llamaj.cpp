@@ -480,6 +480,101 @@ public final class LlamaRuntime {
     );
   }
 
+  /**
+   * Sets the tensor buffer type overrides on model params: an array of
+   * {@code llama_model_tensor_buft_override} entries ended by a {@code {NULL, NULL}} entry.
+   */
+  public static void tensor_buft_overrides(
+    MemorySegment segment,
+    MemorySegment overrides
+  ) {
+    llama_model_params(
+      "tensor_buft_overrides",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      segment,
+      overrides
+    );
+  }
+
+  public static MemorySegment llama_model_tensor_buft_override_array(
+    Arena arena,
+    long count
+  ) {
+    return invoke(
+      "llama_model_tensor_buft_override",
+      "allocateArray",
+      new Class<?>[] { long.class, SegmentAllocator.class },
+      count,
+      arena
+    );
+  }
+
+  public static void llama_model_tensor_buft_override_set(
+    MemorySegment array,
+    long index,
+    MemorySegment pattern,
+    MemorySegment bufferType
+  ) {
+    MemorySegment entry = invoke(
+      "llama_model_tensor_buft_override",
+      "asSlice",
+      new Class<?>[] { MEM_SEG_CLASS, long.class },
+      array,
+      index
+    );
+    invoke(
+      "llama_model_tensor_buft_override",
+      "pattern",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      entry,
+      pattern
+    );
+    invoke(
+      "llama_model_tensor_buft_override",
+      "buft",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      entry,
+      bufferType
+    );
+  }
+
+  public static MemorySegment ggml_backend_dev_by_type(int type) {
+    return llama_h(
+      "ggml_backend_dev_by_type",
+      new Class<?>[] { int.class },
+      type
+    );
+  }
+
+  public static MemorySegment ggml_backend_dev_buffer_type(
+    MemorySegment device
+  ) {
+    return llama_h(
+      "ggml_backend_dev_buffer_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      device
+    );
+  }
+
+  public static MemorySegment ggml_backend_dev_host_buffer_type(
+    MemorySegment device
+  ) {
+    return llama_h(
+      "ggml_backend_dev_host_buffer_type",
+      new Class<?>[] { MEM_SEG_CLASS },
+      device
+    );
+  }
+
+  public static String ggml_backend_buft_name(MemorySegment bufferType) {
+    MemorySegment name = llama_h(
+      "ggml_backend_buft_name",
+      new Class<?>[] { MEM_SEG_CLASS },
+      bufferType
+    );
+    return name.reinterpret(Long.MAX_VALUE).getString(0);
+  }
+
   public static boolean vocab_only(MemorySegment segment) {
     return llama_model_params(
       "vocab_only",
@@ -674,6 +769,18 @@ public final class LlamaRuntime {
       new Class<?>[] { MEM_SEG_CLASS },
       mtmdContext
     );
+  }
+
+  public static String mtmd_get_marker(MemorySegment mtmdContext) {
+    MemorySegment ptr = llama_h(
+      "mtmd_get_marker",
+      new Class<?>[] { MEM_SEG_CLASS },
+      mtmdContext
+    );
+    if (ptr == null || ptr.address() == 0) {
+      return null;
+    }
+    return ptr.reinterpret(Long.MAX_VALUE).getString(0);
   }
 
   public static boolean mtmd_support_audio(MemorySegment mtmdContext) {
@@ -962,9 +1069,24 @@ public final class LlamaRuntime {
     long len,
     boolean placeholder
   ) {
-    // v0.4.0+: the helper takes a by-value mtmd_helper_init_opt (video decode
-    // options); we only decode single image/audio files, so the defaults apply.
-    MemorySegment opt = mtmd_helper_init_opt_default(allocator);
+    return mtmd_helper_bitmap_init_from_buf(
+      allocator,
+      mtmdContext,
+      buf,
+      len,
+      placeholder,
+      mtmd_helper_init_opt_default(allocator)
+    );
+  }
+
+  public static MemorySegment mtmd_helper_bitmap_init_from_buf(
+    SegmentAllocator allocator,
+    MemorySegment mtmdContext,
+    MemorySegment buf,
+    long len,
+    boolean placeholder,
+    MemorySegment opt
+  ) {
     return llama_h(
       "mtmd_helper_bitmap_init_from_buf",
       new Class<?>[] {
@@ -981,6 +1103,471 @@ public final class LlamaRuntime {
       len,
       placeholder,
       opt
+    );
+  }
+
+  public static MemorySegment mtmd_helper_init_opt_video_params(
+    MemorySegment opt
+  ) {
+    return invoke(
+      "mtmd_helper_init_opt",
+      "video_params",
+      new Class<?>[] { MEM_SEG_CLASS },
+      opt
+    );
+  }
+
+  public static void mtmd_helper_video_init_params_set_fps_target(
+    MemorySegment params,
+    float fpsTarget
+  ) {
+    invoke(
+      "mtmd_helper_video_init_params",
+      "fps_target",
+      new Class<?>[] { MEM_SEG_CLASS, float.class },
+      params,
+      fpsTarget
+    );
+  }
+
+  public static void mtmd_helper_video_init_params_set_ffmpeg_bin_dir(
+    MemorySegment params,
+    MemorySegment dir
+  ) {
+    invoke(
+      "mtmd_helper_video_init_params",
+      "ffmpeg_bin_dir",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      params,
+      dir
+    );
+  }
+
+  public static void mtmd_helper_video_init_params_set_timestamp_interval_ms(
+    MemorySegment params,
+    long intervalMs
+  ) {
+    invoke(
+      "mtmd_helper_video_init_params",
+      "timestamp_interval_ms",
+      new Class<?>[] { MEM_SEG_CLASS, long.class },
+      params,
+      intervalMs
+    );
+  }
+
+  public static void mtmd_helper_video_init_params_set_no_soundtrack(
+    MemorySegment params,
+    boolean noSoundtrack
+  ) {
+    invoke(
+      "mtmd_helper_video_init_params",
+      "no_soundtrack",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      params,
+      noSoundtrack
+    );
+  }
+
+  public static void mtmd_helper_video_free(MemorySegment video) {
+    llama_h("mtmd_helper_video_free", new Class<?>[] { MEM_SEG_CLASS }, video);
+  }
+
+  public static MemorySegment mtmd_helper_video_get_info(
+    SegmentAllocator allocator,
+    MemorySegment video
+  ) {
+    return llama_h(
+      "mtmd_helper_video_get_info",
+      new Class<?>[] { SegmentAllocator.class, MEM_SEG_CLASS },
+      allocator,
+      video
+    );
+  }
+
+  public static <T> T mtmd_helper_video_info_field(
+    MemorySegment info,
+    String field
+  ) {
+    return invoke(
+      "mtmd_helper_video_info",
+      field,
+      new Class<?>[] { MEM_SEG_CLASS },
+      info
+    );
+  }
+
+  public static MemorySegment mtmd_helper_get_capabilities(
+    SegmentAllocator allocator,
+    MemorySegment model,
+    MemorySegment mtmdContext
+  ) {
+    return llama_h(
+      "mtmd_helper_get_capabilities",
+      new Class<?>[] { SegmentAllocator.class, MEM_SEG_CLASS, MEM_SEG_CLASS },
+      allocator,
+      model,
+      mtmdContext
+    );
+  }
+
+  public static boolean mtmd_helper_cap_field(MemorySegment cap, String field) {
+    return invoke(
+      "mtmd_helper_cap",
+      field,
+      new Class<?>[] { MEM_SEG_CLASS },
+      cap
+    );
+  }
+
+  public static MemorySegment mtmd_gen_audio_get_info(
+    SegmentAllocator allocator,
+    MemorySegment mtmdContext
+  ) {
+    return llama_h(
+      "mtmd_gen_audio_get_info",
+      new Class<?>[] { SegmentAllocator.class, MEM_SEG_CLASS },
+      allocator,
+      mtmdContext
+    );
+  }
+
+  public static int mtmd_gen_audio_info_field(
+    MemorySegment info,
+    String field
+  ) {
+    return invoke(
+      "mtmd_gen_audio_info",
+      field,
+      new Class<?>[] { MEM_SEG_CLASS },
+      info
+    );
+  }
+
+  public static String mtmd_gen_audio_voice_name(
+    MemorySegment mtmdContext,
+    int idx
+  ) {
+    MemorySegment ptr = llama_h(
+      "mtmd_gen_audio_voice_name",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      mtmdContext,
+      idx
+    );
+    if (ptr == null || ptr.address() == 0) {
+      return null;
+    }
+    return ptr.reinterpret(Long.MAX_VALUE).getString(0);
+  }
+
+  public static MemorySegment mtmd_gen_audio_get_voice(
+    MemorySegment mtmdContext,
+    MemorySegment name
+  ) {
+    return llama_h(
+      "mtmd_gen_audio_get_voice",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      mtmdContext,
+      name
+    );
+  }
+
+  public static MemorySegment mtmd_helper_gen_audio_init(
+    MemorySegment llamaContext,
+    MemorySegment mtmdContext
+  ) {
+    return llama_h(
+      "mtmd_helper_gen_audio_init",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      llamaContext,
+      mtmdContext
+    );
+  }
+
+  public static void mtmd_helper_gen_audio_free(MemorySegment gen) {
+    llama_h(
+      "mtmd_helper_gen_audio_free",
+      new Class<?>[] { MEM_SEG_CLASS },
+      gen
+    );
+  }
+
+  public static void mtmd_helper_gen_audio_reset(MemorySegment gen) {
+    llama_h(
+      "mtmd_helper_gen_audio_reset",
+      new Class<?>[] { MEM_SEG_CLASS },
+      gen
+    );
+  }
+
+  public static MemorySegment mtmd_helper_gen_audio_inp_default(
+    SegmentAllocator allocator
+  ) {
+    return llama_h(
+      "mtmd_helper_gen_audio_inp_default",
+      new Class<?>[] { SegmentAllocator.class },
+      allocator
+    );
+  }
+
+  public static void mtmd_helper_gen_audio_inp_set(
+    MemorySegment inp,
+    String field,
+    Class<?> type,
+    Object value
+  ) {
+    invoke(
+      "mtmd_helper_gen_audio_inp",
+      field,
+      new Class<?>[] { MEM_SEG_CLASS, type },
+      inp,
+      value
+    );
+  }
+
+  public static int mtmd_helper_gen_audio_set_input(
+    MemorySegment gen,
+    MemorySegment inp
+  ) {
+    return llama_h(
+      "mtmd_helper_gen_audio_set_input",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      gen,
+      inp
+    );
+  }
+
+  public static int mtmd_helper_gen_audio_step_prompt(
+    MemorySegment gen,
+    int nBatch
+  ) {
+    return llama_h(
+      "mtmd_helper_gen_audio_step_prompt",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      gen,
+      nBatch
+    );
+  }
+
+  public static int mtmd_helper_gen_audio_step_gen(
+    MemorySegment gen,
+    int sampled,
+    MemorySegment hStateIn,
+    MemorySegment hStateOut,
+    MemorySegment outStop
+  ) {
+    return llama_h(
+      "mtmd_helper_gen_audio_step_gen",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        int.class,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+      },
+      gen,
+      sampled,
+      hStateIn,
+      hStateOut,
+      outStop
+    );
+  }
+
+  public static int mtmd_helper_gen_audio_get_output(
+    MemorySegment gen,
+    MemorySegment outSampleRate,
+    MemorySegment outData,
+    MemorySegment outDataLen,
+    MemorySegment outNSamples
+  ) {
+    return llama_h(
+      "mtmd_helper_gen_audio_get_output",
+      new Class<?>[] {
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+        MEM_SEG_CLASS,
+      },
+      gen,
+      outSampleRate,
+      outData,
+      outDataLen,
+      outNSamples
+    );
+  }
+
+  public static int mtmd_helper_gen_audio_flush(MemorySegment gen) {
+    return llama_h(
+      "mtmd_helper_gen_audio_flush",
+      new Class<?>[] { MEM_SEG_CLASS },
+      gen
+    );
+  }
+
+  public static MemorySegment mtmd_audio_stream_params_default(
+    SegmentAllocator allocator
+  ) {
+    return llama_h(
+      "mtmd_audio_stream_params_default",
+      new Class<?>[] { SegmentAllocator.class },
+      allocator
+    );
+  }
+
+  public static void mtmd_audio_stream_params_set_step_ms(
+    MemorySegment params,
+    int stepMs
+  ) {
+    invoke(
+      "mtmd_audio_stream_params",
+      "step_ms",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      params,
+      stepMs
+    );
+  }
+
+  public static int mtmd_audio_stream_params_step_ms(MemorySegment params) {
+    return invoke(
+      "mtmd_audio_stream_params",
+      "step_ms",
+      new Class<?>[] { MEM_SEG_CLASS },
+      params
+    );
+  }
+
+  public static MemorySegment mtmd_audio_stream_init(
+    MemorySegment mtmdContext,
+    MemorySegment params
+  ) {
+    return llama_h(
+      "mtmd_audio_stream_init",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      mtmdContext,
+      params
+    );
+  }
+
+  public static void mtmd_audio_stream_free(MemorySegment stream) {
+    llama_h("mtmd_audio_stream_free", new Class<?>[] { MEM_SEG_CLASS }, stream);
+  }
+
+  public static int mtmd_audio_stream_push(
+    MemorySegment stream,
+    MemorySegment samples,
+    long nSamples
+  ) {
+    return llama_h(
+      "mtmd_audio_stream_push",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS, long.class },
+      stream,
+      samples,
+      nSamples
+    );
+  }
+
+  public static int mtmd_audio_stream_flush(MemorySegment stream, boolean end) {
+    return llama_h(
+      "mtmd_audio_stream_flush",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class },
+      stream,
+      end
+    );
+  }
+
+  public static int mtmd_audio_stream_step(
+    MemorySegment stream,
+    int lastToken
+  ) {
+    return llama_h(
+      "mtmd_audio_stream_step",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      stream,
+      lastToken
+    );
+  }
+
+  public static MemorySegment mtmd_audio_stream_get_output_embd(
+    MemorySegment stream
+  ) {
+    return llama_h(
+      "mtmd_audio_stream_get_output_embd",
+      new Class<?>[] { MEM_SEG_CLASS },
+      stream
+    );
+  }
+
+  public static boolean mtmd_audio_stream_is_seq_start(MemorySegment stream) {
+    return llama_h(
+      "mtmd_audio_stream_is_seq_start",
+      new Class<?>[] { MEM_SEG_CLASS },
+      stream
+    );
+  }
+
+  public static int llama_batch_ext_add_embd(
+    MemorySegment batch,
+    int seqId,
+    MemorySegment embd
+  ) {
+    return llama_h(
+      "llama_batch_ext_add_embd",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, MEM_SEG_CLASS },
+      batch,
+      seqId,
+      embd
+    );
+  }
+
+  public static void llama_batch_ext_clear(MemorySegment batch) {
+    llama_h("llama_batch_ext_clear", new Class<?>[] { MEM_SEG_CLASS }, batch);
+  }
+
+  public static MemorySegment llama_embd_allocate(SegmentAllocator allocator) {
+    return invoke(
+      "llama_embd",
+      "allocate",
+      new Class<?>[] { SegmentAllocator.class },
+      allocator
+    );
+  }
+
+  public static void llama_embd_set(
+    MemorySegment embd,
+    MemorySegment data,
+    long nRows,
+    long nEmbd
+  ) {
+    invoke(
+      "llama_embd",
+      "data",
+      new Class<?>[] { MEM_SEG_CLASS, MEM_SEG_CLASS },
+      embd,
+      data
+    );
+    invoke(
+      "llama_embd",
+      "n_rows",
+      new Class<?>[] { MEM_SEG_CLASS, long.class },
+      embd,
+      nRows
+    );
+    invoke(
+      "llama_embd",
+      "n_embd",
+      new Class<?>[] { MEM_SEG_CLASS, long.class },
+      embd,
+      nEmbd
+    );
+  }
+
+  public static boolean llama_vocab_is_control(MemorySegment vocab, int token) {
+    return llama_h(
+      "llama_vocab_is_control",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      vocab,
+      token
     );
   }
 
@@ -2418,6 +3005,38 @@ public final class LlamaRuntime {
     );
   }
 
+  public static boolean llama_batch_ext_set_output_logits(
+    MemorySegment batch,
+    int idx,
+    boolean value
+  ) {
+    return llama_h(
+      "llama_batch_ext_set_output_logits",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, boolean.class },
+      batch,
+      idx,
+      value
+    );
+  }
+
+  /**
+   * Sets the state embedding of entry {@code idx}, the hidden state carried over from a previous
+   * stage; false if the context takes none.
+   */
+  public static boolean llama_batch_ext_set_embd_state(
+    MemorySegment batch,
+    int idx,
+    MemorySegment embd
+  ) {
+    return llama_h(
+      "llama_batch_ext_set_embd_state",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, MEM_SEG_CLASS },
+      batch,
+      idx,
+      embd
+    );
+  }
+
   /** {@code llama_process_type}: {@code LLAMA_PROCESS_TYPE_DECODE}. */
   public static final int LLAMA_PROCESS_TYPE_DECODE = 1;
 
@@ -2962,6 +3581,24 @@ public final class LlamaRuntime {
     return invoke(
       "llama_perf_context_data",
       "n_reused",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
+  }
+
+  public static int llama_perf_context_n_reallocs_same(MemorySegment perfData) {
+    return invoke(
+      "llama_perf_context_data",
+      "n_reallocs_same",
+      new Class[] { MEM_SEG_CLASS },
+      perfData
+    );
+  }
+
+  public static int llama_perf_context_n_reallocs_diff(MemorySegment perfData) {
+    return invoke(
+      "llama_perf_context_data",
+      "n_reallocs_diff",
       new Class[] { MEM_SEG_CLASS },
       perfData
     );
