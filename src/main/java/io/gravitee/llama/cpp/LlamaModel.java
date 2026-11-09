@@ -85,6 +85,12 @@ public final class LlamaModel extends MemorySegmentAware implements Freeable {
     return LlamaRuntime.llama_model_n_embd_out(segment);
   }
 
+  /** The model's hidden size ({@code n_embd}). */
+  public int nEmbd() {
+    checkNotFreed();
+    return LlamaRuntime.llama_model_n_embd(segment);
+  }
+
   /**
    * Returns the model's trained context length, as reported by llama.cpp
    * (mirrors the GGUF {@code {arch}.context_length} metadata).

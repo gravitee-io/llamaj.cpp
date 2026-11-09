@@ -16,8 +16,11 @@
 package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.cxx.CxxParam.BATCH_EXT;
+import static io.gravitee.llama.cpp.cxx.CxxParam.CONST_MODEL;
 import static io.gravitee.llama.cpp.cxx.CxxParam.DECISION_ORDER;
 import static io.gravitee.llama.cpp.cxx.CxxParam.INT32;
+import static io.gravitee.llama.cpp.cxx.CxxParam.UINT32;
+import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_BOOLEAN;
 import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
@@ -27,23 +30,25 @@ import io.gravitee.llama.cpp.cxx.CxxFunctions;
 import io.gravitee.llama.cpp.platform.PlatformResolver;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MTP "nextn" self-speculation, EAGLE3 layer-input extraction, and the decision order read by a
- * joint decision head (clef).
+ * MTP "nextn" self-speculation, EAGLE3 layer-input extraction, the decision order read by a
+ * joint decision head (clef, vllm-decision2), and the label texts of a decision model.
  *
  * <p>MTP and EAGLE3 are part of the public C API ({@code llama.h}) since llama.cpp v1.0.0 and
  * go through the jextract bindings in {@link LlamaRuntime}. {@link #available()} and
  * {@link #eagle3Available()} still check that the loaded {@code libllama} exports them, so a
  * native library from an older release (e.g. via {@code LLAMA_CPP_LIB_PATH}) is refused up front.
  *
- * <p>The decision order stays in llama.cpp's <b>staging</b> header ({@code src/llama-ext.h}),
- * which is not inside an {@code extern "C"} block: it is exported under a <b>C++-mangled</b>
- * name (Itanium ABI, identical on macOS-arm64 and Linux-x86_64) that jextract cannot bind, so it
- * is declared as a {@link CxxFunction} and resolved through {@link io.gravitee.llama.cpp.cxx}.
- * If upstream changes its signature the mangled symbol vanishes and {@link #decisionAvailable()}
- * returns {@code false}; {@code LlamaExtSymbolsTest} locks the derived mangling.
+ * <p>The decision order and the decision labels stay in llama.cpp's <b>staging</b> header
+ * ({@code src/llama-ext.h}), which is not inside an {@code extern "C"} block: they are exported
+ * under <b>C++-mangled</b> names (Itanium ABI, identical on macOS-arm64 and Linux-x86_64) that
+ * jextract cannot bind, so each is declared as a {@link CxxFunction} and resolved through
+ * {@link io.gravitee.llama.cpp.cxx}. If upstream changes a signature the mangled symbol vanishes
+ * and {@link #decisionAvailable()} / {@link #decisionLabelsAvailable()} return {@code false};
+ * {@code LlamaExtSymbolsTest} locks the derived manglings.
  *
  * @author GraviteeSource Team
  */
@@ -67,7 +72,7 @@ public final class LlamaExt {
     "llama_model_target_layer_ids_n"
   );
 
-  // Joint decision head (clef) group, staging (C++-mangled).
+  // Decision staging symbols (C++-mangled): joint decision head order (clef) and labels.
   static final CxxFunction BATCH_EXT_SET_DECISION_ORDER = CxxFunction.of(
     "llama_batch_ext_set_decision_order",
     JAVA_BOOLEAN,
@@ -75,9 +80,19 @@ public final class LlamaExt {
     INT32,
     DECISION_ORDER
   );
+  static final CxxFunction MODEL_DECISION_LABEL = CxxFunction.of(
+    "llama_model_decision_label",
+    ADDRESS,
+    CONST_MODEL,
+    UINT32
+  );
 
   static final List<CxxFunction> DECISION_GROUP = List.of(
     BATCH_EXT_SET_DECISION_ORDER
+  );
+
+  static final List<CxxFunction> DECISION_LABELS_GROUP = List.of(
+    MODEL_DECISION_LABEL
   );
 
   private static boolean exported(String symbol) {
@@ -134,6 +149,35 @@ public final class LlamaExt {
   /** Per-symbol resolution report for the decision staging group. */
   public static String decisionResolutionReport() {
     return CxxFunctions.report(DECISION_GROUP);
+  }
+
+  /** True if the decision-label staging symbol resolved against the loaded {@code libllama}. */
+  public static boolean decisionLabelsAvailable() {
+    return CxxFunctions.allResolve(DECISION_LABELS_GROUP);
+  }
+
+  /** Per-symbol resolution report for the decision-label staging group. */
+  public static String decisionLabelsResolutionReport() {
+    return CxxFunctions.report(DECISION_LABELS_GROUP);
+  }
+
+  /**
+   * The label text of each option of a decision model ({@code <arch>.decision.labels}), in option
+   * order; empty if the model declares none.
+   */
+  public static List<String> decisionLabels(LlamaModel model) {
+    var labels = new ArrayList<String>();
+    for (int i = 0; ; i++) {
+      MemorySegment ptr = (MemorySegment) CxxFunctions.call(
+        MODEL_DECISION_LABEL,
+        model.segment,
+        i
+      );
+      if (ptr == null || ptr.equals(MemorySegment.NULL)) {
+        return List.copyOf(labels);
+      }
+      labels.add(ptr.reinterpret(Long.MAX_VALUE).getString(0));
+    }
   }
 
   /**
