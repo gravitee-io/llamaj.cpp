@@ -307,17 +307,6 @@ commands:
           name: Github Release
           command: bash $HOME_DIR/llamaj.cpp/scripts/github_release.sh
 
-  maven_deploy_artifactory:
-    steps:
-      - attach_workspace:
-          at: .
-      - prepare-gpg
-      - run:
-          name: Maven Deploy
-          command: |
-            cd $HOME_DIR/llamaj.cpp/
-            mvn -s .gravitee.azure.settings.xml -B -P gio-artifactory-release,gio-release deploy -DskipTests=true
-
   maven_deploy_azure:
     steps:
       - attach_workspace:
@@ -484,18 +473,6 @@ jobs:
       - install_java_dependencies
       - github_release
 
-  maven_deploy_artifactory:
-    executor: ubuntu_linux_x86_64
-    environment:
-      HOME_DIR: "/home/circleci/"
-      LC_ALL: C.UTF-8
-      LANG: C.UTF-8
-    steps:
-      - install_dependencies
-      - install_java_dependencies
-      - install_dependencies_jextract
-      - maven_deploy_artifactory
-
   maven_deploy_azure:
     executor: ubuntu_linux_x86_64
     environment:
@@ -583,12 +560,6 @@ workflows:
             - cicd-orchestrator
       - github_release:
           name: Github Release
-          requires:
-            - Release Tag
-          context:
-            - cicd-orchestrator
-      - maven_deploy_artifactory:
-          name: Maven Deploy on Artifactory
           requires:
             - Release Tag
           context:
