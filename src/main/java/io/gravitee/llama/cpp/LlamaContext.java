@@ -84,6 +84,15 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
           ") requires flash attention; set flashAttnType(ENABLED) or AUTO."
       );
     }
+    // llama.cpp checks for a GPU device before checking the model, so on a CPU-only host a dense
+    // model would be refused for the wrong reason; check the model first.
+    if (params.moeCacheSize() > 0 && !model.isMoe()) {
+      throw new LlamaException(
+        "MoE cache (moeCacheSize=" +
+          params.moeCacheSize() +
+          ") requires a mixture-of-experts model; set moeCacheSize(0)."
+      );
+    }
     return llama_init_from_model(model.segment, params.segment);
   }
 

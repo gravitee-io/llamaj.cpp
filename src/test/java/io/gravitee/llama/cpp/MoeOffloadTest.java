@@ -140,10 +140,10 @@ class MoeOffloadTest extends LlamaCppTest {
         model,
         new LlamaContextParams(arena).nCtx(256).moeCacheSize(16L << 20)
       )
-    ).isInstanceOf(LlamaException.class);
-    assertThat(logs).anyMatch(l ->
-      l.contains("MoE cache requires a MoE model")
-    );
+    )
+      .isInstanceOf(LlamaException.class)
+      .hasMessageContaining("requires a mixture-of-experts model");
+    assertThat(model.isMoe()).isFalse();
   }
 
   @Test
