@@ -16,9 +16,7 @@
 package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.cxx.CxxParam.BATCH_EXT;
-import static io.gravitee.llama.cpp.cxx.CxxParam.BOOL;
 import static io.gravitee.llama.cpp.cxx.CxxParam.CONST_MODEL;
-import static io.gravitee.llama.cpp.cxx.CxxParam.CTX;
 import static io.gravitee.llama.cpp.cxx.CxxParam.DECISION_ORDER;
 import static io.gravitee.llama.cpp.cxx.CxxParam.INT32;
 import static io.gravitee.llama.cpp.cxx.CxxParam.UINT32;
@@ -31,26 +29,26 @@ import io.gravitee.llama.cpp.cxx.CxxFunction;
 import io.gravitee.llama.cpp.cxx.CxxFunctions;
 import io.gravitee.llama.cpp.platform.PlatformResolver;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SymbolLookup;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Binding for llama.cpp's <b>staging</b> API ({@code src/llama-ext.h}): MTP "nextn"
- * self-speculation, EAGLE3 layer-input extraction, and the decision order read by a joint
- * decision head (clef).
+ * MTP "nextn" self-speculation, EAGLE3 layer-input extraction, the decision order read by a
+ * joint decision head (clef, vllm-decision2), and the label texts of a decision model.
  *
- * <p>The staging header is not inside an {@code extern "C"} block, so these functions are
- * exported from {@code libllama} under <b>C++-mangled</b> names (Itanium ABI — identical on
- * macOS-arm64 and Linux-x86_64) and jextract cannot bind them. Each function is declared as a
- * {@link CxxFunction} data record; derivation of the mangled symbol, resolution, and
- * dispatch live in {@link io.gravitee.llama.cpp.cxx}. Adding a staging function is one
- * declaration line.
+ * <p>MTP and EAGLE3 are part of the public C API ({@code llama.h}) since llama.cpp v1.0.0 and
+ * go through the jextract bindings in {@link LlamaRuntime}. {@link #available()} and
+ * {@link #eagle3Available()} still check that the loaded {@code libllama} exports them, so a
+ * native library from an older release (e.g. via {@code LLAMA_CPP_LIB_PATH}) is refused up front.
  *
- * <p><b>Fragility:</b> the mangled name encodes the full signature. If upstream renames a
- * function or changes a parameter type, the symbol vanishes and the group's {@code available()}
- * returns {@code false} — fail-fast, never a silent wrong-ABI call.
- * {@code MtpEagle3SpeculativeTest} asserts resolution in CI, so a llama.cpp version bump that
- * breaks the ABI fails with a per-symbol report; {@code LlamaExtSymbolsTest} locks the derived
- * manglings against the observed exports.
+ * <p>The decision order and the decision labels stay in llama.cpp's <b>staging</b> header
+ * ({@code src/llama-ext.h}), which is not inside an {@code extern "C"} block: they are exported
+ * under <b>C++-mangled</b> names (Itanium ABI, identical on macOS-arm64 and Linux-x86_64) that
+ * jextract cannot bind, so each is declared as a {@link CxxFunction} and resolved through
+ * {@link io.gravitee.llama.cpp.cxx}. If upstream changes a signature the mangled symbol vanishes
+ * and {@link #decisionAvailable()} / {@link #decisionLabelsAvailable()} return {@code false};
+ * {@code LlamaExtSymbolsTest} locks the derived manglings.
  *
  * @author GraviteeSource Team
  */
@@ -58,57 +56,23 @@ public final class LlamaExt {
 
   private LlamaExt() {}
 
-  // MTP (nextn) self-speculation group.
-  static final CxxFunction SET_EMBEDDINGS_NEXTN = CxxFunction.of(
+  // MTP (nextn) self-speculation group, C symbols of llama.h.
+  static final List<String> MTP_GROUP = List.of(
     "llama_set_embeddings_nextn",
-    null,
-    CTX,
-    BOOL,
-    BOOL
-  );
-  static final CxxFunction GET_EMBEDDINGS_NEXTN_ITH = CxxFunction.of(
     "llama_get_embeddings_nextn_ith",
-    ADDRESS,
-    CTX,
-    INT32
-  );
-  static final CxxFunction GET_CTX_OTHER = CxxFunction.of(
-    "llama_get_ctx_other",
-    ADDRESS,
-    CTX
+    "llama_get_ctx_other"
   );
 
-  // EAGLE3 layer-input extraction group.
-  static final CxxFunction SET_EMBEDDINGS_LAYER_INP = CxxFunction.of(
+  // EAGLE3 layer-input extraction group, C symbols of llama.h.
+  static final List<String> EAGLE3_GROUP = List.of(
     "llama_set_embeddings_layer_inp",
-    null,
-    CTX,
-    UINT32,
-    BOOL
-  );
-  static final CxxFunction GET_EMBEDDINGS_LAYER_INP = CxxFunction.of(
     "llama_get_embeddings_layer_inp",
-    ADDRESS,
-    CTX,
-    UINT32
-  );
-  static final CxxFunction GET_EMBEDDINGS_NEXTN = CxxFunction.of(
     "llama_get_embeddings_nextn",
-    ADDRESS,
-    CTX
-  );
-  static final CxxFunction MODEL_TARGET_LAYER_IDS = CxxFunction.of(
     "llama_model_target_layer_ids",
-    ADDRESS,
-    CONST_MODEL
-  );
-  static final CxxFunction MODEL_TARGET_LAYER_IDS_N = CxxFunction.of(
-    "llama_model_target_layer_ids_n",
-    JAVA_INT,
-    CONST_MODEL
+    "llama_model_target_layer_ids_n"
   );
 
-  // Joint decision head (clef) group.
+  // Decision staging symbols (C++-mangled): joint decision head order (clef) and labels.
   static final CxxFunction BATCH_EXT_SET_DECISION_ORDER = CxxFunction.of(
     "llama_batch_ext_set_decision_order",
     JAVA_BOOLEAN,
@@ -116,48 +80,65 @@ public final class LlamaExt {
     INT32,
     DECISION_ORDER
   );
-
-  static final List<CxxFunction> MTP_GROUP = List.of(
-    SET_EMBEDDINGS_NEXTN,
-    GET_EMBEDDINGS_NEXTN_ITH,
-    GET_CTX_OTHER
-  );
-  static final List<CxxFunction> EAGLE3_GROUP = List.of(
-    SET_EMBEDDINGS_LAYER_INP,
-    GET_EMBEDDINGS_LAYER_INP,
-    GET_EMBEDDINGS_NEXTN,
-    MODEL_TARGET_LAYER_IDS,
-    MODEL_TARGET_LAYER_IDS_N
+  static final CxxFunction MODEL_DECISION_LABEL = CxxFunction.of(
+    "llama_model_decision_label",
+    ADDRESS,
+    CONST_MODEL,
+    UINT32
   );
 
   static final List<CxxFunction> DECISION_GROUP = List.of(
     BATCH_EXT_SET_DECISION_ORDER
   );
 
+  static final List<CxxFunction> DECISION_LABELS_GROUP = List.of(
+    MODEL_DECISION_LABEL
+  );
+
+  private static boolean exported(String symbol) {
+    return SymbolLookup.loaderLookup().find(symbol).isPresent();
+  }
+
+  private static boolean allExported(List<String> group) {
+    return group.stream().allMatch(LlamaExt::exported);
+  }
+
+  private static String report(List<String> group) {
+    StringBuilder sb = new StringBuilder();
+    for (String symbol : group) {
+      if (!sb.isEmpty()) {
+        sb.append('\n');
+      }
+      sb
+        .append(String.format("%-32s: ", symbol))
+        .append(exported(symbol) ? "RESOLVED" : "MISSING");
+    }
+    return sb.toString();
+  }
+
   /* ---------------------------------- public API ---------------------------------- */
 
   /**
-   * True if all MTP (nextn) staging symbols resolved against the loaded {@code libllama}. When
-   * false, the loaded llama.cpp build either predates the nextn API or changed its signatures
-   * (which changes the mangled names) — do not attempt MTP against it.
+   * True if the loaded {@code libllama} exports every MTP (nextn) function. When false, the
+   * loaded llama.cpp build predates the public nextn API: do not attempt MTP against it.
    */
   public static boolean available() {
-    return CxxFunctions.allResolve(MTP_GROUP);
+    return allExported(MTP_GROUP);
   }
 
-  /** Per-symbol resolution report for the MTP staging group. */
+  /** Per-symbol resolution report for the MTP group. */
   public static String resolutionReport() {
-    return CxxFunctions.report(MTP_GROUP);
+    return report(MTP_GROUP);
   }
 
-  /** True if all EAGLE3 staging symbols resolved against the loaded {@code libllama}. */
+  /** True if the loaded {@code libllama} exports every EAGLE3 function. */
   public static boolean eagle3Available() {
-    return CxxFunctions.allResolve(EAGLE3_GROUP);
+    return allExported(EAGLE3_GROUP);
   }
 
-  /** Per-symbol resolution report for the EAGLE3 staging group. */
+  /** Per-symbol resolution report for the EAGLE3 group. */
   public static String eagle3ResolutionReport() {
-    return CxxFunctions.report(EAGLE3_GROUP);
+    return report(EAGLE3_GROUP);
   }
 
   /** True if the decision-order staging symbol (clef) resolved against the loaded {@code libllama}. */
@@ -168,6 +149,35 @@ public final class LlamaExt {
   /** Per-symbol resolution report for the decision staging group. */
   public static String decisionResolutionReport() {
     return CxxFunctions.report(DECISION_GROUP);
+  }
+
+  /** True if the decision-label staging symbol resolved against the loaded {@code libllama}. */
+  public static boolean decisionLabelsAvailable() {
+    return CxxFunctions.allResolve(DECISION_LABELS_GROUP);
+  }
+
+  /** Per-symbol resolution report for the decision-label staging group. */
+  public static String decisionLabelsResolutionReport() {
+    return CxxFunctions.report(DECISION_LABELS_GROUP);
+  }
+
+  /**
+   * The label text of each option of a decision model ({@code <arch>.decision.labels}), in option
+   * order; empty if the model declares none.
+   */
+  public static List<String> decisionLabels(LlamaModel model) {
+    var labels = new ArrayList<String>();
+    for (int i = 0; ; i++) {
+      MemorySegment ptr = (MemorySegment) CxxFunctions.call(
+        MODEL_DECISION_LABEL,
+        model.segment,
+        i
+      );
+      if (ptr == null || ptr.equals(MemorySegment.NULL)) {
+        return List.copyOf(labels);
+      }
+      labels.add(ptr.reinterpret(Long.MAX_VALUE).getString(0));
+    }
   }
 
   /**
@@ -198,7 +208,7 @@ public final class LlamaExt {
     boolean value,
     boolean masked
   ) {
-    CxxFunctions.call(SET_EMBEDDINGS_NEXTN, ctx.segment, value, masked);
+    LlamaRuntime.llama_set_embeddings_nextn(ctx.segment, value, masked);
   }
 
   /**
@@ -210,8 +220,7 @@ public final class LlamaExt {
     int i,
     int nEmbd
   ) {
-    MemorySegment ptr = (MemorySegment) CxxFunctions.call(
-      GET_EMBEDDINGS_NEXTN_ITH,
+    MemorySegment ptr = LlamaRuntime.llama_get_embeddings_nextn_ith(
       ctx.segment,
       i
     );
@@ -223,7 +232,7 @@ public final class LlamaExt {
 
   /** The context this one was linked to via {@code ctx_other} (target for an MTP/EAGLE3 draft). */
   public static MemorySegment getCtxOther(LlamaContext ctx) {
-    return (MemorySegment) CxxFunctions.call(GET_CTX_OTHER, ctx.segment);
+    return LlamaRuntime.llama_get_ctx_other(ctx.segment);
   }
 
   /** Enable/disable capture of a target layer's input hidden state (EAGLE3 feature source). */
@@ -232,19 +241,18 @@ public final class LlamaExt {
     int layer,
     boolean value
   ) {
-    CxxFunctions.call(SET_EMBEDDINGS_LAYER_INP, ctx.segment, layer, value);
+    LlamaRuntime.llama_set_embeddings_layer_inp(ctx.segment, layer, value);
   }
 
   /**
-   * Raw pointer to the captured input hidden states of {@code layer} for the last decode —
+   * Raw pointer to the captured input hidden states of {@code layer} for the last decode:
    * {@code [n_tokens, n_embd]} floats. Caller reinterprets with the right size.
    */
   public static MemorySegment getEmbeddingsLayerInp(
     LlamaContext ctx,
     int layer
   ) {
-    MemorySegment ptr = (MemorySegment) CxxFunctions.call(
-      GET_EMBEDDINGS_LAYER_INP,
+    MemorySegment ptr = LlamaRuntime.llama_get_embeddings_layer_inp(
       ctx.segment,
       layer
     );
@@ -255,14 +263,11 @@ public final class LlamaExt {
   }
 
   /**
-   * Raw pointer to the full nextn (pre-norm) embeddings buffer of the last encode/decode —
-   * one {@code n_embd} row per output. EAGLE3 reads the encoder's g_embd rows from here.
+   * Raw pointer to the full nextn (pre-norm) embeddings buffer of the last encode/decode, one
+   * {@code n_embd} row per output. EAGLE3 reads the encoder's g_embd rows from here.
    */
   public static MemorySegment getEmbeddingsNextnAll(LlamaContext ctx) {
-    MemorySegment ptr = (MemorySegment) CxxFunctions.call(
-      GET_EMBEDDINGS_NEXTN,
-      ctx.segment
-    );
+    MemorySegment ptr = LlamaRuntime.llama_get_embeddings_nextn(ctx.segment);
     if (ptr == null || ptr.equals(MemorySegment.NULL)) {
       throw new LlamaException("no nextn embeddings buffer");
     }
@@ -274,12 +279,11 @@ public final class LlamaExt {
    * (empty for non-draft models).
    */
   public static int[] targetLayerIds(LlamaModel model) {
-    int n = (int) CxxFunctions.call(MODEL_TARGET_LAYER_IDS_N, model.segment);
+    int n = LlamaRuntime.llama_model_target_layer_ids_n(model.segment);
     if (n <= 0) {
       return new int[0];
     }
-    MemorySegment ptr = (MemorySegment) CxxFunctions.call(
-      MODEL_TARGET_LAYER_IDS,
+    MemorySegment ptr = LlamaRuntime.llama_model_target_layer_ids(
       model.segment
     );
     return ptr.reinterpret((long) n * Integer.BYTES).toArray(JAVA_INT);

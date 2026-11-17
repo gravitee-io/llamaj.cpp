@@ -191,6 +191,20 @@ public class Main {
 
     var modelParameters = new LlamaModelParams(ARENA);
     modelParameters.nGpuLayers(nGpuLayers).useMlock(useMlock).useMmap(useMmap);
+    if (params.containsKey("cpu_moe")) {
+      modelParameters.cpuMoe(ARENA);
+    }
+    if (parseInt(params.getOrDefault("moe_cache_mib", "0").strip()) > 0) {
+      modelParameters.useExtraBufferTypes(false);
+    }
+    ofNullable(params.get("n_cpu_moe"))
+      .filter(v -> !v.isBlank())
+      .ifPresent(v -> modelParameters.cpuMoe(ARENA, parseInt(v)));
+    ofNullable(params.get("override_tensor"))
+      .filter(v -> !v.isBlank())
+      .ifPresent(v ->
+        modelParameters.tensorOverrides(ARENA, parseTensorOverrides(v))
+      );
 
     // When using RPC, restrict offloading to only RPC devices
     // so weights are not loaded on local GPU (e.g., Metal)
@@ -241,6 +255,9 @@ public class Main {
           : FlashAttentionType.DISABLED
       )
     );
+    ofNullable(params.get("moe_cache_mib"))
+      .filter(v -> !v.isBlank())
+      .ifPresent(v -> contextParams.moeCacheSize(Long.parseLong(v) << 20));
 
     // Multimodal context initialization
     MtmdContext mtmdContext = null;
@@ -260,6 +277,22 @@ public class Main {
         );
         System.exit(1);
       }
+    }
+
+    if (params.containsKey("speak")) {
+      runSpeak(model, mtmdContext, params);
+      freeAll(model, mtmdContext);
+      return;
+    }
+    if (params.containsKey("transcribe")) {
+      runTranscribe(model, mtmdContext, params);
+      freeAll(model, mtmdContext);
+      return;
+    }
+    if (params.containsKey("decide")) {
+      runDecide(model, mtmdContext, allMediaPaths, params);
+      freeAll(model, mtmdContext);
+      return;
     }
 
     SamplingStrategy strategy = SamplingStrategy.fromString(
@@ -337,6 +370,30 @@ public class Main {
       eagle3Context = new LlamaContext(ARENA, eagle3Model, contextParams);
     }
 
+    LlamaModel dflashModel = null;
+    LlamaContext dflashContext = null;
+    String dflashGguf = params.get("dflash");
+    if (
+      speculativeConfig != null && dflashGguf != null && !dflashGguf.isBlank()
+    ) {
+      dflashModel = new LlamaModel(
+        ARENA,
+        Path.of(dflashGguf).toAbsolutePath(),
+        modelParameters
+      );
+      dflashContext = new LlamaContext(
+        ARENA,
+        dflashModel,
+        new LlamaContextParams(ARENA)
+          .nCtx(context.nCtx())
+          .nBatch(context.nBatch())
+          .nUBatch(Math.min(context.nBatch(), 512))
+          .nSeqMax(context.nSeqMax())
+          .ctxOther(context)
+          .noPerf(true)
+      );
+    }
+
     LlamaSampler sampler = llamaSampler(strategy, context, vocab, params);
 
     List<LlamaChatMessage> messages = new ArrayList<>();
@@ -411,6 +468,8 @@ public class Main {
           state.setMtp(mtpContext, speculativeConfig);
         } else if (eagle3Context != null) {
           state.setEagle3(eagle3Context, eagle3Model, speculativeConfig);
+        } else if (dflashContext != null) {
+          state.setDFlash(dflashContext, dflashModel, speculativeConfig);
         } else {
           state.setNgram(speculativeConfig);
         }
@@ -540,6 +599,9 @@ public class Main {
     if (eagle3Context != null) {
       eagle3Context.free();
     }
+    if (dflashContext != null) {
+      dflashContext.free();
+    }
     context.free();
     sampler.free();
     if (draftContext != null) {
@@ -552,11 +614,206 @@ public class Main {
     if (eagle3Model != null) {
       eagle3Model.free();
     }
+    if (dflashModel != null) {
+      dflashModel.free();
+    }
     if (mtmdContext != null) {
       mtmdContext.free();
     }
 
     llama_backend_free();
+  }
+
+  private static void freeAll(LlamaModel model, MtmdContext mtmdContext) {
+    if (mtmdContext != null) {
+      mtmdContext.free();
+    }
+    model.free();
+    llama_backend_free();
+  }
+
+  private static void requireMtmd(MtmdContext mtmdContext, String flag) {
+    if (mtmdContext == null) {
+      System.err.println("Error: --" + flag + " requires --mmproj.");
+      System.exit(1);
+    }
+  }
+
+  private static void runSpeak(
+    LlamaModel model,
+    MtmdContext mtmdContext,
+    Map<String, String> params
+  ) {
+    requireMtmd(mtmdContext, "speak");
+    String text = params.get("speak");
+    if (text == null || text.isBlank()) {
+      System.err.println("Error: --speak requires the text to say.");
+      System.exit(1);
+    }
+    Path out = Path.of(params.getOrDefault("speech_out", "speech.wav"));
+    var request = LlamaSpeaker.Request.of(text);
+    String voice = params.get("voice");
+    if (voice != null && !voice.isBlank()) {
+      request = request.withVoice(voice);
+    }
+    try (
+      var speaker = LlamaSpeaker.create(
+        ARENA,
+        model,
+        mtmdContext,
+        LlamaSpeaker.Options.defaults()
+      )
+    ) {
+      if (!speaker.voices().isEmpty()) {
+        System.out.println("Voices: " + String.join(", ", speaker.voices()));
+      }
+      var speech = speaker.speak(request);
+      Files.write(out, speech.wav());
+      System.out.printf(
+        "Wrote %.2f s of speech (%d Hz) to %s%n",
+        speech.seconds(),
+        speech.sampleRate(),
+        out.toAbsolutePath()
+      );
+    } catch (java.io.IOException e) {
+      System.err.println("Error writing " + out + ": " + e.getMessage());
+      System.exit(1);
+    }
+  }
+
+  private static void runTranscribe(
+    LlamaModel model,
+    MtmdContext mtmdContext,
+    Map<String, String> params
+  ) {
+    requireMtmd(mtmdContext, "transcribe");
+    String audio = params.get("transcribe");
+    if (audio == null || audio.isBlank()) {
+      System.err.println("Error: --transcribe requires an audio file.");
+      System.exit(1);
+    }
+    try (
+      var transcriber = LlamaTranscriber.create(
+        ARENA,
+        model,
+        mtmdContext,
+        LlamaTranscriber.Options.defaults()
+      )
+    ) {
+      float[] pcm = AudioLoader.loadAudio(
+        Path.of(audio),
+        transcriber.sampleRate()
+      );
+      System.out.println(transcriber.transcribe(pcm));
+    } catch (
+      java.io.IOException
+      | javax.sound.sampled.UnsupportedAudioFileException e
+    ) {
+      System.err.println("Error reading " + audio + ": " + e.getMessage());
+      System.exit(1);
+    }
+  }
+
+  private static void runDecide(
+    LlamaModel model,
+    MtmdContext mtmdContext,
+    List<Path> mediaPaths,
+    Map<String, String> params
+  ) {
+    String text = params.get("decide");
+    if (text == null || text.isBlank()) {
+      System.err.println("Error: --decide requires the prompt to score.");
+      System.exit(1);
+    }
+    try (
+      var decider = LlamaDecider.create(
+        ARENA,
+        model,
+        mtmdContext,
+        LlamaDecider.Options.defaults()
+      )
+    ) {
+      List<String> names = switch (decider) {
+        case LabelDecider label -> label
+          .labels()
+          .stream()
+          .map(l -> l.code().strip())
+          .toList();
+        case PooledDecider pooled -> pooled.classes();
+        default -> List.of();
+      };
+      int nOptions = params.containsKey("options")
+        ? parseInt(params.get("options"))
+        : names.size();
+      if (nOptions <= 0) {
+        System.err.println(
+          "Error: --decide needs --options <n> for this " +
+            decider.type().metaName() +
+            " model."
+        );
+        System.exit(1);
+      }
+      List<MtmdMedia> media = new ArrayList<>();
+      for (Path path : mediaPaths) {
+        media.addAll(MtmdMediaFactory.fromFile(ARENA, path, mtmdContext));
+      }
+      DecisionPrompt prompt = media.isEmpty()
+        ? TextPrompt.of(text, nOptions)
+        : MediaPrompt.of(text, media, nOptions);
+      float[] scores = decider.score(prompt);
+      System.out.println("Decision family: " + decider.type().metaName());
+      for (int i = 0; i < scores.length; i++) {
+        System.out.printf(
+          "  %-12s %.4f%n",
+          i < names.size() ? names.get(i) : String.valueOf(i),
+          scores[i]
+        );
+      }
+      media.forEach(MtmdMedia::free);
+    } catch (Exception e) {
+      System.err.println("Error: " + e.getMessage());
+      System.exit(1);
+    }
+  }
+
+  private static List<LlamaModelParams.TensorOverride> parseTensorOverrides(
+    String value
+  ) {
+    Map<String, java.lang.foreign.MemorySegment> byName = new HashMap<>();
+    byName.put("cpu", BackendRegistry.cpuBufferType());
+    for (GgmlDeviceInfo device : BackendRegistry.listDevices()) {
+      var buft = BackendRegistry.bufferType(device);
+      byName.putIfAbsent(
+        BackendRegistry.bufferTypeName(buft).toLowerCase(),
+        buft
+      );
+    }
+    List<LlamaModelParams.TensorOverride> overrides = new ArrayList<>();
+    for (String entry : value.split(",")) {
+      int eq = entry.lastIndexOf('=');
+      if (eq <= 0 || eq == entry.length() - 1) {
+        System.err.println(
+          "Error: --override_tensor expects <pattern>=<buffer type>, got: " +
+            entry
+        );
+        System.exit(1);
+      }
+      String name = entry.substring(eq + 1).trim().toLowerCase();
+      var buft = byName.get(name);
+      if (buft == null) {
+        System.err.println(
+          "Error: unknown buffer type '" +
+            name +
+            "'; available: " +
+            String.join(", ", byName.keySet())
+        );
+        System.exit(1);
+      }
+      overrides.add(
+        new LlamaModelParams.TensorOverride(entry.substring(0, eq).trim(), buft)
+      );
+    }
+    return overrides;
   }
 
   public static LlamaSampler llamaSampler(
@@ -667,6 +924,8 @@ public class Main {
     boolean mtpDraft = params.containsKey("mtp");
     String eagle3Path = params.get("eagle3");
     boolean eagle3Draft = eagle3Path != null && !eagle3Path.isBlank();
+    String dflashPath = params.get("dflash");
+    boolean dflashDraft = dflashPath != null && !dflashPath.isBlank();
 
     if (params.containsKey("draft") && !modelDraft) {
       System.err.println(
@@ -680,18 +939,27 @@ public class Main {
       );
       System.exit(1);
     }
-    if (!modelDraft && !ngramDraft && !mtpDraft && !eagle3Draft) {
+    if (params.containsKey("dflash") && !dflashDraft) {
+      System.err.println(
+        "Error: --dflash requires a path to a block-diffusion draft GGUF model."
+      );
+      System.exit(1);
+    }
+    if (
+      !modelDraft && !ngramDraft && !mtpDraft && !eagle3Draft && !dflashDraft
+    ) {
       return null;
     }
     int flavours =
       (modelDraft ? 1 : 0) +
       (ngramDraft ? 1 : 0) +
       (mtpDraft ? 1 : 0) +
-      (eagle3Draft ? 1 : 0);
+      (eagle3Draft ? 1 : 0) +
+      (dflashDraft ? 1 : 0);
     if (flavours > 1) {
       System.err.println(
         "Error: use exactly one of --draft (model drafting), --ngram (prompt-lookup), " +
-          "--mtp (nextn self-speculation) or --eagle3 (EAGLE3 head)."
+          "--mtp (nextn self-speculation), --eagle3 (EAGLE3 head) or --dflash (block draft)."
       );
       System.exit(1);
     }
@@ -919,7 +1187,7 @@ public class Main {
         --lora <path>               Path to LoRA adapter
         --mmproj <path>             Path to multimodal projection model (required for images/audio)
         --image <path>              Path to an image file (can be repeated for multiple images)
-        --media <path>              Path to media file: image or audio (auto-detected, can be repeated)
+        --media <path>              Path to media file: image, audio or video (auto-detected, can be repeated)
         --system <msg>              System prompt (default: "You are a helpful AI assistant.")
         --strategy <name>           Sampling strategy (default: CLASSIC_CHAT)
                                     Available: DETERMINISTIC, CLASSIC_CHAT, FOCUSED, BALANCED,
@@ -933,6 +1201,10 @@ public class Main {
                                     Format: host1:port,host2:port (default: none)
                                     When set, model weights and KV-cache are offloaded exclusively
                                     to the remote RPC servers (local GPU is not used).
+        --cpu_moe                   Keep the expert weights of a mixture-of-experts model in host memory
+        --n_cpu_moe <int>           Keep the expert weights of the first N layers in host memory
+        --override_tensor <list>    Comma-separated <tensor name regex>=<buffer type> overrides,
+                                    e.g. "blk\\.1[0-9]\\.ffn_.*_exps=CPU"
 
       Context parameters:
         --n_ctx <int>               Context window size (default: 4096)
@@ -944,6 +1216,9 @@ public class Main {
         --cache_type_v <type>       KV V-cache type (same values). Quantizing V
                                     requires flash attention (auto-enabled).
         --flash_attn <true|false>   Force flash attention on/off (default: auto)
+        --moe_cache_mib <int>       Device cache in MiB for the experts kept in host memory
+                                    (--cpu_moe / --n_cpu_moe; default: 0, disabled). Turns off
+                                    CPU weight repacking, which the cache cannot read.
 
       Conversation mode:
         --conversation_mode <mode>  Conversation history mode (default: full)
@@ -968,6 +1243,9 @@ public class Main {
         --eagle3 <path>             EAGLE3 head model GGUF (arch eagle3, trained for this target)
                                     drafting from the target's intermediate hidden states. Dense
                                     targets; prompt must fit one batch.
+        --dflash <path>             Block-diffusion draft GGUF (arch dflash: DFlash, DSpark, DFlash2
+                                    or LiliCorr, converted for this target) drafting a whole block
+                                    per pass. Dense targets; prompt must fit one batch.
         --n_draft <int>             Max tokens drafted/proposed per round (default: 4).
                                     Lossless greedy under --strategy DETERMINISTIC; otherwise an exact
                                     sampler using temperature/top-k/top-p only (penalties/min-p/grammar/
@@ -1012,6 +1290,16 @@ public class Main {
          Type '/image <path>' to add an image to the next prompt.
          Type '/audio <path>' to add audio to the next prompt.
 
+      Other modes (instead of the chat loop):
+        --speak <text>              Speak the text with a speech model (needs --mmproj)
+        --speech_out <path>         Where --speak writes its WAV file (default: speech.wav)
+        --voice <name>              Predefined voice for --speak (default: the model's first)
+        --transcribe <path>         Transcribe an audio file with a streaming speech-to-text model
+                                    (needs --mmproj)
+        --decide <prompt>           Score a prompt with a decision model and print one raw score per
+                                    option; add --mmproj and --media to score media prompts
+        --options <int>             Number of options --decide scores (default: the model's labels)
+
       Examples:
         java -jar llamaj.cpp.jar --model ./models/llama-7b.gguf
         java -jar llamaj.cpp.jar --model ./mistral.gguf --strategy FOCUSED --temperature 0.8
@@ -1026,6 +1314,11 @@ public class Main {
         java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --draft ./draft.gguf --n_draft 8 --p_min 0.6
         java -jar llamaj.cpp.jar --model ./mtp-model.gguf --strategy DETERMINISTIC --mtp --n_draft 2
         java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --eagle3 ./eagle3-head.gguf --n_draft 2
+        java -jar llamaj.cpp.jar --model ./model.gguf --strategy DETERMINISTIC --dflash ./dflash-draft.gguf --n_draft 8
+        java -jar llamaj.cpp.jar --model ./moe.gguf --cpu_moe --moe_cache_mib 2048
+        java -jar llamaj.cpp.jar --model ./tts.gguf --mmproj ./tts-mmproj.gguf --speak "Hello there" --speech_out hello.wav
+        java -jar llamaj.cpp.jar --model ./asr.gguf --mmproj ./asr-mmproj.gguf --transcribe ./meeting.wav
+        java -jar llamaj.cpp.jar --model ./decision.gguf --decide "<prompt in the model's format>"
       """
     );
   }

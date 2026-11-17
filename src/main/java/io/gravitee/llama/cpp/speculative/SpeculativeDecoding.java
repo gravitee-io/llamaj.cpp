@@ -49,7 +49,8 @@ public abstract sealed class SpeculativeDecoding
   permits
     ModelDraftSpeculativeDecoding,
     NgramSpeculativeDecoding,
-    HiddenStateSpeculativeDecoding {
+    HiddenStateSpeculativeDecoding,
+    DFlashSpeculativeDecoding {
 
   /**
    * Brings the flavour's draft-side state in line with the freshly-processed prompt (called

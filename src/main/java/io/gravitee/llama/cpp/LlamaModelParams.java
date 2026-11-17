@@ -23,8 +23,10 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import java.lang.foreign.ValueLayout;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
@@ -33,6 +35,7 @@ import java.util.List;
 public final class LlamaModelParams extends MemorySegmentAware {
 
   private final int maxDevices;
+  private final List<TensorOverride> tensorOverrides = new ArrayList<>();
   private int nThreads;
 
   public LlamaModelParams(Arena arena) {
@@ -241,6 +244,100 @@ public final class LlamaModelParams extends MemorySegmentAware {
    * @param devices The device handles to use (from {@link BackendRegistry#listDevices()}).
    * @return this instance for chaining.
    */
+  /**
+   * Places the weight tensors whose name matches {@code pattern} (a regular expression searched in
+   * the tensor name, such as {@code blk\.0\.ffn_up_exps}) in {@code bufferType} instead of the
+   * buffer of their layer's device.
+   *
+   * @param pattern    regular expression searched in each tensor name
+   * @param bufferType a buffer type from {@link BackendRegistry#cpuBufferType()} or
+   *                   {@link BackendRegistry#bufferType(GgmlDeviceInfo)}
+   */
+  public record TensorOverride(String pattern, MemorySegment bufferType) {
+    public TensorOverride {
+      if (pattern == null || pattern.isEmpty()) {
+        throw new IllegalArgumentException("pattern must not be empty");
+      }
+      if (bufferType == null || bufferType.equals(MemorySegment.NULL)) {
+        throw new IllegalArgumentException("bufferType must not be NULL");
+      }
+    }
+  }
+
+  /** Matches the expert weight tensors of a mixture-of-experts layer. */
+  public static final String EXPERT_TENSORS =
+    "\\.ffn_(up|down|gate|gate_up)_(ch|)exps";
+
+  /** The tensor buffer overrides set so far, in the order llama.cpp tries them. */
+  public List<TensorOverride> tensorOverrides() {
+    return List.copyOf(tensorOverrides);
+  }
+
+  /**
+   * Adds tensor buffer overrides; the first override whose pattern matches a tensor wins. Must be
+   * called before loading the model.
+   *
+   * @param arena     the arena that keeps the patterns and the override array alive while the
+   *                  model loads
+   * @param overrides the overrides to add after the ones already set
+   */
+  public LlamaModelParams tensorOverrides(
+    Arena arena,
+    List<TensorOverride> overrides
+  ) {
+    tensorOverrides.addAll(overrides);
+    MemorySegment array = LlamaRuntime.llama_model_tensor_buft_override_array(
+      arena,
+      tensorOverrides.size() + 1L
+    );
+    for (int i = 0; i < tensorOverrides.size(); i++) {
+      TensorOverride o = tensorOverrides.get(i);
+      LlamaRuntime.llama_model_tensor_buft_override_set(
+        array,
+        i,
+        arena.allocateFrom(o.pattern()),
+        o.bufferType()
+      );
+    }
+    LlamaRuntime.llama_model_tensor_buft_override_set(
+      array,
+      tensorOverrides.size(),
+      MemorySegment.NULL,
+      MemorySegment.NULL
+    );
+    LlamaRuntime.tensor_buft_overrides(segment, array);
+    return this;
+  }
+
+  /**
+   * Keeps the expert weights of every mixture-of-experts layer in host memory, while the rest of
+   * each layer goes to its device. Pair it with {@link LlamaContextParams#moeCacheSize(long)}, and
+   * {@link #useExtraBufferTypes(boolean) useExtraBufferTypes(false)}, to cache the hot experts on
+   * the device.
+   */
+  public LlamaModelParams cpuMoe(Arena arena) {
+    return tensorOverrides(
+      arena,
+      List.of(
+        new TensorOverride(EXPERT_TENSORS, BackendRegistry.cpuBufferType())
+      )
+    );
+  }
+
+  /** Keeps the expert weights of the first {@code nLayers} layers in host memory. */
+  public LlamaModelParams cpuMoe(Arena arena, int nLayers) {
+    if (nLayers < 0) {
+      throw new IllegalArgumentException("nLayers must be >= 0");
+    }
+    MemorySegment cpu = BackendRegistry.cpuBufferType();
+    return tensorOverrides(
+      arena,
+      IntStream.range(0, nLayers)
+        .mapToObj(i -> new TensorOverride("blk\\." + i + EXPERT_TENSORS, cpu))
+        .toList()
+    );
+  }
+
   public LlamaModelParams devices(Arena arena, List<MemorySegment> devices) {
     // Allocate a NULL-terminated array of pointers
     var devArray = arena.allocate(ValueLayout.ADDRESS, devices.size() + 1);

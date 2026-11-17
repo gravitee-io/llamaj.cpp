@@ -84,6 +84,15 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
           ") requires flash attention; set flashAttnType(ENABLED) or AUTO."
       );
     }
+    // llama.cpp checks for a GPU device before checking the model, so on a CPU-only host a dense
+    // model would be refused for the wrong reason; check the model first.
+    if (params.moeCacheSize() > 0 && !model.isMoe()) {
+      throw new LlamaException(
+        "MoE cache (moeCacheSize=" +
+          params.moeCacheSize() +
+          ") requires a mixture-of-experts model; set moeCacheSize(0)."
+      );
+    }
     return llama_init_from_model(model.segment, params.segment);
   }
 
@@ -126,7 +135,7 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   }
 
   public int nVocab() {
-    return llama_n_vocab(llama_model_get_vocab(model.segment));
+    return llama_vocab_n_tokens(llama_model_get_vocab(model.segment));
   }
 
   public int nCtxUsedCells() {
@@ -311,7 +320,9 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
       llama_perf_context_t_eval_ms(perfData),
       llama_perf_context_n_p_eval(perfData),
       llama_perf_context_n_eval(perfData),
-      llama_perf_context_n_reused(perfData)
+      llama_perf_context_n_reused(perfData),
+      llama_perf_context_n_reallocs_same(perfData),
+      llama_perf_context_n_reallocs_diff(perfData)
     );
   }
 

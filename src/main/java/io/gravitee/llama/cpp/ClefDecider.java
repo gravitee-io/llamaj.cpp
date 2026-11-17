@@ -30,10 +30,11 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 /**
- * Decider for {@link DecisionType#CLEF}: a joint head that reads every question and option span of
- * one prompt, tagged with a {@link DecisionOrder} per token ({@link ClefPrompt}), and
- * returns one score per {@link DecisionOrder#OPTION} span in prompt order. A NaN score means the
- * head could not use the order.
+ * Decider for {@link DecisionType#CLEF} and {@link DecisionType#VLLM_DECISION2}: a joint head that
+ * reads every question and option span of one prompt, tagged with a {@link DecisionOrder} per token
+ * ({@link ClefPrompt}), and returns one score per {@link DecisionOrder#OPTION} span in prompt order.
+ * A clef prompt holds all the questions of a request, a vllm-decision2 prompt one question. A NaN
+ * score means the head could not use the order.
  * <p>
  * Spans of the same role must be separated by {@link DecisionOrder#NONE} tokens; an option span
  * belongs to the last question span before it. One prompt per forward pass; a prompt must fit in
@@ -46,24 +47,32 @@ import java.util.stream.IntStream;
 public final class ClefDecider extends LlamaDecider {
 
   /**
-   * Creates the decider of a clef model.
+   * Creates the decider of a clef or vllm-decision2 model.
    *
    * @param arena   Arena that owns the decider's context
    * @param model   Pre-loaded model (not freed on {@link #close()})
    * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
-   * @throws LlamaException if the model is not a clef model
+   * @throws LlamaException if the model is not of one of these families
    */
   public static ClefDecider create(
     Arena arena,
     LlamaModel model,
     Options options
   ) {
-    requireFamily(model, Set.of(DecisionType.CLEF));
-    return new ClefDecider(arena, model, options);
+    var type = requireFamily(
+      model,
+      Set.of(DecisionType.CLEF, DecisionType.VLLM_DECISION2)
+    );
+    return new ClefDecider(arena, model, type, options);
   }
 
-  private ClefDecider(Arena arena, LlamaModel model, Options options) {
-    super(arena, model, DecisionType.CLEF, embeddingParams(arena, options));
+  private ClefDecider(
+    Arena arena,
+    LlamaModel model,
+    DecisionType type,
+    Options options
+  ) {
+    super(arena, model, type, embeddingParams(arena, options));
   }
 
   @Override
@@ -81,7 +90,8 @@ public final class ClefDecider extends LlamaDecider {
     checkNotFreed();
     if (!LlamaExt.decisionAvailable()) {
       throw new LlamaException(
-        "clef needs llama_batch_ext_set_decision_order:%n%s".formatted(
+        "%s needs llama_batch_ext_set_decision_order:%n%s".formatted(
+          type().metaName(),
           LlamaExt.decisionResolutionReport()
         )
       );

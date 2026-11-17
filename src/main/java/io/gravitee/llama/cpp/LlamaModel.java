@@ -85,6 +85,12 @@ public final class LlamaModel extends MemorySegmentAware implements Freeable {
     return LlamaRuntime.llama_model_n_embd_out(segment);
   }
 
+  /** The model's hidden size ({@code n_embd}). */
+  public int nEmbd() {
+    checkNotFreed();
+    return LlamaRuntime.llama_model_n_embd(segment);
+  }
+
   /**
    * Returns the model's trained context length, as reported by llama.cpp
    * (mirrors the GGUF {@code {arch}.context_length} metadata).
@@ -118,6 +124,33 @@ public final class LlamaModel extends MemorySegmentAware implements Freeable {
    */
   public boolean hasRecurrentState() {
     return isRecurrent() || isHybrid();
+  }
+
+  /**
+   * Whether the model is a mixture of experts: its GGUF metadata declares a non-zero
+   * {@code <arch>.expert_count} and {@code <arch>.expert_used_count}.
+   */
+  public boolean isMoe() {
+    checkNotFreed();
+    try (Arena scratch = Arena.ofConfined()) {
+      String arch = metaVal(scratch, "general.architecture");
+      return (
+        arch != null &&
+        positiveInt(metaVal(scratch, arch + ".expert_count")) &&
+        positiveInt(metaVal(scratch, arch + ".expert_used_count"))
+      );
+    }
+  }
+
+  private static boolean positiveInt(String value) {
+    if (value == null) {
+      return false;
+    }
+    try {
+      return Long.parseLong(value.trim()) > 0;
+    } catch (NumberFormatException e) {
+      return false;
+    }
   }
 
   /**
