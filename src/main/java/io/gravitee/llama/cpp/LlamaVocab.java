@@ -16,13 +16,13 @@
 package io.gravitee.llama.cpp;
 
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_model_get_vocab;
-import static io.gravitee.llama.cpp.LlamaRuntime.llama_n_vocab;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_token_to_piece;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_bos;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_eos;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_get_attr;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_get_text;
 import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_is_eog;
+import static io.gravitee.llama.cpp.LlamaRuntime.llama_vocab_n_tokens;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
@@ -54,7 +54,7 @@ public final class LlamaVocab extends MemorySegmentAware {
   }
 
   public int nVocab() {
-    return llama_n_vocab(this.segment);
+    return llama_vocab_n_tokens(this.segment);
   }
 
   /**

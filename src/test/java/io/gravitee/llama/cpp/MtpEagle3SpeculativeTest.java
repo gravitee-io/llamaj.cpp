@@ -65,8 +65,8 @@ class MtpEagle3SpeculativeTest extends LlamaCppTest {
 
   @Test
   void staging_symbols_resolve_against_bundled_llama_cpp() {
-    // The pinned llama.cpp build must expose both staging groups; if a version bump breaks the
-    // mangled names, this fails fast with the per-symbol report.
+    // The pinned llama.cpp build must export both groups; otherwise this fails fast with the
+    // per-symbol report.
     assertThat(LlamaExt.available()).as(LlamaExt.resolutionReport()).isTrue();
     assertThat(LlamaExt.eagle3Available())
       .as(LlamaExt.eagle3ResolutionReport())

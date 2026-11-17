@@ -126,7 +126,7 @@ public final class LlamaContext extends MemorySegmentAware implements Freeable {
   }
 
   public int nVocab() {
-    return llama_n_vocab(llama_model_get_vocab(model.segment));
+    return llama_vocab_n_tokens(llama_model_get_vocab(model.segment));
   }
 
   public int nCtxUsedCells() {

@@ -12,7 +12,7 @@ Speculative decoding accelerates token generation without changing the result: a
 | **MTP self-speculation** | `setMtp` | the target model's own multi-token-prediction head | a model with `n_layer_nextn > 0` (e.g. Qwen3.6-MoE) |
 | **EAGLE3** | `setEagle3` | a tiny trained head consuming the target's intermediate hidden states | a target-specific `eagle3`-arch head GGUF |
 
-Greedy configs are *lossless* (identical to plain greedy decoding); sampling configs use rejection sampling and stay an *exact* draw of the target distribution. Use it when you have spare compute and want lower latency — especially with repetitive output (code, JSON, RAG) for the n-gram path. MTP/EAGLE3 bind llama.cpp's *staging* nextn API (C++-mangled symbols, capability-probed at runtime via `LlamaExt`).
+Greedy configs are *lossless* (identical to plain greedy decoding); sampling configs use rejection sampling and stay an *exact* draw of the target distribution. Use it when you have spare compute and want lower latency — especially with repetitive output (code, JSON, RAG) for the n-gram path. MTP/EAGLE3 bind llama.cpp's public nextn API (`llama.h` since v1.0.0), capability-probed at runtime via `LlamaExt`.
 
 ## Key types
 - `SpeculativeConfig` — immutable record holding the draft window, sampling knobs, adaptive early-stop, and n-gram window; built via factories, withers, or a builder.
@@ -97,7 +97,7 @@ var headCtx = new LlamaContext(arena, headModel, cp);
 state.setEagle3(headCtx, headModel, SpeculativeConfig.greedy(2));
 ```
 
-Both setters validate capability up front (staging symbols present, head declares 3 extract
+Both setters validate capability up front (nextn symbols exported, head declares 3 extract
 layers, shared vocab) and throw `LlamaException` with a per-symbol report otherwise. The prompt
 must fit in one target batch for EAGLE3 (layer capture covers only the last decode).
 
@@ -152,7 +152,7 @@ Helpers: `isGreedy()` (`temperature <= 0`), `isAdaptive()` (`pMin > 0` and model
 - **Adaptive early stop** (`pMin > 0`) changes only *how many* tokens are speculated per round, not *which* are emitted, so it preserves greedy losslessness and sampling exactness.
 - All four flavours work with both `DefaultLlamaIterator` (single sequence) and `BatchIterator` (fused multi-sequence). For the fused path, size the target context so `nBatch >= sum(nDraft + 1)` across sequences.
 - **Fused MTP/EAGLE3**: sequences sharing a head context draft in lockstep — each chain step is one batched dual *(token, hidden)* decode across sequences (this also amortizes the per-draft dispatch cost that dominates small-graph decodes), they verify in the shared fused target decode, and each sequence then advances its own seed (MTP: the target's hidden at its last accepted verify row) or boundary (EAGLE3: per-sequence slice of the layer capture, encoded and re-synced) from its slice of the verify buffers. Size the **head context** for the batch: `nSeqMax` matching the target's and `nOutputsMax >= nSeqMax` (the bundled CLI does this; if you build the MTP context yourself, see the usage snippet above).
-- **Staging-API dependency:** MTP/EAGLE3 resolve C++-mangled symbols from the bundled llama.cpp at runtime (`LlamaExt.available()` / `eagle3Available()`). A llama.cpp version bump can invalidate them; the setters then fail fast with a per-symbol resolution report rather than mis-calling a changed ABI.
+- **Native version:** MTP/EAGLE3 need a llama.cpp build exporting the nextn API (v1.0.0 or later). `LlamaExt.available()` / `eagle3Available()` probe the loaded `libllama`; against an older build the setters fail fast with a per-symbol resolution report.
 - **Resources/lifecycle:** the `Speculation` allocates persistent native scratch (sampler chain + draft/verify batches) on the state's `Arena`, freed once on teardown. Close the iterator (try-with-resources) when abandoning a stream so the scratch is freed and the sequence cleared; the contexts stay reusable afterward.
 
 ## Benchmarks (July 2026, Apple M4 Max)
