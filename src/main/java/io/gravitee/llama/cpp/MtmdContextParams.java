@@ -30,6 +30,10 @@ import java.lang.foreign.SegmentAllocator;
  */
 public class MtmdContextParams extends MemorySegmentAware {
 
+  // Owns native strings referenced by pointer fields (e.g. media_marker), so they
+  // live exactly as long as this params struct.
+  private final Arena arena;
+
   public MtmdContextParams(Arena arena) {
     super(
       llama_h(
@@ -41,6 +45,7 @@ public class MtmdContextParams extends MemorySegmentAware {
     if (segment == null || segment.address() == 0L) {
       throw new RuntimeException("Failed to allocate mtmd_context_params");
     }
+    this.arena = arena;
   }
 
   public boolean useGpu() {
@@ -75,11 +80,12 @@ public class MtmdContextParams extends MemorySegmentAware {
   }
 
   public MtmdContextParams mediaMarker(String mediaMarker) {
-    // Media marker is a const char*, so it needs to be allocated in a persistent arena
-    // or passed directly. For simplicity, we'll reallocate it here.
+    // media_marker is a const char* stored by pointer: allocate it in the same arena
+    // as the struct. An Arena.ofAuto() segment is only reachable through the native
+    // pointer, so the GC may free it and leave media_marker dangling.
     LlamaRuntime.mtmd_context_params_media_marker(
       segment,
-      Arena.ofAuto().allocateFrom(mediaMarker)
+      arena.allocateFrom(mediaMarker)
     );
     return this;
   }
