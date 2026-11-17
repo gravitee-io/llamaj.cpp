@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 /**
- * Locks {@link LlamaExt.Fn}'s derived Itanium mangling against the symbol names observed in the
- * pinned libllama ({@code nm -gU libllama.dylib}). Pure string logic — no native lib needed —
+ * Locks the derived Itanium mangling of the staging (clef) symbol against the name exported by
+ * libllama, and checks the reports name every MTP/EAGLE3 C symbol. Pure string logic — no native lib needed —
  * so a typo in a signature declaration fails fast in any environment. Whether the symbols
  * actually resolve against the bundled build is asserted separately by
  * {@code MtpEagle3SpeculativeTest#staging_symbols_resolve_against_bundled_llama_cpp}.
@@ -32,34 +32,6 @@ class LlamaExtSymbolsTest {
 
   @Test
   void derived_symbols_match_libllama_exports() {
-    // MTP (nextn) group — verified against libllama b9673 and b9873.
-    assertThat(LlamaExt.SET_EMBEDDINGS_NEXTN.symbol()).isEqualTo(
-      "_Z26llama_set_embeddings_nextnP13llama_contextbb"
-    );
-    assertThat(LlamaExt.GET_EMBEDDINGS_NEXTN_ITH.symbol()).isEqualTo(
-      "_Z30llama_get_embeddings_nextn_ithP13llama_contexti"
-    );
-    assertThat(LlamaExt.GET_CTX_OTHER.symbol()).isEqualTo(
-      "_Z19llama_get_ctx_otherP13llama_context"
-    );
-
-    // EAGLE3 group — verified against libllama b9873.
-    assertThat(LlamaExt.SET_EMBEDDINGS_LAYER_INP.symbol()).isEqualTo(
-      "_Z30llama_set_embeddings_layer_inpP13llama_contextjb"
-    );
-    assertThat(LlamaExt.GET_EMBEDDINGS_LAYER_INP.symbol()).isEqualTo(
-      "_Z30llama_get_embeddings_layer_inpP13llama_contextj"
-    );
-    assertThat(LlamaExt.GET_EMBEDDINGS_NEXTN.symbol()).isEqualTo(
-      "_Z26llama_get_embeddings_nextnP13llama_context"
-    );
-    assertThat(LlamaExt.MODEL_TARGET_LAYER_IDS.symbol()).isEqualTo(
-      "_Z28llama_model_target_layer_idsPK11llama_model"
-    );
-    assertThat(LlamaExt.MODEL_TARGET_LAYER_IDS_N.symbol()).isEqualTo(
-      "_Z30llama_model_target_layer_ids_nPK11llama_model"
-    );
-
     // Joint decision head (clef) — verified against a clang++ build of the llama-ext.h declaration.
     assertThat(LlamaExt.BATCH_EXT_SET_DECISION_ORDER.symbol()).isEqualTo(
       "_Z34llama_batch_ext_set_decision_orderP15llama_batch_exti20llama_decision_order"
@@ -68,7 +40,7 @@ class LlamaExtSymbolsTest {
 
   @Test
   void resolution_report_names_every_declared_symbol() {
-    // Report generation is pure over the group lists; every declared symbol must appear.
+    // Every declared symbol appears in its report, resolved or not.
     String mtp = LlamaExt.resolutionReport();
     assertThat(mtp)
       .contains("llama_set_embeddings_nextn")

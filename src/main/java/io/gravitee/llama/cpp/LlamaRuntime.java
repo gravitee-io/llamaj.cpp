@@ -1071,6 +1071,94 @@ public final class LlamaRuntime {
     );
   }
 
+  /* NextN (MTP) and EAGLE3 layer-input API, public in llama.h since llama.cpp v1.0.0. */
+
+  public static void llama_set_embeddings_nextn(
+    MemorySegment ctx,
+    boolean value,
+    boolean masked
+  ) {
+    llama_h(
+      "llama_set_embeddings_nextn",
+      new Class<?>[] { MEM_SEG_CLASS, boolean.class, boolean.class },
+      ctx,
+      value,
+      masked
+    );
+  }
+
+  public static MemorySegment llama_get_embeddings_nextn(MemorySegment ctx) {
+    return llama_h(
+      "llama_get_embeddings_nextn",
+      new Class<?>[] { MEM_SEG_CLASS },
+      ctx
+    );
+  }
+
+  public static MemorySegment llama_get_embeddings_nextn_ith(
+    MemorySegment ctx,
+    int i
+  ) {
+    return llama_h(
+      "llama_get_embeddings_nextn_ith",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      ctx,
+      i
+    );
+  }
+
+  public static MemorySegment llama_get_ctx_other(MemorySegment ctx) {
+    return llama_h(
+      "llama_get_ctx_other",
+      new Class<?>[] { MEM_SEG_CLASS },
+      ctx
+    );
+  }
+
+  public static void llama_set_embeddings_layer_inp(
+    MemorySegment ctx,
+    int layer,
+    boolean value
+  ) {
+    llama_h(
+      "llama_set_embeddings_layer_inp",
+      new Class<?>[] { MEM_SEG_CLASS, int.class, boolean.class },
+      ctx,
+      layer,
+      value
+    );
+  }
+
+  public static MemorySegment llama_get_embeddings_layer_inp(
+    MemorySegment ctx,
+    int layer
+  ) {
+    return llama_h(
+      "llama_get_embeddings_layer_inp",
+      new Class<?>[] { MEM_SEG_CLASS, int.class },
+      ctx,
+      layer
+    );
+  }
+
+  public static MemorySegment llama_model_target_layer_ids(
+    MemorySegment model
+  ) {
+    return llama_h(
+      "llama_model_target_layer_ids",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
+  public static int llama_model_target_layer_ids_n(MemorySegment model) {
+    return llama_h(
+      "llama_model_target_layer_ids_n",
+      new Class<?>[] { MEM_SEG_CLASS },
+      model
+    );
+  }
+
   /**
    * Sets the CPU threads of an existing context, from its next decode on.
    *
@@ -2069,8 +2157,12 @@ public final class LlamaRuntime {
    * @param vocab The llama vocab
    * @return The vocabulary size
    */
-  public static int llama_n_vocab(MemorySegment vocab) {
-    return llama_h("llama_n_vocab", new Class<?>[] { MEM_SEG_CLASS }, vocab);
+  public static int llama_vocab_n_tokens(MemorySegment vocab) {
+    return llama_h(
+      "llama_vocab_n_tokens",
+      new Class<?>[] { MEM_SEG_CLASS },
+      vocab
+    );
   }
 
   /**
