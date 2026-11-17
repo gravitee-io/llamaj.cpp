@@ -31,12 +31,13 @@ import io.gravitee.llama.cpp.cxx.CxxFunction;
 import io.gravitee.llama.cpp.cxx.CxxFunctions;
 import io.gravitee.llama.cpp.platform.PlatformResolver;
 import java.lang.foreign.MemorySegment;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Binding for llama.cpp's <b>staging</b> API ({@code src/llama-ext.h}): MTP "nextn"
- * self-speculation, EAGLE3 layer-input extraction, and the decision order read by a joint
- * decision head (clef).
+ * self-speculation, EAGLE3 layer-input extraction, the decision order read by a joint decision
+ * head (clef, vllm-decision2), and the label texts of a decision model.
  *
  * <p>The staging header is not inside an {@code extern "C"} block, so these functions are
  * exported from {@code libllama} under <b>C++-mangled</b> names (Itanium ABI — identical on
@@ -116,6 +117,12 @@ public final class LlamaExt {
     INT32,
     DECISION_ORDER
   );
+  static final CxxFunction MODEL_DECISION_LABEL = CxxFunction.of(
+    "llama_model_decision_label",
+    ADDRESS,
+    CONST_MODEL,
+    UINT32
+  );
 
   static final List<CxxFunction> MTP_GROUP = List.of(
     SET_EMBEDDINGS_NEXTN,
@@ -132,6 +139,10 @@ public final class LlamaExt {
 
   static final List<CxxFunction> DECISION_GROUP = List.of(
     BATCH_EXT_SET_DECISION_ORDER
+  );
+
+  static final List<CxxFunction> DECISION_LABELS_GROUP = List.of(
+    MODEL_DECISION_LABEL
   );
 
   /* ---------------------------------- public API ---------------------------------- */
@@ -168,6 +179,35 @@ public final class LlamaExt {
   /** Per-symbol resolution report for the decision staging group. */
   public static String decisionResolutionReport() {
     return CxxFunctions.report(DECISION_GROUP);
+  }
+
+  /** True if the decision-label staging symbol resolved against the loaded {@code libllama}. */
+  public static boolean decisionLabelsAvailable() {
+    return CxxFunctions.allResolve(DECISION_LABELS_GROUP);
+  }
+
+  /** Per-symbol resolution report for the decision-label staging group. */
+  public static String decisionLabelsResolutionReport() {
+    return CxxFunctions.report(DECISION_LABELS_GROUP);
+  }
+
+  /**
+   * The label text of each option of a decision model ({@code <arch>.decision.labels}), in option
+   * order; empty if the model declares none.
+   */
+  public static List<String> decisionLabels(LlamaModel model) {
+    var labels = new ArrayList<String>();
+    for (int i = 0; ; i++) {
+      MemorySegment ptr = (MemorySegment) CxxFunctions.call(
+        MODEL_DECISION_LABEL,
+        model.segment,
+        i
+      );
+      if (ptr == null || ptr.equals(MemorySegment.NULL)) {
+        return List.copyOf(labels);
+      }
+      labels.add(ptr.reinterpret(Long.MAX_VALUE).getString(0));
+    }
   }
 
   /**

@@ -23,13 +23,15 @@ package io.gravitee.llama.cpp;
  *       {@link KevDecider}</li>
  *   <li>{@link LayaPrompt} — {@link LayaDecider}</li>
  *   <li>{@link ClefPrompt} — {@link ClefDecider}</li>
+ *   <li>{@link MediaPrompt} — {@link LabelDecider} and {@link PooledDecider}, with images or
+ *       audio</li>
  * </ul>
  *
  * @author Rémi SULTAN (remi.sultan at graviteesource.com)
  * @author GraviteeSource Team
  */
 public sealed interface DecisionPrompt
-  permits TextPrompt, LayaPrompt, ClefPrompt {
+  permits TextPrompt, LayaPrompt, ClefPrompt, MediaPrompt {
   /** The number of scores the prompt is scored into. */
   int nOptions();
 }

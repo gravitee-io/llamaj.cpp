@@ -27,6 +27,11 @@ public record LlamaPerformance(
 ) {
   /**
    * Context performance metrics from llama.cpp.
+   *
+   * @param graphReallocsSameSize Compute-graph reallocations during inference with an unchanged
+   *                              graph size, over the context's lifetime (not reset by a perf reset)
+   * @param graphReallocsResized  Compute-graph reallocations during inference with a changed graph
+   *                              size, over the context's lifetime (not reset by a perf reset)
    */
   public record ContextPerformance(
     double startTimeMs,
@@ -35,8 +40,37 @@ public record LlamaPerformance(
     double evalTimeMs,
     int promptTokensEvaluated,
     int tokensGenerated,
-    int tokensReused
+    int tokensReused,
+    int graphReallocsSameSize,
+    int graphReallocsResized
   ) {
+    public ContextPerformance(
+      double startTimeMs,
+      double loadTimeMs,
+      double promptEvalTimeMs,
+      double evalTimeMs,
+      int promptTokensEvaluated,
+      int tokensGenerated,
+      int tokensReused
+    ) {
+      this(
+        startTimeMs,
+        loadTimeMs,
+        promptEvalTimeMs,
+        evalTimeMs,
+        promptTokensEvaluated,
+        tokensGenerated,
+        tokensReused,
+        0,
+        0
+      );
+    }
+
+    /** Total compute-graph reallocations during inference. */
+    public int graphReallocs() {
+      return graphReallocsSameSize + graphReallocsResized;
+    }
+
     /**
      * Calculate prompt processing speed in tokens per second.
      * @return tokens per second, or 0 if no prompt evaluation occurred

@@ -15,6 +15,7 @@
  */
 package io.gravitee.llama.cpp;
 
+import io.gravitee.llama.cpp.draft.DFlashDraft;
 import io.gravitee.llama.cpp.draft.HiddenStateDraft;
 import io.gravitee.llama.cpp.speculative.Speculation;
 import java.lang.foreign.Arena;
@@ -235,12 +236,13 @@ public final class BatchIterator
       chains[c] = spec.chain();
       drafted[c] = new int[k];
       // n-gram uses a per-position point-mass draft, so it needs no draft snapshots.
-      if (!spec.isGreedy() && !s.isNgram()) {
+      if (!spec.isGreedy() && !s.isNgram() && !pointMassDraft(s)) {
         snaps[c] = new Speculation.Snapshot[k];
       }
     }
     Map<LlamaContext, List<Integer>> byDraftContext = new LinkedHashMap<>();
     Map<LlamaContext, List<Integer>> byHiddenContext = new LinkedHashMap<>();
+    Map<LlamaContext, List<Integer>> byBlockContext = new LinkedHashMap<>();
     for (int c = 0; c < n; c++) {
       ConversationState s = states.get(c);
       if (s.hasDraft()) {
@@ -251,6 +253,12 @@ public final class BatchIterator
         // MTP/EAGLE3: fused per shared head context (dual token+embd chain steps).
         byHiddenContext
           .computeIfAbsent(hiddenDraft(s).context(), key -> new ArrayList<>())
+          .add(c);
+      } else if (s.isDFlash()) {
+        byBlockContext
+          .computeIfAbsent(s.getDFlashDraft().context(), key ->
+            new ArrayList<>()
+          )
           .add(c);
       } else {
         // n-gram: propose up to nDraft tokens from the committed history (no draft decode).
@@ -280,6 +288,9 @@ public final class BatchIterator
         snaps,
         nDrafted
       );
+    }
+    for (List<Integer> group : byBlockContext.values()) {
+      draftBlockGroup(states, group, drafted, snaps, nDrafted);
     }
 
     // Phase B — one fused target decode over all sequences' drafts. Each sequence's pre-verify
@@ -333,6 +344,16 @@ public final class BatchIterator
           nDrafted[c],
           drafted[c]
         );
+      } else if (s.isDFlash()) {
+        DFlashDraft draft = s.getDFlashDraft();
+        draft.inject(
+          context,
+          base[c],
+          matched[c] + 1,
+          oldNPast[c],
+          s.getSequenceId()
+        );
+        draft.trim(s.getSequenceId(), oldNPast[c] + matched[c] + 1);
       }
     }
 
@@ -591,6 +612,51 @@ public final class BatchIterator
   }
 
   /**
+   * Drafts a group of block-diffusion sequences that share one draft context: their blocks decode
+   * together in one pass, all of the group's largest draft size so every block has the same
+   * length, then each sequence reads its own drafts from its block.
+   */
+  private void draftBlockGroup(
+    List<ConversationState> states,
+    List<Integer> group,
+    int[][] drafted,
+    Speculation.Snapshot[][] snaps,
+    int[] nDrafted
+  ) {
+    int k = 0;
+    for (int c : group) {
+      k = Math.max(k, states.get(c).getNDraft());
+    }
+    List<DFlashDraft.Block> blocks = new ArrayList<>(group.size());
+    for (int c : group) {
+      ConversationState s = states.get(c);
+      blocks.add(
+        s
+          .getDFlashDraft()
+          .block(s.getSequenceId(), s.getNewTokenId(), s.getNPast(), k)
+      );
+    }
+    int[] begs = states.get(group.get(0)).getDFlashDraft().decodeBlocks(blocks);
+    for (int j = 0; j < group.size(); j++) {
+      int c = group.get(j);
+      ConversationState s = states.get(c);
+      DFlashDraft draft = s.getDFlashDraft();
+      nDrafted[c] = draft.readDrafts(
+        s.getSpeculation(),
+        begs[j],
+        Math.min(s.getNDraft(), blocks.get(j).nDraft()),
+        drafted[c],
+        snaps[c]
+      );
+      draft.trim(s.getSequenceId(), s.getNPast());
+    }
+  }
+
+  private static boolean pointMassDraft(ConversationState s) {
+    return s.isDFlash() && s.getDFlashDraft().pointMass();
+  }
+
+  /**
    * Post-accept advance of a hidden-state sequence from its slice of the fused verify decode:
    * MTP re-seeds from the target's hidden at the last accepted row; EAGLE3 encodes its verify
    * rows' captured features, re-syncs the head decoder with only the accepted shifted pairs,
@@ -736,7 +802,9 @@ public final class BatchIterator
       } else {
         // n-gram proposes a single certain token per position (point-mass q = 1); model drafting
         // uses the draft snapshot's probability.
-        float qOfDrafted = ngram ? 1.0f : snaps[i].selectedProbability();
+        float qOfDrafted = snaps == null
+          ? 1.0f
+          : snaps[i].selectedProbability();
         if (
           spec.acceptTarget(
             chain,
@@ -747,7 +815,7 @@ public final class BatchIterator
         ) {
           matched++;
         } else {
-          extra = ngram
+          extra = snaps == null
             ? spec.residualTargetPointMass(drafted[i])
             : spec.residualTargetScatter(snaps[i]);
           break;
@@ -1192,6 +1260,9 @@ public final class BatchIterator
     if (!keepKv) {
       context.getMemory().seqRm(sequenceId, -1, -1);
       context.stateCheckpoints().clear(sequenceId);
+      if (state.isDFlash()) {
+        state.getDFlashDraft().trim(sequenceId, 0);
+      }
     }
     // Free the speculative state's persistent native scratch (idempotent: null-on-free, so the
     // common path of removal-then-stop never double-frees). Non-speculative states have none.

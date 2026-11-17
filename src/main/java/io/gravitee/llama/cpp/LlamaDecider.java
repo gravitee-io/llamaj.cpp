@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -38,19 +39,22 @@ import java.util.stream.IntStream;
  * {@code LlamaDecider} from {@link #create} and calls {@link #score(List)}, which checks each
  * prompt's kind at run time:
  * <ul>
- *   <li>{@link LabelDecider} ({@link TextPrompt}) — openjev, lev, nimble, or any model with
- *       caller-chosen codes ({@link LabelDecider#custom}): logits of the label tokens at the last
- *       prompt token, with the common prefix of the prompts decoded once</li>
+ *   <li>{@link LabelDecider} ({@link TextPrompt}, {@link MediaPrompt}) — openjev, lev, nimble,
+ *       pplx-decider, vllm-d3, granite-switch, h2o-lightning, or any model with caller-chosen
+ *       codes ({@link LabelDecider#custom}): logits of the label tokens at the last prompt token,
+ *       with the common prefix of the prompts decoded once</li>
  *   <li>{@link KevDecider} ({@link TextPrompt}) — scaled dot product of the last token's hidden
  *       state with the hidden state at each option marker</li>
  *   <li>{@link LayaDecider} ({@link LayaPrompt}) — one column of the hidden state at each option
  *       marker</li>
- *   <li>{@link ClefDecider} ({@link ClefPrompt}) — a joint head over tokens tagged with a
- *       {@link DecisionOrder}</li>
+ *   <li>{@link ClefDecider} ({@link ClefPrompt}) — clef, vllm-decision2: a joint head over
+ *       tokens tagged with a {@link DecisionOrder}</li>
+ *   <li>{@link PooledDecider} ({@link TextPrompt}, {@link MediaPrompt}) —
+ *       openbmb-minicpm-ocr-jev: one score per class, the pooled output of the sequence</li>
  * </ul>
- * Only what needs the native model lives here — the family, its special tokens, the temperatures
- * and the {@code "systemone"} template read from the GGUF, and the forward pass. Rendering the
- * template and turning scores into answers are left to the caller.
+ * Only what needs the native model lives here — the family, its special tokens, the temperatures,
+ * score biases and {@code "systemone"} template read from the GGUF, and the forward pass.
+ * Rendering the template and turning scores into answers are left to the caller.
  *
  * <pre>{@code
  * try (var decider = LlamaDecider.create(arena, model, LlamaDecider.Options.defaults())) {
@@ -72,13 +76,16 @@ import java.util.stream.IntStream;
  */
 public abstract sealed class LlamaDecider
   implements Freeable, AutoCloseable
-  permits LabelDecider, KevDecider, LayaDecider, ClefDecider {
+  permits LabelDecider, KevDecider, LayaDecider, ClefDecider, PooledDecider {
 
   final LlamaModel model;
   final LlamaVocab vocab;
   final LlamaContext context;
+  final MtmdContext mtmd;
+  final boolean causal;
   private final DecisionType type;
   private final Map<String, Float> temperatures;
+  private final Map<Integer, float[]> scoreBiases;
   private final String template;
 
   private boolean freed = false;
@@ -89,13 +96,26 @@ public abstract sealed class LlamaDecider
     DecisionType type,
     LlamaContextParams params
   ) {
+    this(arena, model, type, params, null);
+  }
+
+  LlamaDecider(
+    Arena arena,
+    LlamaModel model,
+    DecisionType type,
+    LlamaContextParams params,
+    MtmdContext mtmd
+  ) {
     this.model = model;
     this.type = type;
+    this.mtmd = mtmd;
+    this.causal = isCausal(model);
     this.vocab = new LlamaVocab(model);
     // Metadata strings are scratch: only the context lives in the caller's arena.
     this.temperatures = Collections.unmodifiableMap(
       withScratch(scratch -> readTemperatures(scratch, model))
     );
+    this.scoreBiases = withScratch(scratch -> readScoreBiases(scratch, model));
     this.template = withScratch(scratch ->
       new LlamaTemplate(scratch, model, "systemone").templateString()
     );
@@ -105,7 +125,8 @@ public abstract sealed class LlamaDecider
   /**
    * Creates the decider for the model's decision family, as the family's own factory would
    * ({@link LabelDecider#create}, {@link KevDecider#create}, {@link LayaDecider#create},
-   * {@link ClefDecider#create}).
+   * {@link ClefDecider#create}, {@link PooledDecider#create}). It scores text prompts only; see
+   * {@link #create(Arena, LlamaModel, MtmdContext, Options)} for images and audio.
    *
    * @param arena   Arena that owns the decider's context
    * @param model   Pre-loaded model (not freed on {@link #close()})
@@ -117,11 +138,39 @@ public abstract sealed class LlamaDecider
     LlamaModel model,
     Options options
   ) {
+    return create(arena, model, null, options);
+  }
+
+  /**
+   * Same as {@link #create(Arena, LlamaModel, Options)}, with the multimodal context that the
+   * families reading {@link MediaPrompt}s ({@link LabelDecider}, {@link PooledDecider}) tokenize
+   * and evaluate media with. The other families ignore it.
+   *
+   * @param arena   Arena that owns the decider's context
+   * @param model   Pre-loaded model (not freed on {@link #close()})
+   * @param mtmd    The model's multimodal context (caller-owned), or {@code null} for text only
+   * @param options Configuration; pass {@link Options#defaults()} for sensible defaults
+   * @throws LlamaException if the model is not a decision model, or of an unknown family
+   */
+  public static LlamaDecider create(
+    Arena arena,
+    LlamaModel model,
+    MtmdContext mtmd,
+    Options options
+  ) {
     return switch (familyOf(model)) {
-      case OPENJEV, LEV, NIMBLE -> LabelDecider.create(arena, model, options);
+      case
+        OPENJEV,
+        LEV,
+        NIMBLE,
+        PPLX_DECIDER,
+        VLLM_D3,
+        GRANITE_SWITCH,
+        H2O_LIGHTNING -> LabelDecider.create(arena, model, mtmd, options);
       case KEV -> KevDecider.create(arena, model, options);
       case LAYA -> LayaDecider.create(arena, model, options);
-      case CLEF -> ClefDecider.create(arena, model, options);
+      case CLEF, VLLM_DECISION2 -> ClefDecider.create(arena, model, options);
+      case MINICPM_OCR_JEV -> PooledDecider.create(arena, model, mtmd, options);
       case CUSTOM -> throw new IllegalStateException("CUSTOM is never read");
     };
   }
@@ -155,6 +204,24 @@ public abstract sealed class LlamaDecider
   public Map<String, Float> temperatures() {
     checkNotFreed();
     return temperatures;
+  }
+
+  /**
+   * The score biases of the model ({@code <arch>.decision.score_bias.<n>.<level>}), keyed by the
+   * number of levels of a score question: {@code float[n]}, one offset per level, added to the raw
+   * scores before the softmax. Empty if the model declares none.
+   */
+  public Map<Integer, float[]> scoreBiases() {
+    checkNotFreed();
+    var copy = new TreeMap<Integer, float[]>();
+    scoreBiases.forEach((n, bias) -> copy.put(n, bias.clone()));
+    return Collections.unmodifiableMap(copy);
+  }
+
+  /** Whether the model reads its prompts with causal attention ({@code <arch>.attention.causal}). */
+  public boolean causal() {
+    checkNotFreed();
+    return causal;
   }
 
   /** The {@code "systemone"} Jinja prompt template of the model, or {@code null} if it has none. */
@@ -221,6 +288,40 @@ public abstract sealed class LlamaDecider
       .nUBatch(nBatch)
       .nOutputsMax(nBatch)
       .nSeqMax(1);
+  }
+
+  static boolean isCausal(LlamaModel model) {
+    String value = withScratch(scratch ->
+      model.metaVal(
+        scratch,
+        model.metaVal(scratch, "general.architecture") + ".attention.causal"
+      )
+    );
+    return !"false".equalsIgnoreCase(value == null ? null : value.trim());
+  }
+
+  void decodeMedia(MediaPrompt prompt) {
+    if (mtmd == null) {
+      throw new LlamaException(
+        "a MediaPrompt needs a decider created with an MtmdContext"
+      );
+    }
+    if (!causal) {
+      throw new LlamaException(
+        "a non-causal decision model reads text prompts only"
+      );
+    }
+    context.getMemory().clear();
+    try (var local = Arena.ofConfined()) {
+      var chunks = new MtmdInputChunks(
+        mtmd.tokenize(local, prompt.text(), true, true, prompt.media())
+      );
+      try {
+        mtmd.evalChunks(local, context, chunks, 0, 0, context.nBatch(), true);
+      } finally {
+        chunks.free();
+      }
+    }
   }
 
   /** The model's decision family, read from its metadata. */
@@ -395,6 +496,58 @@ public abstract sealed class LlamaDecider
       );
   }
 
+  private static Map<Integer, float[]> readScoreBiases(
+    Arena arena,
+    LlamaModel model
+  ) {
+    return parseScoreBiases(
+      model.metaVal(arena, "general.architecture") + ".decision.score_bias.",
+      model.meta(arena)
+    );
+  }
+
+  static Map<Integer, float[]> parseScoreBiases(
+    String prefix,
+    Map<String, String> meta
+  ) {
+    var biases = new TreeMap<Integer, float[]>();
+    meta
+      .entrySet()
+      .stream()
+      .filter(e -> e.getKey().startsWith(prefix))
+      .forEach(e -> {
+        String[] parts = e.getKey().substring(prefix.length()).split("\\.");
+        int n = parts.length == 2 ? parseIndex(parts[0]) : -1;
+        int level = parts.length == 2 ? parseIndex(parts[1]) : -1;
+        if (n < 2 || n > 255 || level < 0 || level >= n) {
+          throw new LlamaException(
+            "invalid decision score bias: %s".formatted(e.getKey())
+          );
+        }
+        float value;
+        try {
+          value = Float.parseFloat(e.getValue());
+        } catch (NumberFormatException | NullPointerException _) {
+          throw new LlamaException(
+            "invalid decision score bias: %s = %s".formatted(
+              e.getKey(),
+              e.getValue()
+            )
+          );
+        }
+        biases.computeIfAbsent(n, float[]::new)[level] = value;
+      });
+    return Collections.unmodifiableMap(biases);
+  }
+
+  private static int parseIndex(String text) {
+    try {
+      return Integer.parseInt(text);
+    } catch (NumberFormatException _) {
+      return -1;
+    }
+  }
+
   private static float temperature(Map.Entry<String, String> entry) {
     float temp;
     try {
@@ -417,12 +570,13 @@ public abstract sealed class LlamaDecider
    * Configuration for {@link LlamaDecider}. Any {@code null} field takes a default.
    *
    * @param nCtx    Context size in tokens; {@code null} -> 8192
-   * @param nBatch  Batch size in tokens; {@code null} -> llama.cpp's default for {@link LabelDecider},
-   *                2048 for the other families, where it is also the ubatch size and the prompt
-   *                limit
-   * @param nSeqMax {@link LabelDecider} only: sequences per context; {@code null} -> 8. Sequence 0
-   *                holds the shared prefix, so up to {@code nSeqMax - 1} prompts are decoded
-   *                together. {@code 1} disables prefix sharing.
+   * @param nBatch  Batch size in tokens; {@code null} -> llama.cpp's default for {@link LabelDecider}
+   *                over a causal model, 2048 otherwise, where it is also the ubatch size and the
+   *                prompt limit
+   * @param nSeqMax {@link LabelDecider} over a causal model only: sequences per context;
+   *                {@code null} -> 8. Sequence 0 holds the shared prefix, so up to
+   *                {@code nSeqMax - 1} prompts are decoded together. {@code 1} disables prefix
+   *                sharing.
    */
   public record Options(Integer nCtx, Integer nBatch, Integer nSeqMax) {
     public static Options defaults() {

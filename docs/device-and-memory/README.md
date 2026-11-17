@@ -6,7 +6,8 @@
 These utilities let you introspect the runtime before and after a model is loaded: enumerate registered backends and devices (`BackendRegistry`), measure available memory on CPU RAM, the best local GPU, or remote RPC servers, cheaply read a GGUF model's dimensions without allocating its weights (`LlamaModelDims`), and read throughput/timing metrics from a running iterator (`LlamaPerformance`). Use them to drive capacity planning (will this model fit?), pick a device/`SplitMode`, or surface tokens/sec to users.
 
 ## Key types
-- `BackendRegistry` — static facade: `listBackends()`, `listDevices()`, `supportsRpc()`, `loadBackend()`, `addRpcServer(s)()`, `queryRpcMemory()`, `printSummary()`.
+- `BackendRegistry` — static facade: `listBackends()`, `listDevices()`, `supportsRpc()`, `loadBackend()`, `addRpcServer(s)()`, `queryRpcMemory()`, `printSummary()`, and the buffer types tensor overrides point at: `cpuBufferType()`, `bufferType(device)`, `bufferTypeName(bufferType)`.
+- `LlamaModelParams.TensorOverride` — record `(String pattern, MemorySegment bufferType)`: weights whose name matches `pattern` go to `bufferType` instead of their layer's device.
 - `GgmlBackendInfo` — record `(String name, long index)` for one registered backend (CPU, Metal, CUDA, RPC, ...).
 - `GgmlDeviceInfo` — record `(String name, String description, long index, String backendName)` for one device.
 - `CpuMemoryQuery` — `query()` returns `CpuMemoryInfo(freeBytes, totalBytes)` from the JDK MXBean (nullable, never throws).
@@ -68,17 +69,44 @@ LlamaRuntime.llama_backend_free();
 // perf.sampler().averageSamplingTimeMs();
 ```
 
+### Placing weights: tensor overrides and the MoE cache
+`LlamaModelParams.tensorOverrides(arena, overrides)` moves the weights whose name matches a regular
+expression into another buffer type; the first matching override wins. `cpuMoe(arena)` keeps the
+expert weights of every mixture-of-experts layer in host memory (`cpuMoe(arena, n)` only those of
+the first `n` layers), so the rest of a large MoE model fits the GPU. The device then reads the
+experts it needs from host memory; `LlamaContextParams.moeCacheSize(bytes)` gives it a cache for
+the experts that stay hot:
+
+```java
+var modelParams = new LlamaModelParams(arena)
+    .useExtraBufferTypes(false)      // the cache reads plain host buffers, not repacked ones
+    .cpuMoe(arena);
+var model = new LlamaModel(arena, Path.of("moe.gguf"), modelParams);
+var ctx = new LlamaContext(arena, model, new LlamaContextParams(arena)
+    .nCtx(4096)
+    .moeCacheSize(2048L << 20));     // 2 GiB of device cache for the host experts
+
+// Any other placement: blk.10-19 feed-forward weights on the CPU.
+modelParams.tensorOverrides(arena, List.of(new LlamaModelParams.TensorOverride(
+    "blk\\.1[0-9]\\.ffn_", BackendRegistry.cpuBufferType())));
+```
+
+llama.cpp logs the cache it built (`MoE cache size = … MiB for … MiB of host experts`) and its hit
+rate when the context is freed. Creating a context with a cache fails for a model without experts.
+
 ## Options
 
 | Type / method | Values / shape | Notes |
 |---|---|---|
 | `SplitMode` | `NONE`, `LAYER`, `ROW` | `LlamaModelParams.splitMode(...)`; how layers/KV are spread across GPUs. |
 | `AttentionType` | `UNSPECIFIED`, `CAUSAL`, `NON_CAUSAL` | `LlamaContextParams.attentionType(...)`; encoder vs decoder attention. |
+| `LlamaModelParams.tensorOverrides(arena, list)` / `cpuMoe(arena[, n])` | `TensorOverride(pattern, bufferType)` | Set before loading the model; `LlamaModelParams.EXPERT_TENSORS` is the expert-weight pattern `cpuMoe` uses. |
+| `LlamaContextParams.moeCacheSize(bytes)` | `long`, `0` = disabled | Device cache for the host experts; split among devices like the layers. Experimental in llama.cpp. |
 | `GpuMemoryQuery.queryBest()` | `GpuMemoryInfo(freeBytes, totalBytes)` \| `null` | Picks the GPU/GPU_UMA device with the most free VRAM. |
 | `CpuMemoryQuery.query()` | `CpuMemoryInfo(freeBytes, totalBytes)` \| `null` | JDK `OperatingSystemMXBean`; no native lib needed. |
 | `RpcMemoryQuery.queryAll(endpoints)` | `RpcMemoryInfo(freeBytes, totalBytes, serverCount)` \| `null` | Sums free/total across de-duplicated `host:port` servers. |
 | `BackendRegistry.queryRpcMemory(arena, endpoint, device)` | `RpcDeviceMemory(freeBytes, totalBytes)` | Single remote device; `usedBytes()` derived. |
-| `LlamaPerformance.context()` | `ContextPerformance(startTimeMs, loadTimeMs, promptEvalTimeMs, evalTimeMs, promptTokensEvaluated, tokensGenerated, tokensReused)` | Timing + token counts. |
+| `LlamaPerformance.context()` | `ContextPerformance(startTimeMs, loadTimeMs, promptEvalTimeMs, evalTimeMs, promptTokensEvaluated, tokensGenerated, tokensReused, graphReallocsSameSize, graphReallocsResized)` | Timing + token counts, and the compute-graph reallocations during inference over the context's lifetime (`graphReallocs()` sums them; steady decoding should not add any). |
 | `LlamaPerformance.sampler()` | `SamplerPerformance(samplingTimeMs, sampleCount)` | `averageSamplingTimeMs()` derived. |
 
 ## Notes
